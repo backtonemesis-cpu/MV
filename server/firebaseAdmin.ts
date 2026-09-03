@@ -4,7 +4,7 @@ import { getMvFirestore } from './firestoreAdmin';
 
 let cachedAuth: Auth | null = null;
 
-function getAdminAuth(): Auth {
+export function getAdminAuth(): Auth {
   if (cachedAuth) return cachedAuth;
 
   const app = getApps().length > 0
@@ -21,6 +21,11 @@ function getAdminAuth(): Auth {
  * remains fail-closed on the stable (default) Firestore database.
  */
 export const getAdminFirestore = getMvFirestore;
+
+export async function resolveFirebaseUidForEmail(email: string): Promise<string> {
+  const user = await getAdminAuth().getUserByEmail(email.trim().toLowerCase());
+  return user.uid;
+}
 
 export interface VerifiedFirebaseIdentity {
   uid: string;
