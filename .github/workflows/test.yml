@@ -42,7 +42,7 @@ jobs:
           npx --yes firebase-tools@15.28.2 emulators:exec
           --project regal-campus-198sv
           --only firestore
-          "npx vitest run server/storage/firestoreStore.emulator.test.ts && npx vitest run server/storage/readParity.emulator.test.ts && npx vitest run server/storage/coreMutationParity.emulator.test.ts && npx vitest run server/storage/edgeMutationParity.emulator.test.ts"
+          "npx vitest run server/storage/firestoreStore.emulator.test.ts && npx vitest run server/storage/readParity.emulator.test.ts && npx vitest run server/storage/coreMutationParity.emulator.test.ts && npx vitest run server/storage/edgeMutationParity.emulator.test.ts && npx vitest run server/storage/sqliteFirestoreMigration.emulator.test.ts"
 
       - name: Verify browser Firestore boundary
         shell: bash
