@@ -1,5 +1,6 @@
 import {
   FieldValue,
+  type DocumentData,
   type DocumentReference,
   type Firestore,
   type Transaction as FirestoreTransaction,
@@ -14,6 +15,7 @@ import type {
   PlannedPayment,
   SavingsGoal,
   Transaction,
+  TransactionSplit,
   UserPreferences,
 } from '../../src/types';
 import { getAdminFirestore } from '../firebaseAdmin';
@@ -34,19 +36,20 @@ import { withCalculatedAccountBalances } from './reconciliation';
 
 const COLLECTIONS = {
   members: 'members',
+  preferences: 'preferences',
   accounts: 'accounts',
   categories: 'categories',
   transactions: 'transactions',
   savingsGoals: 'savingsGoals',
   plannedPayments: 'plannedPayments',
   plannedIncomes: 'plannedIncomes',
-  auditLogs: 'auditLogs',
-  preferences: 'preferences',
+  audit: 'audit',
 } as const;
 
 export interface FirestoreMutationContext {
   transaction: FirestoreTransaction;
   householdRef: DocumentReference;
+  metaRef: DocumentReference;
   collectionRef: (name: keyof typeof COLLECTIONS, id: string) => DocumentReference;
   nextVersion: number;
 }
@@ -59,7 +62,7 @@ function asNumber(value: unknown, fallback = 0): number {
   return Number.isSafeInteger(value) ? Number(value) : fallback;
 }
 
-function mapMember(id: string, data: FirebaseFirestore.DocumentData): HouseholdMember {
+function mapMember(id: string, data: DocumentData): HouseholdMember {
   return {
     id,
     email: normalizeEmail(asString(data.email)),
@@ -72,7 +75,7 @@ function mapMember(id: string, data: FirebaseFirestore.DocumentData): HouseholdM
   };
 }
 
-function mapAccount(id: string, data: FirebaseFirestore.DocumentData): Account {
+function mapAccount(id: string, data: DocumentData): Account {
   return {
     id,
     name: asString(data.name),
@@ -99,7 +102,7 @@ function mapAccount(id: string, data: FirebaseFirestore.DocumentData): Account {
   };
 }
 
-function mapCategory(id: string, data: FirebaseFirestore.DocumentData): Category {
+function mapCategory(id: string, data: DocumentData): Category {
   return {
     id,
     name: asString(data.name),
@@ -110,7 +113,21 @@ function mapCategory(id: string, data: FirebaseFirestore.DocumentData): Category
   };
 }
 
-function mapTransaction(id: string, data: FirebaseFirestore.DocumentData): Transaction {
+function mapSplit(id: string, data: DocumentData): TransactionSplit {
+  return {
+    id,
+    amountPence: asNumber(data.amountPence),
+    categoryId: asString(data.categoryId),
+    payer: data.payer,
+    notes: data.notes ? asString(data.notes) : undefined,
+  };
+}
+
+function mapTransaction(
+  id: string,
+  data: DocumentData,
+  splits?: TransactionSplit[]
+): Transaction {
   return {
     id,
     date: asString(data.date),
@@ -127,7 +144,7 @@ function mapTransaction(id: string, data: FirebaseFirestore.DocumentData): Trans
     isSavings: Boolean(data.isSavings),
     isRefund: Boolean(data.isRefund),
     originalTransactionId: data.originalTransactionId ? asString(data.originalTransactionId) : undefined,
-    splits: Array.isArray(data.splits) ? data.splits : undefined,
+    splits: splits && splits.length > 0 ? splits : undefined,
     plannedPaymentId: data.plannedPaymentId ? asString(data.plannedPaymentId) : undefined,
     idempotencyKey: data.idempotencyKey ? asString(data.idempotencyKey) : undefined,
     taxYear: data.taxYear ? asString(data.taxYear) : undefined,
@@ -140,7 +157,7 @@ function mapTransaction(id: string, data: FirebaseFirestore.DocumentData): Trans
   };
 }
 
-function mapPlannedPayment(id: string, data: FirebaseFirestore.DocumentData): PlannedPayment {
+function mapPlannedPayment(id: string, data: DocumentData): PlannedPayment {
   return {
     id,
     name: asString(data.name),
@@ -162,7 +179,7 @@ function mapPlannedPayment(id: string, data: FirebaseFirestore.DocumentData): Pl
   };
 }
 
-function mapPlannedIncome(id: string, data: FirebaseFirestore.DocumentData): PlannedIncome {
+function mapPlannedIncome(id: string, data: DocumentData): PlannedIncome {
   return {
     id,
     name: asString(data.name),
@@ -187,7 +204,7 @@ function mapPlannedIncome(id: string, data: FirebaseFirestore.DocumentData): Pla
   };
 }
 
-function mapSavingsGoal(id: string, data: FirebaseFirestore.DocumentData): SavingsGoal {
+function mapSavingsGoal(id: string, data: DocumentData): SavingsGoal {
   return {
     id,
     name: asString(data.name),
@@ -199,7 +216,7 @@ function mapSavingsGoal(id: string, data: FirebaseFirestore.DocumentData): Savin
   };
 }
 
-function mapAuditLog(id: string, data: FirebaseFirestore.DocumentData): AuditLogEntry {
+function mapAuditLog(id: string, data: DocumentData): AuditLogEntry {
   return {
     id,
     timestamp: asString(data.timestamp),
@@ -221,25 +238,38 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
     return this.db.collection('households').doc(HOUSEHOLD_ID);
   }
 
+  private metaRef() {
+    return this.householdRef().collection('meta').doc('state');
+  }
+
   private collection(name: keyof typeof COLLECTIONS) {
     return this.householdRef().collection(COLLECTIONS[name]);
   }
 
   async ensureHousehold(): Promise<void> {
-    const ref = this.householdRef();
-    await this.db.runTransaction(async (transaction) => {
-      const snapshot = await transaction.get(ref);
-      if (snapshot.exists) return;
+    const householdRef = this.householdRef();
+    const metaRef = this.metaRef();
 
-      transaction.create(ref, {
-        id: HOUSEHOLD_ID,
-        name: HOUSEHOLD_NAME,
-        currency: HOUSEHOLD_CURRENCY,
-        version: 1,
-        schemaVersion: CURRENT_SCHEMA_VERSION,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+    await this.db.runTransaction(async (transaction) => {
+      const householdSnapshot = await transaction.get(householdRef);
+      const metaSnapshot = await transaction.get(metaRef);
+
+      if (!householdSnapshot.exists) {
+        transaction.create(householdRef, {
+          id: HOUSEHOLD_ID,
+          name: HOUSEHOLD_NAME,
+          currency: HOUSEHOLD_CURRENCY,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      if (!metaSnapshot.exists) {
+        transaction.create(metaRef, {
+          version: 1,
+          schemaVersion: CURRENT_SCHEMA_VERSION,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
     });
   }
 
@@ -248,6 +278,7 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
 
     const [
       householdSnapshot,
+      metaSnapshot,
       membersSnapshot,
       accountsSnapshot,
       categoriesSnapshot,
@@ -258,6 +289,7 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
       auditSnapshot,
     ] = await Promise.all([
       this.householdRef().get(),
+      this.metaRef().get(),
       this.collection('members').get(),
       this.collection('accounts').get(),
       this.collection('categories').get(),
@@ -265,10 +297,11 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
       this.collection('savingsGoals').get(),
       this.collection('plannedPayments').get(),
       this.collection('plannedIncomes').get(),
-      this.collection('auditLogs').orderBy('timestamp', 'desc').limit(200).get(),
+      this.collection('audit').orderBy('timestamp', 'desc').limit(200).get(),
     ]);
 
-    const meta = householdSnapshot.data() || {};
+    const household = householdSnapshot.data() || {};
+    const meta = metaSnapshot.data() || {};
     const members = membersSnapshot.docs
       .map((doc) => mapMember(doc.id, doc.data()))
       .sort((a, b) => a.joinedAt.localeCompare(b.joinedAt));
@@ -280,8 +313,20 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
       .map((doc) => mapCategory(doc.id, doc.data()))
       .filter((category) => !category.isArchived)
       .sort((a, b) => `${a.group}:${a.name}`.localeCompare(`${b.group}:${b.name}`));
+
+    const splitEntries = await Promise.all(
+      transactionsSnapshot.docs.map(async (doc) => {
+        const splitsSnapshot = await doc.ref.collection('splits').get();
+        return [
+          doc.id,
+          splitsSnapshot.docs.map((splitDoc) => mapSplit(splitDoc.id, splitDoc.data())),
+        ] as const;
+      })
+    );
+    const splitsByTransaction = new Map<string, TransactionSplit[]>(splitEntries);
+
     const transactions = transactionsSnapshot.docs
-      .map((doc) => mapTransaction(doc.id, doc.data()))
+      .map((doc) => mapTransaction(doc.id, doc.data(), splitsByTransaction.get(doc.id)))
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
     const accounts = withCalculatedAccountBalances(rawAccounts, transactions);
     const savingsGoals = savingsSnapshot.docs
@@ -299,7 +344,7 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
 
     return {
       id: HOUSEHOLD_ID,
-      name: asString(meta.name, HOUSEHOLD_NAME),
+      name: asString(household.name, HOUSEHOLD_NAME),
       version: asNumber(meta.version, 1),
       schemaStatus: {
         currentSchemaVersion: CURRENT_SCHEMA_VERSION,
@@ -357,22 +402,23 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
 
   /**
    * Atomic Firestore mutation primitive for subsequent route migration.
-   * The caller's business write, household version bump and audit entry all
-   * commit together. A stale expectedVersion fails before any write is applied.
+   * The caller's business write, meta/state version bump and append-only audit
+   * entry all commit together. A stale expectedVersion fails before any write.
    */
   async runMutation<T>(
     request: HouseholdMutationRequest,
     apply: (context: FirestoreMutationContext) => Promise<T> | T
   ): Promise<HouseholdMutationResult<T>> {
     const householdRef = this.householdRef();
+    const metaRef = this.metaRef();
 
     return this.db.runTransaction(async (transaction) => {
-      const snapshot = await transaction.get(householdRef);
-      if (!snapshot.exists) {
-        throw new Error('Authoritative Firestore household has not been initialized.');
+      const metaSnapshot = await transaction.get(metaRef);
+      if (!metaSnapshot.exists) {
+        throw new Error('Authoritative Firestore household meta/state has not been initialized.');
       }
 
-      const currentVersion = asNumber(snapshot.data()?.version, 1);
+      const currentVersion = asNumber(metaSnapshot.data()?.version, 1);
       if (request.expectedVersion !== currentVersion) {
         const error: any = new Error(
           `Concurrent modification conflict: submitted version ${request.expectedVersion}, but server is at version ${currentVersion}. Refresh to load latest state.`
@@ -389,19 +435,20 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
       const value = await apply({
         transaction,
         householdRef,
+        metaRef,
         collectionRef,
         nextVersion,
       });
 
       const now = new Date().toISOString();
-      transaction.update(householdRef, {
+      transaction.update(metaRef, {
         version: nextVersion,
         schemaVersion: CURRENT_SCHEMA_VERSION,
         updatedAt: now,
       });
 
       const auditRef = collectionRef(
-        'auditLogs',
+        'audit',
         `log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
       );
       transaction.create(auditRef, {
