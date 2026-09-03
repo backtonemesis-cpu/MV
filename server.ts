@@ -41,11 +41,6 @@ import { UserRole, TestResult } from './src/types';
 import { FirestoreHouseholdStore } from './server/storage/firestoreStore';
 import { FirestoreEdgeMutationStore } from './server/storage/edgeMutations';
 import { FirestoreCoreMutationStore } from './server/storage/coreMutations';
-import {
-  validateFirestoreTransactionInput,
-  validateRuntimeAccountInput,
-  validateSavingsGoalAccountReferences,
-} from './server/storage/firestoreValidation';
 import { resolveRuntimeDataBackend } from './server/storage/runtimeBackend';
 import { getMvFirestore } from './server/firestoreAdmin';
 import { createFirestoreCoreFinanceRouter } from './server/firestoreCoreFinanceRoutes';
@@ -88,34 +83,6 @@ function requireFirestoreEdgeMutations(): FirestoreEdgeMutationStore {
     throw new Error('Firestore runtime mutation store is unavailable.');
   }
   return firestoreEdgeMutations;
-}
-
-function requireFirestoreCoreMutations(): FirestoreCoreMutationStore {
-  if (!firestoreCoreMutations) {
-    throw new Error('Firestore runtime core mutation store is unavailable.');
-  }
-  return firestoreCoreMutations;
-}
-
-function firestoreActor(req: Request, expectedVersion: unknown) {
-  if (!Number.isSafeInteger(expectedVersion)) {
-    const error: any = new Error('expectedVersion is required');
-    error.status = 400;
-    throw error;
-  }
-
-  return {
-    expectedVersion: Number(expectedVersion),
-    actorEmail: req.user!.email,
-    now: new Date().toISOString(),
-  };
-}
-
-function firestoreMutationError(res: Response, err: any, fallback: string) {
-  return res.status(err?.status || 400).json({
-    error: err?.message || fallback,
-    serverVersion: err?.serverVersion,
-  });
 }
 
 async function startServer() {
