@@ -1,85 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function getUserRole() {
-      return request.auth.token.role;
-    }
-
-    function isHouseholdMember() {
-      return isAuthenticated();
-    }
-
-    function canEdit() {
-      return isAuthenticated() && (getUserRole() == 'owner' || getUserRole() == 'editor' || getUserRole() == null);
-    }
-
-    // Users Collection
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId) || (isAuthenticated() && getUserRole() == 'owner');
-    }
-
-    // Accounts Collection
-    match /accounts/{accountId} {
-      allow read: if isHouseholdMember();
-      allow create, update: if canEdit();
-      allow delete: if isAuthenticated() && (getUserRole() == 'owner');
-    }
-
-    // Transactions Collection
-    match /transactions/{transactionId} {
-      allow read: if isHouseholdMember();
-      allow create, update: if canEdit();
-      allow delete: if canEdit();
-    }
-
-    // Planned Payments Collection
-    match /plannedPayments/{paymentId} {
-      allow read: if isHouseholdMember();
-      allow create, update: if canEdit();
-      allow delete: if canEdit();
-    }
-
-    // Planned Incomes Collection
-    match /plannedIncomes/{incomeId} {
-      allow read: if isHouseholdMember();
-      allow create, update: if canEdit();
-      allow delete: if canEdit();
-    }
-
-    // Savings Goals Collection
-    match /savingsGoals/{goalId} {
-      allow read: if isHouseholdMember();
-      allow create, update: if canEdit();
-      allow delete: if canEdit();
-    }
-
-    // Audit Logs Collection
-    match /auditLogs/{logId} {
-      allow read: if isHouseholdMember();
-      allow create: if isHouseholdMember();
-      allow update, delete: if false; // Immutable audit log
-    }
-
-    // Household Metadata Collection
-    match /householdMeta/{metaId} {
-      allow read: if isHouseholdMember();
-      allow write: if canEdit();
-    }
-
-    // Connection test doc (used during bootstrap/connectivity checks)
-    match /test/{docId} {
-      allow read, write: if isAuthenticated();
+    // MV uses Firebase Auth in the browser, but household finance data must never
+    // be accessed directly by browser Firestore clients. All household reads and
+    // writes go through the authenticated MV server API, where membership and role
+    // authorization are enforced on every request.
+    //
+    // The future durable Firestore backend will use Firebase Admin on the server.
+    // Firebase Admin bypasses client security rules, so this file intentionally
+    // keeps all browser/mobile Firestore access fail-closed.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
