@@ -20,6 +20,7 @@ declare global {
 }
 
 const OWNER_EMAIL = 'backtonemesis@gmail.com';
+const FIREBASE_COOKIE_NAME = 'mv_firebase_id';
 const LOCAL_CREDENTIAL_ROUTES = new Set([
   '/api/auth/login',
   '/api/auth/register',
@@ -81,6 +82,25 @@ export function ensureInitialOwner(): void {
     'owner',
     now
   );
+}
+
+function getCookieValue(cookieHeader: string | undefined, name: string): string {
+  if (!cookieHeader) return '';
+
+  for (const part of cookieHeader.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator === -1) continue;
+    const key = part.slice(0, separator).trim();
+    if (key !== name) continue;
+
+    try {
+      return decodeURIComponent(part.slice(separator + 1).trim());
+    } catch {
+      return '';
+    }
+  }
+
+  return '';
 }
 
 function getLocalSessionUser(token: string): AuthenticatedUser | undefined {
@@ -195,6 +215,10 @@ function getOrCreateFirebaseUser(identity: VerifiedFirebaseIdentity): Authentica
 
 /**
  * Production authentication accepts only Firebase ID tokens with a verified email.
+ * Standard API calls send the token as a Bearer header. Browser EventSource cannot
+ * set that header, so the same short-lived Firebase token may also arrive in a
+ * Secure/SameSite cookie created by the authenticated client.
+ *
  * Local password/session authentication remains available solely outside production
  * so existing automated tests and development fixtures can continue to work.
  */
@@ -213,6 +237,10 @@ export async function authenticateRequest(
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.substring(7).trim();
+  }
+
+  if (!token && process.env.NODE_ENV === 'production') {
+    token = getCookieValue(req.headers.cookie, FIREBASE_COOKIE_NAME);
   }
 
   // Test-only token header. Never accepted in development or production.
