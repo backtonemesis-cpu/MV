@@ -146,6 +146,7 @@ function mapTransaction(
     originalTransactionId: data.originalTransactionId ? asString(data.originalTransactionId) : undefined,
     splits: splits && splits.length > 0 ? splits : undefined,
     plannedPaymentId: data.plannedPaymentId ? asString(data.plannedPaymentId) : undefined,
+    plannedIncomeId: data.plannedIncomeId ? asString(data.plannedIncomeId) : undefined,
     idempotencyKey: data.idempotencyKey ? asString(data.idempotencyKey) : undefined,
     taxYear: data.taxYear ? asString(data.taxYear) : undefined,
     schemaVersion: Number.isSafeInteger(data.schemaVersion) ? Number(data.schemaVersion) : 1,
@@ -162,6 +163,11 @@ function mapPlannedPayment(id: string, data: DocumentData): PlannedPayment {
     id,
     name: asString(data.name),
     amountPence: asNumber(data.amountPence),
+    actualAmountPence: Number.isSafeInteger(data.actualAmountPence)
+      ? Number(data.actualAmountPence)
+      : undefined,
+    actualDate: data.actualDate ? asString(data.actualDate) : undefined,
+    actualTransactionId: data.actualTransactionId ? asString(data.actualTransactionId) : undefined,
     month: asString(data.month),
     responsiblePerson: data.responsiblePerson,
     accountId: asString(data.accountId),
@@ -180,6 +186,9 @@ function mapPlannedPayment(id: string, data: DocumentData): PlannedPayment {
 }
 
 function mapPlannedIncome(id: string, data: DocumentData): PlannedIncome {
+  const actualDate = data.actualDate || data.receivedDate;
+  const actualTransactionId = data.actualTransactionId || data.linkedTransactionId;
+
   return {
     id,
     name: asString(data.name),
@@ -191,10 +200,10 @@ function mapPlannedIncome(id: string, data: DocumentData): PlannedIncome {
     sourcePerson: data.sourcePerson,
     accountId: asString(data.accountId),
     expectedDate: data.expectedDate ? asString(data.expectedDate) : undefined,
-    receivedDate: data.receivedDate ? asString(data.receivedDate) : undefined,
+    actualDate: actualDate ? asString(actualDate) : undefined,
+    actualTransactionId: actualTransactionId ? asString(actualTransactionId) : undefined,
     status: data.status,
     notes: data.notes ? asString(data.notes) : undefined,
-    linkedTransactionId: data.linkedTransactionId ? asString(data.linkedTransactionId) : undefined,
     schemaVersion: Number.isSafeInteger(data.schemaVersion) ? Number(data.schemaVersion) : 1,
     metadata: data.metadata && typeof data.metadata === 'object' ? data.metadata : undefined,
     createdAt: asString(data.createdAt),
