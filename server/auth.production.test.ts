@@ -1,12 +1,20 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('./firebaseAdmin', () => ({
+  verifyFirebaseIdentity: vi.fn(),
+}));
+
 import { initDb, getDb } from './db';
 import { authenticateRequest, ensureInitialOwner } from './auth';
+import { verifyFirebaseIdentity } from './firebaseAdmin';
 
 const originalNodeEnv = process.env.NODE_ENV;
 const originalOwnerPassword = process.env.INITIAL_OWNER_PASSWORD;
+const verifyFirebaseIdentityMock = vi.mocked(verifyFirebaseIdentity);
 
 describe('production authentication hardening', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     process.env.NODE_ENV = 'production';
     delete process.env.INITIAL_OWNER_PASSWORD;
     initDb(':memory:');
@@ -50,4 +58,54 @@ describe('production authentication hardening', () => {
       expect(next).not.toHaveBeenCalled();
     }
   );
+
+  it('creates a verified new Firebase user as Pending from the SSE auth cookie', async () => {
+    verifyFirebaseIdentityMock.mockResolvedValue({
+      uid: 'firebase-guest-uid',
+      email: 'guest@example.com',
+      name: 'Guest User',
+    });
+
+    const req: any = {
+      path: '/api/events',
+      method: 'GET',
+      headers: { cookie: 'other=value; mv_firebase_id=firebase-id-token' },
+    };
+    const next = vi.fn();
+
+    await authenticateRequest(req, {} as any, next);
+
+    expect(verifyFirebaseIdentityMock).toHaveBeenCalledWith('firebase-id-token');
+    expect(req.user).toMatchObject({
+      email: 'guest@example.com',
+      name: 'Guest User',
+      role: 'pending',
+    });
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('maps the verified Marius email to the sole Household Owner', async () => {
+    verifyFirebaseIdentityMock.mockResolvedValue({
+      uid: 'firebase-marius-uid',
+      email: 'backtonemesis@gmail.com',
+      name: 'Marius',
+    });
+
+    const req: any = {
+      path: '/api/session',
+      method: 'GET',
+      headers: { authorization: 'Bearer firebase-owner-token' },
+    };
+    const next = vi.fn();
+
+    await authenticateRequest(req, {} as any, next);
+
+    expect(req.user).toMatchObject({
+      email: 'backtonemesis@gmail.com',
+      role: 'owner',
+    });
+
+    const owners = getDb().prepare("SELECT email FROM users WHERE role = 'owner'").all() as Array<{ email: string }>;
+    expect(owners).toEqual([{ email: 'backtonemesis@gmail.com' }]);
+  });
 });
