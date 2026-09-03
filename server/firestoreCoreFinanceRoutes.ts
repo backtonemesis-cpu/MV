@@ -121,7 +121,7 @@ export function createFirestoreCoreFinanceRouter(options: {
         input
       );
 
-      if (result.value.duplicatePrevented) {
+      if ('duplicatePrevented' in result.value && result.value.duplicatePrevented) {
         const data = await store.getHouseholdData();
         const existing = data.transactions.find(
           (tx) => tx.id === result.value.id
