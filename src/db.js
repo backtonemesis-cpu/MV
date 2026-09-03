@@ -50,6 +50,19 @@ function plainAuditRecord({ actorUid, action, entityType, entityId, before = nul
   };
 }
 
+async function ensurePrimaryHouseholdForOwner(user) {
+  if (user.email.toLowerCase() !== OWNER_EMAIL) return;
+  const hRef = householdRef();
+  const household = await getDoc(hRef);
+  if (!household.exists()) {
+    await setDoc(hRef, {
+      name: 'MV',
+      ownerUid: user.uid,
+      createdAt: serverTimestamp(),
+    });
+  }
+}
+
 export async function ensureUserProfile(user) {
   if (!user?.uid || !user.email || !user.emailVerified) {
     throw new Error('A verified authenticated identity is required.');
@@ -62,31 +75,22 @@ export async function ensureUserProfile(user) {
       displayName: user.displayName || existing.data().displayName || '',
       lastAccessAt: serverTimestamp(),
     });
+    await ensurePrimaryHouseholdForOwner(user);
     return { id: existing.id, ...existing.data() };
   }
 
   const membership = initialMembershipForEmail(user.email);
   await setDoc(ref, {
-    email: user.email.toLowerCase(),
+    email: user.email,
     displayName: user.displayName || '',
     ...membership,
     createdAt: serverTimestamp(),
     lastAccessAt: serverTimestamp(),
   });
 
-  if (user.email.toLowerCase() === OWNER_EMAIL) {
-    const hRef = householdRef();
-    const household = await getDoc(hRef);
-    if (!household.exists()) {
-      await setDoc(hRef, {
-        name: 'MV',
-        ownerUid: user.uid,
-        createdAt: serverTimestamp(),
-      });
-    }
-  }
+  await ensurePrimaryHouseholdForOwner(user);
 
-  return { id: user.uid, email: user.email.toLowerCase(), displayName: user.displayName || '', ...membership };
+  return { id: user.uid, email: user.email, displayName: user.displayName || '', ...membership };
 }
 
 export async function getCurrentProfile(uid) {
@@ -204,6 +208,10 @@ export async function updateFinancialRecord({ actorUid, recordId, expectedRevisi
 }
 
 export async function deleteFinancialRecord({ actorUid, recordId, expectedRevision }) {
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 1) {
+    throw new TypeError('expectedRevision must be a positive integer.');
+  }
+
   const ref = doc(recordsCollection(), recordId);
   await runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(ref);
