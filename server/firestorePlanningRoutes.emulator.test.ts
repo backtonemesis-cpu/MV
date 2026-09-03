@@ -231,6 +231,85 @@ describeEmulator('Firestore planning HTTP routes', () => {
     expect(data.version).toBe(3);
   });
 
+  it('updates and deletes planned bills and incomes through the Firestore HTTP routes', async () => {
+    let result = await request('/api/planned-payments', 'POST', {
+      expectedVersion: 1,
+      name: 'Broadband',
+      amountPence: 3000,
+      month: '2026-09',
+      responsiblePerson: 'Vesta',
+      accountId: 'acc-main',
+      categoryId: 'cat-internet',
+    });
+    const paymentId = result.payload.id;
+    expect(result.payload.version).toBe(2);
+
+    result = await request(`/api/planned-payments/${paymentId}`, 'PUT', {
+      expectedVersion: 2,
+      name: 'Vodafone Broadband',
+      amountPence: 3250,
+      month: '2026-09',
+      responsiblePerson: 'Vesta',
+      accountId: 'acc-main',
+      dueDate: '2026-09-13',
+      categoryId: 'cat-internet',
+      includeInTransferPlan: false,
+    });
+    expect(result.response.status).toBe(200);
+    expect(result.payload.version).toBe(3);
+
+    result = await request('/api/planned-incomes', 'POST', {
+      expectedVersion: 3,
+      name: 'Child Benefit',
+      expectedAmountPence: 10000,
+      month: '2026-09',
+      sourcePerson: 'Vesta',
+      accountId: 'acc-main',
+      expectedDate: '2026-09-18',
+    });
+    const incomeId = result.payload.id;
+    expect(result.payload.version).toBe(4);
+
+    result = await request(`/api/planned-incomes/${incomeId}`, 'PUT', {
+      expectedVersion: 4,
+      name: 'Child Benefit Updated',
+      expectedAmountPence: 10500,
+      month: '2026-09',
+      sourcePerson: 'Vesta',
+      accountId: 'acc-main',
+      expectedDate: '2026-09-19',
+    });
+    expect(result.response.status).toBe(200);
+    expect(result.payload.version).toBe(5);
+
+    let data = await store.getHouseholdData();
+    expect(data.plannedPayments.find((item) => item.id === paymentId)).toMatchObject({
+      name: 'Vodafone Broadband',
+      amountPence: 3250,
+      includeInTransferPlan: false,
+    });
+    expect(data.plannedIncomes?.find((item) => item.id === incomeId)).toMatchObject({
+      name: 'Child Benefit Updated',
+      expectedAmountPence: 10500,
+    });
+
+    result = await request(`/api/planned-payments/${paymentId}`, 'DELETE', {
+      expectedVersion: 5,
+    });
+    expect(result.response.status).toBe(200);
+    expect(result.payload.version).toBe(6);
+
+    result = await request(`/api/planned-incomes/${incomeId}`, 'DELETE', {
+      expectedVersion: 6,
+    });
+    expect(result.response.status).toBe(200);
+    expect(result.payload.version).toBe(7);
+
+    data = await store.getHouseholdData();
+    expect(data.plannedPayments.some((item) => item.id === paymentId)).toBe(false);
+    expect(data.plannedIncomes?.some((item) => item.id === incomeId)).toBe(false);
+  });
+
   it('executes an internal transfer exactly once across source and destination balances', async () => {
     const result = await request('/api/transfer-plan/execute-transfer', 'POST', {
       expectedVersion: 1,
