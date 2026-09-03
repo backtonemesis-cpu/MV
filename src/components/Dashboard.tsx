@@ -98,7 +98,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     const grouped = new Map<string, number>();
     monthPlannedPayments
-      .filter((p) => p.includeInTransferPlan)
+      .filter((p) => p.includeInTransferPlan && p.status !== 'paid')
       .forEach((p) => {
         grouped.set(p.accountId, (grouped.get(p.accountId) || 0) + p.amountPence);
       });

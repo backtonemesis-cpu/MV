@@ -33,12 +33,15 @@ interface SettingsViewProps {
   auditLogs: AuditLogEntry[];
   userPreferences: UserPreferences;
   onUpdatePreferences: (prefs: Partial<UserPreferences>) => void;
+  onSaveAppearance?: () => Promise<void>;
   onApproveMember: (memberId: string, role: 'editor' | 'view_only') => Promise<void>;
   onChangeRole: (memberId: string, newRole: UserRole) => Promise<void>;
   onRemoveMember: (memberId: string) => Promise<void>;
   onDownloadBackup: () => Promise<void>;
   onRestoreBackup: (payload: any) => Promise<void>;
   onOpenAcceptanceTests: () => void;
+  onResetHousehold?: () => Promise<void>;
+  onLoadSampleData?: () => Promise<void>;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -47,20 +50,59 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   auditLogs,
   userPreferences,
   onUpdatePreferences,
+  onSaveAppearance,
   onApproveMember,
   onChangeRole,
   onRemoveMember,
   onDownloadBackup,
   onRestoreBackup,
   onOpenAcceptanceTests,
+  onResetHousehold,
+  onLoadSampleData,
 }) => {
   const [activeTab, setActiveTab] = useState<'appearance' | 'members' | 'audit' | 'backup'>('appearance');
   const [restoreJson, setRestoreJson] = useState('');
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreSuccess, setRestoreSuccess] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isSavingAppearance, setIsSavingAppearance] = useState(false);
+  const [appearanceSavedMessage, setAppearanceSavedMessage] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [isLoadingSample, setIsLoadingSample] = useState(false);
+  const [sampleMessage, setSampleMessage] = useState<string | null>(null);
 
   const isOwner = currentSession.role === 'owner';
+
+  const handleResetExecute = async () => {
+    if (!onResetHousehold) return;
+    try {
+      setIsResetting(true);
+      setResetMessage(null);
+      await onResetHousehold();
+      setResetMessage('Household successfully reset to clean zero state.');
+      setShowResetConfirm(false);
+    } catch (err: any) {
+      setResetMessage(err.message || 'Failed to reset household.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleLoadSampleExecute = async () => {
+    if (!onLoadSampleData) return;
+    try {
+      setIsLoadingSample(true);
+      setSampleMessage(null);
+      await onLoadSampleData();
+      setSampleMessage('Development sample data loaded successfully.');
+    } catch (err: any) {
+      setSampleMessage(err.message || 'Failed to load sample data.');
+    } finally {
+      setIsLoadingSample(false);
+    }
+  };
 
   const handleRestoreSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,6 +298,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 })}
               </div>
             </div>
+
+            {/* Explicit Save Appearance Button & Confirmation */}
+            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-750 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <button
+                type="button"
+                id="save-appearance-button"
+                disabled={isSavingAppearance}
+                onClick={async () => {
+                  try {
+                    setIsSavingAppearance(true);
+                    setAppearanceSavedMessage(null);
+                    if (onSaveAppearance) {
+                      await onSaveAppearance();
+                    }
+                    setAppearanceSavedMessage(`Appearance preferences saved successfully for ${currentSession.email}!`);
+                    setTimeout(() => setAppearanceSavedMessage(null), 4000);
+                  } catch (err: any) {
+                    setAppearanceSavedMessage('Failed to persist preferences: ' + (err.message || 'Unknown error'));
+                  } finally {
+                    setIsSavingAppearance(false);
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                {isSavingAppearance ? 'Saving Appearance...' : 'Save Appearance'}
+              </button>
+
+              {appearanceSavedMessage && (
+                <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 animate-fadeIn">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{appearanceSavedMessage}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -419,7 +496,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           {/* Restore */}
           {isOwner && (
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+            <>
+              <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
               <div>
                 <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
                   Idempotent Restore
@@ -463,7 +541,82 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               </form>
             </div>
-          )}
+
+            {/* Clean Production Reset */}
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                  Clean Production Setup — Reset to Zero
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  Clear all sample accounts, transactions, and scheduled bills so you can start from a completely clean slate with zero test data. User logins and permissions are preserved.
+                </p>
+              </div>
+
+              {resetMessage && (
+                <div className="p-3 bg-neutral-100 dark:bg-neutral-700 rounded-xl text-xs text-neutral-800 dark:text-neutral-200">
+                  {resetMessage}
+                </div>
+              )}
+
+              {!showResetConfirm ? (
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  className="px-4 py-2 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-xs font-semibold transition"
+                >
+                  Reset Household Data to Zero...
+                </button>
+              ) : (
+                <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 space-y-3">
+                  <p className="text-xs font-semibold text-rose-800 dark:text-rose-300">
+                    Are you sure? This will remove all transactions, accounts, and planned payments. This cannot be undone unless you export a backup first.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleResetExecute}
+                      disabled={isResetting}
+                      className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
+                    >
+                      {isResetting ? 'Resetting...' : 'Yes, Permanently Clear All Financial Data'}
+                    </button>
+                    <button
+                      onClick={() => setShowResetConfirm(false)}
+                      className="px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-semibold hover:bg-neutral-300 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Opt-in Sample Fixture Data */}
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                  Development Mode — Load Sample Fixture Data
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  Populate realistic household demonstration accounts, split transactions, and transfer plan bills from sample fixtures for development testing.
+                </p>
+              </div>
+
+              {sampleMessage && (
+                <div className="p-3 bg-neutral-100 dark:bg-neutral-700 rounded-xl text-xs text-neutral-800 dark:text-neutral-200">
+                  {sampleMessage}
+                </div>
+              )}
+
+              <button
+                onClick={handleLoadSampleExecute}
+                disabled={isLoadingSample}
+                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-200 dark:hover:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-semibold shadow-xs transition"
+              >
+                {isLoadingSample ? 'Loading Fixtures...' : 'Load Sample Demonstration Data'}
+              </button>
+            </div>
+          </>
+        )}
         </div>
       )}
     </div>

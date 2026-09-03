@@ -24,11 +24,35 @@ export function calculateAccountFunding(
     (p) => p.accountId === account.id && p.includeInTransferPlan === true
   );
 
-  const totalSelectedPaymentsPence = selectedPayments.reduce((sum, p) => sum + p.amountPence, 0);
+  const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
+  const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
+
+  // Sort upcoming unpaid obligations chronologically by due date
+  const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
+    const dateA = a.dueDate || '9999-99-99';
+    const dateB = b.dueDate || '9999-99-99';
+    return dateA.localeCompare(dateB);
+  });
+
   const currentBalancePence = account.currentBalancePence;
   const amountAvailablePence = Math.max(0, currentBalancePence);
 
-  // Exact Transfer Required formula:
+  // Distinguish obligations that are funded by current cash from those that are unfunded
+  let runningBalance = amountAvailablePence;
+  const fundedPayments: PlannedPayment[] = [];
+  const unfundedPayments: PlannedPayment[] = [];
+
+  for (const p of sortedUnpaid) {
+    if (runningBalance >= p.amountPence) {
+      fundedPayments.push(p);
+      runningBalance -= p.amountPence;
+    } else {
+      unfundedPayments.push(p);
+    }
+  }
+
+  // Exact Transfer Required formula: only unpaid commitments require future funding
+  const totalSelectedPaymentsPence = unpaidPayments.reduce((sum, p) => sum + p.amountPence, 0);
   const transferRequiredPence = Math.max(0, totalSelectedPaymentsPence - currentBalancePence);
   const isFullyFunded = transferRequiredPence === 0;
 
@@ -36,6 +60,10 @@ export function calculateAccountFunding(
     account,
     currentBalancePence,
     selectedPayments,
+    unpaidPayments,
+    paidPayments,
+    fundedPayments,
+    unfundedPayments,
     totalSelectedPaymentsPence,
     amountAvailablePence,
     transferRequiredPence,

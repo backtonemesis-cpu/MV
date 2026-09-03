@@ -484,17 +484,24 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-2xs font-semibold uppercase tracking-wider ${
-                                p.status === 'paid'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-neutral-100 text-neutral-700'
-                              }`}
-                            >
-                              {p.status}
+                          <div className="flex items-center gap-2">
+                            {p.status === 'paid' ? (
+                              <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Paid (Fulfilled)
+                              </span>
+                            ) : req.fundedPayments?.some((fp) => fp.id === p.id) ? (
+                              <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                                Funded by Cash
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                                Needs Transfer
+                              </span>
+                            )}
+                            <span className={`font-bold ${p.status === 'paid' ? 'text-neutral-400 line-through' : 'text-neutral-900'}`}>
+                              {formatPence(p.amountPence)}
                             </span>
-                            <span className="font-bold text-neutral-900">{formatPence(p.amountPence)}</span>
                           </div>
                         </div>
                       ))}

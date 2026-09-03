@@ -116,6 +116,10 @@ export interface AccountFundingRequirement {
   account: Account;
   currentBalancePence: number;
   selectedPayments: PlannedPayment[];
+  unpaidPayments: PlannedPayment[];
+  paidPayments: PlannedPayment[];
+  fundedPayments: PlannedPayment[];
+  unfundedPayments: PlannedPayment[];
   totalSelectedPaymentsPence: number;
   amountAvailablePence: number;
   transferRequiredPence: number;

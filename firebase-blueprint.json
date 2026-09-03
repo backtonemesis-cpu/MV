@@ -1,0 +1,173 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Household user profile with email and role",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "editor", "viewer"] },
+        "joinedAt": { "type": "string" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Financial account balance and reconciliation anchor",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["current", "savings", "credit", "isa", "pension"] },
+        "currency": { "type": "string" },
+        "startingBalancePence": { "type": "number" },
+        "currentBalancePence": { "type": "number" },
+        "ownerPerson": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "reconciledBalancePence": { "type": "number" },
+        "reconciliationDate": { "type": "string" },
+        "reconciledAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "currency", "startingBalancePence", "currentBalancePence", "ownerPerson"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Individual transaction with optional split items",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "description": { "type": "string" },
+        "amountPence": { "type": "number" },
+        "type": { "type": "string", "enum": ["expense", "income", "transfer", "refund", "repayment"] },
+        "categoryId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "transferAccountId": { "type": "string" },
+        "payer": { "type": "string" },
+        "isTransfer": { "type": "boolean" },
+        "isSavings": { "type": "boolean" },
+        "isRepayment": { "type": "boolean" },
+        "isRefund": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "date", "description", "amountPence", "type", "categoryId", "accountId", "payer"]
+    },
+    "PlannedPayment": {
+      "title": "PlannedPayment",
+      "description": "Scheduled bill or planned payment obligation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amountPence": { "type": "number" },
+        "month": { "type": "string" },
+        "responsiblePerson": { "type": "string" },
+        "accountId": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["unpaid", "paid"] },
+        "includeInTransferPlan": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "name", "amountPence", "month", "responsiblePerson", "accountId", "status"]
+    },
+    "PlannedIncome": {
+      "title": "PlannedIncome",
+      "description": "Expected income stream",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "expectedAmountPence": { "type": "number" },
+        "month": { "type": "string" },
+        "recipientPerson": { "type": "string" },
+        "accountId": { "type": "string" },
+        "status": { "type": "string", "enum": ["expected", "received"] },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "name", "expectedAmountPence", "month", "recipientPerson", "accountId", "status"]
+    },
+    "SavingsGoal": {
+      "title": "SavingsGoal",
+      "description": "Household savings target",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "targetAmountPence": { "type": "number" },
+        "currentAmountPence": { "type": "number" },
+        "targetDate": { "type": "string" },
+        "accountId": { "type": "string" }
+      },
+      "required": ["id", "name", "targetAmountPence", "currentAmountPence"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Audit log entry for household activity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "actorEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "summary": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "actorEmail", "action", "entityType", "entityId", "summary"]
+    },
+    "HouseholdMeta": {
+      "title": "HouseholdMeta",
+      "description": "Household concurrency version and state metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "number" },
+        "name": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["id", "version", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and assigned household roles"
+    },
+    "/accounts/{accountId}": {
+      "schema": "Account",
+      "description": "Financial accounts and balances"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Financial transactions and splits"
+    },
+    "/plannedPayments/{paymentId}": {
+      "schema": "PlannedPayment",
+      "description": "Scheduled planned obligations and bills"
+    },
+    "/plannedIncomes/{incomeId}": {
+      "schema": "PlannedIncome",
+      "description": "Expected income streams"
+    },
+    "/savingsGoals/{goalId}": {
+      "schema": "SavingsGoal",
+      "description": "Household savings and investment targets"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Audit trails for household mutations"
+    },
+    "/householdMeta/{metaId}": {
+      "schema": "HouseholdMeta",
+      "description": "Household concurrency version and metadata"
+    }
+  }
+}

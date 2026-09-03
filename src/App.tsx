@@ -22,6 +22,10 @@ import {
   importMonth,
   fetchBackup,
   restoreBackup,
+  resetHouseholdData,
+  loadSampleHouseholdData,
+  saveUserPreferences,
+  subscribeToHouseholdEvents,
 } from './utils/api';
 import {
   HouseholdData,
@@ -152,6 +156,14 @@ export default function App() {
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Real-time synchronization across devices via SSE
+  useEffect(() => {
+    const unsubscribe = subscribeToHouseholdEvents(() => {
+      loadData();
+    });
+    return unsubscribe;
   }, [loadData]);
 
   // Handle Identity Switching (Marius vs Vesta vs Pending user)
@@ -656,6 +668,9 @@ export default function App() {
                     return next;
                   });
                 }}
+                onSaveAppearance={async () => {
+                  await saveUserPreferences(userPreferences);
+                }}
                 onApproveMember={handleApproveMember}
                 onChangeRole={handleChangeRole}
                 onRemoveMember={handleRemoveMember}
@@ -671,6 +686,14 @@ export default function App() {
                 }}
                 onRestoreBackup={async (payload) => {
                   await restoreBackup(payload);
+                  await loadData();
+                }}
+                onResetHousehold={async () => {
+                  await resetHouseholdData();
+                  await loadData();
+                }}
+                onLoadSampleData={async () => {
+                  await loadSampleHouseholdData();
                   await loadData();
                 }}
                 onOpenAcceptanceTests={() => setShowTestsModal(true)}
