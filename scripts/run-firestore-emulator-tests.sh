@@ -13,3 +13,4 @@ run_suite server/storage/coreMutationParity.emulator.test.ts
 run_suite server/storage/edgeMutationParity.emulator.test.ts
 run_suite server/storage/sqliteFirestoreMigration.emulator.test.ts
 run_suite server/storage/runtimeFirestoreFoundation.emulator.test.ts
+run_suite server/firestoreCoreFinanceRoutes.emulator.test.ts
