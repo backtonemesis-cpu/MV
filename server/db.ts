@@ -272,6 +272,15 @@ export function getHouseholdData(): HouseholdData {
     metadata: a.metadata_json ? JSON.parse(a.metadata_json) : undefined,
   }));
 
+  const categories: Category[] = rawCategories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    group: c.group,
+    monthlyBudgetPence: c.monthlyBudgetPence,
+    icon: c.icon || undefined,
+    isArchived: Boolean(c.isArchived),
+  }));
+
   const plannedPayments: PlannedPayment[] = rawPlannedPayments.map((p) => ({
     id: p.id,
     name: p.name,
@@ -344,7 +353,7 @@ export function getHouseholdData(): HouseholdData {
     schemaStatus: getSchemaStatus(db),
     members: rawMembers,
     accounts,
-    categories: rawCategories,
+    categories,
     transactions,
     savingsGoals,
     plannedPayments,
