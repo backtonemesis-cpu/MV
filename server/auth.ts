@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { getDb } from './db';
 import { verifyFirebaseIdentity, type VerifiedFirebaseIdentity } from './firebaseAdmin';
 import { UserRole } from '../src/types';
+import { FirestoreHouseholdStore } from './storage/firestoreStore';
+import { isFirestoreRuntime } from './storage/runtimeBackend';
 
 export interface AuthenticatedUser {
   id: string;
@@ -133,7 +135,7 @@ function getLocalSessionUser(token: string): AuthenticatedUser | undefined {
   };
 }
 
-function getOrCreateFirebaseUser(identity: VerifiedFirebaseIdentity): AuthenticatedUser {
+function getOrCreateSqliteFirebaseUser(identity: VerifiedFirebaseIdentity): AuthenticatedUser {
   const db = getDb();
   const now = new Date().toISOString();
   let userRow = db.prepare(
@@ -213,6 +215,31 @@ function getOrCreateFirebaseUser(identity: VerifiedFirebaseIdentity): Authentica
   };
 }
 
+let firestoreHouseholdStore: FirestoreHouseholdStore | null = null;
+
+function getFirestoreHouseholdStore(): FirestoreHouseholdStore {
+  if (!firestoreHouseholdStore) {
+    firestoreHouseholdStore = new FirestoreHouseholdStore();
+  }
+  return firestoreHouseholdStore;
+}
+
+async function getOrCreateFirebaseUser(
+  identity: VerifiedFirebaseIdentity
+): Promise<AuthenticatedUser> {
+  if (isFirestoreRuntime()) {
+    const member = await getFirestoreHouseholdStore().getOrCreateVerifiedMember(identity);
+    return {
+      id: member.id,
+      email: member.email,
+      name: member.name,
+      role: member.role,
+    };
+  }
+
+  return getOrCreateSqliteFirebaseUser(identity);
+}
+
 /**
  * Production authentication accepts only Firebase ID tokens with a verified email.
  * Standard API calls send the token as a Bearer header. Browser EventSource cannot
@@ -257,7 +284,7 @@ export async function authenticateRequest(
   try {
     if (process.env.NODE_ENV === 'production') {
       const identity = await verifyFirebaseIdentity(token);
-      req.user = getOrCreateFirebaseUser(identity);
+      req.user = await getOrCreateFirebaseUser(identity);
     } else {
       req.user = getLocalSessionUser(token);
     }

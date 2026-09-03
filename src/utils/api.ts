@@ -599,11 +599,11 @@ export async function switchSession(email: string): Promise<void> {
 // -------------------------------------------------------------
 // Member Management (Owner Only)
 // -------------------------------------------------------------
-export async function approveMember(memberId: string, role: 'editor' | 'view_only') {
+export async function approveMember(memberId: string, role: 'editor' | 'view_only', expectedVersion: number) {
   const res = await fetch('/api/members/approve', {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ memberId, role }),
+    body: JSON.stringify({ memberId, role, expectedVersion }),
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
@@ -612,11 +612,11 @@ export async function approveMember(memberId: string, role: 'editor' | 'view_onl
   return res.json();
 }
 
-export async function changeMemberRole(memberId: string, newRole: UserRole) {
+export async function changeMemberRole(memberId: string, newRole: UserRole, expectedVersion: number) {
   const res = await fetch('/api/members/role', {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ memberId, newRole }),
+    body: JSON.stringify({ memberId, newRole, expectedVersion }),
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
@@ -625,10 +625,11 @@ export async function changeMemberRole(memberId: string, newRole: UserRole) {
   return res.json();
 }
 
-export async function removeMember(memberId: string) {
+export async function removeMember(memberId: string, expectedVersion: number) {
   const res = await fetch(`/api/members/${memberId}`, {
     method: 'DELETE',
     headers: getHeaders(),
+    body: JSON.stringify({ expectedVersion }),
   });
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));

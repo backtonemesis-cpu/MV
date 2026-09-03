@@ -460,7 +460,8 @@ export default function App() {
   // Member Management Handlers
   const handleApproveMember = async (memberId: string, role: 'editor' | 'view_only') => {
     try {
-      await approveMember(memberId, role);
+      if (!household) return;
+      await approveMember(memberId, role, household.version);
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to approve member');
@@ -469,7 +470,8 @@ export default function App() {
 
   const handleChangeRole = async (memberId: string, newRole: UserRole) => {
     try {
-      await changeMemberRole(memberId, newRole);
+      if (!household) return;
+      await changeMemberRole(memberId, newRole, household.version);
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to update member role');
@@ -478,7 +480,8 @@ export default function App() {
 
   const handleRemoveMember = async (memberId: string) => {
     try {
-      await removeMember(memberId);
+      if (!household) return;
+      await removeMember(memberId, household.version);
       await loadData();
     } catch (err: any) {
       setError(err.message || 'Failed to remove member');

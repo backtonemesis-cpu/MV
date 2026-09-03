@@ -27,6 +27,8 @@ import {
   HOUSEHOLD_CURRENCY,
   HOUSEHOLD_ID,
   HOUSEHOLD_NAME,
+  OWNER_EMAIL,
+  initialRoleForVerifiedEmail,
   type HouseholdMutationRequest,
   type HouseholdMutationResult,
   type PersistentHouseholdStore,
@@ -389,6 +391,125 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
   async getMemberById(memberId: string): Promise<HouseholdMember | null> {
     const snapshot = await this.collection('members').doc(memberId).get();
     return snapshot.exists ? mapMember(snapshot.id, snapshot.data() || {}) : null;
+  }
+
+  async getOrCreateVerifiedMember(identity: {
+    uid: string;
+    email: string;
+    name: string;
+  }): Promise<HouseholdMember> {
+    await this.ensureHousehold();
+
+    const email = normalizeEmail(identity.email);
+    const memberRef = this.collection('members').doc(identity.uid);
+    const now = new Date().toISOString();
+
+    const existingByEmail = await this.collection('members')
+      .where('email', '==', email)
+      .limit(2)
+      .get();
+
+    const conflicting = existingByEmail.docs.find((doc) => doc.id !== identity.uid);
+    if (conflicting) {
+      throw new Error(
+        `Verified identity ${email} is already bound to a different Firebase UID. Administrator repair is required.`
+      );
+    }
+
+    const result = await this.db.runTransaction(async (transaction) => {
+      const metaRef = this.metaRef();
+      const [memberSnapshot, metaSnapshot] = await Promise.all([
+        transaction.get(memberRef),
+        transaction.get(metaRef),
+      ]);
+
+      if (!metaSnapshot.exists) {
+        throw new Error('Authoritative Firestore household meta/state has not been initialized.');
+      }
+
+      if (memberSnapshot.exists) {
+        const existing = mapMember(memberSnapshot.id, memberSnapshot.data() || {});
+
+        if (existing.email !== email) {
+          throw new Error('Firebase UID is already bound to a different household email.');
+        }
+
+        if (email === OWNER_EMAIL && existing.role !== 'owner') {
+          transaction.update(memberRef, {
+            role: 'owner',
+            name: identity.name,
+            lastActiveAt: now,
+          });
+          return { ...existing, name: identity.name, role: 'owner' as const, lastActiveAt: now };
+        }
+
+        if (email !== OWNER_EMAIL && existing.role === 'owner') {
+          throw new Error('Only Marius may hold the Household Owner role.');
+        }
+
+        transaction.update(memberRef, {
+          name: identity.name,
+          lastActiveAt: now,
+        });
+        return { ...existing, name: identity.name, lastActiveAt: now };
+      }
+
+      const ownerSnapshot = await transaction.get(
+        this.collection('members').where('role', '==', 'owner').limit(2)
+      );
+      if (email === OWNER_EMAIL) {
+        const foreignOwner = ownerSnapshot.docs.find(
+          (doc) => normalizeEmail(asString(doc.data().email)) !== OWNER_EMAIL
+        );
+        if (foreignOwner) {
+          throw new Error('Household Owner state requires administrator repair before sign-in can continue.');
+        }
+      }
+
+      const role = initialRoleForVerifiedEmail(email);
+      const joinedAt = now;
+      transaction.create(memberRef, {
+        email,
+        name: identity.name,
+        role,
+        joinedAt,
+        lastActiveAt: now,
+      });
+
+      const currentVersion = asNumber(metaSnapshot.data()?.version, 1);
+      const nextVersion = currentVersion + 1;
+      transaction.update(metaRef, {
+        version: nextVersion,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        updatedAt: now,
+      });
+
+      const auditRef = this.collection('audit').doc(
+        `log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      );
+      transaction.create(auditRef, {
+        timestamp: now,
+        actorEmail: email,
+        action: role === 'owner' ? 'owner_identity_registered' : 'member_access_requested',
+        entityType: 'member',
+        entityId: identity.uid,
+        summary:
+          role === 'owner'
+            ? 'Verified Marius Firebase identity established as Household Owner'
+            : `Verified user ${email} requested household access and is Pending`,
+      });
+
+      return {
+        id: identity.uid,
+        email,
+        name: identity.name,
+        role,
+        joinedAt,
+        lastActiveAt: now,
+      } as HouseholdMember;
+    });
+
+    return result;
   }
 
   async getPreferences(memberId: string): Promise<UserPreferences> {
