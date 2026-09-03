@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { Request, Response, NextFunction } from 'express';
 import { getDb } from './db';
+import { verifyFirebaseIdentity, type VerifiedFirebaseIdentity } from './firebaseAdmin';
 import { UserRole } from '../src/types';
 
 export interface AuthenticatedUser {
@@ -18,8 +19,13 @@ declare global {
   }
 }
 
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const OWNER_EMAIL = 'backtonemesis@gmail.com';
+const FIREBASE_COOKIE_NAME = 'mv_firebase_id';
+const LOCAL_CREDENTIAL_ROUTES = new Set([
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/switch',
+]);
 
 export function hashPassword(password: string, salt: string): string {
   return crypto.scryptSync(password, salt, 64).toString('hex');
@@ -44,27 +50,23 @@ export function verifyPassword(password: string, salt: string, storedHash: strin
 }
 
 /**
- * Ensures Marius exists as the initial owner for local/test environments, or
- * when production has been explicitly provisioned with INITIAL_OWNER_PASSWORD.
+ * Development/test bootstrap only.
  *
- * Production must never fall back to a public/default owner password.
+ * Production identity is established exclusively from a verified Firebase ID token,
+ * so production never creates an Owner from a password or a known fallback secret.
  */
 export function ensureInitialOwner(): void {
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+
   const db = getDb();
   const userCount = (db.prepare('SELECT count(*) as count FROM users').get() as any).count;
   if (userCount !== 0) return;
 
   const configuredPassword = process.env.INITIAL_OWNER_PASSWORD?.trim();
-  if (process.env.NODE_ENV === 'production' && !configuredPassword) {
-    console.warn(
-      '[MV Auth] Initial owner was not auto-created because INITIAL_OWNER_PASSWORD is not configured. ' +
-      'Provision the owner securely before enabling production household access.'
-    );
-    return;
-  }
-
+  const initialPassword = configuredPassword || crypto.randomBytes(32).toString('base64url');
   const salt = crypto.randomBytes(16).toString('hex');
-  const initialPassword = configuredPassword || 'Household2026!';
   const passwordHash = hashPassword(initialPassword, salt);
   const now = new Date().toISOString();
 
@@ -82,25 +84,151 @@ export function ensureInitialOwner(): void {
   );
 }
 
-/**
- * Extracts and validates the cryptographic session token from Authorization header.
- * Development/test-only identity switching is explicitly unavailable in production.
- */
-export function authenticateRequest(req: Request, res: Response, next: NextFunction): void {
-  if (process.env.NODE_ENV === 'production' && req.path === '/api/auth/switch') {
-    res.status(404).json({ error: 'Not found' });
-    return;
+function getCookieValue(cookieHeader: string | undefined, name: string): string {
+  if (!cookieHeader) return '';
+
+  for (const part of cookieHeader.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator === -1) continue;
+    const key = part.slice(0, separator).trim();
+    if (key !== name) continue;
+
+    try {
+      return decodeURIComponent(part.slice(separator + 1).trim());
+    } catch {
+      return '';
+    }
   }
 
-  if (
-    process.env.NODE_ENV === 'production' &&
-    req.path === '/api/auth/register' &&
-    req.method === 'POST' &&
-    String(req.body?.email || '').trim().toLowerCase() === OWNER_EMAIL
-  ) {
-    res.status(403).json({
-      error: 'The household owner cannot be self-registered in production. Use the secure owner provisioning flow.',
-    });
+  return '';
+}
+
+function getLocalSessionUser(token: string): AuthenticatedUser | undefined {
+  const db = getDb();
+  const tokenHash = hashToken(token);
+  const session = db.prepare(`
+    SELECT s.token_hash, s.user_id, s.expires_at
+    FROM user_sessions s
+    WHERE s.token_hash = ? AND s.expires_at > ?
+  `).get(tokenHash, Date.now()) as any;
+
+  if (!session) return undefined;
+
+  const userRow = db.prepare(
+    'SELECT id, email, display_name, role FROM users WHERE id = ?'
+  ).get(session.user_id) as any;
+
+  if (!userRow) return undefined;
+
+  db.prepare('UPDATE users SET last_active_at = ? WHERE id = ?').run(
+    new Date().toISOString(),
+    userRow.id
+  );
+
+  return {
+    id: userRow.id,
+    email: userRow.email,
+    name: userRow.display_name,
+    role: userRow.role as UserRole,
+  };
+}
+
+function getOrCreateFirebaseUser(identity: VerifiedFirebaseIdentity): AuthenticatedUser {
+  const db = getDb();
+  const now = new Date().toISOString();
+  let userRow = db.prepare(
+    'SELECT id, email, display_name, role FROM users WHERE email = ?'
+  ).get(identity.email) as any;
+
+  if (!userRow) {
+    let role: UserRole = 'pending';
+
+    if (identity.email === OWNER_EMAIL) {
+      const existingOwner = db.prepare(
+        "SELECT id, email FROM users WHERE role = 'owner' LIMIT 1"
+      ).get() as any;
+
+      if (existingOwner && String(existingOwner.email).toLowerCase() !== OWNER_EMAIL) {
+        throw new Error('Household Owner state requires administrator repair before sign-in can continue.');
+      }
+
+      role = 'owner';
+    }
+
+    const userId = `firebase-${crypto
+      .createHash('sha256')
+      .update(identity.uid)
+      .digest('hex')
+      .slice(0, 32)}`;
+
+    // These columns remain for local/test authentication compatibility only.
+    // Production password routes are disabled, and these random values are not credentials.
+    const placeholderSalt = crypto.randomBytes(16).toString('hex');
+    const placeholderHash = crypto.randomBytes(64).toString('hex');
+
+    db.prepare(`
+      INSERT INTO users (id, email, password_hash, salt, display_name, role, joined_at, last_active_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      userId,
+      identity.email,
+      placeholderHash,
+      placeholderSalt,
+      identity.name,
+      role,
+      now,
+      now
+    );
+
+    db.prepare(`
+      INSERT OR IGNORE INTO user_preferences (user_id, theme, accent_color, updated_at)
+      VALUES (?, 'system', 'default', ?)
+    `).run(userId, now);
+
+    userRow = {
+      id: userId,
+      email: identity.email,
+      display_name: identity.name,
+      role,
+    };
+  } else {
+    // The verified Owner email is authoritative for Owner identity. Never grant
+    // Owner to any other email, and repair a stale non-owner role for Marius.
+    if (identity.email === OWNER_EMAIL && userRow.role !== 'owner') {
+      db.prepare("UPDATE users SET role = 'owner' WHERE id = ?").run(userRow.id);
+      userRow.role = 'owner';
+    }
+
+    db.prepare(
+      'UPDATE users SET display_name = ?, last_active_at = ? WHERE id = ?'
+    ).run(identity.name, now, userRow.id);
+    userRow.display_name = identity.name;
+  }
+
+  return {
+    id: userRow.id,
+    email: userRow.email,
+    name: userRow.display_name,
+    role: userRow.role as UserRole,
+  };
+}
+
+/**
+ * Production authentication accepts only Firebase ID tokens with a verified email.
+ * Standard API calls send the token as a Bearer header. Browser EventSource cannot
+ * set that header, so the same short-lived Firebase token may also arrive in a
+ * Secure/SameSite cookie created by the authenticated client.
+ *
+ * Local password/session authentication remains available solely outside production
+ * so existing automated tests and development fixtures can continue to work.
+ */
+export async function authenticateRequest(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (process.env.NODE_ENV === 'production' && LOCAL_CREDENTIAL_ROUTES.has(req.path)) {
+    res.status(404).json({ error: 'Not found' });
     return;
   }
 
@@ -111,56 +239,34 @@ export function authenticateRequest(req: Request, res: Response, next: NextFunct
     token = authHeader.substring(7).trim();
   }
 
-  // Also check dev header ONLY if explicitly permitted in automated tests.
+  if (!token && process.env.NODE_ENV === 'production') {
+    token = getCookieValue(req.headers.cookie, FIREBASE_COOKIE_NAME);
+  }
+
+  // Test-only token header. Never accepted in development or production.
   if (!token && process.env.NODE_ENV === 'test' && req.headers['x-test-auth-token']) {
     token = req.headers['x-test-auth-token'] as string;
   }
 
   if (!token) {
     req.user = undefined;
-    return next();
+    next();
+    return;
   }
 
   try {
-    const db = getDb();
-    const tokenHash = hashToken(token);
-    const session = db.prepare(`
-      SELECT s.token_hash, s.user_id, s.email, s.role, s.expires_at, u.display_name
-      FROM user_sessions s
-      JOIN users u ON u.id = s.user_id
-      WHERE s.token_hash = ? AND s.expires_at > ?
-    `).get(tokenHash, Date.now()) as any;
-
-    if (!session) {
-      req.user = undefined;
-      return next();
+    if (process.env.NODE_ENV === 'production') {
+      const identity = await verifyFirebaseIdentity(token);
+      req.user = getOrCreateFirebaseUser(identity);
+    } else {
+      req.user = getLocalSessionUser(token);
     }
-
-    // Check the current role from the authoritative users table so removal/role
-    // changes take effect even if an older session row exists.
-    const userRow = db.prepare('SELECT id, email, display_name, role FROM users WHERE id = ?').get(session.user_id) as any;
-    if (!userRow) {
-      req.user = undefined;
-      return next();
-    }
-
-    req.user = {
-      id: userRow.id,
-      email: userRow.email,
-      name: userRow.display_name,
-      role: userRow.role as UserRole,
-    };
-
-    db.prepare('UPDATE users SET last_active_at = ? WHERE id = ?').run(
-      new Date().toISOString(),
-      userRow.id
-    );
-
-    return next();
   } catch (err) {
+    console.warn('[MV Auth] Authentication rejected:', err instanceof Error ? err.message : err);
     req.user = undefined;
-    return next();
   }
+
+  next();
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
