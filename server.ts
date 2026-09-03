@@ -255,6 +255,12 @@ async function startServer() {
   });
 
   app.post('/api/auth/logout', requireAuth, (req: Request, res: Response) => {
+    if (DATA_BACKEND === 'firestore') {
+      // Firebase Auth owns production session revocation/sign-out. The client clears
+      // its Firebase session/token; there is no local MV session row to delete.
+      return res.json({ success: true, message: 'Logged out successfully' });
+    }
+
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7).trim();
@@ -265,7 +271,12 @@ async function startServer() {
     return res.json({ success: true, message: 'Logged out successfully' });
   });
 
-  app.get('/api/auth/me', requireAuth, (req: Request, res: Response) => {
+  app.get('/api/auth/me', requireAuth, async (req: Request, res: Response) => {
+    if (DATA_BACKEND === 'firestore') {
+      const preferences = await requireFirestoreStore().getPreferences(req.user!.id);
+      return res.json({ user: req.user, preferences });
+    }
+
     const db = getDb();
     const prefRow = db.prepare('SELECT theme, accent_color FROM user_preferences WHERE user_id = ?').get(req.user!.id) as any;
     return res.json({
@@ -277,9 +288,19 @@ async function startServer() {
     });
   });
 
-  app.get('/api/session', (req: Request, res: Response) => {
-    // If user is authenticated, return their verified session
+  app.get('/api/session', async (req: Request, res: Response) => {
     if (req.user) {
+      if (DATA_BACKEND === 'firestore') {
+        return res.json({
+          email: req.user.email,
+          name: req.user.name,
+          role: req.user.role,
+          householdId: 'household-mv',
+          // Production identity switching is intentionally unavailable.
+          availableIdentities: [],
+        });
+      }
+
       const db = getDb();
       const members = db.prepare('SELECT email, display_name as name, role FROM users').all() as any[];
       return res.json({
@@ -291,7 +312,6 @@ async function startServer() {
       });
     }
 
-    // Unauthenticated response
     return res.status(401).json({
       error: 'Unauthenticated',
       message: 'Please sign in to access household finances.',
@@ -301,32 +321,48 @@ async function startServer() {
   // -------------------------------------------------------------
   // Data Versioning & Schema Status Endpoint
   // -------------------------------------------------------------
-  app.get('/api/system/schema-status', (req: Request, res: Response) => {
+  app.get('/api/system/schema-status', async (req: Request, res: Response) => {
+    if (DATA_BACKEND === 'firestore') {
+      return res.json({
+        currentSchemaVersion: CURRENT_SCHEMA_VERSION,
+        minSupportedClientVersion: MIN_SUPPORTED_CLIENT_SCHEMA_VERSION,
+        latestAppliedVersion: CURRENT_SCHEMA_VERSION,
+        appliedMigrations: [],
+        isUpToDate: true,
+        backend: 'firestore',
+      });
+    }
+
     const db = getDb();
     const status = getSchemaStatus(db);
     return res.json(status);
   });
 
   // User preferences (Theme and Accent)
-  app.put('/api/user/preferences', requireAuth, (req: Request, res: Response) => {
+  app.put('/api/user/preferences', requireAuth, async (req: Request, res: Response) => {
     const { theme, accent } = req.body;
-    const db = getDb();
-    const now = new Date().toISOString();
-
     const validThemes = ['light', 'dark', 'system'];
     const validAccents = ['default', 'blue', 'lilac', 'yellow', 'red', 'green', 'teal', 'orange', 'rose', 'emerald', 'indigo', 'slate'];
-
     const chosenTheme = validThemes.includes(theme) ? theme : 'system';
     const chosenAccent = validAccents.includes(accent) ? accent : 'default';
 
-    db.prepare(`
-      INSERT INTO user_preferences (user_id, theme, accent_color, updated_at)
-      VALUES (?, ?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET
-        theme = excluded.theme,
-        accent_color = excluded.accent_color,
-        updated_at = excluded.updated_at
-    `).run(req.user!.id, chosenTheme, chosenAccent, now);
+    if (DATA_BACKEND === 'firestore') {
+      await requireFirestoreStore().savePreferences(req.user!.id, {
+        theme: chosenTheme,
+        accent: chosenAccent,
+      });
+    } else {
+      const db = getDb();
+      const now = new Date().toISOString();
+      db.prepare(`
+        INSERT INTO user_preferences (user_id, theme, accent_color, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(user_id) DO UPDATE SET
+          theme = excluded.theme,
+          accent_color = excluded.accent_color,
+          updated_at = excluded.updated_at
+      `).run(req.user!.id, chosenTheme, chosenAccent, now);
+    }
 
     return res.json({
       success: true,
@@ -341,10 +377,39 @@ async function startServer() {
   // -------------------------------------------------------------
   // Household Membership & Role Governance (Owner Only)
   // -------------------------------------------------------------
-  app.post('/api/members/approve', requireRole(['owner']), (req: Request, res: Response) => {
-    const { memberId, role } = req.body;
+  app.post('/api/members/approve', requireRole(['owner']), async (req: Request, res: Response) => {
+    const { memberId, role, expectedVersion } = req.body;
     if (!memberId || (role !== 'editor' && role !== 'view_only')) {
       return res.status(400).json({ error: 'Valid memberId and role (editor | view_only) required' });
+    }
+
+    if (DATA_BACKEND === 'firestore') {
+      if (!Number.isSafeInteger(expectedVersion)) {
+        return res.status(400).json({ error: 'expectedVersion is required for membership changes' });
+      }
+
+      try {
+        const result = await requireFirestoreEdgeMutations().approveMember(
+          {
+            expectedVersion,
+            actorEmail: req.user!.email,
+            now: new Date().toISOString(),
+          },
+          memberId,
+          role
+        );
+        broadcastHouseholdUpdate(result.version, req.user!.email);
+        return res.json({
+          success: true,
+          message: `Member approved as ${role}`,
+          version: result.version,
+        });
+      } catch (err: any) {
+        return res.status(err.status || 400).json({
+          error: err.message || 'Failed to approve member',
+          serverVersion: err.serverVersion,
+        });
+      }
     }
 
     const db = getDb();
@@ -357,8 +422,6 @@ async function startServer() {
     db.prepare(`
       UPDATE users SET role = ?, approved_at = ?, approved_by = ? WHERE id = ?
     `).run(role, now, req.user!.email, memberId);
-
-    // Update active sessions for target user
     db.prepare('UPDATE user_sessions SET role = ? WHERE user_id = ?').run(role, memberId);
 
     const version = bumpVersionAndLog(
@@ -371,15 +434,44 @@ async function startServer() {
     );
 
     broadcastHouseholdUpdate(version, req.user!.email);
-    return res.json({ success: true, message: `Member approved as ${role}` });
+    return res.json({ success: true, message: `Member approved as ${role}`, version });
   });
 
-  app.post('/api/members/role', requireRole(['owner']), (req: Request, res: Response) => {
-    const { memberId, newRole } = req.body;
+  app.post('/api/members/role', requireRole(['owner']), async (req: Request, res: Response) => {
+    const { memberId, newRole, expectedVersion } = req.body;
     const validRoles: UserRole[] = ['owner', 'editor', 'view_only', 'pending', 'removed'];
 
     if (!memberId || !validRoles.includes(newRole)) {
       return res.status(400).json({ error: 'Valid memberId and newRole required' });
+    }
+
+    if (DATA_BACKEND === 'firestore') {
+      if (!Number.isSafeInteger(expectedVersion)) {
+        return res.status(400).json({ error: 'expectedVersion is required for membership changes' });
+      }
+
+      try {
+        const result = await requireFirestoreEdgeMutations().changeMemberRole(
+          {
+            expectedVersion,
+            actorEmail: req.user!.email,
+            now: new Date().toISOString(),
+          },
+          memberId,
+          newRole
+        );
+        broadcastHouseholdUpdate(result.version, req.user!.email);
+        return res.json({
+          success: true,
+          message: `Role updated to ${newRole}`,
+          version: result.version,
+        });
+      } catch (err: any) {
+        return res.status(err.status || 400).json({
+          error: err.message || 'Failed to change role',
+          serverVersion: err.serverVersion,
+        });
+      }
     }
 
     const db = getDb();
@@ -388,7 +480,6 @@ async function startServer() {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    // Protect last owner
     if (target.role === 'owner' && newRole !== 'owner') {
       const ownerCount = (db.prepare("SELECT count(*) as count FROM users WHERE role = 'owner'").get() as any).count;
       if (ownerCount <= 1) {
@@ -409,11 +500,41 @@ async function startServer() {
     );
 
     broadcastHouseholdUpdate(version, req.user!.email);
-    return res.json({ success: true, message: `Role updated to ${newRole}` });
+    return res.json({ success: true, message: `Role updated to ${newRole}`, version });
   });
 
-  app.delete('/api/members/:id', requireRole(['owner']), (req: Request, res: Response) => {
+  app.delete('/api/members/:id', requireRole(['owner']), async (req: Request, res: Response) => {
     const memberId = req.params.id;
+    const expectedVersion = Number(req.body?.expectedVersion);
+
+    if (DATA_BACKEND === 'firestore') {
+      if (!Number.isSafeInteger(expectedVersion)) {
+        return res.status(400).json({ error: 'expectedVersion is required for membership changes' });
+      }
+
+      try {
+        const result = await requireFirestoreEdgeMutations().removeMember(
+          {
+            expectedVersion,
+            actorEmail: req.user!.email,
+            now: new Date().toISOString(),
+          },
+          memberId
+        );
+        broadcastHouseholdUpdate(result.version, req.user!.email);
+        return res.json({
+          success: true,
+          message: 'Member removed and access revoked immediately',
+          version: result.version,
+        });
+      } catch (err: any) {
+        return res.status(err.status || 400).json({
+          error: err.message || 'Failed to remove member',
+          serverVersion: err.serverVersion,
+        });
+      }
+    }
+
     const db = getDb();
     const target = db.prepare('SELECT * FROM users WHERE id = ?').get(memberId) as any;
 
@@ -424,7 +545,6 @@ async function startServer() {
       return res.status(400).json({ error: 'Cannot remove household owner' });
     }
 
-    // Set role to removed and terminate all active sessions immediately
     db.prepare("UPDATE users SET role = 'removed' WHERE id = ?").run(memberId);
     db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(memberId);
 
@@ -438,15 +558,31 @@ async function startServer() {
     );
 
     broadcastHouseholdUpdate(version, req.user!.email);
-    return res.json({ success: true, message: 'Member removed and access revoked immediately' });
+    return res.json({ success: true, message: 'Member removed and access revoked immediately', version });
   });
 
   // -------------------------------------------------------------
   // Authoritative Household Data (Strict Read Isolation)
   // -------------------------------------------------------------
-  app.get('/api/household', requireRead, (req: Request, res: Response) => {
-    const data = getHouseholdData();
+  app.get('/api/household', requireRead, async (req: Request, res: Response) => {
+    const data =
+      DATA_BACKEND === 'firestore'
+        ? await requireFirestoreStore().getHouseholdData()
+        : getHouseholdData();
     return res.json(data);
+  });
+
+  // Stage 7A safety gate. Firestore identity/read/governance is wired, but the
+  // remaining financial routes below still use SQLite and must not receive
+  // production Firestore traffic until Stage 7B replaces them.
+  app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    if (DATA_BACKEND === 'firestore') {
+      return res.status(503).json({
+        error: 'Firestore production mutation cutover is not complete.',
+        code: 'FIRESTORE_MUTATION_CUTOVER_INCOMPLETE',
+      });
+    }
+    next();
   });
 
   // -------------------------------------------------------------
