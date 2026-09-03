@@ -48,6 +48,7 @@ import {
 } from './server/storage/firestoreValidation';
 import { resolveRuntimeDataBackend } from './server/storage/runtimeBackend';
 import { getMvFirestore } from './server/firestoreAdmin';
+import { createFirestoreCoreFinanceRouter } from './server/firestoreCoreFinanceRoutes';
 
 const PORT = 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -610,18 +611,33 @@ async function startServer() {
     return res.json(data);
   });
 
-  // Stage 7B1 safety gate. Transactions, accounts/reconciliation and savings
-  // are Firestore-backed below. Every other lower route remains fail-closed
-  // until its own verified cutover slice is merged.
+  if (
+    DATA_BACKEND === 'firestore' &&
+    firestoreDb &&
+    firestoreStore &&
+    firestoreCoreMutations &&
+    firestoreEdgeMutations
+  ) {
+    app.use(
+      '/api',
+      createFirestoreCoreFinanceRouter({
+        db: firestoreDb,
+        store: firestoreStore,
+        core: firestoreCoreMutations,
+        edge: firestoreEdgeMutations,
+      })
+    );
+  }
+
+  // Stage 7B1 safety gate. Verified Firestore core-finance routes above fully
+  // terminate their requests. Anything else below remains fail-closed and
+  // cannot fall through into legacy SQLite handlers.
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (DATA_BACKEND === 'firestore') {
-      const allowedPrefixes = ['/transactions', '/accounts', '/savings-goals'];
-      if (!allowedPrefixes.some((prefix) => req.path.startsWith(prefix))) {
-        return res.status(503).json({
-          error: 'Firestore production mutation cutover is not complete for this route.',
-          code: 'FIRESTORE_MUTATION_CUTOVER_INCOMPLETE',
-        });
-      }
+      return res.status(503).json({
+        error: 'Firestore production mutation cutover is not complete for this route.',
+        code: 'FIRESTORE_MUTATION_CUTOVER_INCOMPLETE',
+      });
     }
     next();
   });
