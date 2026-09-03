@@ -22,6 +22,11 @@ export function getAdminAuth(): Auth {
  */
 export const getAdminFirestore = getMvFirestore;
 
+export async function resolveFirebaseUidForEmail(email: string): Promise<string> {
+  const user = await getAdminAuth().getUserByEmail(email.trim().toLowerCase());
+  return user.uid;
+}
+
 export interface VerifiedFirebaseIdentity {
   uid: string;
   email: string;
