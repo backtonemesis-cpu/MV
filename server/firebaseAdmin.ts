@@ -4,7 +4,7 @@ import { getMvFirestore } from './firestoreAdmin';
 
 let cachedAuth: Auth | null = null;
 
-function getAdminAuth(): Auth {
+export function getAdminAuth(): Auth {
   if (cachedAuth) return cachedAuth;
 
   const app = getApps().length > 0
