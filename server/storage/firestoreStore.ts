@@ -261,15 +261,32 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
   async ensureHousehold(): Promise<void> {
     const householdRef = this.householdRef();
     const metaRef = this.metaRef();
+
+    // Fast path for every established or migrated household. In particular,
+    // a migrated household must not receive bootstrap categories after cutover.
+    const establishedMeta = await metaRef.get();
+    if (establishedMeta.exists) return;
+
     const categoryRefs = STANDARD_CATEGORIES.map((category) =>
       this.collection('categories').doc(category.id)
     );
 
     await this.db.runTransaction(async (transaction) => {
-      const [householdSnapshot, metaSnapshot] = await Promise.all([
+      // Firestore requires every transaction read to happen before the first
+      // write. Read the entire one-time bootstrap set up front.
+      const snapshots = await Promise.all([
         transaction.get(householdRef),
         transaction.get(metaRef),
+        ...categoryRefs.map((ref) => transaction.get(ref)),
       ]);
+
+      const householdSnapshot = snapshots[0];
+      const metaSnapshot = snapshots[1];
+      const categorySnapshots = snapshots.slice(2);
+
+      // Another initializer may have won the race while this transaction was
+      // retried. If authoritative meta/state exists, do not seed anything.
+      if (metaSnapshot.exists) return;
 
       if (!householdSnapshot.exists) {
         transaction.create(householdRef, {
@@ -280,30 +297,24 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
         });
       }
 
-      if (!metaSnapshot.exists) {
-        // A newly initialized Firestore household mirrors SQLite schema
-        // configuration. Categories are non-financial catalogue records;
-        // accounts, transactions, bills, income and savings remain empty.
-        const categorySnapshots = await Promise.all(
-          categoryRefs.map((ref) => transaction.get(ref))
-        );
+      transaction.create(metaRef, {
+        version: 1,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
 
-        transaction.create(metaRef, {
-          version: 1,
-          schemaVersion: CURRENT_SCHEMA_VERSION,
-          updatedAt: FieldValue.serverTimestamp(),
+      // A newly initialized Firestore household mirrors SQLite schema
+      // configuration. Categories are non-financial catalogue records;
+      // accounts, transactions, bills, income and savings remain empty.
+      for (let index = 0; index < STANDARD_CATEGORIES.length; index += 1) {
+        if (categorySnapshots[index].exists) continue;
+        const category = STANDARD_CATEGORIES[index];
+        transaction.create(categoryRefs[index], {
+          name: category.name,
+          group: category.group,
+          monthlyBudgetPence: category.monthlyBudgetPence,
+          isArchived: false,
         });
-
-        for (let index = 0; index < STANDARD_CATEGORIES.length; index += 1) {
-          if (categorySnapshots[index].exists) continue;
-          const category = STANDARD_CATEGORIES[index];
-          transaction.create(categoryRefs[index], {
-            name: category.name,
-            group: category.group,
-            monthlyBudgetPence: category.monthlyBudgetPence,
-            isArchived: false,
-          });
-        }
       }
     });
   }
