@@ -35,6 +35,7 @@ import {
   normalizeEmail,
 } from './contracts';
 import { withCalculatedAccountBalances } from './reconciliation';
+import { STANDARD_CATEGORIES } from './standardCategories';
 
 const COLLECTIONS = {
   members: 'members',
@@ -260,10 +261,15 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
   async ensureHousehold(): Promise<void> {
     const householdRef = this.householdRef();
     const metaRef = this.metaRef();
+    const categoryRefs = STANDARD_CATEGORIES.map((category) =>
+      this.collection('categories').doc(category.id)
+    );
 
     await this.db.runTransaction(async (transaction) => {
-      const householdSnapshot = await transaction.get(householdRef);
-      const metaSnapshot = await transaction.get(metaRef);
+      const [householdSnapshot, metaSnapshot] = await Promise.all([
+        transaction.get(householdRef),
+        transaction.get(metaRef),
+      ]);
 
       if (!householdSnapshot.exists) {
         transaction.create(householdRef, {
@@ -275,11 +281,29 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
       }
 
       if (!metaSnapshot.exists) {
+        // A newly initialized Firestore household mirrors SQLite schema
+        // configuration. Categories are non-financial catalogue records;
+        // accounts, transactions, bills, income and savings remain empty.
+        const categorySnapshots = await Promise.all(
+          categoryRefs.map((ref) => transaction.get(ref))
+        );
+
         transaction.create(metaRef, {
           version: 1,
           schemaVersion: CURRENT_SCHEMA_VERSION,
           updatedAt: FieldValue.serverTimestamp(),
         });
+
+        for (let index = 0; index < STANDARD_CATEGORIES.length; index += 1) {
+          if (categorySnapshots[index].exists) continue;
+          const category = STANDARD_CATEGORIES[index];
+          transaction.create(categoryRefs[index], {
+            name: category.name,
+            group: category.group,
+            monthlyBudgetPence: category.monthlyBudgetPence,
+            isArchived: false,
+          });
+        }
       }
     });
   }
