@@ -44,6 +44,7 @@ import { FirestoreCoreMutationStore } from './server/storage/coreMutations';
 import { resolveRuntimeDataBackend } from './server/storage/runtimeBackend';
 import { getMvFirestore } from './server/firestoreAdmin';
 import { createFirestoreCoreFinanceRouter } from './server/firestoreCoreFinanceRoutes';
+import { createFirestorePlanningRouter } from './server/firestorePlanningRoutes';
 
 const PORT = 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -594,11 +595,20 @@ async function startServer() {
         edge: firestoreEdgeMutations,
       })
     );
+    app.use(
+      '/api',
+      createFirestorePlanningRouter({
+        db: firestoreDb,
+        store: firestoreStore,
+        core: firestoreCoreMutations,
+        edge: firestoreEdgeMutations,
+      })
+    );
   }
 
-  // Stage 7B1 safety gate. Verified Firestore core-finance routes above fully
-  // terminate their requests. Anything else below remains fail-closed and
-  // cannot fall through into legacy SQLite handlers.
+  // Stage 7B2 safety gate. Verified Firestore core-finance and planning routes
+  // above fully terminate their requests. Anything else below remains fail-closed
+  // and cannot fall through into legacy SQLite handlers.
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (DATA_BACKEND === 'firestore') {
       return res.status(503).json({
