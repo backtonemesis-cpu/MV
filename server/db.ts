@@ -203,7 +203,7 @@ export function getHouseholdData(): HouseholdData {
   const rawAccounts = db.prepare('SELECT * FROM accounts WHERE is_active = 1 ORDER BY name ASC').all() as any[];
   const rawCategories = db.prepare('SELECT id, name, group_name as "group", monthly_budget_pence as monthlyBudgetPence, icon, is_archived as isArchived FROM categories WHERE is_archived = 0 ORDER BY group_name ASC, name ASC').all() as any[];
   const rawTransactions = db.prepare('SELECT * FROM transactions ORDER BY date DESC, created_at DESC').all() as any[];
-  const rawSplits = db.prepare('SELECT * FROM transaction_splits').all() as any[];
+  const rawSplits = db.prepare('SELECT * FROM transaction_splits ORDER BY transaction_id ASC, id ASC').all() as any[];
   const rawPlannedPayments = db.prepare('SELECT * FROM planned_payments ORDER BY month DESC, due_date ASC').all() as any[];
   const rawPlannedIncomes = db.prepare('SELECT * FROM planned_incomes ORDER BY month DESC, expected_date ASC').all() as any[];
   const rawSavingsGoals = db.prepare('SELECT * FROM savings_goals ORDER BY target_date ASC').all() as any[];
