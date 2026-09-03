@@ -610,15 +610,18 @@ async function startServer() {
     return res.json(data);
   });
 
-  // Stage 7A safety gate. Firestore identity/read/governance is wired, but the
-  // remaining financial routes below still use SQLite and must not receive
-  // production Firestore traffic until Stage 7B replaces them.
+  // Stage 7B1 safety gate. Transactions, accounts/reconciliation and savings
+  // are Firestore-backed below. Every other lower route remains fail-closed
+  // until its own verified cutover slice is merged.
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (DATA_BACKEND === 'firestore') {
-      return res.status(503).json({
-        error: 'Firestore production mutation cutover is not complete.',
-        code: 'FIRESTORE_MUTATION_CUTOVER_INCOMPLETE',
-      });
+      const allowedPrefixes = ['/transactions', '/accounts', '/savings-goals'];
+      if (!allowedPrefixes.some((prefix) => req.path.startsWith(prefix))) {
+        return res.status(503).json({
+          error: 'Firestore production mutation cutover is not complete for this route.',
+          code: 'FIRESTORE_MUTATION_CUTOVER_INCOMPLETE',
+        });
+      }
     }
     next();
   });
