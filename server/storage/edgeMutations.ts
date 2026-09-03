@@ -4,7 +4,7 @@ import type { UserRole } from '../../src/types';
 import { bumpVersionAndLog } from '../db';
 import { CURRENT_SCHEMA_VERSION } from '../migrations';
 import type { HouseholdMutationResult } from './contracts';
-import { HOUSEHOLD_ID } from './contracts';
+import { HOUSEHOLD_ID, OWNER_EMAIL, normalizeEmail } from './contracts';
 import {
   FirestoreCoreMutationStore,
   SqliteCoreMutationStore,
@@ -453,11 +453,12 @@ export class SqliteEdgeMutationStore implements EdgeMutationStore {
       const target = this.db.prepare('SELECT * FROM users WHERE id = ?').get(memberId) as any;
       if (!target) throw new Error('Member not found');
 
-      if (target.role === 'owner' && newRole !== 'owner') {
-        const ownerCount = Number(
-          (this.db.prepare("SELECT count(*) as count FROM users WHERE role = 'owner'").get() as any).count
-        );
-        if (ownerCount <= 1) throw new Error('Cannot demote the sole household owner');
+      const targetEmail = normalizeEmail(String(target.email));
+      if (targetEmail === OWNER_EMAIL && newRole !== 'owner') {
+        throw new Error('Cannot demote the sole household owner');
+      }
+      if (targetEmail !== OWNER_EMAIL && newRole === 'owner') {
+        throw new Error('Only Marius may hold the Household Owner role');
       }
 
       this.db.prepare('UPDATE users SET role = ? WHERE id = ?').run(newRole, memberId);
@@ -485,7 +486,9 @@ export class SqliteEdgeMutationStore implements EdgeMutationStore {
       assertVersion(this.db, actor.expectedVersion);
       const target = this.db.prepare('SELECT * FROM users WHERE id = ?').get(memberId) as any;
       if (!target) throw new Error('Member not found');
-      if (target.role === 'owner') throw new Error('Cannot remove household owner');
+      if (normalizeEmail(String(target.email)) === OWNER_EMAIL || target.role === 'owner') {
+        throw new Error('Cannot remove household owner');
+      }
 
       this.db.prepare("UPDATE users SET role = 'removed' WHERE id = ?").run(memberId);
       this.db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(memberId);
@@ -840,11 +843,6 @@ export class FirestoreEdgeMutationStore implements EdgeMutationStore {
   }
 
   async changeMemberRole(actor: MutationActor, memberId: string, newRole: UserRole) {
-    const ownerSnapshot = await this.householdRef()
-      .collection('members')
-      .where('role', '==', 'owner')
-      .get();
-
     return this.store.runMutation(
       {
         expectedVersion: actor.expectedVersion,
@@ -860,12 +858,12 @@ export class FirestoreEdgeMutationStore implements EdgeMutationStore {
         const ref = collectionRef('members', memberId);
         const target = await transaction.get(ref);
         if (!target.exists) throw new Error('Member not found');
-        if (
-          target.data()?.role === 'owner' &&
-          newRole !== 'owner' &&
-          ownerSnapshot.size <= 1
-        ) {
+        const targetEmail = normalizeEmail(String(target.data()?.email || ''));
+        if (targetEmail === OWNER_EMAIL && newRole !== 'owner') {
           throw new Error('Cannot demote the sole household owner');
+        }
+        if (targetEmail !== OWNER_EMAIL && newRole === 'owner') {
+          throw new Error('Only Marius may hold the Household Owner role');
         }
         transaction.update(ref, { role: newRole });
         return { id: memberId, role: newRole };
@@ -889,7 +887,10 @@ export class FirestoreEdgeMutationStore implements EdgeMutationStore {
         const ref = collectionRef('members', memberId);
         const target = await transaction.get(ref);
         if (!target.exists) throw new Error('Member not found');
-        if (target.data()?.role === 'owner') throw new Error('Cannot remove household owner');
+        const targetEmail = normalizeEmail(String(target.data()?.email || ''));
+        if (targetEmail === OWNER_EMAIL || target.data()?.role === 'owner') {
+          throw new Error('Cannot remove household owner');
+        }
         transaction.update(ref, { role: 'removed' });
         return { id: memberId, role: 'removed' as const };
       }
