@@ -28,6 +28,12 @@ jobs:
       - name: Run automated test suite
         run: npm test
 
+      - name: Use Java 21 for Firestore emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Run Firestore emulator store tests
         env:
           GOOGLE_CLOUD_PROJECT: regal-campus-198sv
