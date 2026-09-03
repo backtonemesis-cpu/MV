@@ -28,6 +28,22 @@ jobs:
       - name: Run automated test suite
         run: npm test
 
+      - name: Use Java 21 for Firestore emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run Firestore emulator store tests
+        env:
+          GOOGLE_CLOUD_PROJECT: regal-campus-198sv
+          MV_FIRESTORE_DATABASE_ID: "(default)"
+        run: >-
+          npx --yes firebase-tools@15.28.2 emulators:exec
+          --project regal-campus-198sv
+          --only firestore
+          "npx vitest run server/storage/firestoreStore.emulator.test.ts"
+
       - name: Verify browser Firestore boundary
         shell: bash
         run: |
