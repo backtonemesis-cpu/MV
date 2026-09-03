@@ -19,6 +19,7 @@ declare global {
 }
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const OWNER_EMAIL = 'backtonemesis@gmail.com';
 
 export function hashPassword(password: string, salt: string): string {
   return crypto.scryptSync(password, salt, 64).toString('hex');
@@ -43,38 +44,66 @@ export function verifyPassword(password: string, salt: string, storedHash: strin
 }
 
 /**
- * Ensures Marius (backtonemesis@gmail.com) exists as initial owner if no users exist.
+ * Ensures Marius exists as the initial owner for local/test environments, or
+ * when production has been explicitly provisioned with INITIAL_OWNER_PASSWORD.
+ *
+ * Production must never fall back to a public/default owner password.
  */
 export function ensureInitialOwner(): void {
   const db = getDb();
   const userCount = (db.prepare('SELECT count(*) as count FROM users').get() as any).count;
-  if (userCount === 0) {
-    const salt = crypto.randomBytes(16).toString('hex');
-    // Default initial password for Marius in fresh database setup: 'Household2026!'
-    // Marius can change this immediately or sign in
-    const defaultPassword = process.env.INITIAL_OWNER_PASSWORD || 'Household2026!';
-    const passwordHash = hashPassword(defaultPassword, salt);
-    const now = new Date().toISOString();
+  if (userCount !== 0) return;
 
-    db.prepare(`
-      INSERT INTO users (id, email, password_hash, salt, display_name, role, joined_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      'user-marius',
-      'backtonemesis@gmail.com',
-      passwordHash,
-      salt,
-      'Marius',
-      'owner',
-      now
+  const configuredPassword = process.env.INITIAL_OWNER_PASSWORD?.trim();
+  if (process.env.NODE_ENV === 'production' && !configuredPassword) {
+    console.warn(
+      '[MV Auth] Initial owner was not auto-created because INITIAL_OWNER_PASSWORD is not configured. ' +
+      'Provision the owner securely before enabling production household access.'
     );
+    return;
   }
+
+  const salt = crypto.randomBytes(16).toString('hex');
+  const initialPassword = configuredPassword || 'Household2026!';
+  const passwordHash = hashPassword(initialPassword, salt);
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO users (id, email, password_hash, salt, display_name, role, joined_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    'user-marius',
+    OWNER_EMAIL,
+    passwordHash,
+    salt,
+    'Marius',
+    'owner',
+    now
+  );
 }
 
 /**
- * Extracts and validates the cryptographic session token from Authorization header or cookie.
+ * Extracts and validates the cryptographic session token from Authorization header.
+ * Development/test-only identity switching is explicitly unavailable in production.
  */
 export function authenticateRequest(req: Request, res: Response, next: NextFunction): void {
+  if (process.env.NODE_ENV === 'production' && req.path === '/api/auth/switch') {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    req.path === '/api/auth/register' &&
+    req.method === 'POST' &&
+    String(req.body?.email || '').trim().toLowerCase() === OWNER_EMAIL
+  ) {
+    res.status(403).json({
+      error: 'The household owner cannot be self-registered in production. Use the secure owner provisioning flow.',
+    });
+    return;
+  }
+
   const authHeader = req.headers['authorization'];
   let token = '';
 
@@ -82,7 +111,7 @@ export function authenticateRequest(req: Request, res: Response, next: NextFunct
     token = authHeader.substring(7).trim();
   }
 
-  // Also check dev header ONLY if explicitly permitted in non-production automated testing
+  // Also check dev header ONLY if explicitly permitted in automated tests.
   if (!token && process.env.NODE_ENV === 'test' && req.headers['x-test-auth-token']) {
     token = req.headers['x-test-auth-token'] as string;
   }
@@ -107,7 +136,8 @@ export function authenticateRequest(req: Request, res: Response, next: NextFunct
       return next();
     }
 
-    // Check user's current role from users table (in case it was updated or removed)
+    // Check the current role from the authoritative users table so removal/role
+    // changes take effect even if an older session row exists.
     const userRow = db.prepare('SELECT id, email, display_name, role FROM users WHERE id = ?').get(session.user_id) as any;
     if (!userRow) {
       req.user = undefined;
@@ -121,7 +151,6 @@ export function authenticateRequest(req: Request, res: Response, next: NextFunct
       role: userRow.role as UserRole,
     };
 
-    // Update last_active_at periodically
     db.prepare('UPDATE users SET last_active_at = ? WHERE id = ?').run(
       new Date().toISOString(),
       userRow.id
@@ -166,7 +195,7 @@ export function requireRead(req: Request, res: Response, next: NextFunction): vo
   }
   if (req.user.role === 'pending') {
     res.status(403).json({
-      error: 'Your account is pending approval by the household owner Marius (backtonemesis@gmail.com). No financial data is accessible.',
+      error: 'Your account is pending approval by the household owner. No household financial data is accessible.',
       role: 'pending',
     });
     return;
