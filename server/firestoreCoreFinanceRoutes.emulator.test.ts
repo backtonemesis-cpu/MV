@@ -1,6 +1,6 @@
 import express from 'express';
 import { createServer, type Server } from 'node:http';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { getMvFirestore } from './firestoreAdmin';
 import { createFirestoreCoreFinanceRouter } from './firestoreCoreFinanceRoutes';
 import { FirestoreCoreMutationStore } from './storage/coreMutations';
@@ -75,12 +75,16 @@ describeEmulator('Firestore core finance HTTP routes', () => {
     await startApp();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     if (server) {
       await new Promise<void>((resolve, reject) =>
         server!.close((error) => (error ? reject(error) : resolve()))
       );
+      server = null;
     }
+  });
+
+  afterAll(async () => {
     await db.recursiveDelete(householdRef);
   });
 
