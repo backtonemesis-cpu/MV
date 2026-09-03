@@ -8,6 +8,16 @@ interface AuthGateProps {
   children: React.ReactNode;
 }
 
+const FIREBASE_COOKIE_NAME = 'mv_firebase_id';
+
+function setEventStreamAuthCookie(idToken: string): void {
+  document.cookie = `${FIREBASE_COOKIE_NAME}=${encodeURIComponent(idToken)}; Path=/; Max-Age=3600; Secure; SameSite=Strict`;
+}
+
+function clearEventStreamAuthCookie(): void {
+  document.cookie = `${FIREBASE_COOKIE_NAME}=; Path=/; Max-Age=0; Secure; SameSite=Strict`;
+}
+
 export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
   const [isReady, setIsReady] = useState(import.meta.env.DEV);
   const [isSignedIn, setIsSignedIn] = useState(import.meta.env.DEV);
@@ -21,6 +31,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
       try {
         if (!user) {
           clearAuthToken();
+          clearEventStreamAuthCookie();
           setIsSignedIn(false);
           setIsReady(true);
           return;
@@ -28,11 +39,13 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
 
         const idToken = await user.getIdToken();
         setAuthToken(idToken);
+        setEventStreamAuthCookie(idToken);
         setIsSignedIn(true);
         setIsReady(true);
         setError(null);
       } catch (err) {
         clearAuthToken();
+        clearEventStreamAuthCookie();
         setIsSignedIn(false);
         setIsReady(true);
         setError(err instanceof Error ? err.message : 'Unable to verify sign-in.');
