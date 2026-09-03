@@ -1,0 +1,6 @@
+{
+  "name": "MV Household Finance",
+  "description": "Shared household finance application for Marius and Vesta featuring server-side authorization, optimistic concurrency control, and penny-exact financial integrity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

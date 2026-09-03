@@ -146,6 +146,7 @@ A React/Vite-style front end plus a managed backend such as Supabase/Firebase is
 13. Mobile/iPhone layout is usable.
 14. Desktop layout is usable.
 15. Production build and deployment tests pass.
+16. Transfer Plan exact deficit & surplus integrity (distinguishes Paid/Unpaid from Transfer Plan inclusion, computes exact integer-pence requirements without floating-point drift, returns £0.00 for funded accounts, and treats internal transfers as non-spending/non-income).
 
 ## What not to do
 

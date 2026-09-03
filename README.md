@@ -1,45 +1,34 @@
 # MV
 
-**MV** is a new private shared household finance application for Marius and Vesta.
+**MV** is a new shared household finance application for Marius and Vesta.
 
-This repository is intentionally a fresh build. It is not a fork or copy of Penny.
+This repository is intentionally a **fresh build**. It is not a fork or copy of Penny and should be developed as an independent product.
 
-## Current state
+## Core objective
 
-The repository now contains the **initial secure architecture scaffold**, not a finished finance app:
+Build a secure, mobile-first household money-management app that two authenticated household members can use simultaneously against one shared dataset.
 
-- Firebase Auth identity foundation
-- Pending / Owner / Editor / Viewer / Removed household roles
-- Firestore household isolation and server-side access rules
-- version-checked financial writes to prevent silent stale overwrites
-- append-only client audit collection
-- integer-pence financial calculations
-- automated core calculation/policy/validation tests
-- minimal mobile-first authenticated shell
+## Initial roles
 
-See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the implementation model and [`GOOGLE_HANDOFF.md`](./GOOGLE_HANDOFF.md) for the wider product requirements.
+- **Marius** — Household Owner/Admin
+- **Vesta** — Household Editor once approved
+- New authenticated users — Pending until approved by the Owner/Admin
+- Optional approved role — View only
 
-## Local setup
+Household roles control financial-data access only. Household members must never receive repository, deployment, hosting, publishing, or development permissions merely because they can use the app.
 
-1. Copy `.env.example` to `.env` and enter the Firebase **Web SDK** configuration for the MV project.
-2. Enable Google as a Firebase Authentication provider.
-3. Create Firestore and deploy `firestore.rules` and `firestore.indexes.json`.
-4. Install dependencies and run the app:
+## Development principles
 
-```bash
-npm install
-npm test
-npm run dev
-```
+- Shared server-side data; do not use browser localStorage as the system of record.
+- Authentication-backed identity and server-side authorization on every read/write.
+- Pending users receive no household financial data.
+- Owner/Admin can approve, change role, reject, or remove household members.
+- Version/conflict protection must prevent stale saves silently overwriting newer edits.
+- Keep an append-only audit/history trail for security-sensitive membership changes and meaningful financial edits.
+- Mobile-first UI, especially iPhone, with desktop support.
+- Preserve exact currency values; avoid floating-point rounding errors for money.
+- Build automated tests before production deployment.
 
-Production build:
+## Handoff
 
-```bash
-npm run build
-```
-
-## Security rules
-
-Do not commit Firebase Admin SDK/service-account credentials. `VITE_*` variables are delivered to the browser and therefore must contain only Firebase Web SDK client configuration.
-
-The initial Owner identity is deliberately limited to the verified authentication email `backtonemesis@gmail.com`. All other authenticated identities start Pending and receive no household financial data until the Owner approves them.
+See [`GOOGLE_HANDOFF.md`](./GOOGLE_HANDOFF.md) for the implementation brief intended for the next development environment.

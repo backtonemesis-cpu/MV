@@ -1,0 +1,312 @@
+import React, { useState } from 'react';
+import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'lucide-react';
+import { PlannedPayment, Account, Category, Payer } from '../types';
+import { parseToPence } from '../utils/currency';
+
+interface PlannedPaymentModalProps {
+  payment?: PlannedPayment | null;
+  accounts: Account[];
+  categories: Category[];
+  activeMonth: string;
+  onClose: () => void;
+  onSave: (paymentData: Partial<PlannedPayment>) => Promise<void>;
+}
+
+export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
+  payment,
+  accounts,
+  categories,
+  activeMonth,
+  onClose,
+  onSave,
+}) => {
+  const isEditing = Boolean(payment);
+
+  const [name, setName] = useState(payment?.name || '');
+  const [amountStr, setAmountStr] = useState(
+    payment ? (payment.amountPence / 100).toFixed(2) : ''
+  );
+  const [month, setMonth] = useState(payment?.month || activeMonth || '2026-09');
+  const [accountId, setAccountId] = useState(payment?.accountId || accounts[0]?.id || '');
+  const [responsiblePerson, setResponsiblePerson] = useState<Payer>(
+    payment?.responsiblePerson || 'Joint'
+  );
+  const [dueDate, setDueDate] = useState(payment?.dueDate || '');
+  const [categoryId, setCategoryId] = useState(payment?.categoryId || categories[0]?.id || 'cat-housing');
+  const [status, setStatus] = useState<'unpaid' | 'paid'>(payment?.status || 'unpaid');
+  const [includeInTransferPlan, setIncludeInTransferPlan] = useState<boolean>(
+    payment?.includeInTransferPlan !== undefined ? payment.includeInTransferPlan : true
+  );
+  const [notes, setNotes] = useState(payment?.notes || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // When account changes, default responsible person to account owner if available
+  const handleAccountChange = (newAccId: string) => {
+    setAccountId(newAccId);
+    const selectedAcc = accounts.find((a) => a.id === newAccId);
+    if (selectedAcc?.ownerPerson) {
+      setResponsiblePerson(selectedAcc.ownerPerson);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError('Payment / Bill name is required.');
+      return;
+    }
+    const pence = parseToPence(amountStr);
+    if (pence <= 0) {
+      setError('Please enter a valid amount in pounds and pence (e.g. 349.79).');
+      return;
+    }
+    if (!accountId) {
+      setError('Please choose a payment account.');
+      return;
+    }
+    if (!month.trim()) {
+      setError('Billing month is required (e.g. 2026-09).');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await onSave({
+        name: name.trim(),
+        amountPence: pence,
+        month: month.trim(),
+        accountId,
+        responsiblePerson,
+        dueDate: dueDate || undefined,
+        categoryId: categoryId || undefined,
+        status,
+        includeInTransferPlan,
+        notes: notes.trim() || undefined,
+      });
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to save scheduled payment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-neutral-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50">
+          <div>
+            <h3 className="text-base font-semibold text-neutral-900">
+              {isEditing ? 'Edit Planned Payment' : 'Add Upcoming Payment / Bill'}
+            </h3>
+            <p className="text-xs text-neutral-500">
+              Attach to a payment account so it can be funded via the Transfer Plan
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-800 text-xs">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Payment Name */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-700 mb-1">
+              Payment / Bill Name *
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Child Maintenance, Council Tax, Vodafone, Rent"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              required
+            />
+          </div>
+
+          {/* Amount & Month */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Amount (£) *
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-sm text-neutral-400 font-medium">£</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="349.79"
+                  value={amountStr}
+                  onChange={(e) => setAmountStr(e.target.value)}
+                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Billing Month (YYYY-MM) *
+              </label>
+              <input
+                type="text"
+                placeholder="2026-09"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                pattern="^\d{4}-\d{2}$"
+                title="Format: YYYY-MM (e.g. 2026-09)"
+                className="w-full px-3 py-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Payment Account & Responsible Person */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Payment Account *
+              </label>
+              <select
+                value={accountId}
+                onChange={(e) => handleAccountChange(e.target.value)}
+                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                required
+              >
+                {accounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.name} ({acc.ownerPerson || acc.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Responsible Person
+              </label>
+              <select
+                value={responsiblePerson}
+                onChange={(e) => setResponsiblePerson(e.target.value as Payer)}
+                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              >
+                <option value="Marius">Marius</option>
+                <option value="Vesta">Vesta</option>
+                <option value="Joint">Joint</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Due Date & Category */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">
+                Due Date (Optional)
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">Category</label>
+              <select
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Status & Plan Inclusion (Separate Concepts) */}
+          <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-medium text-neutral-800">Include in Transfer Plan</span>
+                <p className="text-xs text-neutral-500">
+                  Should this payment create a funding requirement for this account?
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                id="modal-include-plan-toggle"
+                checked={includeInTransferPlan}
+                onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
+                className="w-4 h-4 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-200">
+              <div>
+                <span className="text-xs font-medium text-neutral-800">Payment Status</span>
+                <p className="text-xs text-neutral-500">
+                  Has this payment already cleared or been executed?
+                </p>
+              </div>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
+                className="text-xs font-medium border border-neutral-300 rounded-md px-2.5 py-1 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              >
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-700 mb-1">Notes (Optional)</label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Direct debit reference, contract notice..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md shadow-xs disabled:opacity-50 transition-colors"
+            >
+              {isSubmitting ? 'Saving...' : isEditing ? 'Update Payment' : 'Add Payment'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
