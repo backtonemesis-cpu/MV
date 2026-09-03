@@ -44,6 +44,7 @@ import { FirestoreCoreMutationStore } from './server/storage/coreMutations';
 import { resolveRuntimeDataBackend } from './server/storage/runtimeBackend';
 import { getMvFirestore } from './server/firestoreAdmin';
 import { createFirestoreCoreFinanceRouter } from './server/firestoreCoreFinanceRoutes';
+import { createFirestorePlannedFinanceRouter } from './server/firestorePlannedFinanceRoutes';
 
 const PORT = 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -594,9 +595,18 @@ async function startServer() {
         edge: firestoreEdgeMutations,
       })
     );
+    app.use(
+      '/api',
+      createFirestorePlannedFinanceRouter({
+        db: firestoreDb,
+        store: firestoreStore,
+        core: firestoreCoreMutations,
+        edge: firestoreEdgeMutations,
+      })
+    );
   }
 
-  // Stage 7B1 safety gate. Verified Firestore core-finance routes above fully
+  // Stage 7B2 safety gate. Verified Firestore finance routes above fully
   // terminate their requests. Anything else below remains fail-closed and
   // cannot fall through into legacy SQLite handlers.
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {

@@ -295,3 +295,162 @@ export async function validateSavingsGoalAccountReferences(
 
   return errors;
 }
+
+
+export async function validateFirestorePlannedPaymentInput(
+  db: Firestore,
+  body: any
+): Promise<RuntimeValidationResult> {
+  const errors: Array<{ field: string; message: string }> = [];
+
+  if (
+    !body.name ||
+    typeof body.name !== 'string' ||
+    body.name.trim().length === 0
+  ) {
+    errors.push({
+      field: 'name',
+      message: 'Payment name/obligation is required',
+    });
+  }
+
+  if (
+    !body.amountPence ||
+    !Number.isInteger(body.amountPence) ||
+    body.amountPence <= 0
+  ) {
+    errors.push({
+      field: 'amountPence',
+      message: 'Amount must be a positive integer in pence',
+    });
+  }
+
+  if (!body.month || !/^\d{4}-\d{2}$/.test(body.month)) {
+    errors.push({
+      field: 'month',
+      message: 'Month is required in YYYY-MM format',
+    });
+  }
+
+  if (!body.responsiblePerson || !VALID_PAYERS.includes(body.responsiblePerson)) {
+    errors.push({
+      field: 'responsiblePerson',
+      message: `Responsible person must be one of: ${VALID_PAYERS.join(', ')}`,
+    });
+  }
+
+  if (!body.accountId || typeof body.accountId !== 'string') {
+    errors.push({
+      field: 'accountId',
+      message: 'Payment account is required',
+    });
+  } else if (!(await documentExists(db, 'accounts', body.accountId))) {
+    errors.push({
+      field: 'accountId',
+      message: `Referenced account '${body.accountId}' does not exist`,
+    });
+  }
+
+  if (errors.length > 0) return { errors };
+
+  return {
+    errors: [],
+    sanitized: {
+      name: body.name.trim(),
+      amountPence: body.amountPence,
+      month: body.month,
+      responsiblePerson: body.responsiblePerson,
+      accountId: body.accountId,
+      dueDate: body.dueDate ? String(body.dueDate).trim() : undefined,
+      categoryId: body.categoryId || undefined,
+      status: body.status === 'paid' ? 'paid' : 'unpaid',
+      includeInTransferPlan: body.includeInTransferPlan !== false,
+      notes: body.notes ? String(body.notes).trim() : undefined,
+    },
+  };
+}
+
+export async function validateFirestorePlannedIncomeInput(
+  db: Firestore,
+  body: any
+): Promise<RuntimeValidationResult> {
+  const errors: Array<{ field: string; message: string }> = [];
+
+  if (
+    !body.name ||
+    typeof body.name !== 'string' ||
+    body.name.trim().length === 0
+  ) {
+    errors.push({
+      field: 'name',
+      message: 'Income source name is required',
+    });
+  }
+
+  if (
+    !body.expectedAmountPence ||
+    !Number.isInteger(body.expectedAmountPence) ||
+    body.expectedAmountPence <= 0
+  ) {
+    errors.push({
+      field: 'expectedAmountPence',
+      message: 'Expected amount must be a positive integer in pence',
+    });
+  }
+
+  if (!body.month || !/^\d{4}-\d{2}$/.test(body.month)) {
+    errors.push({
+      field: 'month',
+      message: 'Month is required in YYYY-MM format',
+    });
+  }
+
+  if (!body.sourcePerson || !VALID_PAYERS.includes(body.sourcePerson)) {
+    errors.push({
+      field: 'sourcePerson',
+      message: `Source person must be one of: ${VALID_PAYERS.join(', ')}`,
+    });
+  }
+
+  if (!body.accountId || typeof body.accountId !== 'string') {
+    errors.push({
+      field: 'accountId',
+      message: 'Receiving account is required',
+    });
+  } else if (!(await documentExists(db, 'accounts', body.accountId))) {
+    errors.push({
+      field: 'accountId',
+      message: `Referenced account '${body.accountId}' does not exist`,
+    });
+  }
+
+  if (errors.length > 0) return { errors };
+
+  return {
+    errors: [],
+    sanitized: {
+      name: body.name.trim(),
+      expectedAmountPence: body.expectedAmountPence,
+      month: body.month,
+      sourcePerson: body.sourcePerson,
+      accountId: body.accountId,
+      expectedDate: body.expectedDate
+        ? String(body.expectedDate).trim()
+        : undefined,
+      status:
+        body.status === 'received'
+          ? 'received'
+          : body.status === 'partial'
+            ? 'partial'
+            : 'expected',
+      notes: body.notes ? String(body.notes).trim() : undefined,
+    },
+  };
+}
+
+export async function firestoreAccountExists(
+  db: Firestore,
+  accountId: string
+): Promise<boolean> {
+  return documentExists(db, 'accounts', accountId);
+}
