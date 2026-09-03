@@ -1,5 +1,5 @@
 import type { Firestore } from 'firebase-admin/firestore';
-import type { Payer, TransactionType, ValidationError } from '../../src/types';
+import type { Payer, TransactionType } from '../../src/types';
 import { HOUSEHOLD_ID } from './contracts';
 
 export interface RuntimeValidationResult {
