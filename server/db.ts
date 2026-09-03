@@ -200,6 +200,17 @@ export function getHouseholdData(): HouseholdData {
 
   const meta = db.prepare('SELECT * FROM household_meta WHERE id = ?').get('household-mv') as any;
   const rawMembers = db.prepare('SELECT id, email, display_name as name, role, joined_at as joinedAt, approved_at as approvedAt, approved_by as approvedBy, last_active_at as lastActiveAt FROM users ORDER BY joined_at ASC').all() as any[];
+  const members: HouseholdMember[] = rawMembers.map((m) => ({
+    id: m.id,
+    email: m.email,
+    name: m.name,
+    role: m.role,
+    joinedAt: m.joinedAt,
+    approvedAt: m.approvedAt || undefined,
+    approvedBy: m.approvedBy || undefined,
+    lastActiveAt: m.lastActiveAt || undefined,
+  }));
+
   const rawAccounts = db.prepare('SELECT * FROM accounts WHERE is_active = 1 ORDER BY name ASC').all() as any[];
   const rawCategories = db.prepare('SELECT id, name, group_name as "group", monthly_budget_pence as monthlyBudgetPence, icon, is_archived as isArchived FROM categories WHERE is_archived = 0 ORDER BY group_name ASC, name ASC').all() as any[];
   const rawTransactions = db.prepare('SELECT * FROM transactions ORDER BY date DESC, created_at DESC').all() as any[];
@@ -351,7 +362,7 @@ export function getHouseholdData(): HouseholdData {
     name: meta?.name || 'Marius & Vesta Household',
     version: meta?.version || 1,
     schemaStatus: getSchemaStatus(db),
-    members: rawMembers,
+    members,
     accounts,
     categories,
     transactions,
