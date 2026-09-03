@@ -18,6 +18,12 @@ import {
   UserRole,
   UserPreferences,
 } from '../src/types';
+import {
+  runMigrations,
+  getSchemaStatus,
+  CURRENT_SCHEMA_VERSION,
+  MIN_SUPPORTED_CLIENT_SCHEMA_VERSION,
+} from './migrations';
 
 let dbInstance: DatabaseSync | null = null;
 let currentDbPath = '';
@@ -48,216 +54,8 @@ export function initDb(dbPath?: string): DatabaseSync {
   }
   db.exec('PRAGMA foreign_keys = ON;');
 
-  // Create tables
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      salt TEXT NOT NULL,
-      display_name TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('owner', 'editor', 'view_only', 'pending', 'removed')),
-      joined_at TEXT NOT NULL,
-      approved_at TEXT,
-      approved_by TEXT,
-      last_active_at TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS user_sessions (
-      token_hash TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      email TEXT NOT NULL,
-      role TEXT NOT NULL,
-      expires_at INTEGER NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS user_preferences (
-      user_id TEXT PRIMARY KEY,
-      theme TEXT NOT NULL DEFAULT 'system',
-      accent_color TEXT NOT NULL DEFAULT 'default',
-      updated_at TEXT NOT NULL,
-      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS household_meta (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      currency TEXT NOT NULL DEFAULT 'GBP',
-      version INTEGER NOT NULL DEFAULT 1,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS accounts (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('current', 'joint', 'savings', 'credit', 'cash')),
-      currency TEXT NOT NULL DEFAULT 'GBP',
-      starting_balance_pence INTEGER NOT NULL DEFAULT 0,
-      current_balance_pence INTEGER NOT NULL DEFAULT 0,
-      owner_person TEXT NOT NULL CHECK(owner_person IN ('Marius', 'Vesta', 'Joint')),
-      is_active INTEGER NOT NULL DEFAULT 1,
-      reconciled_at TEXT,
-      reconciliation_date TEXT,
-      reconciled_balance_pence INTEGER,
-      credit_limit_pence INTEGER,
-      balance_owed_pence INTEGER,
-      notes TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS categories (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      group_name TEXT NOT NULL,
-      monthly_budget_pence INTEGER NOT NULL DEFAULT 0,
-      icon TEXT,
-      is_archived INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS transactions (
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      description TEXT NOT NULL,
-      amount_pence INTEGER NOT NULL,
-      type TEXT NOT NULL CHECK(type IN ('expense', 'income', 'transfer', 'repayment', 'refund')),
-      category_id TEXT NOT NULL,
-      account_id TEXT NOT NULL,
-      target_account_id TEXT,
-      payer TEXT NOT NULL CHECK(payer IN ('Marius', 'Vesta', 'Joint')),
-      notes TEXT,
-      is_transfer INTEGER NOT NULL DEFAULT 0,
-      is_repayment INTEGER NOT NULL DEFAULT 0,
-      is_savings INTEGER NOT NULL DEFAULT 0,
-      is_refund INTEGER NOT NULL DEFAULT 0,
-      original_transaction_id TEXT,
-      planned_payment_id TEXT,
-      planned_income_id TEXT,
-      created_at TEXT NOT NULL,
-      created_by TEXT NOT NULL,
-      updated_at TEXT,
-      updated_by TEXT,
-      FOREIGN KEY(account_id) REFERENCES accounts(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS transaction_splits (
-      id TEXT PRIMARY KEY,
-      transaction_id TEXT NOT NULL,
-      category_id TEXT NOT NULL,
-      amount_pence INTEGER NOT NULL,
-      payer TEXT,
-      notes TEXT,
-      FOREIGN KEY(transaction_id) REFERENCES transactions(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS planned_incomes (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      expected_amount_pence INTEGER NOT NULL,
-      actual_amount_pence INTEGER,
-      month TEXT NOT NULL,
-      source_person TEXT NOT NULL CHECK(source_person IN ('Marius', 'Vesta', 'Joint')),
-      account_id TEXT NOT NULL,
-      expected_date TEXT,
-      actual_date TEXT,
-      status TEXT NOT NULL CHECK(status IN ('expected', 'received', 'partial')),
-      notes TEXT,
-      actual_transaction_id TEXT,
-      created_at TEXT NOT NULL,
-      created_by TEXT NOT NULL,
-      updated_at TEXT,
-      updated_by TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS planned_payments (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      amount_pence INTEGER NOT NULL,
-      actual_amount_pence INTEGER,
-      actual_date TEXT,
-      actual_transaction_id TEXT,
-      month TEXT NOT NULL,
-      responsible_person TEXT NOT NULL CHECK(responsible_person IN ('Marius', 'Vesta', 'Joint')),
-      account_id TEXT NOT NULL,
-      due_date TEXT,
-      category_id TEXT,
-      status TEXT NOT NULL CHECK(status IN ('unpaid', 'paid')),
-      include_in_transfer_plan INTEGER NOT NULL DEFAULT 1,
-      notes TEXT,
-      created_at TEXT NOT NULL,
-      created_by TEXT NOT NULL,
-      updated_at TEXT,
-      updated_by TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS savings_goals (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      target_pence INTEGER NOT NULL,
-      current_pence INTEGER NOT NULL DEFAULT 0,
-      target_date TEXT,
-      account_id TEXT NOT NULL,
-      linked_account_id TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS audit_logs (
-      id TEXT PRIMARY KEY,
-      timestamp TEXT NOT NULL,
-      actor_email TEXT NOT NULL,
-      action TEXT NOT NULL,
-      entity_type TEXT NOT NULL,
-      entity_id TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      details_json TEXT
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
-    CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
-    CREATE INDEX IF NOT EXISTS idx_planned_payments_month ON planned_payments(month);
-    CREATE INDEX IF NOT EXISTS idx_planned_incomes_month ON planned_incomes(month);
-  `);
-
-  // Ensure household_meta exists
-  const metaRow = db.prepare('SELECT * FROM household_meta WHERE id = ?').get('household-mv') as any;
-  if (!metaRow) {
-    db.prepare('INSERT INTO household_meta (id, name, currency, version, updated_at) VALUES (?, ?, ?, ?, ?)').run(
-      'household-mv',
-      'Marius & Vesta Household',
-      'GBP',
-      1,
-      new Date().toISOString()
-    );
-  }
-
-  // Ensure standard budget category structure exists (categories with 0 budget, ready for real entries)
-  const catCount = (db.prepare('SELECT count(*) as count FROM categories').get() as any).count;
-  if (catCount === 0) {
-    const defaultCategories = [
-      { id: 'cat-housing', name: 'Rent / Mortgage', group_name: 'Housing', monthly_budget_pence: 0 },
-      { id: 'cat-council-tax', name: 'Council Tax', group_name: 'Housing', monthly_budget_pence: 0 },
-      { id: 'cat-groceries', name: 'Groceries & Food', group_name: 'Living', monthly_budget_pence: 0 },
-      { id: 'cat-utilities', name: 'Gas & Electricity', group_name: 'Utilities', monthly_budget_pence: 0 },
-      { id: 'cat-water', name: 'Water Rates', group_name: 'Utilities', monthly_budget_pence: 0 },
-      { id: 'cat-internet', name: 'Broadband & Mobile', group_name: 'Utilities', monthly_budget_pence: 0 },
-      { id: 'cat-transport', name: 'Transport & Fuel', group_name: 'Living', monthly_budget_pence: 0 },
-      { id: 'cat-childcare', name: 'Child Maintenance / Care', group_name: 'Family', monthly_budget_pence: 0 },
-      { id: 'cat-health', name: 'Health & Pharmacy', group_name: 'Personal', monthly_budget_pence: 0 },
-      { id: 'cat-dining', name: 'Dining & Takeaway', group_name: 'Discretionary', monthly_budget_pence: 0 },
-      { id: 'cat-entertainment', name: 'Entertainment & Subs', group_name: 'Discretionary', monthly_budget_pence: 0 },
-      { id: 'cat-savings', name: 'Savings Allocation', group_name: 'Savings', monthly_budget_pence: 0 },
-      { id: 'cat-salary', name: 'Salary & Earnings', group_name: 'Income', monthly_budget_pence: 0 },
-      { id: 'cat-benefits', name: 'State Benefits / Universal Credit', group_name: 'Income', monthly_budget_pence: 0 },
-      { id: 'cat-child-benefit', name: 'Child Benefit', group_name: 'Income', monthly_budget_pence: 0 },
-    ];
-    const catInsert = db.prepare('INSERT INTO categories (id, name, group_name, monthly_budget_pence, icon, is_archived) VALUES (?, ?, ?, ?, ?, 0)');
-    for (const c of defaultCategories) {
-      catInsert.run(c.id, c.name, c.group_name, c.monthly_budget_pence, null);
-    }
-  }
+  // Run sequential schema migrations up to CURRENT_SCHEMA_VERSION
+  runMigrations(db);
 
   dbInstance = db;
   return db;
@@ -445,6 +243,10 @@ export function getHouseholdData(): HouseholdData {
     plannedPaymentId: tx.planned_payment_id || undefined,
     plannedIncomeId: tx.planned_income_id || undefined,
     splits: splitsMap.get(tx.id) || undefined,
+    idempotencyKey: tx.idempotency_key || undefined,
+    taxYear: tx.tax_year || undefined,
+    schemaVersion: tx.schema_version !== undefined ? Number(tx.schema_version) : 1,
+    metadata: tx.metadata_json ? JSON.parse(tx.metadata_json) : undefined,
     createdAt: tx.created_at,
     createdBy: tx.created_by,
     updatedAt: tx.updated_at || undefined,
@@ -466,6 +268,8 @@ export function getHouseholdData(): HouseholdData {
     creditLimitPence: a.credit_limit_pence !== null ? a.credit_limit_pence : undefined,
     balanceOwedPence: a.balance_owed_pence !== null ? a.balance_owed_pence : undefined,
     notes: a.notes || undefined,
+    schemaVersion: a.schema_version !== undefined ? Number(a.schema_version) : 1,
+    metadata: a.metadata_json ? JSON.parse(a.metadata_json) : undefined,
   }));
 
   const plannedPayments: PlannedPayment[] = rawPlannedPayments.map((p) => ({
@@ -483,6 +287,8 @@ export function getHouseholdData(): HouseholdData {
     status: p.status,
     includeInTransferPlan: Boolean(p.include_in_transfer_plan),
     notes: p.notes || undefined,
+    schemaVersion: p.schema_version !== undefined ? Number(p.schema_version) : 1,
+    metadata: p.metadata_json ? JSON.parse(p.metadata_json) : undefined,
     createdAt: p.created_at,
     createdBy: p.created_by,
     updatedAt: p.updated_at || undefined,
@@ -502,6 +308,8 @@ export function getHouseholdData(): HouseholdData {
     status: i.status,
     notes: i.notes || undefined,
     actualTransactionId: i.actual_transaction_id || undefined,
+    schemaVersion: i.schema_version !== undefined ? Number(i.schema_version) : 1,
+    metadata: i.metadata_json ? JSON.parse(i.metadata_json) : undefined,
     createdAt: i.created_at,
     createdBy: i.created_by,
     updatedAt: i.updated_at || undefined,
@@ -533,6 +341,7 @@ export function getHouseholdData(): HouseholdData {
     id: meta?.id || 'household-mv',
     name: meta?.name || 'Marius & Vesta Household',
     version: meta?.version || 1,
+    schemaStatus: getSchemaStatus(db),
     members: rawMembers,
     accounts,
     categories: rawCategories,

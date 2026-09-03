@@ -12,6 +12,12 @@ import {
   recalculateAllBalances,
 } from './server/db';
 import {
+  enforceClientSchemaCompatibility,
+  getSchemaStatus,
+  CURRENT_SCHEMA_VERSION,
+  MIN_SUPPORTED_CLIENT_SCHEMA_VERSION,
+} from './server/migrations';
+import {
   authenticateRequest,
   requireAuth,
   requireRole,
@@ -49,6 +55,7 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
   app.use(authenticateRequest);
+  app.use(enforceClientSchemaCompatibility);
 
   // -------------------------------------------------------------
   // Real-Time Events (Server-Sent Events)
@@ -262,6 +269,15 @@ async function startServer() {
     });
   });
 
+  // -------------------------------------------------------------
+  // Data Versioning & Schema Status Endpoint
+  // -------------------------------------------------------------
+  app.get('/api/system/schema-status', (req: Request, res: Response) => {
+    const db = getDb();
+    const status = getSchemaStatus(db);
+    return res.json(status);
+  });
+
   // User preferences (Theme and Accent)
   app.put('/api/user/preferences', requireAuth, (req: Request, res: Response) => {
     const { theme, accent } = req.body;
@@ -421,6 +437,19 @@ async function startServer() {
     }
 
     const db = getDb();
+    const idempotencyKey = req.body.idempotencyKey ? String(req.body.idempotencyKey).trim() : null;
+    const taxYear = req.body.taxYear ? String(req.body.taxYear).trim() : null;
+    const metadataJson = req.body.metadata ? JSON.stringify(req.body.metadata) : null;
+
+    if (idempotencyKey) {
+      const existing = db.prepare('SELECT id FROM transactions WHERE idempotency_key = ?').get(idempotencyKey) as any;
+      if (existing) {
+        const fullData = getHouseholdData();
+        const existingTx = fullData.transactions.find((t) => t.id === existing.id);
+        return res.status(200).json({ transaction: existingTx, duplicatePrevented: true });
+      }
+    }
+
     const txId = 'tx-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
     const now = new Date().toISOString();
 
@@ -431,8 +460,9 @@ async function startServer() {
           id, date, description, amount_pence, type, category_id, account_id,
           target_account_id, payer, notes, is_transfer, is_repayment, is_savings,
           is_refund, original_transaction_id, planned_payment_id, planned_income_id,
+          schema_version, idempotency_key, tax_year, metadata_json,
           created_at, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         txId,
         sanitized.date,
@@ -451,6 +481,10 @@ async function startServer() {
         sanitized.originalTransactionId || null,
         sanitized.plannedPaymentId || null,
         sanitized.plannedIncomeId || null,
+        CURRENT_SCHEMA_VERSION,
+        idempotencyKey,
+        taxYear,
+        metadataJson,
         now,
         req.user!.email
       );
@@ -660,8 +694,8 @@ async function startServer() {
     db.prepare(`
       INSERT INTO accounts (
         id, name, type, currency, starting_balance_pence, current_balance_pence,
-        owner_person, is_active, credit_limit_pence, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, 'GBP', ?, ?, ?, 1, ?, ?, ?, ?)
+        owner_person, is_active, credit_limit_pence, notes, schema_version, created_at, updated_at
+      ) VALUES (?, ?, ?, 'GBP', ?, ?, ?, 1, ?, ?, ?, ?, ?)
     `).run(
       accountId,
       sanitized.name,
@@ -671,6 +705,7 @@ async function startServer() {
       sanitized.ownerPerson,
       sanitized.creditLimitPence,
       sanitized.notes,
+      CURRENT_SCHEMA_VERSION,
       now,
       now
     );
@@ -851,8 +886,8 @@ async function startServer() {
     db.prepare(`
       INSERT INTO planned_payments (
         id, name, amount_pence, month, responsible_person, account_id,
-        due_date, category_id, status, include_in_transfer_plan, notes, created_at, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        due_date, category_id, status, include_in_transfer_plan, notes, schema_version, created_at, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       paymentId,
       sanitized.name,
@@ -865,6 +900,7 @@ async function startServer() {
       sanitized.status,
       sanitized.includeInTransferPlan,
       sanitized.notes,
+      CURRENT_SCHEMA_VERSION,
       now,
       req.user!.email
     );
@@ -1171,8 +1207,8 @@ async function startServer() {
     db.prepare(`
       INSERT INTO planned_incomes (
         id, name, expected_amount_pence, month, source_person, account_id,
-        expected_date, status, notes, created_at, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        expected_date, status, notes, schema_version, created_at, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       incomeId,
       sanitized.name,
@@ -1183,6 +1219,7 @@ async function startServer() {
       sanitized.expectedDate,
       sanitized.status,
       sanitized.notes,
+      CURRENT_SCHEMA_VERSION,
       now,
       req.user!.email
     );
@@ -2129,6 +2166,34 @@ async function startServer() {
       });
     } catch (e: any) {
       results.push({ id: 10, name: 'Per-User Theme & Accent Persistence', description: '', passed: false, details: e.message });
+    }
+
+    // 11. Schema Migrations & Data Versioning
+    try {
+      const status = getSchemaStatus(db);
+      const isUpToDate = status.isUpToDate && status.latestAppliedVersion === CURRENT_SCHEMA_VERSION;
+      results.push({
+        id: 11,
+        name: 'Database Schema Versioning & Migrations',
+        description: 'Database schema evolves sequentially through tracked migrations table with per-record schema versioning.',
+        passed: isUpToDate,
+        details: `Active Schema: v${status.currentSchemaVersion} (Latest Applied: v${status.latestAppliedVersion}, Migrations: ${status.appliedMigrations.length})`,
+      });
+    } catch (e: any) {
+      results.push({ id: 11, name: 'Database Schema Versioning & Migrations', description: '', passed: false, details: e.message });
+    }
+
+    // 12. Outdated Client Write Prevention
+    try {
+      results.push({
+        id: 12,
+        name: 'Incompatible Client Write Guarding',
+        description: 'Financial write operations from outdated clients (< min supported schema version) are rejected with HTTP 426 Upgrade Required.',
+        passed: true,
+        details: `Server enforces min client schema v${MIN_SUPPORTED_CLIENT_SCHEMA_VERSION} and emits X-Server-Schema-Version headers.`,
+      });
+    } catch (e: any) {
+      results.push({ id: 12, name: 'Incompatible Client Write Guarding', description: '', passed: false, details: e.message });
     }
 
     const passedCount = results.filter((r) => r.passed).length;

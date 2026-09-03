@@ -32,6 +32,8 @@ export interface Account {
   creditLimitPence?: number; // Credit card limit in pence
   balanceOwedPence?: number; // Credit card balance owed in pence
   notes?: string;
+  schemaVersion?: number;
+  metadata?: Record<string, any>;
 }
 
 export interface Category {
@@ -69,6 +71,10 @@ export interface Transaction {
   originalTransactionId?: string; // For linked refunds/credits
   splits?: TransactionSplit[]; // Split transaction support
   plannedPaymentId?: string; // Linked bill obligation
+  idempotencyKey?: string;
+  taxYear?: string;
+  schemaVersion?: number;
+  metadata?: Record<string, any>;
   createdAt: string;
   createdBy: string; // User email
   updatedAt?: string;
@@ -88,6 +94,8 @@ export interface PlannedIncome {
   status: 'expected' | 'received' | 'partial';
   notes?: string;
   linkedTransactionId?: string;
+  schemaVersion?: number;
+  metadata?: Record<string, any>;
   createdAt: string;
   createdBy: string;
   updatedAt?: string;
@@ -106,6 +114,8 @@ export interface PlannedPayment {
   status: 'unpaid' | 'paid'; // Separate concept from Transfer Plan inclusion
   includeInTransferPlan: boolean; // User inclusion toggle
   notes?: string;
+  schemaVersion?: number;
+  metadata?: Record<string, any>;
   createdAt: string;
   createdBy: string;
   updatedAt?: string;
@@ -156,10 +166,27 @@ export interface AuditLogEntry {
   details?: Record<string, any>;
 }
 
+export interface SchemaMigrationRecord {
+  version: number;
+  name: string;
+  appliedAt: string;
+  executionTimeMs: number;
+  checksum?: string;
+}
+
+export interface SchemaStatus {
+  currentSchemaVersion: number;
+  minSupportedClientVersion: number;
+  latestAppliedVersion: number;
+  appliedMigrations: SchemaMigrationRecord[];
+  isUpToDate: boolean;
+}
+
 export interface HouseholdData {
   id: string;
   name: string;
   version: number; // Concurrency tracking
+  schemaStatus?: SchemaStatus;
   members: HouseholdMember[];
   accounts: Account[];
   categories: Category[];
