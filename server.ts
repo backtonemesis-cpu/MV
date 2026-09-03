@@ -38,17 +38,46 @@ import {
 } from './server/validation';
 import { calculateAccountFunding, generateTransferPlan } from './src/utils/transferPlan';
 import { UserRole, TestResult } from './src/types';
+import { FirestoreHouseholdStore } from './server/storage/firestoreStore';
+import { FirestoreEdgeMutationStore } from './server/storage/edgeMutations';
+import { resolveRuntimeDataBackend } from './server/storage/runtimeBackend';
+import { getMvFirestore } from './server/firestoreAdmin';
 
 const PORT = 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_BACKEND = resolveRuntimeDataBackend();
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+if (DATA_BACKEND === 'sqlite') {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  // Local/dev compatibility only. Cloud Run remains blocked from SQLite.
+  initDb(path.join(DATA_DIR, 'mv_household.sqlite'));
+  ensureInitialOwner();
 }
 
-// Initialize SQLite Database and initial owner setup
-initDb(path.join(DATA_DIR, 'mv_household.sqlite'));
-ensureInitialOwner();
+const firestoreDb = DATA_BACKEND === 'firestore' ? getMvFirestore() : null;
+const firestoreStore =
+  firestoreDb ? new FirestoreHouseholdStore(firestoreDb) : null;
+const firestoreEdgeMutations =
+  firestoreDb && firestoreStore
+    ? new FirestoreEdgeMutationStore(firestoreDb, firestoreStore)
+    : null;
+
+function requireFirestoreStore(): FirestoreHouseholdStore {
+  if (!firestoreStore) {
+    throw new Error('Firestore runtime store is unavailable.');
+  }
+  return firestoreStore;
+}
+
+function requireFirestoreEdgeMutations(): FirestoreEdgeMutationStore {
+  if (!firestoreEdgeMutations) {
+    throw new Error('Firestore runtime mutation store is unavailable.');
+  }
+  return firestoreEdgeMutations;
+}
 
 async function startServer() {
   const app = express();
