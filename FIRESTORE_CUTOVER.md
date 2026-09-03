@@ -6,9 +6,13 @@ MV is not production-ready while household finance data is authoritative in loca
 
 The production startup guard intentionally refuses Cloud Run + SQLite. Do not remove that guard until the Firestore cutover gates below pass.
 
-The existing Firebase project configuration identifies the MV Firestore database as:
+The existing AI Studio configuration identifies a named Firestore database:
 
 `ai-studio-mv-02fb52df-6e5f-458e-bc1e-b1fdc07a8db7`
+
+That named database must remain locked down from browser access. It is not, however, approved as MV's authoritative production database because Firebase Admin's named-database `getFirestore(..., databaseId)` overload is currently Public Preview and Firebase documentation says not to use it in production.
+
+MV authoritative production data must use the stable **`(default)` Firestore database** unless and until Firebase documents named-database Admin access as production-supported. If the project does not yet have a `(default)` database, it must be created/configured in Firebase/Google Cloud before production cutover.
 
 The browser uses Firebase for authentication only. Direct browser Firestore reads/writes are denied. Household data access remains behind the MV server API and server-side authorization.
 
@@ -49,6 +53,16 @@ Recommended document layout under `households/household-mv`:
 
 Do not store local password hashes or MV session tokens in Firestore. Firebase Auth is the identity provider.
 
+## Production database selection
+
+Production server code must use the stable Firebase Admin default-database API:
+
+`getFirestore(app)`
+
+Repository code must fail closed if `MV_FIRESTORE_DATABASE_ID` is set to anything other than `(default)` while named-database Admin access remains preview-only.
+
+The existing AI Studio named database can be retained for legacy/staging investigation, but direct client rules must remain deny-all and it must not silently become the production household system of record.
+
 ## Concurrency and atomic writes
 
 The current dataset-level `expectedVersion` contract must remain authoritative during cutover.
@@ -84,7 +98,7 @@ Migration must be explicit and evidence-preserving:
 1. Freeze financial writes for the migration window.
 2. Export the current authoritative SQLite household financial data using a migration-only export that excludes local authentication/session secrets.
 3. Preserve stable entity IDs and relationship/linkage IDs.
-4. Import to a non-production Firestore namespace/database first.
+4. Import to a non-production Firestore test namespace/environment first.
 5. Recalculate and compare:
    - account balances and reconciliation anchors;
    - monthly actual income;
@@ -97,7 +111,7 @@ Migration must be explicit and evidence-preserving:
    - dataset version and schema compatibility.
 6. Verify Marius Owner and Pending/Editor/View-only boundaries with real Firebase-authenticated test users.
 7. Perform simultaneous-edit conflict tests.
-8. Only then import to the production MV Firestore database and switch the server backend.
+8. Only then import to the production `(default)` Firestore database and switch the server backend.
 
 Membership/Owner authority must be established from verified Firebase identities and must not be imported from a financial backup.
 
@@ -105,13 +119,14 @@ Membership/Owner authority must be established from verified Firebase identities
 
 Use separate reviewable PRs rather than one untestable replacement:
 
-1. **Client boundary** — Firebase browser is Auth-only; direct Firestore access denied. (This PR.)
-2. **Firestore server store + emulator tests** — implement typed persistence methods and role/version transactions without changing production backend.
-3. **Read parity** — populate Firestore test fixtures and prove `/api/household` output matches SQLite fixture output for the same data.
-4. **Mutation parity** — transactions, reconciliation, planned/actual linkage, month import, savings, backup/restore and membership operations pass the same behavioral tests against Firestore.
-5. **Migration tooling** — explicit SQLite → Firestore migration with dry-run validation and no sample-data fallback.
-6. **Production cutover** — set `MV_DATA_BACKEND=firestore`, require Firebase Admin/Firestore readiness, remove the Cloud Run SQLite refusal only for the completed Firestore path, deploy a new Cloud Run revision and verify it Ready.
-7. **Post-cutover validation** — Marius/Vesta shared-data verification, role tests, concurrent-edit tests, backup/restore verification and totals comparison.
+1. **Client boundary** — Firebase browser is Auth-only; direct Firestore access denied. Completed.
+2. **Production database selection** — stable `(default)` Firestore only; named database rejected for authoritative production use while the Admin API is preview. This PR.
+3. **Firestore server store + emulator tests** — implement typed persistence methods and role/version transactions without changing production backend.
+4. **Read parity** — populate Firestore test fixtures and prove `/api/household` output matches SQLite fixture output for the same data.
+5. **Mutation parity** — transactions, reconciliation, planned/actual linkage, month import, savings, backup/restore and membership operations pass the same behavioral tests against Firestore.
+6. **Migration tooling** — explicit SQLite → Firestore migration with dry-run validation and no sample-data fallback.
+7. **Production cutover** — set `MV_DATA_BACKEND=firestore`, require Firebase Admin/Firestore readiness, remove the Cloud Run SQLite refusal only for the completed Firestore path, deploy a new Cloud Run revision and verify it Ready.
+8. **Post-cutover validation** — Marius/Vesta shared-data verification, role tests, concurrent-edit tests, backup/restore verification and totals comparison.
 
 ## Required external Firebase / Google Cloud configuration
 
@@ -119,8 +134,10 @@ Repository code alone cannot complete these controls:
 
 - Google sign-in must be enabled in Firebase Authentication.
 - The deployed MV domain must be an authorized Firebase Auth domain.
-- The Cloud Run service account must have the minimum required access to verify Firebase Auth tokens and access the selected Firestore database through Application Default Credentials.
-- The named Firestore database must exist and the fail-closed client rules in this repository must be deployed to that database.
+- The Cloud Run service account must have the minimum required access to verify Firebase Auth tokens and access Firestore through Application Default Credentials.
+- A production `(default)` Firestore database must exist before server cutover.
+- The existing named AI Studio Firestore database should have the fail-closed client rules from this repository deployed to it.
+- When `(default)` is created, add it to the Firebase CLI rules configuration and deploy the same fail-closed browser rules there before production data is written.
 - Production data migration must be deliberately executed and verified; it must never be inferred from development fixtures.
 
 Do not mark MV production-ready until every cutover gate above is proven.
