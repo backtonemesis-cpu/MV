@@ -1,5 +1,6 @@
 import { applicationDefault, getApp, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth, type Auth, type DecodedIdToken } from 'firebase-admin/auth';
+import { getMvFirestore } from './firestoreAdmin';
 
 let cachedAuth: Auth | null = null;
 
@@ -13,6 +14,13 @@ function getAdminAuth(): Auth {
   cachedAuth = getAuth(app);
   return cachedAuth;
 }
+
+/**
+ * Compatibility export for server-side storage modules. The implementation is
+ * intentionally delegated to firestoreAdmin.ts so production database selection
+ * remains fail-closed on the stable (default) Firestore database.
+ */
+export const getAdminFirestore = getMvFirestore;
 
 export interface VerifiedFirebaseIdentity {
   uid: string;
