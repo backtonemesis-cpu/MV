@@ -24,13 +24,13 @@ export interface Account {
   currency: 'GBP';
   startingBalancePence: number;
   currentBalancePence: number;
-  ownerPerson?: Payer; // 'Marius' | 'Vesta' | 'Joint'
-  isActive?: boolean; // Defaults to true; inactive accounts remain in history but hidden from new forms
-  reconciledAt?: string; // ISO timestamp of authoritative reconciliation
-  reconciliationDate?: string; // YYYY-MM-DD effective as-of date
-  reconciledBalancePence?: number; // Authoritative statement balance as of reconciliationDate
-  creditLimitPence?: number; // Credit card limit in pence
-  balanceOwedPence?: number; // Credit card balance owed in pence
+  ownerPerson?: Payer;
+  isActive?: boolean;
+  reconciledAt?: string;
+  reconciliationDate?: string;
+  reconciledBalancePence?: number;
+  creditLimitPence?: number;
+  balanceOwedPence?: number;
   notes?: string;
   schemaVersion?: number;
   metadata?: Record<string, any>;
@@ -47,7 +47,7 @@ export interface Category {
 
 export interface TransactionSplit {
   id: string;
-  amountPence: number; // In exact integer pence
+  amountPence: number;
   categoryId: string;
   payer?: Payer;
   notes?: string;
@@ -55,45 +55,49 @@ export interface TransactionSplit {
 
 export interface Transaction {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   description: string;
-  amountPence: number; // Stored in minor units (pence)
+  amountPence: number;
   type: TransactionType;
   categoryId: string;
   accountId: string;
-  targetAccountId?: string; // For transfers & repayments
+  targetAccountId?: string;
   payer: Payer;
   notes?: string;
   isTransfer: boolean;
   isRepayment: boolean;
   isSavings: boolean;
   isRefund: boolean;
-  originalTransactionId?: string; // For linked refunds/credits
-  splits?: TransactionSplit[]; // Split transaction support
-  plannedPaymentId?: string; // Linked bill obligation
+  originalTransactionId?: string;
+  splits?: TransactionSplit[];
+  plannedPaymentId?: string;
+  plannedIncomeId?: string;
   idempotencyKey?: string;
   taxYear?: string;
   schemaVersion?: number;
   metadata?: Record<string, any>;
   createdAt: string;
-  createdBy: string; // User email
+  createdBy: string;
   updatedAt?: string;
   updatedBy?: string;
 }
 
 export interface PlannedIncome {
   id: string;
-  name: string; // e.g. "Marius Salary", "Vesta Universal Credit", "Child Benefit"
+  name: string;
   expectedAmountPence: number;
   actualAmountPence?: number;
-  month: string; // "YYYY-MM"
+  month: string;
   sourcePerson: Payer;
-  accountId: string; // Destination account
+  accountId: string;
   expectedDate?: string;
+  actualDate?: string;
+  actualTransactionId?: string;
+  /** Legacy aliases retained during datastore cutover. */
   receivedDate?: string;
+  linkedTransactionId?: string;
   status: 'expected' | 'received' | 'partial';
   notes?: string;
-  linkedTransactionId?: string;
   schemaVersion?: number;
   metadata?: Record<string, any>;
   createdAt: string;
@@ -104,15 +108,18 @@ export interface PlannedIncome {
 
 export interface PlannedPayment {
   id: string;
-  name: string; // e.g. "Child Maintenance", "Rent", "Vodafone"
-  amountPence: number; // Stored in minor units (pence)
-  month: string; // "YYYY-MM" (e.g. "2026-09")
-  responsiblePerson: Payer; // 'Marius' | 'Vesta' | 'Joint'
-  accountId: string; // Payment account that must cover this bill
-  dueDate?: string; // Due date where known (e.g. "2026-09-01" or "01")
+  name: string;
+  amountPence: number;
+  actualAmountPence?: number;
+  actualDate?: string;
+  actualTransactionId?: string;
+  month: string;
+  responsiblePerson: Payer;
+  accountId: string;
+  dueDate?: string;
   categoryId?: string;
-  status: 'unpaid' | 'paid'; // Separate concept from Transfer Plan inclusion
-  includeInTransferPlan: boolean; // User inclusion toggle
+  status: 'unpaid' | 'paid';
+  includeInTransferPlan: boolean;
   notes?: string;
   schemaVersion?: number;
   metadata?: Record<string, any>;
@@ -185,7 +192,7 @@ export interface SchemaStatus {
 export interface HouseholdData {
   id: string;
   name: string;
-  version: number; // Concurrency tracking
+  version: number;
   schemaStatus?: SchemaStatus;
   members: HouseholdMember[];
   accounts: Account[];
