@@ -28,6 +28,19 @@ jobs:
       - name: Run automated test suite
         run: npm test
 
+      - name: Verify browser Firestore boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -R --line-number --fixed-strings "firebase/firestore" src; then
+            echo "Browser code must not access Firestore directly"
+            exit 1
+          fi
+
+          grep --fixed-strings "allow read, write: if false;" firestore.rules
+          grep --fixed-strings '"database": "ai-studio-mv-02fb52df-6e5f-458e-bc1e-b1fdc07a8db7"' firebase.json
+
       - name: Build production bundle
         run: npm run build
 
