@@ -36,7 +36,10 @@ describeEmulator('empty Firestore runtime identity and governance foundation', (
     let household = await store.getHouseholdData();
     expect(household.version).toBe(2);
     expect(household.accounts).toEqual([]);
-    expect(household.categories).toEqual([]);
+    expect(household.categories.length).toBeGreaterThanOrEqual(16);
+    expect(household.categories.map((category) => category.id)).toEqual(
+      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer'])
+    );
     expect(household.transactions).toEqual([]);
     expect(household.savingsGoals).toEqual([]);
     expect(household.plannedPayments).toEqual([]);
