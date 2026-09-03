@@ -328,7 +328,9 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
         const splitsSnapshot = await doc.ref.collection('splits').get();
         return [
           doc.id,
-          splitsSnapshot.docs.map((splitDoc) => mapSplit(splitDoc.id, splitDoc.data())),
+          splitsSnapshot.docs
+            .map((splitDoc) => mapSplit(splitDoc.id, splitDoc.data()))
+            .sort((a, b) => a.id.localeCompare(b.id)),
         ] as const;
       })
     );
