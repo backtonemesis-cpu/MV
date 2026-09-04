@@ -16,6 +16,7 @@ import {
   preflightLocalRestore,
   resetLocalHousehold,
   restoreLocalBackup,
+  reconcileLocalAccount,
   updateLocalAccount,
   updateLocalHouseholdMember,
   updateLocalPlannedIncome,
@@ -179,6 +180,66 @@ describe('Penny-style local MV storage', () => {
       state.accounts.find((item) => item.id === savings.account.id)?.currentBalancePence
     ).toBe(70_00);
     expect(state.transactions.every((tx) => Number.isSafeInteger(tx.amountPence))).toBe(true);
+  });
+
+  it('allows an account to be reconciled to exactly zero and ignores future-dated activity in the current balance', () => {
+    let state = loadLocalHousehold();
+
+    const account = createLocalAccount(
+      {
+        name: 'Zero Balance Test',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalTransaction(
+      {
+        description: 'Past debit',
+        amountPence: 12_34,
+        type: 'expense',
+        categoryId: 'cat-groceries',
+        accountId: account.account.id,
+        payer: 'Vesta',
+        date: '2026-09-01',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalTransaction(
+      {
+        description: 'Future wage',
+        amountPence: 1000_00,
+        type: 'income',
+        categoryId: 'cat-salary',
+        accountId: account.account.id,
+        payer: 'Vesta',
+        date: '2099-09-11',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    // Future activity must not inflate what Accounts reports as the balance now.
+    expect(
+      state.accounts.find((item) => item.id === account.account.id)?.currentBalancePence
+    ).toBe(-12_34);
+
+    reconcileLocalAccount(
+      account.account.id,
+      0,
+      '2026-09-04',
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const reconciled = state.accounts.find((item) => item.id === account.account.id);
+    expect(reconciled?.reconciledBalancePence).toBe(0);
+    expect(reconciled?.currentBalancePence).toBe(0);
   });
 
   it('records multi-source Transfer Plan funding atomically and reconciles every account by ID', () => {
