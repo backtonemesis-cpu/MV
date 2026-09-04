@@ -707,8 +707,8 @@ export function loadLocalHousehold(): HouseholdData {
 
   if (!hasSourceBudget) {
     // Keep a one-time local rollback copy before replacing old/test finance data.
-    // App-only savings goals are preserved when their linked account name exists
-    // in the source workbook (for example a goal linked to Chase).
+    // App-only savings goals are preserved across the source-budget migration.
+    // Legacy account links are retained only when compatible for backup/audit history.
     storage.setItem(SOURCE_IMPORT_BACKUP_KEY, raw);
     const sourceHousehold = createSourceBudgetHousehold(parsed);
     saveLocalHousehold(sourceHousehold);
