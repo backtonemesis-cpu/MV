@@ -167,4 +167,5 @@ try {
   console.log('Production storage preflight matrix passed.');
 } finally {
   await reset();
+  await db.terminate();
 }
