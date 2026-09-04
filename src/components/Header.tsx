@@ -5,6 +5,7 @@ import {
   DownloadCloud,
 } from 'lucide-react';
 import { UserSession } from '../types';
+import { APP_VERSION } from '../appVersion';
 
 interface HeaderProps {
   session: UserSession | null;
@@ -37,8 +38,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-bold text-main tracking-tight text-base sm:text-lg">
                   MV Finance
                 </span>
-                <span className="hidden sm:inline-block text-xs font-medium px-2 py-0.5 bg-surface-muted text-muted rounded-md border border-muted">
-                  v{datasetVersion}
+                <span
+                  className="hidden sm:inline-block text-xs font-medium px-2 py-0.5 bg-surface-muted text-muted rounded-md border border-muted"
+                  title="Application version"
+                >
+                  v{APP_VERSION}
+                </span>
+                <span
+                  className="hidden sm:inline-block text-xs font-medium px-2 py-0.5 bg-surface-muted text-muted rounded-md border border-muted"
+                  title="Local financial dataset revision"
+                >
+                  Data v{datasetVersion}
                 </span>
               </div>
             </div>
