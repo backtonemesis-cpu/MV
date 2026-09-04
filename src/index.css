@@ -2235,3 +2235,399 @@ html[data-theme] button.bg-white:hover {
     max-height: 92vh !important;
   }
 }
+
+
+/* ==========================================================================
+   MV MASTER DENSITY + MODAL STABILITY — FINAL OVERRIDES
+   ========================================================================== */
+.mv-density-root {
+  max-width: none;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.mv-density-root main {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+/* Professional ledger rhythm */
+.mv-density-root .finance-row,
+.mv-density-root .mv-settings-log-row {
+  padding: 8px 12px !important;
+}
+
+.mv-density-root table {
+  background: #181F32;
+  border-color: #26314D;
+  color: #F8FAFC;
+}
+
+.mv-density-root table th {
+  padding: 7px 10px !important;
+  color: #64748B;
+  font-size: 11px !important;
+  font-weight: 600;
+}
+
+.mv-density-root table td {
+  padding: 8px 10px !important;
+  color: #F8FAFC;
+  font-size: 13px !important;
+}
+
+.mv-density-root tbody tr {
+  transition: background-color 130ms ease;
+}
+
+.mv-density-root tbody tr:hover,
+.mv-density-root .finance-row:hover,
+.mv-density-root .mv-settings-log-row:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.mv-density-root .finance-row-actions {
+  transition: opacity 140ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mv-density-root .finance-row-actions {
+    opacity: 0.3;
+  }
+
+  .mv-density-root .finance-row:hover .finance-row-actions,
+  .mv-density-root .finance-row:focus-within .finance-row-actions {
+    opacity: 1;
+  }
+}
+
+/* Status capsules remain readable while dense. */
+.mv-density-root .finance-status-positive,
+.mv-density-root .finance-status-negative,
+.mv-density-root .finance-status-neutral {
+  min-height: 18px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 13px;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.mv-density-root .finance-status-positive {
+  border-color: rgba(34, 197, 94, 0.20);
+  background: rgba(34, 197, 94, 0.10);
+  color: #4ADE80;
+}
+
+.mv-density-root .finance-status-negative {
+  border-color: rgba(239, 68, 68, 0.20);
+  background: rgba(239, 68, 68, 0.10);
+  color: #F87171;
+}
+
+/* Universal named edit/workflow modal dimensions. */
+.mv-modal-card {
+  max-height: 85vh;
+}
+
+.mv-modal-card.mv-modal-wide,
+.mv-income-modal,
+.mv-account-modal,
+.mv-transaction-modal,
+.mv-rollover-modal {
+  width: min(100%, 520px);
+  max-width: 520px !important;
+  max-height: 85vh !important;
+  border: 1px solid #26314D;
+  border-radius: 8px !important;
+  background: #181F32;
+}
+
+.mv-income-modal,
+.mv-account-modal,
+.mv-transaction-modal {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+/* Dynamic Transaction types no longer resize the modal shell. */
+.mv-transaction-modal {
+  height: min(680px, 85vh);
+}
+
+.mv-transaction-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px !important;
+  scrollbar-width: thin;
+  scrollbar-color: #2E374A transparent;
+}
+
+.mv-transaction-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mv-transaction-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mv-transaction-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #2E374A;
+}
+
+.mv-transaction-body > * + * {
+  margin-top: 12px;
+}
+
+.mv-transaction-dynamic {
+  min-height: 132px;
+  margin-block: 12px;
+}
+
+.mv-transaction-type-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2px;
+  border: 1px solid #26314D;
+  border-radius: 7px;
+  padding: 3px;
+  background: #111522;
+}
+
+.mv-transaction-type-tab {
+  min-height: 30px !important;
+  border-radius: 5px;
+  padding: 6px 8px !important;
+  color: #64748B;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: capitalize;
+  transition: background-color 130ms ease, color 130ms ease;
+}
+
+.mv-transaction-type-tab:hover {
+  background: #1E273E;
+  color: #F8FAFC;
+}
+
+.mv-transaction-type-tab.is-active {
+  background: #1E273E;
+  color: #F8FAFC;
+  box-shadow: inset 0 -2px 0 #22C55E;
+}
+
+.mv-transaction-control,
+.mv-account-modal input:not([type="checkbox"]):not([type="radio"]),
+.mv-account-modal select,
+.mv-account-modal textarea,
+.mv-income-modal input:not([type="checkbox"]):not([type="radio"]),
+.mv-income-modal select,
+.mv-income-modal textarea {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 6px 12px !important;
+  border: 1px solid #26314D !important;
+  border-radius: 6px !important;
+  background: #111522 !important;
+  color: #F8FAFC !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+}
+
+.mv-account-modal textarea,
+.mv-income-modal textarea {
+  min-height: 60px !important;
+  height: auto !important;
+  resize: vertical;
+}
+
+.mv-transaction-control:focus,
+.mv-account-modal input:focus,
+.mv-account-modal select:focus,
+.mv-account-modal textarea:focus,
+.mv-income-modal input:focus,
+.mv-income-modal select:focus,
+.mv-income-modal textarea:focus {
+  border-color: #22C55E !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.10) !important;
+}
+
+.mv-transaction-selector-pill {
+  display: inline-flex;
+  min-height: 30px !important;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #26314D;
+  border-radius: 6px;
+  padding: 6px 10px !important;
+  background: #111522;
+  color: #64748B;
+  font-size: 12px !important;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mv-transaction-selector-pill:hover {
+  background: #1E273E;
+  color: #F8FAFC;
+}
+
+.mv-transaction-selector-pill.is-active {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.10);
+  color: #4ADE80;
+}
+
+.mv-transaction-splits {
+  border: 1px solid #26314D;
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #111522;
+}
+
+.mv-integrity-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+  border-top: 1px solid #26314D;
+  border-bottom: 1px solid #26314D;
+  padding: 10px 0;
+}
+
+.mv-integrity-title {
+  display: block;
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mv-integrity-flag,
+.mv-account-toggle {
+  display: flex !important;
+  min-height: 24px;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  color: #94A3B8 !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  cursor: pointer;
+}
+
+.mv-integrity-flag input[type="checkbox"],
+.mv-account-toggle input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  accent-color: #22C55E;
+}
+
+/* Fixed action bars across edit modals. */
+.mv-transaction-primary,
+.mv-account-primary,
+.mv-income-primary {
+  min-height: 30px !important;
+  height: 30px !important;
+  border: 1px solid #22C55E;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  background: #22C55E;
+  color: #FFFFFF;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1 !important;
+}
+
+.mv-transaction-secondary,
+.mv-account-secondary,
+.mv-income-secondary {
+  min-height: 30px !important;
+  height: 30px !important;
+  border: 1px solid #26314D;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  background: #111522;
+  color: #94A3B8;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1 !important;
+}
+
+.mv-transaction-secondary:hover,
+.mv-account-secondary:hover,
+.mv-income-secondary:hover {
+  background: #1E273E;
+  color: #F8FAFC;
+}
+
+/* Prepare Next Month retains fixed chrome and only scrolls its dataset. */
+.mv-rollover-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh !important;
+}
+
+/* Settings Backup: isolated panels with explicit file/JSON clearance. */
+.mv-settings-restore-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mv-settings-restore-stack > * {
+  margin: 0 !important;
+}
+
+.mv-settings-restore-stack .mv-settings-file {
+  display: block;
+  width: 100%;
+}
+
+.mv-settings-restore-stack .mv-settings-textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px !important;
+}
+
+/* Keep tabular financial figures vertically scannable throughout the app. */
+.mv-density-root :is(
+  .font-mono,
+  [class*="tabular-nums"],
+  .mv-rollover-amount,
+  table td
+) {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+@media (max-width: 640px) {
+  .mv-transaction-modal,
+  .mv-account-modal,
+  .mv-income-modal,
+  .mv-rollover-modal {
+    width: 100%;
+    max-width: 100% !important;
+    height: auto;
+    max-height: 92vh !important;
+  }
+
+  .mv-transaction-type-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mv-transaction-dynamic {
+    min-height: 0;
+  }
+}
