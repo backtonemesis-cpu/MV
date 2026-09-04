@@ -292,7 +292,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Income & Wages</h1>
-          <p className="mt-0.5 text-[12px] font-normal text-muted">
+          <p className="mt-0.5 text-[12px] font-normal text-subtle">
             Expected and received household income for the active month.
           </p>
         </div>
@@ -444,7 +444,20 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     return (
                       <article
                         key={income.id}
-                        className="finance-row group flex items-center justify-between gap-3 px-3 py-3 sm:px-4"
+                        tabIndex={canEdit ? 0 : undefined}
+                        onClick={(event) => {
+                          if (!canEdit) return;
+                          if ((event.target as HTMLElement).closest('button, input, a, select, textarea')) return;
+                          openEdit(income);
+                        }}
+                        onKeyDown={(event) => {
+                          if (!canEdit || event.target !== event.currentTarget) return;
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            openEdit(income);
+                          }
+                        }}
+                        className={`finance-row group flex items-center justify-between gap-3 px-3 py-3 sm:px-4 ${canEdit ? 'is-clickable' : ''}`}
                       >
                         <div className="flex min-w-0 flex-1 items-center gap-3">
                           <div className="finance-leading-icon">
@@ -497,7 +510,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                               {!received && (
                                 <button
                                   type="button"
-                                  onClick={() => openReceive(income)}
+                                  onClick={(event) => { event.stopPropagation(); openReceive(income); }}
                                   className="finance-receive-button"
                                   title="Mark received"
                                 >
@@ -509,7 +522,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                               <div className="finance-row-actions flex items-center gap-1">
                                 <button
                                   type="button"
-                                  onClick={() => openEdit(income)}
+                                  onClick={(event) => { event.stopPropagation(); openEdit(income); }}
                                   className="finance-action-button"
                                   title="Edit income"
                                   aria-label={`Edit ${income.name}`}
@@ -520,7 +533,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                 {!received && (
                                   <button
                                     type="button"
-                                    onClick={() => removeIncome(income)}
+                                    onClick={(event) => { event.stopPropagation(); removeIncome(income); }}
                                     className="finance-action-button is-danger"
                                     title="Delete expected income"
                                     aria-label={`Delete ${income.name}`}
