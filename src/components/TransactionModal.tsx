@@ -284,7 +284,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-sm font-bold text-muted text-main0">
+                <span className="absolute left-3 top-2.5 text-sm font-bold text-muted text-subtle">
                   £
                 </span>
                 <input
