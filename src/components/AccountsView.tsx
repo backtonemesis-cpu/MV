@@ -20,7 +20,6 @@ import {
 import { JOINT_ACCOUNT_OWNER_ID } from '../types';
 import type { Account, SavingsGoal, UserRole, AccountType, Transaction, HouseholdMember } from '../types';
 import {
-  calculateSavingsGoalAllocationIntegrity,
   formatPence,
   parseToPence,
 } from '../utils/currency';
@@ -86,9 +85,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   // New Goal form state
   const [goalName, setGoalName] = useState('');
   const [goalTargetStr, setGoalTargetStr] = useState('');
-  const [goalCurrentStr, setGoalCurrentStr] = useState('');
-  const [goalAccountId, setGoalAccountId] = useState(accounts[0]?.id || '');
   const [goalDate, setGoalDate] = useState('');
+  const [goalMonthlyPlanStr, setGoalMonthlyPlanStr] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -174,10 +172,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     [displayedAccounts]
   );
 
-  const goalIntegrityById = useMemo(() => {
-    const rows = calculateSavingsGoalAllocationIntegrity(accounts, savingsGoals);
-    return new Map(rows.map((row) => [row.goalId, row]));
-  }, [accounts, savingsGoals]);
+  const totalSavingsPence = useMemo(
+    () =>
+      accounts
+        .filter(
+          (account) =>
+            account.isActive !== false &&
+            (account.type === 'savings' || account.type === 'cash')
+        )
+        .reduce((sum, account) => sum + account.currentBalancePence, 0),
+    [accounts]
+  );
 
   // Account creation
   const handleAccountSubmit = async (e: React.FormEvent) => {
@@ -301,24 +306,24 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
-  // Handle Goal Submit
+  // Savings goals are household targets, not account-specific allocations.
   const handleGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!goalName.trim() || !goalAccountId) return;
+    if (!goalName.trim()) return;
     try {
       setIsSubmitting(true);
-      const targetPence = parseToPence(goalTargetStr);
-      const currentPence = parseToPence(goalCurrentStr);
+      setError(null);
       await onCreateSavingsGoal({
         name: goalName.trim(),
-        targetPence,
-        currentPence,
-        accountId: goalAccountId,
+        targetPence: parseToPence(goalTargetStr),
+        currentPence: 0,
         targetDate: goalDate || undefined,
+        monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setGoalName('');
       setGoalTargetStr('');
-      setGoalCurrentStr('');
+      setGoalDate('');
+      setGoalMonthlyPlanStr('');
       setShowGoalModal(false);
     } catch (err: any) {
       setError(err.message || 'Failed to create savings goal');
@@ -331,30 +336,30 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setSelectedGoal(goal);
     setGoalName(goal.name);
     setGoalTargetStr((goal.targetPence / 100).toFixed(2));
-    setGoalCurrentStr((goal.currentPence / 100).toFixed(2));
-    setGoalAccountId(goal.accountId);
     setGoalDate(goal.targetDate || '');
+    setGoalMonthlyPlanStr(
+      goal.monthlyPlanPence ? (goal.monthlyPlanPence / 100).toFixed(2) : ''
+    );
     setError(null);
     setShowEditGoalModal(true);
   };
 
   const handleEditGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedGoal || !goalName.trim() || !goalAccountId) return;
+    if (!selectedGoal || !goalName.trim()) return;
     try {
       setIsSubmitting(true);
       setError(null);
       await onUpdateSavingsGoal(selectedGoal.id, {
         name: goalName.trim(),
         targetPence: parseToPence(goalTargetStr),
-        currentPence: parseToPence(goalCurrentStr),
-        accountId: goalAccountId,
         targetDate: goalDate || undefined,
+        monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setShowEditGoalModal(false);
       setSelectedGoal(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to update savings pot');
+      setError(err.message || 'Failed to update savings goal');
     } finally {
       setIsSubmitting(false);
     }
@@ -590,13 +595,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         )}
       </div>
 
-      {/* Savings Pots Section */}
+      {/* Savings Goals Section */}
       <section className="pt-1">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold tracking-tight text-main">Savings Pots</h2>
+            <h2 className="text-lg font-bold tracking-tight text-main">Savings Goals</h2>
             <p className="mt-0.5 text-xs text-muted">
-              Goals linked to your savings and liquid accounts.
+              Household targets based on all Savings + Cash balances.
             </p>
           </div>
 
@@ -607,7 +612,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-muted bg-surface px-3.5 text-sm font-semibold text-main transition-all hover:bg-surface-muted active:scale-[0.98]"
             >
               <Plus className="h-4 w-4 text-accent" />
-              Add Pot
+              Add Goal
             </button>
           )}
         </div>
@@ -615,20 +620,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         {savingsGoals.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-muted bg-surface-muted px-6 py-12 text-center">
             <PiggyBank className="mx-auto h-5 w-5 text-subtle" />
-            <p className="mt-2 text-sm font-medium text-muted">No savings pots</p>
+            <p className="mt-2 text-sm font-medium text-muted">No savings goals</p>
             <p className="mt-1 text-xs text-subtle">
-              Add a goal when you want to track money toward a specific target.
+              Add a target to track household savings progress.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {savingsGoals.map((goal) => {
-              const percent =
-                goal.targetPence > 0
-                  ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
-                  : 100;
-              const linkedAccount = accounts.find((account) => account.id === goal.accountId);
-              const integrity = goalIntegrityById.get(goal.id);
+              const rawPercent =
+                goal.targetPence > 0 ? (totalSavingsPence / goal.targetPence) * 100 : 100;
+              const percent = Math.round(rawPercent * 10) / 10;
+              const progressBarPercent = Math.min(100, Math.max(0, rawPercent));
+              const remainingPence = Math.max(0, goal.targetPence - totalSavingsPence);
 
               return (
                 <article
@@ -639,13 +643,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <div className="min-w-0">
                       <h3 className="truncate text-base font-bold text-main">{goal.name}</h3>
                       <span className="text-xs text-subtle">
-                        Stored in {linkedAccount?.name || 'Account'}
+                        Household savings goal
                       </span>
                     </div>
 
                     <div className="shrink-0 text-right">
                       <div className="font-mono text-lg font-extrabold tracking-tight tabular-nums text-main">
-                        {formatPence(goal.currentPence)}
+                        {formatPence(totalSavingsPence)}
                       </div>
                       <span className="mv-private-value text-[11px] text-subtle">
                         Target {formatPence(goal.targetPence)}
@@ -656,19 +660,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface-muted">
                     <div
                       className="h-2 rounded-full bg-accent transition-all"
-                      style={{ width: `${percent}%` }}
+                      style={{ width: `${progressBarPercent}%` }}
                     />
                   </div>
 
                   <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
-                    <span>{percent}% funded</span>
+                    <span>{percent}% complete</span>
                     {goal.targetDate && <span>{goal.targetDate}</span>}
                   </div>
-                  {integrity?.isOverallocated && (
-                    <div className="mt-3 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-[11px] leading-4 text-danger">
-                      Recorded allocation exceeds the linked account balance by {formatPence(integrity.overallocatedPence)}.
-                    </div>
-                  )}
+                  <div className="mt-2 text-[11px] text-subtle">
+                    {remainingPence > 0
+                      ? `${formatPence(remainingPence)} remaining`
+                      : 'Goal achieved'}
+                  </div>
 
                   {canEdit && (
                     <div className="mt-4 flex items-center justify-end gap-2 border-t border-muted pt-3">
@@ -1147,7 +1151,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           <div className="mv-modal-card">
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
-                Create Savings Pot / Goal
+                Create Savings Goal
               </h3>
               <button
                 onClick={() => setShowGoalModal(false)}
@@ -1175,49 +1179,29 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  Linked Account
+                  Target (£)
                 </label>
-                <select
-                  value={goalAccountId}
-                  onChange={(e) => setGoalAccountId(e.target.value)}
+                <input
+                  type="text"
+                  value={goalTargetStr}
+                  onChange={(e) => setGoalTargetStr(e.target.value)}
+                  placeholder="20000.00"
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                >
-                  {accounts
-                    .filter((a) => a.isActive !== false)
-                    .map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} ({formatPence(acc.currentBalancePence)})
-                      </option>
-                    ))}
-                </select>
+                  required
+                />
               </div>
 
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Current (£)
-                  </label>
-                  <input
-                    type="text"
-                    value={goalCurrentStr}
-                    onChange={(e) => setGoalCurrentStr(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Target (£)
-                  </label>
-                  <input
-                    type="text"
-                    value={goalTargetStr}
-                    onChange={(e) => setGoalTargetStr(e.target.value)}
-                    placeholder="10000.00"
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
+                </label>
+                <input
+                  type="text"
+                  value={goalMonthlyPlanStr}
+                  onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
+                  placeholder="e.g. 500.00"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                />
               </div>
 
               <div>
@@ -1245,7 +1229,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Savings Pot'}
+                  {isSubmitting ? 'Saving...' : 'Save Goal'}
                 </button>
               </div>
             </form>
@@ -1253,7 +1237,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
-      {/* MODAL: Edit Savings Pot */}
+      {/* MODAL: Edit Savings Goal */}
       {showEditGoalModal && selectedGoal && (
         <div className="mv-modal-backdrop">
           <div className="mv-modal-card">
@@ -1291,43 +1275,27 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Linked Account</label>
-                <select
-                  value={goalAccountId}
-                  onChange={(e) => setGoalAccountId(e.target.value)}
+                <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
+                <input
+                  type="text"
+                  value={goalTargetStr}
+                  onChange={(e) => setGoalTargetStr(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
-                >
-                  {accounts
-                    .filter((a) => a.isActive !== false || a.id === selectedGoal.accountId)
-                    .map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} ({formatPence(acc.currentBalancePence)})
-                      </option>
-                    ))}
-                </select>
+                />
               </div>
 
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">Current (£)</label>
-                  <input
-                    type="text"
-                    value={goalCurrentStr}
-                    onChange={(e) => setGoalCurrentStr(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
-                  <input
-                    type="text"
-                    value={goalTargetStr}
-                    onChange={(e) => setGoalTargetStr(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
+                </label>
+                <input
+                  type="text"
+                  value={goalMonthlyPlanStr}
+                  onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  placeholder="e.g. 500.00"
+                />
               </div>
 
               <div>
@@ -1347,7 +1315,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   className="inline-flex items-center gap-1.5 rounded-xl border border-danger bg-danger-soft px-4 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Delete Pot
+                  Delete Goal
                 </button>
 
                 <div className="flex items-center gap-2">
