@@ -327,6 +327,7 @@ export async function executeTransferPlanAllocations(payload: {
   }>;
   description?: string;
   date?: string;
+  month: string;
   expectedVersion: number;
 }) {
   const { expectedVersion, ...transfer } = payload;
