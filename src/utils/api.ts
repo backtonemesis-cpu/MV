@@ -305,7 +305,7 @@ export async function switchSession(email: string): Promise<void> {
 }
 
 export async function createHouseholdMember(
-  data: { name: string; email: string; role?: 'editor' | 'view_only' | 'pending' },
+  data: { name: string; email?: string; role?: 'editor' | 'view_only' | 'pending' },
   expectedVersion: number
 ) {
   return createLocalHouseholdMember(data, expectedVersion);
