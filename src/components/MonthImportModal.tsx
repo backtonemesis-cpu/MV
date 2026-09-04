@@ -125,23 +125,23 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-      <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+      <div className="bg-surface rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-muted flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 mv-surface-muted bg-neutral-50 dark:bg-neutral-850">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-surface-muted">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-success-soft text-success flex items-center justify-center">
               <Layers className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+              <h3 className="text-base font-bold text-main">
                 Copy Bills to Month
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -150,8 +150,8 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           {error && (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl flex items-start gap-2 text-rose-800 dark:text-rose-300 text-xs">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="p-3 bg-danger-soft border border-danger rounded-xl flex items-start gap-2 text-danger text-xs">
+              <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
@@ -159,13 +159,13 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           {/* Month Selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs font-semibold text-muted mb-1">
                 From Month
               </label>
               <select
                 value={sourceMonth}
                 onChange={(e) => setSourceMonth(e.target.value)}
-                className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-medium focus:ring-2 focus:ring-accent focus:outline-none"
               >
                 {availableMonths.map((m) => (
                   <option key={m} value={m}>
@@ -176,7 +176,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              <label className="block text-xs font-semibold text-muted mb-1">
                 To Month
               </label>
               <input
@@ -185,35 +185,35 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                 onChange={(e) => setTargetMonth(e.target.value.trim())}
                 placeholder="YYYY-MM"
                 pattern="\d{4}-\d{2}"
-                className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-medium focus:ring-2 focus:ring-accent focus:outline-none"
                 required
               />
             </div>
           </div>
 
           {/* Integrity Guarantees Banner */}
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+          <div className="p-3 bg-success-soft border border-success rounded-xl text-xs text-success flex items-start gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
             <span className="text-[11px]">Copied bills reset to <strong>Unpaid</strong>; duplicates are skipped.</span>
           </div>
 
           {/* Bills Selection */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+              <span className="text-xs font-bold text-main">
                 Bills ({selectedPaymentIds.size}/{sourcePayments.length})
               </span>
               <button
                 type="button"
                 onClick={handleToggleSelectAll}
-                className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
+                className="text-xs font-semibold text-success hover:underline"
               >
                 {selectedPaymentIds.size === sourcePayments.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
 
             {sourcePayments.length === 0 ? (
-              <div className="p-4 text-center text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mv-surface-muted bg-neutral-50 dark:bg-neutral-800 rounded-xl border mv-border border-neutral-200 dark:border-neutral-700">
+              <div className="p-4 text-center text-xs text-muted text-main0 bg-surface-muted rounded-xl border border-muted">
                 No bills in {sourceMonth}.
               </div>
             ) : (
@@ -234,10 +234,10 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                       onClick={() => !isDup && handleTogglePayment(payment.id)}
                       className={`p-3 rounded-xl border transition-colors flex items-center justify-between cursor-pointer ${
                         isDup
-                          ? 'mv-surface-muted bg-neutral-50 dark:bg-neutral-850 mv-border border-neutral-200 dark:border-neutral-800 opacity-60 cursor-not-allowed'
+                          ? 'bg-surface-muted border-muted opacity-60 cursor-not-allowed'
                           : isChecked
-                          ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
-                          : 'mv-surface bg-white dark:bg-neutral-800 mv-border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750'
+                          ? 'bg-success-soft border-success'
+                          : 'bg-surface border-muted hover:bg-surface-muted'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -246,30 +246,30 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                           checked={isChecked}
                           disabled={isDup}
                           onChange={() => handleTogglePayment(payment.id)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 mv-border border-neutral-300 dark:border-neutral-600"
+                          className="w-4 h-4 rounded text-success focus:ring-accent border-muted"
                         />
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
+                            <span className="text-xs font-bold text-main">
                               {payment.name}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-medium">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-muted text-muted font-medium">
                               {payment.responsiblePerson}
                             </span>
                             {isDup && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-medium">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-soft text-warning font-medium">
                                 Already in {targetMonth}
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-0.5">
+                          <div className="text-[11px] text-muted text-main0 mt-0.5">
                             {acc?.name || 'Account'} • Due {payment.dueDate ? payment.dueDate.split('-')[2] : 'Day 1'}
                           </div>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-xs font-black mv-text text-neutral-900 dark:text-neutral-100">
+                        <div className="text-xs font-black text-main">
                           {formatPence(payment.amountPence)}
                         </div>
                       </div>
@@ -281,18 +281,18 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="mv-hscroll pt-3 border-t border-neutral-100 dark:border-neutral-800 items-center justify-end">
+          <div className="mv-hscroll pt-3 border-t border-muted items-center justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="shrink-0 whitespace-nowrap px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition"
+              className="shrink-0 whitespace-nowrap px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || selectedPaymentIds.size === 0}
-              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
             >
               <Copy className="w-3.5 h-3.5" />
               {isSubmitting ? 'Importing...' : `Copy ${selectedPaymentIds.size} Bills`}
