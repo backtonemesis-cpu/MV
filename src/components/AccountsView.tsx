@@ -309,7 +309,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     {acc.name}
                   </h3>
                   {acc.notes && (
-                    <p className="text-xs text-muted text-main0 mt-1 line-clamp-2">
+                    <p className="text-xs text-muted text-subtle mt-1 line-clamp-2">
                       {acc.notes}
                     </p>
                   )}
@@ -328,7 +328,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <div className="mt-6 pt-4 border-t border-muted">
                   <div className="flex items-baseline justify-between">
                     <div>
-                      <span className="text-[11px] text-muted text-main0 font-medium">
+                      <span className="text-[11px] text-muted text-subtle font-medium">
                         {acc.type === 'credit' ? 'Owed' : 'Balance'}
                       </span>
                       <div
@@ -345,7 +345,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                           : formatPence(acc.currentBalancePence)}
                       </div>
                       {acc.creditLimitPence !== undefined && acc.creditLimitPence > 0 && (
-                        <div className="text-[11px] text-muted text-main0 mt-1">
+                        <div className="text-[11px] text-muted text-subtle mt-1">
                           Limit: {formatPence(acc.creditLimitPence)} · Available:{' '}
                           {formatPence(
                             Math.max(
@@ -374,14 +374,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                         <button
                           onClick={() => openReconcileModal(acc)}
                           title="Reconcile"
-                          className="p-1.5 rounded-lg text-muted text-main0 hover:text-success hover:bg-surface-muted transition"
+                          className="p-1.5 rounded-lg text-muted text-subtle hover:text-success hover:bg-surface-muted transition"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => openEditModal(acc)}
                           title="Edit"
-                          className="p-1.5 rounded-lg text-muted text-main0 hover:text-main hover:bg-surface-muted transition"
+                          className="p-1.5 rounded-lg text-muted text-subtle hover:text-main hover:bg-surface-muted transition"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -416,7 +416,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 onClick={() => setShowGoalModal(true)}
                 className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-surface-muted px-3.5 text-[13px] font-semibold text-muted shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-surface-muted transition"
               >
-                <Plus className="w-3.5 h-3.5 text-muted text-main0" />
+                <Plus className="w-3.5 h-3.5 text-muted text-subtle" />
                 Add Pot
               </button>
             </div>
@@ -445,7 +445,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <h3 className="text-base font-bold text-main">
                       {goal.name}
                     </h3>
-                    <span className="text-xs text-muted text-main0">
+                    <span className="text-xs text-muted text-subtle">
                       Stored in {linkedAccount?.name || 'Account'}
                     </span>
                   </div>
@@ -453,7 +453,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <div className="text-lg font-black text-main">
                       {formatPence(goal.currentPence)}
                     </div>
-                    <span className="text-[11px] text-muted text-main0">
+                    <span className="text-[11px] text-muted text-subtle">
                       Target: {formatPence(goal.targetPence)}
                     </span>
                   </div>
@@ -466,7 +466,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   />
                 </div>
 
-                <div className="flex justify-between items-center text-[11px] text-muted text-main0 mt-2">
+                <div className="flex justify-between items-center text-[11px] text-muted text-subtle mt-2">
                   <span>{percent}% funded</span>
                   {goal.targetDate && <span>Target: {goal.targetDate}</span>}
                 </div>
@@ -767,13 +767,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 const diffPence = targetPence - selectedAccount.currentBalancePence;
                 return (
                   <div className="p-3 bg-surface-muted rounded-xl border border-muted text-xs space-y-1.5">
-                    <div className="flex justify-between text-muted text-main0">
+                    <div className="flex justify-between text-muted text-subtle">
                       <span>Current</span>
                       <span className="font-semibold text-main">
                         {formatPence(selectedAccount.currentBalancePence)}
                       </span>
                     </div>
-                    <div className="flex justify-between text-muted text-main0">
+                    <div className="flex justify-between text-muted text-subtle">
                       <span>Statement</span>
                       <span className="font-semibold text-main">
                         {formatPence(targetPence)}
@@ -829,7 +829,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <h3 className="text-base font-bold text-main">
                   {selectedAccount.name} Activity
                 </h3>
-                <p className="text-xs text-muted text-main0">
+                <p className="text-xs text-muted text-subtle">
                   {formatPence(selectedAccount.currentBalancePence)}
                 </p>
               </div>
@@ -843,7 +843,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <div className="flex-1 overflow-y-auto mt-4 space-y-2 pr-1">
               {accountActivityTxs.length === 0 ? (
-                <div className="p-6 text-center text-xs text-muted text-main0 bg-surface-muted rounded-xl">
+                <div className="p-6 text-center text-xs text-muted text-subtle bg-surface-muted rounded-xl">
                   No recorded transactions for this account yet.
                 </div>
               ) : (
@@ -870,7 +870,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                             {tx.payer}
                           </span>
                         </div>
-                        <div className="text-[11px] text-muted text-main0 mt-0.5">
+                        <div className="text-[11px] text-muted text-subtle mt-0.5">
                           {tx.date}
                         </div>
                       </div>
