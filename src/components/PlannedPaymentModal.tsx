@@ -41,6 +41,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const [includeInTransferPlan, setIncludeInTransferPlan] = useState<boolean>(
     payment?.includeInTransferPlan !== undefined ? payment.includeInTransferPlan : true
   );
+  const [isRecurring, setIsRecurring] = useState<boolean>(payment?.isRecurring === true);
   const [notes, setNotes] = useState(payment?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +106,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
         categoryId: categoryId || undefined,
         status,
         includeInTransferPlan,
+        isRecurring,
         notes: notes.trim() || undefined,
       });
       onClose();
@@ -269,6 +271,19 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 id="modal-include-plan-toggle"
                 checked={includeInTransferPlan}
                 onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
+                className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-muted">
+              <div>
+                <span className="text-xs font-medium text-main">Recurring Monthly</span>
+              </div>
+              <input
+                type="checkbox"
+                id="modal-recurring-toggle"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
                 className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
               />
             </div>
