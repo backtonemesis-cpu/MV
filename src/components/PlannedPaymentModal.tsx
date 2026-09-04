@@ -94,17 +94,17 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-      <div className="mv-surface bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border mv-border border-neutral-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 mv-surface-muted bg-neutral-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+      <div className="bg-surface rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-muted">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-surface-muted">
           <div>
-            <h3 className="text-base font-semibold mv-text text-neutral-900">
+            <h3 className="text-base font-semibold text-main">
               {isEditing ? 'Edit Bill' : 'Add Bill'}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -112,15 +112,15 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-800 text-xs">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs">
+              <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Payment Name */}
           <div>
-            <label className="block text-xs font-medium text-neutral-700 mb-1">
+            <label className="block text-xs font-medium text-muted mb-1">
               Name *
             </label>
             <input
@@ -128,7 +128,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               placeholder="Bill name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 text-sm border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              className="w-full px-3 py-2 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
               required
             />
           </div>
@@ -136,11 +136,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Amount & Month */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-medium text-muted mb-1">
                 Amount *
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-sm mv-text-muted text-neutral-400 font-medium">£</span>
+                <span className="absolute left-3 top-2 text-sm text-muted text-subtle font-medium">£</span>
                 <input
                   type="number"
                   step="0.01"
@@ -148,14 +148,14 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                   placeholder="349.79"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-medium text-muted mb-1">
                 Month *
               </label>
               <input
@@ -165,7 +165,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 onChange={(e) => setMonth(e.target.value)}
                 pattern="^\d{4}-\d{2}$"
                 title="Format: YYYY-MM (e.g. 2026-09)"
-                className="w-full px-3 py-1.5 text-sm border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                 required
               />
             </div>
@@ -174,13 +174,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Payment Account & Responsible */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-medium text-muted mb-1">
                 Payment Account *
               </label>
               <select
                 value={accountId}
                 onChange={(e) => handleAccountChange(e.target.value)}
-                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
                 required
               >
                 {accounts.map((acc) => (
@@ -192,13 +192,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-medium text-muted mb-1">
                 Responsible Person
               </label>
               <select
                 value={responsiblePerson}
                 onChange={(e) => setResponsiblePerson(e.target.value as Payer)}
-                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 <option value="Marius">Marius</option>
                 <option value="Vesta">Vesta</option>
@@ -210,23 +210,23 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Due Date & Category */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-medium text-muted mb-1">
                 Due Date
               </label>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">Category</label>
+              <label className="block text-xs font-medium text-muted mb-1">Category</label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -238,28 +238,28 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Status & Plan Inclusion (Separate Concepts) */}
-          <div className="p-3 mv-surface-muted bg-neutral-50 rounded-lg border mv-border border-neutral-200 space-y-3">
+          <div className="p-3 bg-surface-muted rounded-lg border border-muted space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-medium text-neutral-800">Include in Transfer Plan</span>
+                <span className="text-xs font-medium text-main">Include in Transfer Plan</span>
               </div>
               <input
                 type="checkbox"
                 id="modal-include-plan-toggle"
                 checked={includeInTransferPlan}
                 onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
-                className="w-4 h-4 mv-text text-neutral-900 rounded mv-border border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t mv-border border-neutral-200">
+            <div className="flex items-center justify-between pt-2 border-t border-muted">
               <div>
-                <span className="text-xs font-medium text-neutral-800">Payment Status</span>
+                <span className="text-xs font-medium text-main">Payment Status</span>
               </div>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
-                className="text-xs font-medium border mv-border border-neutral-300 rounded-md px-2.5 py-1 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="text-xs font-medium border border-muted rounded-md px-2.5 py-1 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 <option value="unpaid">Unpaid</option>
                 <option value="paid">Paid</option>
@@ -269,13 +269,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-neutral-700 mb-1">Notes</label>
+            <label className="block text-xs font-medium text-muted mb-1">Notes</label>
             <textarea
               rows={2}
               placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
             />
           </div>
 
@@ -284,14 +284,14 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
+              className="px-4 py-2 text-xs font-medium text-muted hover:bg-surface-muted rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md shadow-xs disabled:opacity-50 transition-colors"
+              className="px-4 py-2 text-xs font-medium text-on-accent bg-surface hover:bg-surface-muted rounded-md shadow-xs disabled:opacity-50 transition-colors"
             >
               {isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Add'}
             </button>
