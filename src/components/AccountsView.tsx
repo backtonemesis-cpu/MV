@@ -453,7 +453,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           </div>
 
           {isCredit && acc.creditLimitPence !== undefined && acc.creditLimitPence > 0 && (
-            <div className="mt-1 text-[11px] text-subtle">
+            <div className="mv-private-value mt-1 text-[11px] text-subtle">
               Limit {formatPence(acc.creditLimitPence)} · Available{' '}
               {formatPence(Math.max(0, acc.creditLimitPence - balancePence))}
             </div>
@@ -637,7 +637,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                       <div className="font-mono text-lg font-extrabold tracking-tight tabular-nums text-main">
                         {formatPence(goal.currentPence)}
                       </div>
-                      <span className="text-[11px] text-subtle">
+                      <span className="mv-private-value text-[11px] text-subtle">
                         Target {formatPence(goal.targetPence)}
                       </span>
                     </div>
