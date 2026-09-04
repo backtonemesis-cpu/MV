@@ -148,7 +148,7 @@ export default function App() {
       if (err.status === 403 && err.role === 'pending') {
         setHousehold(null);
       } else {
-        setError(err.message || 'Error communicating with household backend');
+        setError(err.message || 'Error reading local MV data');
       }
     } finally {
       setIsLoading(false);
@@ -159,7 +159,7 @@ export default function App() {
     loadData();
   }, [loadData]);
 
-  // Real-time synchronization across devices via SSE
+  // Keep multiple tabs on this device in sync through local browser events
   useEffect(() => {
     const unsubscribe = subscribeToHouseholdEvents(() => {
       loadData();
@@ -167,7 +167,7 @@ export default function App() {
     return unsubscribe;
   }, [loadData]);
 
-  // Handle Identity Switching (Marius vs Vesta vs Pending user)
+  // Local-only compatibility hook; only Marius is available
   const handleSwitchUser = async (email: string) => {
     try {
       setIsLoading(true);
@@ -541,7 +541,7 @@ export default function App() {
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
             <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-              Synchronizing with authoritative household dataset...
+              Loading MV data from this browser...
             </span>
           </div>
         )}
