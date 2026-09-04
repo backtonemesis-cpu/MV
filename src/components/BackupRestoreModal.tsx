@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   X,
   Download,
-  Upload,
   ShieldCheck,
   AlertCircle,
   FileCheck,
@@ -30,6 +29,23 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   const [importJson, setImportJson] = useState<string>('');
   const [restoreComplete, setRestoreComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const frame = requestAnimationFrame(() => fileInputRef.current?.focus());
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -96,7 +112,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card">
+      <div className="mv-modal-card mv-backup-modal">
         <div className="mv-modal-header">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-success" />
@@ -110,7 +126,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           </button>
         </div>
 
-        <div className="mv-modal-body space-y-3 overflow-y-auto">
+        <div className="mv-modal-scroll-body">
           {error && (
             <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
@@ -119,22 +135,22 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           )}
 
           {/* Export Section */}
-          <div className="bg-surface-muted p-4 rounded-xl border border-muted">
+          <section className="mv-backup-section">
             <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Backup
             </h3>
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-surface text-on-accent rounded-xl text-xs font-semibold hover:bg-surface-muted transition disabled:opacity-50"
+              className="mv-backup-secondary inline-flex items-center gap-1.5"
             >
               <Download className="w-4 h-4" />
               {isExporting ? 'Generating...' : 'Download Backup'}
             </button>
-          </div>
+          </section>
 
           {/* Restore Section (Owner Only) */}
-          <div className="border-t border-muted pt-5">
+          <section className="mv-backup-section">
             <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Restore
             </h3>
@@ -154,30 +170,40 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
             ) : (
               <div className="space-y-3">
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-muted text-subtle file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-success-soft file:text-success hover:file:bg-success-soft"
+                  className="block w-full"
                 />
 
                 <textarea
                   placeholder="Paste backup JSON"
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
-                  className="w-full h-24 p-2 text-[11px] font-mono rounded-xl border border-muted"
+                  className="w-full font-mono"
                 />
 
-                <button
-                  onClick={handleRestore}
-                  disabled={isImporting || !importJson.trim()}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-on-accent rounded-xl text-xs font-semibold hover:bg-success-soft transition disabled:opacity-50"
-                >
-                  <Upload className="w-4 h-4" />
-                  {isImporting ? 'Restoring...' : 'Restore Backup'}
-                </button>
+
               </div>
             )}
-          </div>
+          </section>
+        </div>
+
+        <div className="mv-modal-fixed-actions">
+          <button type="button" onClick={onClose} className="mv-backup-secondary">
+            Close
+          </button>
+          {isOwner && !restoreComplete && (
+            <button
+              type="button"
+              onClick={handleRestore}
+              disabled={isImporting || !importJson.trim()}
+              className="mv-backup-primary"
+            >
+              {isImporting ? 'Restoring…' : 'Restore Backup'}
+            </button>
+          )}
         </div>
       </div>
     </div>
