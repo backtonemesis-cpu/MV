@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { getDb } from './db';
 import { verifyFirebaseIdentity, type VerifiedFirebaseIdentity } from './firebaseAdmin';
 import { UserRole } from '../src/types';
+import { isMvOwnerEmail, MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../src/accessPolicy';
 import { FirestoreHouseholdStore } from './storage/firestoreStore';
 import { isFirestoreRuntime } from './storage/runtimeBackend';
 
@@ -21,7 +22,6 @@ declare global {
   }
 }
 
-const OWNER_EMAIL = 'backtonemesis@gmail.com';
 const FIREBASE_COOKIE_NAME = 'mv_firebase_id';
 const LOCAL_CREDENTIAL_ROUTES = new Set([
   '/api/auth/login',
@@ -77,7 +77,7 @@ export function ensureInitialOwner(): void {
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(
     'user-marius',
-    OWNER_EMAIL,
+    MV_OWNER_EMAIL,
     passwordHash,
     salt,
     'Marius',
@@ -145,12 +145,12 @@ function getOrCreateSqliteFirebaseUser(identity: VerifiedFirebaseIdentity): Auth
   if (!userRow) {
     let role: UserRole = 'pending';
 
-    if (identity.email === OWNER_EMAIL) {
+    if (identity.email === MV_OWNER_EMAIL) {
       const existingOwner = db.prepare(
         "SELECT id, email FROM users WHERE role = 'owner' LIMIT 1"
       ).get() as any;
 
-      if (existingOwner && String(existingOwner.email).toLowerCase() !== OWNER_EMAIL) {
+      if (existingOwner && String(existingOwner.email).toLowerCase() !== MV_OWNER_EMAIL) {
         throw new Error('Household Owner state requires administrator repair before sign-in can continue.');
       }
 
@@ -196,7 +196,7 @@ function getOrCreateSqliteFirebaseUser(identity: VerifiedFirebaseIdentity): Auth
   } else {
     // The verified Owner email is authoritative for Owner identity. Never grant
     // Owner to any other email, and repair a stale non-owner role for Marius.
-    if (identity.email === OWNER_EMAIL && userRow.role !== 'owner') {
+    if (identity.email === MV_OWNER_EMAIL && userRow.role !== 'owner') {
       db.prepare("UPDATE users SET role = 'owner' WHERE id = ?").run(userRow.id);
       userRow.role = 'owner';
     }
@@ -284,6 +284,14 @@ export async function authenticateRequest(
   try {
     if (process.env.NODE_ENV === 'production') {
       const identity = await verifyFirebaseIdentity(token);
+
+      if (MV_SINGLE_USER_MODE && !isMvOwnerEmail(identity.email)) {
+        console.warn('[MV Auth] Single-user mode rejected verified identity:', identity.email);
+        req.user = undefined;
+        next();
+        return;
+      }
+
       req.user = await getOrCreateFirebaseUser(identity);
     } else {
       req.user = getLocalSessionUser(token);

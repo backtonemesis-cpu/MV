@@ -59,6 +59,7 @@ import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { PendingAccessScreen } from './components/PendingAccessScreen';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { MV_SINGLE_USER_MODE } from './accessPolicy';
 
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -488,7 +489,9 @@ export default function App() {
     }
   };
 
-  const pendingMembersCount = household
+  const pendingMembersCount = MV_SINGLE_USER_MODE
+    ? 0
+    : household
     ? household.members.filter((m) => m.role === 'pending').length
     : 0;
 

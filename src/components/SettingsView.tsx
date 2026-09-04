@@ -26,6 +26,7 @@ import {
   AccentColor,
   UserPreferences,
 } from '../types';
+import { MV_SINGLE_USER_MODE } from '../accessPolicy';
 
 interface SettingsViewProps {
   currentSession: UserSession;
@@ -141,7 +142,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Household Settings & Controls
         </h1>
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          Independent appearance preferences, access governance, audit trail, and backups
+          Private single-user settings, audit trail, and backups
         </p>
       </div>
 
@@ -159,20 +160,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           Appearance & Themes
         </button>
 
-        <button
-          onClick={() => setActiveTab('members')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'members'
-              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400'
-              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          Members & Access
-          {members.some((m) => m.role === 'pending') && (
-            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-          )}
-        </button>
+        {!MV_SINGLE_USER_MODE && (
+          <button
+            onClick={() => setActiveTab('members')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
+              activeTab === 'members'
+                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Members & Access
+            {members.some((m) => m.role === 'pending') && (
+              <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+            )}
+          </button>
+        )}
 
         <button
           onClick={() => setActiveTab('audit')}
@@ -339,7 +342,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* TAB 2: Members & Access */}
-      {activeTab === 'members' && (
+      {!MV_SINGLE_USER_MODE && activeTab === 'members' && (
         <div className="space-y-4 max-w-3xl">
           <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
             <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-4">
