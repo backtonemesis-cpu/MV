@@ -39,12 +39,12 @@ export const MembersView: React.FC<MembersViewProps> = ({
   return (
     <div className="space-y-6 pb-12">
       {/* Title & Security Principles Banner */}
-      <div className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-xs">
+      <div className="mv-surface bg-white p-6 rounded-2xl border mv-border border-neutral-200 shadow-xs">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-neutral-900">Household Access</h1>
+            <h1 className="text-xl font-bold mv-text text-neutral-900">Household Access</h1>
           </div>
-          <span className="px-3 py-1 bg-neutral-100 border border-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg flex items-center gap-1.5">
+          <span className="px-3 py-1 bg-neutral-100 border mv-border border-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-neutral-600" />
             Role: <strong className="capitalize">{userRole.replace('_', ' ')}</strong>
           </span>
@@ -65,12 +65,12 @@ export const MembersView: React.FC<MembersViewProps> = ({
             {pendingMembers.map((member) => (
               <div
                 key={member.id}
-                className="bg-white p-4 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="mv-surface bg-white p-4 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div>
-                  <div className="text-xs font-bold text-neutral-900">{member.name || member.email}</div>
-                  <div className="text-[11px] text-neutral-500">{member.email}</div>
-                  <div className="text-[10px] text-neutral-400 mt-0.5">
+                  <div className="text-xs font-bold mv-text text-neutral-900">{member.name || member.email}</div>
+                  <div className="text-[11px] mv-text-muted text-neutral-500">{member.email}</div>
+                  <div className="text-[10px] mv-text-muted text-neutral-400 mt-0.5">
                     Requested access: {new Date(member.joinedAt).toLocaleString('en-GB')}
                   </div>
                 </div>
@@ -100,7 +100,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-neutral-500 italic">
+                  <span className="text-xs mv-text-muted text-neutral-500 italic">
                     Owner approval required
                   </span>
                 )}
@@ -111,8 +111,8 @@ export const MembersView: React.FC<MembersViewProps> = ({
       )}
 
       {/* Members */}
-      <div className="bg-white p-5 rounded-2xl border border-neutral-200 shadow-xs">
-        <h2 className="text-sm font-bold text-neutral-900 mb-4">Active Household Members</h2>
+      <div className="mv-surface bg-white p-5 rounded-2xl border mv-border border-neutral-200 shadow-xs">
+        <h2 className="text-sm font-bold mv-text text-neutral-900 mb-4">Active Household Members</h2>
 
         <div className="divide-y divide-neutral-100">
           {activeMembers.map((member) => {
@@ -128,14 +128,14 @@ export const MembersView: React.FC<MembersViewProps> = ({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-neutral-900">{member.name}</span>
+                      <span className="text-xs font-bold mv-text text-neutral-900">{member.name}</span>
                       {isMarius && (
                         <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full border border-amber-300">
                           Owner
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-neutral-500">{member.email}</div>
+                    <div className="text-[11px] mv-text-muted text-neutral-500">{member.email}</div>
                   </div>
                 </div>
 
@@ -145,7 +145,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       <select
                         value={member.role}
                         onChange={(e) => onChangeRole(member.id, e.target.value as UserRole)}
-                        className="px-2.5 py-1.5 text-xs rounded-lg border border-neutral-300 bg-white font-medium text-neutral-700"
+                        className="px-2.5 py-1.5 text-xs rounded-lg border mv-border border-neutral-300 mv-surface bg-white font-medium text-neutral-700"
                       >
                         <option value="editor">Editor</option>
                         <option value="view_only">View Only</option>
@@ -158,14 +158,14 @@ export const MembersView: React.FC<MembersViewProps> = ({
                             onRemoveMember(member.id);
                           }
                         }}
-                        className="p-1.5 text-neutral-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                        className="p-1.5 mv-text-muted text-neutral-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
                         title="Remove member"
                       >
                         <UserX className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-700 capitalize border border-neutral-200">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-700 capitalize border mv-border border-neutral-200">
                       {member.role.replace('_', ' ')}
                     </span>
                   )}
@@ -178,11 +178,11 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
       {/* Removed Members (if any) */}
       {removedMembers.length > 0 && (
-        <div className="bg-neutral-50 p-5 rounded-2xl border border-neutral-200 shadow-xs">
+        <div className="mv-surface-muted bg-neutral-50 p-5 rounded-2xl border mv-border border-neutral-200 shadow-xs">
           <h3 className="text-xs font-bold text-neutral-700 mb-2">Removed</h3>
           <div className="space-y-2">
             {removedMembers.map((m) => (
-              <div key={m.id} className="text-xs text-neutral-600 flex justify-between items-center bg-white p-2.5 rounded-lg border border-neutral-200">
+              <div key={m.id} className="text-xs text-neutral-600 flex justify-between items-center mv-surface bg-white p-2.5 rounded-lg border mv-border border-neutral-200">
                 <span>{m.email}</span>
                 {isOwner && (
                   <button
