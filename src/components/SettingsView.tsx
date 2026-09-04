@@ -144,11 +144,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* Settings Tabs */}
-      <div className="rounded-xl bg-[#f1f5f9] dark:bg-neutral-800/90 p-1.5 shadow-inner shadow-slate-200/40 dark:shadow-none overflow-x-auto">
-        <div className="flex min-w-max items-center gap-1">
+      <div className="mv-segmented shadow-inner shadow-slate-200/40 dark:shadow-none">
+        <div className="flex min-w-max items-center gap-2">
           <button
             onClick={() => setActiveTab('appearance')}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === 'appearance'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -161,7 +161,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {!MV_SINGLE_USER_MODE && (
             <button
               onClick={() => setActiveTab('members')}
-              className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'members'
                   ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                   : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -177,7 +177,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === 'audit'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -189,7 +189,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             onClick={() => setActiveTab('backup')}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === 'backup'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -376,7 +376,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
 
                   {isOwner && m.role !== 'owner' && (
-                    <div className="flex items-center gap-2">
+                    <div className="mv-hscroll items-center max-w-full">
                       {m.role === 'pending' ? (
                         <>
                           <button
