@@ -314,9 +314,12 @@ export function createLocalTransaction(
     },
     (state) => {
       if (!data.accountId) throw new Error('Account is required.');
-      if (!data.categoryId) throw new Error('Category is required.');
+      const categoryId =
+        data.categoryId ||
+        (data.isTransfer || data.type === 'transfer' ? 'cat-transfer' : '');
+      if (!categoryId) throw new Error('Category is required.');
       assertAccountExists(state, data.accountId);
-      assertCategoryExists(state, data.categoryId);
+      assertCategoryExists(state, categoryId);
       if (!isSafePence(data.amountPence) || (data.amountPence ?? -1) < 0) {
         throw new Error('Transaction amount must be exact integer pence.');
       }
@@ -328,7 +331,7 @@ export function createLocalTransaction(
         description: data.description || 'Transaction',
         amountPence: data.amountPence!,
         type: data.type || 'expense',
-        categoryId: data.categoryId,
+        categoryId,
         accountId: data.accountId,
         targetAccountId: data.targetAccountId,
         payer: data.payer || 'Marius',
