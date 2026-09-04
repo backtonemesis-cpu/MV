@@ -10,9 +10,11 @@ import type {
   UserPreferences,
 } from './types';
 import { normalizeUserPreferences } from './themeEngine';
+import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
+const SOURCE_IMPORT_BACKUP_KEY = 'mv_local_state_before_source_budget_import_v1';
 const PREFS_KEY = 'mv_local_preferences_v1';
 const LOCAL_EVENT = 'mv-local-state-updated';
 const OWNER_EMAIL = 'marius@local.invalid';
@@ -222,9 +224,9 @@ export function loadLocalHousehold(): HouseholdData {
 
   const raw = storage.getItem(STORAGE_KEY);
   if (!raw) {
-    const blank = createBlankLocalHousehold();
-    saveLocalHousehold(blank);
-    return blank;
+    const sourceHousehold = createSourceBudgetHousehold();
+    saveLocalHousehold(sourceHousehold);
+    return normalizeHousehold(sourceHousehold);
   }
 
   let parsed: unknown;
@@ -237,6 +239,20 @@ export function loadLocalHousehold(): HouseholdData {
   }
 
   assertHouseholdShape(parsed);
+
+  const hasSourceBudget =
+    parsed.schemaStatus?.appliedMigrations?.includes(SOURCE_BUDGET_IMPORT_ID) ?? false;
+
+  if (!hasSourceBudget) {
+    // Keep a one-time local rollback copy before replacing old/test finance data.
+    // App-only savings goals are preserved when their linked account name exists
+    // in the source workbook (for example a goal linked to Chase).
+    storage.setItem(SOURCE_IMPORT_BACKUP_KEY, raw);
+    const sourceHousehold = createSourceBudgetHousehold(parsed);
+    saveLocalHousehold(sourceHousehold);
+    return normalizeHousehold(sourceHousehold);
+  }
+
   return normalizeHousehold(parsed);
 }
 
