@@ -3731,12 +3731,14 @@ html[data-theme] button.bg-white:hover {
 
 /* Financial semantic colors have final precedence over any user accent choice. */
 .mv-density-root .finance-amount.is-positive,
-.mv-density-root .finance-status-positive {
+.mv-density-root .finance-status-positive,
+.mv-density-root .finance-semantic-positive {
   color: #22C55E !important;
 }
 
 .mv-density-root .finance-amount.is-negative,
-.mv-density-root .finance-status-negative {
+.mv-density-root .finance-status-negative,
+.mv-density-root .finance-semantic-negative {
   color: #EF4444 !important;
 }
 
