@@ -360,19 +360,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <div
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-white rounded-xl border-2 border-amber-300 shadow-xs overflow-hidden"
+                className="bg-white dark:bg-neutral-900 rounded-2xl border border-amber-200 dark:border-amber-900/70 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
                 {/* Account Card Header */}
-                <div className="p-5 bg-amber-50/40 border-b border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-6 bg-white dark:bg-neutral-900 border-b border-amber-100 dark:border-amber-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-base font-bold text-neutral-900">{req.account.name}</h3>
                       {req.account.ownerPerson && (
-                        <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-neutral-200 text-neutral-800">
+                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#eef2ff] text-[#3730a3] dark:bg-indigo-950/60 dark:text-indigo-200">
                           {req.account.ownerPerson}
                         </span>
                       )}
-                      <span className="px-2 py-0.5 text-xs font-medium rounded-md bg-white border border-neutral-300 text-neutral-600 capitalize">
+                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-neutral-800 dark:text-neutral-300 capitalize">
                         {req.account.type}
                       </span>
                     </div>
@@ -437,7 +437,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 </div>
 
                 {/* Selected upcoming payments that create this requirement */}
-                <div className="p-4 bg-neutral-50/50">
+                <div className="p-6 bg-slate-50/70 dark:bg-neutral-950/40">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-neutral-700">
                       Selected upcoming payments creating this funding requirement:
@@ -520,61 +520,91 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             <span>Accounts Fully Funded — No Transfer Required ({plan.accountsFullyFunded.length})</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {plan.accountsFullyFunded.map((req) => (
-              <div
+              <article
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden"
+                className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
-                <div className="p-4 bg-emerald-50/40 border-b border-emerald-100 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-neutral-900">{req.account.name}</h3>
-                      {req.account.ownerPerson && (
-                        <span className="px-2 py-0.5 text-2xs font-semibold rounded bg-neutral-200 text-neutral-800">
-                          {req.account.ownerPerson}
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white">
+                          {req.account.name}
+                        </h3>
+                        {req.account.ownerPerson && (
+                          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#eef2ff] text-[#3730a3] dark:bg-indigo-950/60 dark:text-indigo-200">
+                            {req.account.ownerPerson}
+                          </span>
+                        )}
+                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-neutral-800 dark:text-neutral-300 capitalize">
+                          {req.account.type}
                         </span>
-                      )}
+                      </div>
                     </div>
-                    <p className="text-2xs text-neutral-500 mt-0.5">
-                      Current balance: {formatPence(req.currentBalancePence)} · Bills:{' '}
-                      {formatPence(req.totalSelectedPaymentsPence)} ({req.selectedPayments.length} selected)
-                    </p>
+
+                    <div className="shrink-0 text-right">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-[#e6f4ea] text-[#137333] dark:bg-emerald-950/60 dark:text-emerald-200">
+                        Covered
+                      </span>
+                      <div className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-neutral-400">
+                        No transfer required
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="text-right">
-                    <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      £0.00 (Covered)
-                    </span>
-                  </div>
-                </div>
+                  <div className="mt-6">
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-neutral-400">
+                      Current balance
+                    </div>
+                    <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+                      {formatPence(req.currentBalancePence)}
+                    </div>
 
-                {/* Sub-list of payments */}
-                <div className="p-3 bg-neutral-50/40 text-xs">
-                  {req.selectedPayments.length > 0 ? (
-                    <div className="space-y-1">
-                      {req.selectedPayments.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between py-1 text-2xs text-neutral-600">
-                          <div className="flex items-center gap-2 truncate">
-                            <input
-                              type="checkbox"
-                              checked={p.includeInTransferPlan}
-                              onChange={() => handleTogglePaymentInPlan(p)}
-                              disabled={isViewOnly}
-                              className="w-3.5 h-3.5 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
-                            />
-                            <span className="font-medium text-neutral-800 truncate">{p.name}</span>
-                          </div>
-                          <span className="font-semibold text-neutral-900 ml-2">{formatPence(p.amountPence)}</span>
+                    <div className="mt-3 rounded-xl bg-[#f8fafc] dark:bg-neutral-800/70 px-3.5 py-2.5 text-[13px] font-medium text-[#64748b] dark:text-neutral-300">
+                      Available: {formatPence(req.amountAvailablePence)} <span aria-hidden="true">•</span> Bills:{' '}
+                      {formatPence(req.totalSelectedPaymentsPence)} <span aria-hidden="true">•</span>{' '}
+                      {req.selectedPayments.length} selected
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    {req.selectedPayments.length > 0 ? (
+                      <div className="rounded-xl border border-slate-200 dark:border-neutral-800 bg-slate-50/70 dark:bg-neutral-950/40 px-4 py-2">
+                        <div className="divide-y divide-slate-200/80 dark:divide-neutral-800">
+                          {req.selectedPayments.map((p) => (
+                            <div key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={p.includeInTransferPlan}
+                                  onChange={() => handleTogglePaymentInPlan(p)}
+                                  disabled={isViewOnly}
+                                  className="w-3.5 h-3.5 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                                />
+                                <span className="font-semibold text-slate-800 dark:text-neutral-200 truncate">
+                                  {p.name}
+                                </span>
+                              </div>
+                              <span className="font-bold text-slate-950 dark:text-white shrink-0">
+                                {formatPence(p.amountPence)}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-2xs text-neutral-400 italic">No payments selected for this account</span>
-                  )}
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc] dark:bg-neutral-800/60 px-4 py-4 text-center">
+                        <span className="text-[13px] font-medium text-[#64748b] dark:text-neutral-400">
+                          No payments selected for this account
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
