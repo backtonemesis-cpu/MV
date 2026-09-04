@@ -182,6 +182,38 @@ describe('Penny-style local MV storage', () => {
     expect(state.transactions.every((tx) => Number.isSafeInteger(tx.amountPence))).toBe(true);
   });
 
+  it('reconciles a stale £1000 duplicate-style current account to exactly £0', () => {
+    let state = loadLocalHousehold();
+
+    const account = createLocalAccount(
+      {
+        name: 'Vesta Current Test',
+        type: 'current',
+        startingBalancePence: 1000_00,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((item) => item.id === account.account.id)?.currentBalancePence
+    ).toBe(1000_00);
+
+    reconcileLocalAccount(
+      account.account.id,
+      0,
+      '2026-09-04',
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const reconciled = state.accounts.find((item) => item.id === account.account.id);
+    expect(reconciled?.reconciledBalancePence).toBe(0);
+    expect(reconciled?.reconciliationDate).toBe('2026-09-04');
+    expect(reconciled?.currentBalancePence).toBe(0);
+  });
+
   it('allows an account to be reconciled to exactly zero and ignores future-dated activity in the current balance', () => {
     let state = loadLocalHousehold();
 
