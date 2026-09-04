@@ -138,7 +138,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
             <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Restore
             </h3>
-            <p className="text-xs text-muted text-main0 mb-3">Restoring replaces local data.</p>
+            <p className="text-xs text-muted text-subtle mb-3">Restoring replaces local data.</p>
 
             {!isOwner ? (
               <div className="p-3 bg-surface-muted rounded-xl text-xs text-muted">
@@ -157,7 +157,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-muted text-main0 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-success-soft file:text-success hover:file:bg-success-soft"
+                  className="block w-full text-xs text-muted text-subtle file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-success-soft file:text-success hover:file:bg-success-soft"
                 />
 
                 <textarea
