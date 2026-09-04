@@ -1145,7 +1145,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
-      {/* MODAL: Add Savings Pot */}
+      {/* MODAL: Add Savings Goal */}
       {showGoalModal && (
         <div className="mv-modal-backdrop">
           <div className="mv-modal-card">
@@ -1242,7 +1242,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         <div className="mv-modal-backdrop">
           <div className="mv-modal-card">
             <div className="mv-modal-header">
-              <h3 className="text-base font-bold text-main">Edit Savings Pot</h3>
+              <h3 className="text-base font-bold text-main">Edit Savings Goal</h3>
               <button
                 type="button"
                 onClick={() => {
