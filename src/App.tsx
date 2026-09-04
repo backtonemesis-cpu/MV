@@ -58,31 +58,42 @@ import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { MV_SINGLE_USER_MODE } from './accessPolicy';
 
+function normalizeInitialTheme(value: unknown): UserPreferences['theme'] {
+  if (value === 'light' || value === 'dark' || value === 'slate') return value;
+  if (value === 'system') {
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  }
+  return 'light';
+}
+
+function normalizeInitialAccent(value: unknown): UserPreferences['accent'] {
+  if (value === 'emerald' || value === 'sapphire' || value === 'amethyst') return value;
+  if (value === 'blue' || value === 'indigo') return 'sapphire';
+  if (value === 'lilac' || value === 'purple') return 'amethyst';
+  return 'emerald';
+}
+
 function readInitialPreferences(): UserPreferences {
   try {
     const saved = localStorage.getItem('mv_local_preferences_v1');
     if (saved) {
       const parsed = JSON.parse(saved);
-      const theme =
-        parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system'
-          ? parsed.theme
-          : 'system';
       return {
-        theme,
-        accent: parsed.accent || 'default',
+        theme: normalizeInitialTheme(parsed.theme),
+        accent: normalizeInitialAccent(parsed.accent),
       };
     }
 
-    const legacyTheme = localStorage.getItem('mv-theme-mode');
     return {
-      theme:
-        legacyTheme === 'light' || legacyTheme === 'dark' || legacyTheme === 'system'
-          ? legacyTheme
-          : 'system',
-      accent: 'default',
+      theme: normalizeInitialTheme(localStorage.getItem('mv-theme-mode')),
+      accent: 'emerald',
     };
   } catch {
-    return { theme: 'system', accent: 'default' };
+    return { theme: 'light', accent: 'emerald' };
   }
 }
 
@@ -147,35 +158,16 @@ export default function App() {
       );
   }, [household, selectedMonth]);
 
-  // Apply appearance immediately when the picker changes.
+  // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const root = document.documentElement;
+    root.setAttribute('data-theme', userPreferences.theme);
+    root.setAttribute('data-accent', userPreferences.accent);
 
-    const applyTheme = () => {
-      const isDark =
-        userPreferences.theme === 'dark' ||
-        (userPreferences.theme === 'system' && media.matches);
-
-      document.documentElement.classList.toggle('dark', isDark);
-      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-    };
-
-    applyTheme();
-
-    if (userPreferences.theme === 'system') {
-      media.addEventListener?.('change', applyTheme);
-      return () => media.removeEventListener?.('change', applyTheme);
-    }
-  }, [userPreferences.theme]);
-
-  useEffect(() => {
-    const accent = userPreferences.accent;
-    if (!accent || accent === 'default' || accent === 'emerald') {
-      document.documentElement.removeAttribute('data-accent');
-    } else {
-      document.documentElement.setAttribute('data-accent', accent);
-    }
-  }, [userPreferences.accent]);
+    // Keep Tailwind's legacy dark: utilities readable while semantic tokens take precedence.
+    root.classList.toggle('dark', userPreferences.theme !== 'light');
+    root.style.colorScheme = userPreferences.theme === 'light' ? 'light' : 'dark';
+  }, [userPreferences.theme, userPreferences.accent]);
 
   // Load Session & Household Data
   const loadData = useCallback(async () => {
