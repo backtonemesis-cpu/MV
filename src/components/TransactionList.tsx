@@ -108,7 +108,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       {/* Header with Search and Action Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+          <h1 className="text-xl font-bold mv-text text-neutral-900 dark:text-neutral-100">
             Activity
           </h1>
         </div>
@@ -202,7 +202,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </div>
 
       {/* Transaction Table / Card List */}
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs overflow-hidden">
+      <div className="mv-surface bg-white dark:bg-neutral-800 rounded-2xl border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs overflow-hidden">
         {filteredTransactions.length === 0 ? (
           <div className="m-4 rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center">
             <p className="text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
@@ -249,7 +249,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                        <span className="text-sm font-bold mv-text text-neutral-900 dark:text-neutral-100">
                           {tx.description}
                         </span>
                         {tx.isSavings && (
@@ -274,7 +274,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400 mt-1 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1 flex-wrap">
                         <span>{tx.date}</span>
                         <span>•</span>
                         <span className="font-semibold text-neutral-700 dark:text-neutral-300">
@@ -300,7 +300,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
 
                       {tx.notes && (
-                        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-1 italic">
+                        <p className="text-[11px] mv-text-muted text-neutral-400 dark:text-neutral-500 mt-1 italic">
                           {tx.notes}
                         </p>
                       )}
@@ -310,13 +310,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                           {tx.splits.map((s, idx) => (
                             <span
                               key={idx}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-600"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border mv-border border-neutral-200 dark:border-neutral-600"
                             >
                               <span className="font-medium">
                                 {categoriesMap.get(s.categoryId) || 'Category'}:
                               </span>
                               <span className="font-bold">{formatPence(s.amountPence)}</span>
-                              {s.notes && <span className="text-neutral-400">({s.notes})</span>}
+                              {s.notes && <span className="mv-text-muted text-neutral-400">({s.notes})</span>}
                             </span>
                           ))}
                         </div>
@@ -328,7 +328,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                     <div
                       className={`text-base font-black ${
                         isNegative
-                          ? 'text-neutral-900 dark:text-neutral-100'
+                          ? 'mv-text text-neutral-900 dark:text-neutral-100'
                           : 'text-emerald-700 dark:text-emerald-400'
                       }`}
                     >
@@ -339,7 +339,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => onEditTransaction(tx)}
-                          className="p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
+                          className="p-1.5 mv-text-muted text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
                           title="Edit"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -350,7 +350,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                               onDeleteTransaction(tx.id);
                             }
                           }}
-                          className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
+                          className="p-1.5 mv-text-muted text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
