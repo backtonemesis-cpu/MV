@@ -17,6 +17,7 @@ import {
   createPlannedPayment,
   updatePlannedPayment,
   deletePlannedPayment,
+  markPaymentPaid,
   createPlannedIncome,
   updatePlannedIncome,
   deletePlannedIncome,
@@ -469,6 +470,31 @@ export default function App() {
     }
   };
 
+  const handleMarkPlannedPaymentPaid = async (
+    id: string,
+    payload: {
+      actualAmountPence: number;
+      actualDate: string;
+      accountId: string;
+    }
+  ) => {
+    if (!household) return;
+    try {
+      await markPaymentPaid(id, {
+        ...payload,
+        expectedVersion: household.version,
+      });
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to record bill payment');
+      }
+      throw err;
+    }
+  };
+
   const handleBulkTogglePlannedPayments = async (params: {
     month?: string;
     include: boolean;
@@ -800,6 +826,7 @@ export default function App() {
                 onCreatePlannedPayment={handleCreatePlannedPayment}
                 onUpdatePlannedPayment={handleUpdatePlannedPayment}
                 onDeletePlannedPayment={handleDeletePlannedPayment}
+                onMarkPaymentPaid={handleMarkPlannedPaymentPaid}
                 onBulkTogglePlannedPayments={handleBulkTogglePlannedPayments}
                 onExecuteTransfer={handleExecuteTransferAllocations}
                 onUndoFunding={handleUndoTransferPlanFunding}
