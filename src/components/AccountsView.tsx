@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Landmark,
   PiggyBank,
@@ -88,6 +88,38 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      if (showActivityModal) {
+        setShowActivityModal(false);
+      } else if (showReconcileModal) {
+        setShowReconcileModal(false);
+      } else if (showEditGoalModal) {
+        setShowEditGoalModal(false);
+        setSelectedGoal(null);
+      } else if (showGoalModal) {
+        setShowGoalModal(false);
+      } else if (showEditModal) {
+        setShowEditModal(false);
+        setSelectedAccount(null);
+      } else if (showAccModal) {
+        setShowAccModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [
+    showAccModal,
+    showActivityModal,
+    showEditGoalModal,
+    showEditModal,
+    showGoalModal,
+    showReconcileModal,
+  ]);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
   const ownerOptions = useMemo(
@@ -653,21 +685,21 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Add Account */}
       {showAccModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Add Account
               </h3>
               <button
                 onClick={() => setShowAccModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAccountSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleAccountSubmit} className="mv-modal-form">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
@@ -679,6 +711,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   Account Name
                 </label>
                 <input
+                  autoFocus
                   type="text"
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
@@ -688,7 +721,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
                     Owner
@@ -753,7 +786,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowAccModal(false)}
@@ -776,21 +809,21 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Edit Account */}
       {showEditModal && selectedAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Edit {selectedAccount.name}
               </h3>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleEditSubmit} className="mv-modal-form">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
@@ -802,6 +835,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   Account Name
                 </label>
                 <input
+                  autoFocus
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -810,7 +844,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
                     Owner
@@ -875,7 +909,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
@@ -898,33 +932,34 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Reconcile Balance */}
       {showReconcileModal && selectedAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Reconcile
               </h3>
               <button
                 onClick={() => setShowReconcileModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleReconcileSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleReconcileSubmit} className="mv-modal-form">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
                     Statement Date
                   </label>
                   <input
+                    autoFocus
                     type="date"
                     value={reconcileDate}
                     onChange={(e) => setReconcileDate(e.target.value)}
@@ -989,7 +1024,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 );
               })()}
 
-              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowReconcileModal(false)}
@@ -1012,9 +1047,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Account Activity Ledger */}
       {showActivityModal && selectedAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-muted p-6 flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card mv-modal-wide flex flex-col">
+            <div className="mv-modal-header">
               <div>
                 <h3 className="text-base font-bold text-main">
                   {selectedAccount.name} Activity
@@ -1025,7 +1060,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
               <button
                 onClick={() => setShowActivityModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1095,26 +1130,27 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Add Savings Pot */}
       {showGoalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Create Savings Pot / Goal
               </h3>
               <button
                 onClick={() => setShowGoalModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleGoalSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleGoalSubmit} className="mv-modal-form">
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Goal Name
                 </label>
                 <input
+                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
@@ -1143,7 +1179,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
                     Current (£)
@@ -1183,7 +1219,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowGoalModal(false)}
@@ -1206,9 +1242,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Edit Savings Pot */}
       {showEditGoalModal && selectedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">Edit Savings Pot</h3>
               <button
                 type="button"
@@ -1216,13 +1252,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   setShowEditGoalModal(false);
                   setSelectedGoal(null);
                 }}
-                className="p-1 rounded-lg text-subtle hover:text-main hover:bg-surface-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleEditGoalSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleEditGoalSubmit} className="mv-modal-form">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
@@ -1258,7 +1294,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">Current (£)</label>
                   <input
@@ -1290,7 +1326,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-between gap-2">
+              <div className="mv-modal-actions justify-between">
                 <button
                   type="button"
                   onClick={() => handleDeleteGoal(selectedGoal)}
