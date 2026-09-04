@@ -66,7 +66,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const [goalDate, setGoalDate] = useState('');
 
   // Quick savings transfer state
-  const [sourceAccountId, setSourceAccountId] = useState(accounts.find((a) => a.type === 'current')?.id || accounts[0]?.id || '');
+  const [sourceAccountId, setSourceAccountId] = useState(
+    accounts.find((a) => a.isActive !== false && a.type === 'current')?.id ||
+      accounts.find((a) => a.isActive !== false && a.type !== 'credit')?.id ||
+      ''
+  );
   const [transferAmountStr, setTransferAmountStr] = useState('');
   const [transferPayer, setTransferPayer] = useState<Payer>('Joint');
 
@@ -105,6 +109,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           (account.type === 'savings' || account.type === 'cash')
       ),
     [accounts]
+  );
+
+  const savingsAccountIds = useMemo(
+    () => new Set(savingsAccounts.map((account) => account.id)),
+    [savingsAccounts]
   );
 
   // Authoritative savings position. Goals are allocations only; they do not define total savings.
@@ -532,9 +541,26 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       {tx.date} · {tx.payer}
                     </div>
                   </div>
-                  <div className="shrink-0 font-semibold text-success whitespace-nowrap">
-                    +{formatPence(tx.amountPence)}
-                  </div>
+                  {(() => {
+                    const sourceIsSavings = savingsAccountIds.has(tx.accountId);
+                    const targetIsSavings = tx.targetAccountId
+                      ? savingsAccountIds.has(tx.targetAccountId)
+                      : false;
+                    const isIncoming = !sourceIsSavings && targetIsSavings;
+                    const isOutgoing = sourceIsSavings && !targetIsSavings;
+                    const sign = isIncoming ? '+' : isOutgoing ? '-' : '';
+                    const tone = isIncoming
+                      ? 'text-success'
+                      : isOutgoing
+                      ? 'text-danger'
+                      : 'text-muted';
+
+                    return (
+                      <div className={`shrink-0 font-semibold whitespace-nowrap ${tone}`}>
+                        {sign}{formatPence(tx.amountPence)}
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
