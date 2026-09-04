@@ -10,9 +10,11 @@ import type {
   UserPreferences,
 } from './types';
 import { normalizeUserPreferences } from './themeEngine';
+import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
+const SOURCE_IMPORT_BACKUP_KEY = 'mv_local_state_before_source_budget_import_v1';
 const PREFS_KEY = 'mv_local_preferences_v1';
 const LOCAL_EVENT = 'mv-local-state-updated';
 const OWNER_EMAIL = 'marius@local.invalid';
@@ -202,6 +204,31 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
   return balance;
 }
 
+function markSourceBudgetHandled(state: HouseholdData): void {
+  const current = state.schemaStatus || {
+    currentSchemaVersion: 1,
+    minSupportedClientVersion: 1,
+    latestAppliedVersion: 1,
+    appliedMigrations: [],
+    isUpToDate: true,
+  };
+
+  if (!current.appliedMigrations.some((migration) => migration.name === SOURCE_BUDGET_IMPORT_ID)) {
+    current.appliedMigrations = [
+      ...current.appliedMigrations,
+      {
+        version: 1,
+        name: SOURCE_BUDGET_IMPORT_ID,
+        appliedAt: nowIso(),
+        executionTimeMs: 0,
+        checksum: 'user-explicit-state',
+      },
+    ];
+  }
+
+  state.schemaStatus = current;
+}
+
 function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
@@ -222,9 +249,9 @@ export function loadLocalHousehold(): HouseholdData {
 
   const raw = storage.getItem(STORAGE_KEY);
   if (!raw) {
-    const blank = createBlankLocalHousehold();
-    saveLocalHousehold(blank);
-    return blank;
+    const sourceHousehold = createSourceBudgetHousehold();
+    saveLocalHousehold(sourceHousehold);
+    return normalizeHousehold(sourceHousehold);
   }
 
   let parsed: unknown;
@@ -237,6 +264,22 @@ export function loadLocalHousehold(): HouseholdData {
   }
 
   assertHouseholdShape(parsed);
+
+  const hasSourceBudget =
+    parsed.schemaStatus?.appliedMigrations?.some(
+      (migration) => migration.name === SOURCE_BUDGET_IMPORT_ID
+    ) ?? false;
+
+  if (!hasSourceBudget) {
+    // Keep a one-time local rollback copy before replacing old/test finance data.
+    // App-only savings goals are preserved when their linked account name exists
+    // in the source workbook (for example a goal linked to Chase).
+    storage.setItem(SOURCE_IMPORT_BACKUP_KEY, raw);
+    const sourceHousehold = createSourceBudgetHousehold(parsed);
+    saveLocalHousehold(sourceHousehold);
+    return normalizeHousehold(sourceHousehold);
+  }
+
   return normalizeHousehold(parsed);
 }
 
@@ -1143,6 +1186,9 @@ export function restoreLocalBackup(payload: any, expectedVersion: number): { ver
   if (!storage) throw new Error('Browser storage is unavailable.');
   storage.setItem(ROLLBACK_KEY, JSON.stringify(current));
   restored.version = current.version + 1;
+  // An explicit restore is authoritative. Mark the source import as handled so
+  // the one-time source seeding migration does not overwrite the restored backup.
+  markSourceBudgetHandled(restored);
   appendAudit(restored, {
     action: 'database_restored',
     entityType: 'system',
@@ -1158,6 +1204,8 @@ export function resetLocalHousehold(expectedVersion: number): { version: number 
   if (current.version !== expectedVersion) throw conflict(current.version);
   const reset = createBlankLocalHousehold(current.version + 1);
   reset.auditLogs = current.auditLogs;
+  // An explicit reset must stay blank rather than immediately reimporting source data.
+  markSourceBudgetHandled(reset);
   appendAudit(reset, {
     action: 'household_reset',
     entityType: 'system',
