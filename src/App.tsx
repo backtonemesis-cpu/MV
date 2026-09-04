@@ -21,6 +21,7 @@ import {
   markIncomeReceived,
   bulkTogglePlannedPayments,
   executeTransferPlanTransfer,
+  executeTransferPlanAllocations,
   createHouseholdMember,
   updateHouseholdMember,
   approveMember,
@@ -485,6 +486,36 @@ export default function App() {
     }
   };
 
+  const handleExecuteTransferAllocations = async (payload: {
+    destinationAccountId: string;
+    expectedTotalPence: number;
+    allocations: Array<{
+      sourceAccountId: string;
+      amountPence: number;
+    }>;
+    description: string;
+    date: string;
+  }) => {
+    if (!household) return;
+    try {
+      setIsSubmitting(true);
+      await executeTransferPlanAllocations({
+        ...payload,
+        expectedVersion: household.version,
+      });
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to execute Transfer Plan allocations');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Planned Income / Wages Handlers
   const handleCreatePlannedIncome = async (data: Partial<PlannedIncome>) => {
     if (!household) return;
@@ -711,7 +742,7 @@ export default function App() {
                 onUpdatePlannedPayment={handleUpdatePlannedPayment}
                 onDeletePlannedPayment={handleDeletePlannedPayment}
                 onBulkTogglePlannedPayments={handleBulkTogglePlannedPayments}
-                onExecuteTransfer={handleExecuteTransfer}
+                onExecuteTransfer={handleExecuteTransferAllocations}
               />
             )}
 
