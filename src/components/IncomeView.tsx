@@ -3,6 +3,7 @@ import {
   Banknote,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   Edit2,
   Plus,
   Trash2,
@@ -287,117 +288,128 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
     'w-full h-11 rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all';
 
   return (
-    <div className="space-y-6 bg-app pb-16 text-main">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-5 bg-[#0B0F19] pb-16 text-white">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-main">Income & Wages</h1>
-          <p className="mt-0.5 text-xs text-muted">
+          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-white">Income & Wages</h1>
+          <p className="mt-0.5 text-[12px] font-normal text-[#9CA3AF]">
             Expected and received household income for the active month.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <select
-            value={selectedMonth}
-            onChange={(event) => onSelectMonth(event.target.value)}
-            className="h-10 rounded-xl border border-muted bg-surface-muted px-3 text-sm font-semibold text-main"
-          >
-            {availableMonths.map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
+          <label className="relative block">
+            <span className="sr-only">Income month</span>
+            <select
+              value={selectedMonth}
+              onChange={(event) => onSelectMonth(event.target.value)}
+              className="h-10 appearance-none rounded-md border border-[rgba(255,255,255,0.06)] bg-[#1F2937] px-3 pr-9 text-[12px] font-semibold text-[#F9FAFB] outline-none transition-colors focus:border-[#2E374A] focus:bg-[#374151]"
+            >
+              {availableMonths.map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+          </label>
 
           {canEdit && (
             <button
               type="button"
               onClick={openCreate}
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
+              className="inline-flex h-10 items-center gap-1.5 rounded-md bg-accent px-4 text-sm font-semibold text-on-accent transition-all hover:brightness-95 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
               Add Income
             </button>
           )}
         </div>
-      </div>
+      </header>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Income summary">
-        <article className="rounded-[14px] border border-muted/70 bg-surface p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025),0_8px_24px_rgba(0,0,0,0.12)]">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+      <section
+        className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+        aria-label="Income summary"
+      >
+        <article className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#1F2937] p-4">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
             Expected
           </span>
-          <div className="mt-2 font-mono text-[30px] font-bold leading-none tracking-[-0.025em] tabular-nums text-main">
+          <div className="mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums text-white">
             {formatPence(monthExpectedPence)}
           </div>
-          <p className="mt-3 text-[11px] leading-4 text-subtle">
+          <p className="mt-1 text-[11px] font-normal text-[#6B7280]">
             {monthIncomes.length} income source{monthIncomes.length === 1 ? '' : 's'}
           </p>
         </article>
 
-        <article className="rounded-[14px] border border-muted/70 bg-surface p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025),0_8px_24px_rgba(0,0,0,0.12)]">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+        <article className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#1F2937] p-4">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
             Received
           </span>
-          <div className="mt-2 font-mono text-[30px] font-bold leading-none tracking-[-0.025em] tabular-nums text-success">
+          <div className="mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums text-white">
             {formatPence(monthReceivedPence)}
           </div>
-          <p className="mt-3 text-[11px] leading-4 text-subtle">
+          <p className="mt-1 text-[11px] font-normal text-[#6B7280]">
             {monthFullyReceivedCount} of {monthIncomes.length} received
           </p>
         </article>
 
-        <article className="rounded-[14px] border border-muted/70 bg-surface p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025),0_8px_24px_rgba(0,0,0,0.12)]">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
+        <article className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#1F2937] p-4">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
             Outstanding
           </span>
-          <div className="mt-2 font-mono text-[30px] font-bold leading-none tracking-[-0.025em] tabular-nums text-warning">
+          <div className="mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums text-white">
             {formatPence(monthOutstandingPence)}
           </div>
-          <p className="mt-3 text-[11px] leading-4 text-subtle">
+          <p className="mt-1 text-[11px] font-normal text-[#6B7280]">
             {monthRemainingCount} payment{monthRemainingCount === 1 ? '' : 's'} remaining
           </p>
         </article>
       </section>
 
-      <section aria-labelledby="income-schedule-title">
-        <header className="mb-4 flex items-end justify-between gap-3">
+      <section
+        className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#111827] p-3 sm:p-4"
+        aria-labelledby="income-schedule-title"
+      >
+        <header className="mb-3 flex items-end justify-between gap-3 px-1">
           <div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-subtle">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
               Income schedule
             </div>
-            <h2 id="income-schedule-title" className="mt-1 text-base font-semibold tracking-tight text-main">
+            <h2
+              id="income-schedule-title"
+              className="mt-0.5 text-[14px] font-semibold text-[#F9FAFB]"
+            >
               {selectedMonth} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
             </h2>
           </div>
         </header>
 
         {monthIncomes.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-muted bg-surface p-5">
-            <div className="flex min-h-[160px] flex-col items-center justify-center rounded-xl bg-surface-muted p-8 text-center">
-              <Banknote className="h-5 w-5 text-subtle" />
-              <p className="mt-2 text-sm font-medium text-muted">No income sources for {selectedMonth}</p>
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={openCreate}
-                  className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition-all hover:bg-surface-muted active:scale-[0.98]"
-                >
-                  <Plus className="h-3.5 w-3.5 text-accent" />
-                  Add income
-                </button>
-              )}
-            </div>
+          <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(255,255,255,0.06)] bg-[#1F2937] p-8 text-center">
+            <Banknote className="h-5 w-5 text-[#6B7280]" />
+            <p className="mt-2 text-sm font-medium text-[#9CA3AF]">No income sources for {selectedMonth}</p>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={openCreate}
+                className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[#111827] px-3 text-xs font-semibold text-[#F9FAFB] transition-colors hover:bg-[#374151]"
+              >
+                <Plus className="h-3.5 w-3.5 text-accent" />
+                Add income
+              </button>
+            )}
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {incomeDateGroups.map((group) => (
               <div key={group.date}>
-                <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-subtle">
+                <div className="px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
                   {group.label}
                 </div>
 
-                <div className="mt-2 space-y-2">
+                <div className="mt-2 space-y-px">
                   {group.items.map((income) => {
                     const linkedTx = linkedTransactionFor(income);
                     const received =
@@ -421,11 +433,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     const statusLabel =
                       income.status === 'partial' ? 'Partial' : received ? 'Received' : 'Expected';
                     const statusClassName =
-                      income.status === 'partial'
-                        ? 'border-warning bg-warning-soft text-warning'
-                        : received
-                        ? 'border-success bg-success-soft text-success'
-                        : 'border-muted bg-surface-muted text-muted';
+                      received && income.status !== 'partial'
+                        ? 'border-[rgba(34,197,94,0.20)] bg-[rgba(34,197,94,0.10)] text-[#4ADE80]'
+                        : 'border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.10)] text-[#F87171]';
                     const shownAmountPence =
                       income.actualAmountPence ?? linkedTx?.amountPence ?? income.expectedAmountPence;
                     const showExpectedComparison =
@@ -434,42 +444,49 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     return (
                       <article
                         key={income.id}
-                        className="group grid gap-3 rounded-[14px] border border-muted/70 bg-surface px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02),0_6px_18px_rgba(0,0,0,0.10)] transition-[background-color,border-color,box-shadow] duration-150 hover:border-strong hover:bg-surface-muted/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
+                        className="group flex items-center justify-between gap-3 rounded-lg border border-transparent bg-[#1F2937] px-3 py-3 transition-colors hover:border-[#2E374A] hover:bg-[#374151] sm:px-4"
                       >
-                        <div className="min-w-0">
-                          <h3 className="truncate text-[15px] font-semibold leading-5 text-main">
-                            {income.name}
-                          </h3>
-
-                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span
-                              className={`inline-flex h-[22px] items-center gap-1.5 rounded-[7px] border px-2 text-[10px] font-semibold tracking-[0.02em] ${statusClassName}`}
-                            >
-                              <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-                              {statusLabel}
-                            </span>
-
-                            <span className="text-[11px] font-medium text-muted">{income.sourcePerson}</span>
-                            <span className="text-[11px] text-subtle" aria-hidden="true">·</span>
-                            <span className="text-[11px] font-medium text-muted">{categoryName}</span>
-                            <span className="text-[11px] text-subtle" aria-hidden="true">·</span>
-                            <span className="text-[11px] font-medium text-muted">{accountName}</span>
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#111827] text-[#9CA3AF]">
+                            <Banknote className="h-4 w-4" aria-hidden="true" />
                           </div>
 
-                          {income.notes && (
-                            <p className="mt-1.5 max-w-[650px] truncate text-xs font-normal leading-4 text-subtle">
-                              {income.notes}
-                            </p>
-                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                              <h3 className="truncate text-[14px] font-semibold leading-5 text-[#F9FAFB] sm:text-[15px]">
+                                {income.name}
+                              </h3>
+
+                              <span
+                                className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.04em] ${statusClassName}`}
+                              >
+                                {statusLabel}
+                              </span>
+                            </div>
+
+                            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-normal text-[#9CA3AF]">
+                              <span>{income.sourcePerson}</span>
+                              <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                              <span>{categoryName}</span>
+                              <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                              <span>{accountName}</span>
+                            </div>
+
+                            {income.notes && (
+                              <p className="mt-0.5 max-w-[650px] truncate text-[11px] font-normal text-[#6B7280]">
+                                {income.notes}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="flex min-w-[150px] items-start justify-between gap-3 sm:justify-end">
-                          <div className="text-left sm:text-right">
-                            <div className="font-mono text-[17px] font-semibold leading-6 tracking-tight tabular-nums text-main">
+                        <div className="flex shrink-0 items-center gap-2">
+                          <div className="min-w-[96px] text-right">
+                            <div className="font-mono text-[16px] font-semibold leading-5 tabular-nums text-white sm:text-[18px]">
                               {formatPence(shownAmountPence)}
                             </div>
                             {showExpectedComparison && (
-                              <div className="mt-0.5 text-[10px] leading-4 text-subtle">
+                              <div className="mt-0.5 text-[11px] font-normal text-[#6B7280]">
                                 Expected {formatPence(income.expectedAmountPence)}
                               </div>
                             )}
@@ -481,7 +498,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => openReceive(income)}
-                                  className="inline-flex h-7 items-center gap-1 rounded-[8px] border border-success bg-success-soft px-2.5 text-[10px] font-semibold text-success transition-all hover:brightness-110 active:scale-[0.97]"
+                                  className="inline-flex h-8 items-center gap-1 rounded-full border border-[rgba(34,197,94,0.20)] bg-[rgba(34,197,94,0.10)] px-2.5 text-[11px] font-bold uppercase tracking-[0.03em] text-[#4ADE80] transition-colors hover:bg-[rgba(34,197,94,0.16)] active:scale-[0.97]"
                                   title="Mark received"
                                 >
                                   <CheckCircle2 className="h-3.5 w-3.5" />
@@ -489,27 +506,29 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                 </button>
                               )}
 
-                              <button
-                                type="button"
-                                onClick={() => openEdit(income)}
-                                className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-transparent text-muted opacity-60 transition-all hover:bg-surface-muted hover:text-main hover:opacity-100 focus:opacity-100 active:scale-[0.97] sm:opacity-30 sm:group-hover:opacity-100"
-                                title="Edit income"
-                                aria-label={`Edit ${income.name}`}
-                              >
-                                <Edit2 className="h-3.5 w-3.5" />
-                              </button>
-
-                              {!received && (
+                              <div className="flex items-center gap-1 opacity-70 transition-opacity sm:opacity-40 sm:group-hover:opacity-100">
                                 <button
                                   type="button"
-                                  onClick={() => removeIncome(income)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-transparent text-subtle opacity-60 transition-all hover:bg-danger-soft hover:text-danger hover:opacity-100 focus:opacity-100 active:scale-[0.97] sm:opacity-0 sm:group-hover:opacity-100"
-                                  title="Delete expected income"
-                                  aria-label={`Delete ${income.name}`}
+                                  onClick={() => openEdit(income)}
+                                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2E374A] text-[#9CA3AF] transition-colors hover:text-white active:scale-[0.97]"
+                                  title="Edit income"
+                                  aria-label={`Edit ${income.name}`}
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Edit2 className="h-3.5 w-3.5" />
                                 </button>
-                              )}
+
+                                {!received && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeIncome(income)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2E374A] text-[#9CA3AF] transition-colors hover:text-[#F87171] active:scale-[0.97]"
+                                    title="Delete expected income"
+                                    aria-label={`Delete ${income.name}`}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
