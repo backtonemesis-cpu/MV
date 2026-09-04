@@ -24,11 +24,8 @@ export function calculateAccountFunding(
     (p) => p.accountId === account.id && p.includeInTransferPlan === true
   );
 
-  const paidPayments = selectedPayments.filter(
-    (p) => p.status === 'paid' || Boolean(p.actualTransactionId)
-  );
-  const paidIds = new Set(paidPayments.map((payment) => payment.id));
-  const unpaidPayments = selectedPayments.filter((p) => !paidIds.has(p.id));
+  const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
+  const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
 
   // Sort upcoming unpaid obligations chronologically by due date
   const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
