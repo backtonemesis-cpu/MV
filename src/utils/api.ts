@@ -278,6 +278,7 @@ export async function bulkTogglePlannedPayments(
     month?: string;
     include: boolean;
     onlyUnpaid?: boolean;
+    status?: 'paid' | 'unpaid';
     paymentIds?: string[];
   },
   expectedVersion: number
