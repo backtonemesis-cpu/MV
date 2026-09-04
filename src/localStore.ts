@@ -233,7 +233,28 @@ function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
   state.name = state.name || 'Marius Household';
-  state.members = [ownerMember()];
+
+  const existingMembers = Array.isArray(state.members) ? state.members : [];
+  const existingOwner = existingMembers.find(
+    (member) =>
+      member.id === 'local-marius' ||
+      member.email.trim().toLowerCase() === OWNER_EMAIL.toLowerCase()
+  );
+  const owner = {
+    ...ownerMember(),
+    ...(existingOwner || {}),
+    id: 'local-marius',
+    email: OWNER_EMAIL,
+    name: existingOwner?.name || OWNER_NAME,
+    role: 'owner' as const,
+  };
+  const otherMembers = existingMembers.filter(
+    (member) =>
+      member.id !== 'local-marius' &&
+      member.email.trim().toLowerCase() !== OWNER_EMAIL.toLowerCase()
+  );
+  state.members = [owner, ...otherMembers];
+
   state.plannedIncomes = state.plannedIncomes || [];
   state.accounts = state.accounts.map((account) => ({
     ...account,
@@ -749,6 +770,7 @@ function plannedIncomeFromPartial(data: Partial<PlannedIncome>): PlannedIncome {
     month: data.month,
     sourcePerson: data.sourcePerson || 'Marius',
     accountId: data.accountId,
+    categoryId: data.categoryId,
     expectedDate: data.expectedDate,
     actualDate: data.actualDate,
     actualTransactionId: data.actualTransactionId,
@@ -808,6 +830,33 @@ export function updateLocalPlannedIncome(
       next.updatedAt = nowIso();
       next.updatedBy = OWNER_EMAIL;
       assertAccountExists(state, next.accountId);
+      if (next.categoryId) assertCategoryExists(state, next.categoryId);
+
+      const linkedTransactionId = next.actualTransactionId || next.linkedTransactionId;
+      if (linkedTransactionId) {
+        const txIndex = state.transactions.findIndex((tx) => tx.id === linkedTransactionId);
+        if (txIndex >= 0) {
+          const linkedTx = state.transactions[txIndex];
+          const syncedAmount = next.actualAmountPence ?? linkedTx.amountPence;
+          const syncedDate = next.actualDate || next.receivedDate || linkedTx.date;
+          const syncedCategoryId = next.categoryId || linkedTx.categoryId;
+
+          assertCategoryExists(state, syncedCategoryId);
+          state.transactions[txIndex] = {
+            ...linkedTx,
+            description: next.name,
+            amountPence: syncedAmount,
+            date: syncedDate,
+            accountId: next.accountId,
+            categoryId: syncedCategoryId,
+            payer: next.sourcePerson,
+            plannedIncomeId: next.id,
+            updatedAt: nowIso(),
+            updatedBy: OWNER_EMAIL,
+          };
+        }
+      }
+
       incomes[index] = next;
       state.plannedIncomes = incomes;
       return next;
@@ -1012,7 +1061,8 @@ export function markLocalIncomeReceived(
 
       const accountId = payload.accountId || income.accountId;
       assertAccountExists(state, accountId);
-      assertCategoryExists(state, 'cat-salary');
+      const categoryId = income.categoryId || 'cat-salary';
+      assertCategoryExists(state, categoryId);
       const amountPence = payload.actualAmountPence ?? income.expectedAmountPence;
       if (!isSafePence(amountPence) || amountPence < 0) {
         throw new Error('Actual income amount must be exact integer pence.');
@@ -1024,7 +1074,7 @@ export function markLocalIncomeReceived(
         description: income.name,
         amountPence,
         type: 'income',
-        categoryId: 'cat-salary',
+        categoryId,
         accountId,
         payer: income.sourcePerson,
         isTransfer: false,
@@ -1104,6 +1154,152 @@ export function importLocalMonth(
     }
   );
   return { imported: result.value, version: result.state.version };
+}
+
+export function createLocalHouseholdMember(
+  data: Pick<HouseholdMember, 'name' | 'email'> & { role?: 'editor' | 'view_only' | 'pending' },
+  expectedVersion: number
+): { member: HouseholdMember; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'member_created',
+      entityType: 'member',
+      entityId: '',
+      summary: data.name || data.email || 'Household member added',
+    },
+    (state) => {
+      const name = data.name?.trim();
+      const email = data.email?.trim().toLowerCase();
+      if (!name) throw new Error('Household member name is required.');
+      if (!email || !email.includes('@')) throw new Error('A valid household member email is required.');
+      if (email === OWNER_EMAIL.toLowerCase()) throw new Error('Marius is already the household owner.');
+      if (
+        state.members.some(
+          (member) => member.email.trim().toLowerCase() === email && member.role !== 'removed'
+        )
+      ) {
+        throw new Error('A household member with this email already exists.');
+      }
+
+      const existingRemoved = state.members.find(
+        (member) => member.email.trim().toLowerCase() === email && member.role === 'removed'
+      );
+      const member: HouseholdMember = existingRemoved
+        ? {
+            ...existingRemoved,
+            name,
+            role: data.role || 'editor',
+            approvedAt: nowIso(),
+            approvedBy: OWNER_EMAIL,
+            lastActiveAt: undefined,
+          }
+        : {
+            id: createId('member'),
+            email,
+            name,
+            role: data.role || 'editor',
+            joinedAt: nowIso(),
+            approvedAt: data.role === 'pending' ? undefined : nowIso(),
+            approvedBy: data.role === 'pending' ? undefined : OWNER_EMAIL,
+          };
+
+      state.members = existingRemoved
+        ? state.members.map((item) => (item.id === existingRemoved.id ? member : item))
+        : [...state.members, member];
+      return member;
+    }
+  );
+  return { member: result.value, version: result.state.version };
+}
+
+export function approveLocalHouseholdMember(
+  memberId: string,
+  role: 'editor' | 'view_only',
+  expectedVersion: number
+): { member: HouseholdMember; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'member_approved',
+      entityType: 'member',
+      entityId: memberId,
+      summary: `Household member approved as ${role}`,
+    },
+    (state) => {
+      const index = state.members.findIndex((member) => member.id === memberId);
+      if (index < 0) throw new Error('Household member not found.');
+      if (state.members[index].role === 'owner') throw new Error('The household owner role cannot be changed.');
+      const next: HouseholdMember = {
+        ...state.members[index],
+        role,
+        approvedAt: nowIso(),
+        approvedBy: OWNER_EMAIL,
+      };
+      state.members[index] = next;
+      return next;
+    }
+  );
+  return { member: result.value, version: result.state.version };
+}
+
+export function changeLocalHouseholdMemberRole(
+  memberId: string,
+  newRole: UserRole,
+  expectedVersion: number
+): { member: HouseholdMember; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'member_role_changed',
+      entityType: 'member',
+      entityId: memberId,
+      summary: `Household member role changed to ${newRole}`,
+    },
+    (state) => {
+      const index = state.members.findIndex((member) => member.id === memberId);
+      if (index < 0) throw new Error('Household member not found.');
+      if (state.members[index].role === 'owner') throw new Error('The household owner role cannot be changed.');
+      if (newRole === 'owner') throw new Error('MV supports one household owner in local mode.');
+      const next: HouseholdMember = {
+        ...state.members[index],
+        role: newRole,
+        approvedAt:
+          newRole === 'editor' || newRole === 'view_only'
+            ? state.members[index].approvedAt || nowIso()
+            : state.members[index].approvedAt,
+        approvedBy:
+          newRole === 'editor' || newRole === 'view_only'
+            ? state.members[index].approvedBy || OWNER_EMAIL
+            : state.members[index].approvedBy,
+      };
+      state.members[index] = next;
+      return next;
+    }
+  );
+  return { member: result.value, version: result.state.version };
+}
+
+export function removeLocalHouseholdMember(
+  memberId: string,
+  expectedVersion: number
+): { version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'member_removed',
+      entityType: 'member',
+      entityId: memberId,
+      summary: 'Household member removed',
+    },
+    (state) => {
+      const index = state.members.findIndex((member) => member.id === memberId);
+      if (index < 0) throw new Error('Household member not found.');
+      if (state.members[index].role === 'owner') throw new Error('The household owner cannot be removed.');
+      state.members[index] = { ...state.members[index], role: 'removed' };
+    }
+  );
+  return { version: result.state.version };
 }
 
 export function getLocalPreferences(): UserPreferences {
