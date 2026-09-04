@@ -204,6 +204,31 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
   return balance;
 }
 
+function markSourceBudgetHandled(state: HouseholdData): void {
+  const current = state.schemaStatus || {
+    currentSchemaVersion: 1,
+    minSupportedClientVersion: 1,
+    latestAppliedVersion: 1,
+    appliedMigrations: [],
+    isUpToDate: true,
+  };
+
+  if (!current.appliedMigrations.some((migration) => migration.name === SOURCE_BUDGET_IMPORT_ID)) {
+    current.appliedMigrations = [
+      ...current.appliedMigrations,
+      {
+        version: 1,
+        name: SOURCE_BUDGET_IMPORT_ID,
+        appliedAt: nowIso(),
+        executionTimeMs: 0,
+        checksum: 'user-explicit-state',
+      },
+    ];
+  }
+
+  state.schemaStatus = current;
+}
+
 function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
@@ -1161,6 +1186,9 @@ export function restoreLocalBackup(payload: any, expectedVersion: number): { ver
   if (!storage) throw new Error('Browser storage is unavailable.');
   storage.setItem(ROLLBACK_KEY, JSON.stringify(current));
   restored.version = current.version + 1;
+  // An explicit restore is authoritative. Mark the source import as handled so
+  // the one-time source seeding migration does not overwrite the restored backup.
+  markSourceBudgetHandled(restored);
   appendAudit(restored, {
     action: 'database_restored',
     entityType: 'system',
@@ -1176,6 +1204,8 @@ export function resetLocalHousehold(expectedVersion: number): { version: number 
   if (current.version !== expectedVersion) throw conflict(current.version);
   const reset = createBlankLocalHousehold(current.version + 1);
   reset.auditLogs = current.auditLogs;
+  // An explicit reset must stay blank rather than immediately reimporting source data.
+  markSourceBudgetHandled(reset);
   appendAudit(reset, {
     action: 'household_reset',
     entityType: 'system',
