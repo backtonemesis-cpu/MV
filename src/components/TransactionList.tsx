@@ -110,9 +110,6 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
             Household Activity & Ledger
           </h1>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            {filteredTransactions.length} of {transactions.length} records • exact integer penny accuracy
-          </p>
         </div>
 
         {canEdit && (
@@ -134,7 +131,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search transactions, merchants, notes..."
+              placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -173,13 +170,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             onChange={(e) => setSelectedType(e.target.value)}
             className="px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 bg-white dark:bg-neutral-850"
           >
-            <option value="all">All Classifications</option>
-            <option value="expense">Living Expenses</option>
-            <option value="income">Income / Salary Inflows</option>
-            <option value="transfer">Internal Transfers</option>
-            <option value="repayment">Card Repayments</option>
-            <option value="refund">Refunds & Credits</option>
-            <option value="savings">Savings Contributions</option>
+            <option value="all">All Types</option>
+            <option value="expense">Expenses</option>
+            <option value="income">Income</option>
+            <option value="transfer">Transfers</option>
+            <option value="repayment">Repayments</option>
+            <option value="refund">Refunds</option>
+            <option value="savings">Savings</option>
           </select>
 
           {/* Category Filter */}
@@ -203,9 +200,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         {filteredTransactions.length === 0 ? (
           <div className="text-center py-12 px-4">
             <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
-              No transactions match the selected filters
+              No matching transactions
             </p>
-            <p className="text-xs text-neutral-400 mt-1">Try clearing filters or adding a new transaction.</p>
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-700/60">
@@ -252,22 +248,22 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         </span>
                         {tx.isSavings && (
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                            Savings Transfer
+                            Savings
                           </span>
                         )}
                         {tx.isTransfer && !tx.isSavings && (
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300">
-                            Internal Transfer
+                            Transfer
                           </span>
                         )}
                         {tx.isRepayment && (
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                            Card Repayment
+                            Repayment
                           </span>
                         )}
                         {tx.isRefund && (
                           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
-                            Refund / Credit
+                            Refund
                           </span>
                         )}
                       </div>
@@ -338,7 +334,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         <button
                           onClick={() => onEditTransaction(tx)}
                           className="p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition"
-                          title="Edit transaction"
+                          title="Edit"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -349,7 +345,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                             }
                           }}
                           className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
-                          title="Delete transaction"
+                          title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
