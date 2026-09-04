@@ -1169,6 +1169,7 @@ function plannedPaymentFromPartial(data: Partial<PlannedPayment>): PlannedPaymen
     categoryId: data.categoryId,
     status: data.status || 'unpaid',
     includeInTransferPlan: data.includeInTransferPlan !== false,
+    isRecurring: data.isRecurring === true,
     notes: data.notes,
     schemaVersion: data.schemaVersion,
     metadata: data.metadata,
