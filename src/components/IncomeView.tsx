@@ -357,8 +357,10 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 categories.find(
                   (category) => category.id === (income.categoryId || linkedTx?.categoryId)
                 )?.name || 'Income';
-              const accountName =
-                accounts.find((account) => account.id === income.accountId)?.name || 'Account';
+              const targetAccount = accounts.find((account) => account.id === income.accountId);
+              const accountName = targetAccount
+                ? `${targetAccount.name}${targetAccount.ownerPerson ? ` (${targetAccount.ownerPerson})` : ''}`
+                : 'Account';
 
               return (
                 <article
