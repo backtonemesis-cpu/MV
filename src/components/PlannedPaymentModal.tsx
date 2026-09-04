@@ -3,6 +3,7 @@ import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'luci
 import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
+import { MonthPicker } from './MonthPicker';
 
 interface PlannedPaymentModalProps {
   payment?: PlannedPayment | null;
@@ -87,7 +88,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
       return;
     }
     if (!month.trim()) {
-      setError('Billing month is required (e.g. 2026-09).');
+      setError('Billing month is required.');
       return;
     }
 
@@ -180,15 +181,10 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <label className="block text-xs font-medium text-muted mb-1">
                 Month *
               </label>
-              <input
-                type="text"
-                placeholder="2026-09"
+              <MonthPicker
                 value={month}
-                onChange={(e) => setMonth(e.target.value)}
-                pattern="^\d{4}-\d{2}$"
-                title="Format: YYYY-MM (e.g. 2026-09)"
-                className="w-full px-3 py-1.5 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-                required
+                onChange={setMonth}
+                ariaLabel="Billing month"
               />
             </div>
           </div>
