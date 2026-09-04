@@ -277,13 +277,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-sm">
             <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
-              Current Savings
+              Savings Account Balances
             </h2>
             <div className="mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-main whitespace-nowrap">
               {formatPence(savingsPosition.currentSavingsPence)}
             </div>
             <span className="mt-1 block text-[11px] leading-4 text-subtle">
-              confirmed savings / liquid balances
+              Savings and Cash accounts only
             </span>
           </article>
 
@@ -341,7 +341,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           {savingsPosition.savingsAccounts.length === 0 ? (
             <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-6 text-left">
               <p className="text-[13px] font-medium leading-5 text-subtle">
-                No savings or liquid-balance accounts are configured.
+                No active Savings or Cash accounts are configured.
               </p>
             </div>
           ) : (
