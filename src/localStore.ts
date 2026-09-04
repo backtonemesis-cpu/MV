@@ -205,6 +205,20 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
   return balance;
 }
 
+function adjustAnchoredBalanceForNewTransfer(
+  account: Account,
+  deltaPence: number,
+  transferDate: string
+): void {
+  if (
+    account.reconciliationDate &&
+    Number.isSafeInteger(account.reconciledBalancePence) &&
+    transferDate <= account.reconciliationDate
+  ) {
+    account.reconciledBalancePence = account.reconciledBalancePence! + deltaPence;
+  }
+}
+
 function markSourceBudgetHandled(state: HouseholdData): void {
   const current = state.schemaStatus || {
     currentSchemaVersion: 1,
@@ -312,17 +326,13 @@ function renameFinancialPersonReferences(
 }
 
 
-function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
+function repairDuplicateAccountRouting(state: HouseholdData): number {
   const normalized = (value?: string) => value?.trim().toLowerCase() || '';
-  const isImported = (metadata?: Record<string, any>) =>
-    Boolean(metadata?.sourceImportId || metadata?.source);
 
   const resolve = (
     currentAccountId: string,
-    person: string,
-    metadata?: Record<string, any>
+    person: string
   ): string | undefined => {
-    if (!isImported(metadata)) return undefined;
     const personKey = normalized(person);
     if (!personKey || personKey === 'joint') return undefined;
 
@@ -348,8 +358,7 @@ function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
     if (transaction.isTransfer || transaction.type === 'transfer') return transaction;
     const targetAccountId = resolve(
       transaction.accountId,
-      transaction.payer,
-      transaction.metadata
+      transaction.payer
     );
     if (!targetAccountId) return transaction;
     repairs += 1;
@@ -361,7 +370,7 @@ function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
         accountRoutingRepair: {
           fromAccountId: transaction.accountId,
           toAccountId: targetAccountId,
-          reason: 'unique imported same-bank owner match',
+          reason: 'unique same-bank owner match',
         },
       },
     };
@@ -370,8 +379,7 @@ function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
   state.plannedPayments = state.plannedPayments.map((payment) => {
     const targetAccountId = resolve(
       payment.accountId,
-      payment.responsiblePerson,
-      payment.metadata
+      payment.responsiblePerson
     );
     if (!targetAccountId) return payment;
     repairs += 1;
@@ -383,7 +391,7 @@ function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
         accountRoutingRepair: {
           fromAccountId: payment.accountId,
           toAccountId: targetAccountId,
-          reason: 'unique imported same-bank owner match',
+          reason: 'unique same-bank owner match',
         },
       },
     };
@@ -392,8 +400,7 @@ function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
   state.plannedIncomes = (state.plannedIncomes || []).map((income) => {
     const targetAccountId = resolve(
       income.accountId,
-      income.sourcePerson,
-      income.metadata
+      income.sourcePerson
     );
     if (!targetAccountId) return income;
     repairs += 1;
@@ -405,7 +412,7 @@ function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
         accountRoutingRepair: {
           fromAccountId: income.accountId,
           toAccountId: targetAccountId,
-          reason: 'unique imported same-bank owner match',
+          reason: 'unique same-bank owner match',
         },
       },
     };
@@ -463,12 +470,12 @@ function normalizeHousehold(input: HouseholdData): HouseholdData {
 
   state.plannedIncomes = state.plannedIncomes || [];
 
-  // Imported rows were originally linked before the app could distinguish
-  // same-named accounts owned by different household members. Repair only
-  // deterministic imported cases: same bank name + same account type + one
-  // unique active account whose owner matches the imported person. Manual
-  // records are never reassigned by this compatibility repair.
-  repairImportedDuplicateAccountRouting(state);
+  // Same-named bank accounts are distinguished by stable account ID and owner.
+  // If a record is attached to the wrong owner's duplicate account, repair only
+  // the deterministic case: same bank name + same account type + one unique
+  // active account whose owner matches the financial person. This is a dev/test
+  // dataset, so the repair applies to both imported and manually-created rows.
+  repairDuplicateAccountRouting(state);
 
   state.accounts = state.accounts.map((account) => ({
     ...account,
@@ -935,8 +942,20 @@ export function bulkToggleLocalPlannedPayments(
         if (ids && !ids.has(payment.id)) return payment;
         const isPaid = payment.status === 'paid';
         if (params.onlyUnpaid && isPaid) return payment;
-        if (params.status === 'paid' && !isPaid) return payment;
-        if (params.status === 'unpaid' && isPaid) return payment;
+
+        if (params.status) {
+          const matchesStatus =
+            params.status === 'paid' ? isPaid : !isPaid;
+          return {
+            ...payment,
+            // "Select Paid" / "Select Unpaid" are exclusive selections:
+            // matching rows are selected and the opposite status is cleared.
+            includeInTransferPlan: params.include ? matchesStatus : matchesStatus ? false : payment.includeInTransferPlan,
+            updatedAt: nowIso(),
+            updatedBy: OWNER_EMAIL,
+          };
+        }
+
         return {
           ...payment,
           includeInTransferPlan: params.include,
@@ -983,13 +1002,65 @@ export function executeLocalTransfer(
   }
   const category = state.categories.find((item) => item.id === 'cat-transfer');
   if (!category) throw new Error('Internal Transfer category is missing.');
+
+  const transferDate = payload.date || new Date().toISOString().slice(0, 10);
+  const sourceNeedsAnchorAdjustment =
+    source.reconciliationDate &&
+    Number.isSafeInteger(source.reconciledBalancePence) &&
+    transferDate <= source.reconciliationDate;
+  const destinationNeedsAnchorAdjustment =
+    destination.reconciliationDate &&
+    Number.isSafeInteger(destination.reconciledBalancePence) &&
+    transferDate <= destination.reconciliationDate;
+
+  if (sourceNeedsAnchorAdjustment || destinationNeedsAnchorAdjustment) {
+    const result = mutateLocalHousehold(
+      expectedVersion,
+      {
+        action: 'transfer_created',
+        entityType: 'transaction',
+        entityId: '',
+        summary: payload.description || 'Internal transfer',
+      },
+      (draft) => {
+        const draftSource = draft.accounts.find((account) => account.id === payload.sourceAccountId)!;
+        const draftDestination = draft.accounts.find(
+          (account) => account.id === payload.destinationAccountId
+        )!;
+        adjustAnchoredBalanceForNewTransfer(draftSource, -payload.amountPence, transferDate);
+        adjustAnchoredBalanceForNewTransfer(draftDestination, payload.amountPence, transferDate);
+
+        const tx: Transaction = {
+          id: createId('tx'),
+          accountId: payload.sourceAccountId,
+          targetAccountId: payload.destinationAccountId,
+          amountPence: payload.amountPence,
+          description: payload.description || 'Internal transfer',
+          date: transferDate,
+          payer: payload.payer || source.ownerPerson || 'Joint',
+          categoryId: category.id,
+          type: 'transfer',
+          isTransfer: true,
+          isRepayment: false,
+          isSavings: false,
+          isRefund: false,
+          createdAt: nowIso(),
+          createdBy: OWNER_EMAIL,
+        };
+        draft.transactions.unshift(tx);
+        return tx;
+      }
+    );
+    return { transaction: result.value, version: result.state.version };
+  }
+
   return createLocalTransaction(
     {
       accountId: payload.sourceAccountId,
       targetAccountId: payload.destinationAccountId,
       amountPence: payload.amountPence,
       description: payload.description || 'Internal transfer',
-      date: payload.date || new Date().toISOString().slice(0, 10),
+      date: transferDate,
       payer: payload.payer || source.ownerPerson || 'Joint',
       categoryId: category.id,
       type: 'transfer',
@@ -1085,6 +1156,13 @@ export function executeLocalTransferAllocations(
       const batchId = createId('transfer-batch');
       const createdAt = nowIso();
       const date = payload.date || new Date().toISOString().slice(0, 10);
+
+      for (const { source, amountPence } of validated) {
+        const draftSource = state.accounts.find((account) => account.id === source.id)!;
+        adjustAnchoredBalanceForNewTransfer(draftSource, -amountPence, date);
+      }
+      adjustAnchoredBalanceForNewTransfer(destination, allocatedTotalPence, date);
+
       const transactions = validated.map(({ source, amountPence }, index) => {
         const tx: Transaction = {
           id: createId('tx'),
