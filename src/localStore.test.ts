@@ -47,7 +47,7 @@ describe('Penny-style local MV storage', () => {
     vi.stubGlobal('localStorage', storage);
   });
 
-  it('starts blank with only Marius and standard categories', () => {
+  it('starts with the audited September source budget and Marius owner', () => {
     const state = loadLocalHousehold();
 
     expect(state.version).toBe(1);
@@ -57,12 +57,20 @@ describe('Penny-style local MV storage', () => {
         role: 'owner',
       }),
     ]);
-    expect(state.accounts).toEqual([]);
-    expect(state.transactions).toEqual([]);
-    expect(state.plannedPayments).toEqual([]);
-    expect(state.categories.map((item) => item.id)).toEqual(
-      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer'])
+    expect(state.accounts.map((item) => item.name)).toEqual(
+      expect.arrayContaining(['Chase', 'Santander', 'Cash', 'Lloyds', 'NatWest', 'Credit Card'])
     );
+    expect(state.transactions).toHaveLength(19);
+    expect(state.plannedPayments).toHaveLength(13);
+    expect(state.plannedIncomes).toHaveLength(5);
+    expect(state.categories.map((item) => item.id)).toEqual(
+      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer', 'src-cat-fixed'])
+    );
+    expect(
+      state.schemaStatus?.appliedMigrations.some(
+        (migration) => migration.name === 'source-budget-2026-09-v1'
+      )
+    ).toBe(true);
     expect(storage.getItem(LOCAL_STORAGE_KEY)).toBeTruthy();
   });
 
@@ -193,7 +201,7 @@ describe('Penny-style local MV storage', () => {
     const backup = createLocalBackupPackage();
     const preflight = preflightLocalRestore(backup);
     expect(preflight.valid).toBe(true);
-    expect(preflight.counts.accounts).toBe(1);
+    expect(preflight.counts.accounts).toBe(7);
 
     state = loadLocalHousehold();
     resetLocalHousehold(state.version);
@@ -202,8 +210,8 @@ describe('Penny-style local MV storage', () => {
 
     restoreLocalBackup(backup, state.version);
     state = loadLocalHousehold();
-    expect(state.accounts).toHaveLength(1);
-    expect(state.accounts[0].startingBalancePence).toBe(123_45);
+    expect(state.accounts).toHaveLength(7);
+    expect(state.accounts.find((account) => account.name === 'Main')?.startingBalancePence).toBe(123_45);
     expect(state.members).toHaveLength(1);
     expect(state.members[0].email).toBe('marius@local.invalid');
     expect(state.auditLogs.map((entry) => entry.action)).toContain('database_restored');
