@@ -233,14 +233,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-neutral-850 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-neutral-200 dark:border-neutral-750">
+      <div className="mv-surface bg-white dark:bg-neutral-850 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border mv-border border-neutral-200 dark:border-neutral-750">
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-750">
-          <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
             {initialTransaction ? 'Edit Transaction' : 'New Transaction'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+            className="p-1.5 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -267,7 +267,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   onClick={() => handleTypeChange(t)}
                   className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold capitalize transition ${
                     type === t
-                      ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-xs'
+                      ? 'mv-surface bg-white dark:bg-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
                   }`}
                 >
@@ -284,7 +284,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-sm font-bold text-neutral-500 dark:text-neutral-400">
+                <span className="absolute left-3 top-2.5 text-sm font-bold mv-text-muted text-neutral-500 dark:text-neutral-400">
                   £
                 </span>
                 <input
@@ -292,7 +292,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   placeholder="0.00"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2 text-sm font-semibold rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full pl-7 pr-3 py-2 text-sm font-semibold rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                   required
                 />
               </div>
@@ -306,7 +306,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 text-sm rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 required
               />
             </div>
@@ -322,7 +322,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full px-3 py-2 text-sm rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               required
             />
           </div>
@@ -341,7 +341,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   className={`py-2 px-3 text-xs font-semibold rounded-xl border transition ${
                     payer === p
                       ? 'border-emerald-600 dark:border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800'
+                      : 'mv-border border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-700 dark:text-neutral-300 mv-surface bg-white dark:bg-neutral-800'
                   }`}
                 >
                   {p}
@@ -359,7 +359,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <select
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="w-full px-3 py-2 text-sm rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               >
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
@@ -377,7 +377,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 <select
                   value={targetAccountId}
                   onChange={(e) => setTargetAccountId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 text-sm rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 >
                   <option value="">Select account</option>
                   {accounts
@@ -399,7 +399,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 text-sm rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 >
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
@@ -449,13 +449,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               </div>
 
               {isSplitEnabled && (
-                <div className="space-y-2 p-3 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border border-neutral-200 dark:border-neutral-700">
+                <div className="space-y-2 p-3 mv-surface-muted bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border mv-border border-neutral-200 dark:border-neutral-700">
                   {splits.map((splitRow, idx) => (
                     <div key={idx} className="mv-hscroll items-center">
                       <select
                         value={splitRow.categoryId}
                         onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)}
-                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100"
                       >
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -465,20 +465,20 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       </select>
 
                       <div className="relative w-28">
-                        <span className="absolute left-2 top-1.5 text-xs text-neutral-400">£</span>
+                        <span className="absolute left-2 top-1.5 text-xs mv-text-muted text-neutral-400">£</span>
                         <input
                           type="text"
                           placeholder="0.00"
                           value={splitRow.amountStr}
                           onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)}
-                          className="w-full pl-5 pr-2 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100"
+                          className="w-full pl-5 pr-2 py-1.5 text-xs font-semibold rounded-lg mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100"
                         />
                       </div>
 
                       <button
                         type="button"
                         onClick={() => handleRemoveSplitRow(idx)}
-                        className="p-1 text-neutral-400 hover:text-rose-600 transition"
+                        className="p-1 mv-text-muted text-neutral-400 hover:text-rose-600 transition"
                         title="Remove split"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -510,7 +510,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 type="checkbox"
                 checked={isRepayment}
                 onChange={(e) => setIsRepayment(e.target.checked)}
-                className="w-4 h-4 text-emerald-600 rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-500"
+                className="w-4 h-4 text-emerald-600 rounded mv-border border-neutral-300 dark:border-neutral-700 focus:ring-emerald-500"
               />
               <span>Card repayment</span>
             </label>
@@ -520,7 +520,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 type="checkbox"
                 checked={isSavings}
                 onChange={(e) => setIsSavings(e.target.checked)}
-                className="w-4 h-4 text-emerald-600 rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-500"
+                className="w-4 h-4 text-emerald-600 rounded mv-border border-neutral-300 dark:border-neutral-700 focus:ring-emerald-500"
               />
               <span>Savings</span>
             </label>
@@ -536,7 +536,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 text-sm rounded-xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
