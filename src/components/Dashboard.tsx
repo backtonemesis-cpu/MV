@@ -236,7 +236,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-            <span>Liquid funds {formatPence(totalLiquidBalancePence)}</span>
+            <span className="mv-private-value">Liquid funds {formatPence(totalLiquidBalancePence)}</span>
             <span className="h-1 w-1 rounded-full bg-accent" />
             <span>{selectedMonth}</span>
           </div>
@@ -310,7 +310,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 {formatPence(metric.value)}
               </div>
 
-              <div className="mt-1.5 truncate text-[11px] text-subtle">{metric.note}</div>
+              <div className="mv-private-value mt-1.5 truncate text-[11px] text-subtle">{metric.note}</div>
             </article>
           );
         })}
@@ -327,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               <div>
                 <h3 className="text-sm font-semibold text-main">Funding required</h3>
-                <p className="mt-1 text-xs leading-5 text-muted">
+                <p className="mv-private-value mt-1 text-xs leading-5 text-muted">
                   {transferPlanSnapshot
                     .map((item) => `${item.accountName} needs ${formatPence(item.deficitPence)}`)
                     .join(' • ')}
