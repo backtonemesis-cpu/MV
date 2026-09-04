@@ -364,10 +364,11 @@ export default function App() {
     }
   };
 
-  // Savings contribution handler: transfer + pot allocation commit atomically.
+  // Savings contribution handler: household goal context + explicit savings destination.
   const handleSavingsTransfer = async (payload: {
     goalId: string;
     sourceAccountId: string;
+    destinationAccountId: string;
     amountPence: number;
     payer?: Payer;
   }) => {
@@ -378,6 +379,7 @@ export default function App() {
         {
           goalId: payload.goalId,
           sourceAccountId: payload.sourceAccountId,
+          destinationAccountId: payload.destinationAccountId,
           amountPence: payload.amountPence,
           payer: payload.payer,
           date: new Date().toISOString().substring(0, 10),
@@ -389,7 +391,7 @@ export default function App() {
       if (err.status === 409) {
         setConflictServerVersion(err.serverVersion || household.version + 1);
       } else {
-        setError(err.message || 'Failed to process savings allocation');
+        setError(err.message || 'Failed to process savings transfer');
       }
       throw err;
     } finally {
