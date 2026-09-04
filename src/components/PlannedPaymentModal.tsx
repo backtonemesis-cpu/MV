@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'lucide-react';
-import { PlannedPayment, Account, Category, Payer } from '../types';
+import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../types';
+import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
 
 interface PlannedPaymentModalProps {
   payment?: PlannedPayment | null;
   accounts: Account[];
   categories: Category[];
+  members: HouseholdMember[];
   activeMonth: string;
   onClose: () => void;
   onSave: (paymentData: Partial<PlannedPayment>) => Promise<void>;
@@ -16,6 +18,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   payment,
   accounts,
   categories,
+  members,
   activeMonth,
   onClose,
   onSave,
@@ -40,6 +43,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const [notes, setNotes] = useState(payment?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const personOptions = householdPersonOptions(members, [responsiblePerson]);
 
   // When account changes, default responsible person to account owner if available
   const handleAccountChange = (newAccId: string) => {
@@ -200,9 +204,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 onChange={(e) => setResponsiblePerson(e.target.value as Payer)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
-                <option value="Marius">Marius</option>
-                <option value="Vesta">Vesta</option>
-                <option value="Joint">Joint</option>
+                {personOptions.map((person) => (
+                  <option key={person} value={person}>
+                    {person}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
