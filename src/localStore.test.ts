@@ -350,6 +350,63 @@ describe('Penny-style local MV storage', () => {
     );
   });
 
+  it('undoes a legacy untagged incoming transfer used to fund a covered account', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Legacy Funding Source',
+        type: 'savings',
+        startingBalancePence: 200_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Legacy Vesta Current',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    // Simulates an older funding transfer created before transferBatchId existed.
+    createLocalTransaction(
+      {
+        description: 'Fund Vesta current',
+        amountPence: 100_00,
+        type: 'transfer',
+        categoryId: 'cat-transfer',
+        accountId: source.account.id,
+        targetAccountId: destination.account.id,
+        payer: 'Marius',
+        isTransfer: true,
+        date: '2026-09-04',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence
+    ).toBe(100_00);
+
+    undoLatestLocalTransferPlanFunding(destination.account.id, state.version);
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence
+    ).toBe(0);
+    expect(
+      state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
+    ).toBe(200_00);
+  });
+
   it('undoes the latest Transfer Plan funding batch and restores source and destination balances', () => {
     let state = loadLocalHousehold();
 

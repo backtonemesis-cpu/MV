@@ -144,9 +144,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       (transaction) =>
         transaction.type === 'transfer' &&
         transaction.isTransfer &&
-        transaction.targetAccountId &&
-        (Boolean(transaction.metadata?.transferBatchId) ||
-          transaction.description.startsWith('Transfer Plan: Fund '))
+        Boolean(transaction.targetAccountId)
     );
 
     for (const transaction of planTransfers) {
@@ -623,7 +621,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                           type="button"
                           onClick={() => handleUndoFunding(req.account)}
                           disabled={undoingFundingAccountId === req.account.id}
-                          title="Undo the latest Transfer Plan funding and return the money to the original source account(s)"
+                          title="Undo the latest incoming funding transfer and return the money to the original source account(s)"
                           className="inline-flex items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted transition hover:border-strong hover:text-main disabled:opacity-50"
                         >
                           <RotateCcw className="h-3.5 w-3.5" />

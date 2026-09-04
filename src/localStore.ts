@@ -1225,9 +1225,7 @@ export function undoLatestLocalTransferPlanFunding(
       (transaction) =>
         transaction.targetAccountId === destinationAccountId &&
         transaction.type === 'transfer' &&
-        transaction.isTransfer &&
-        (Boolean(transaction.metadata?.transferBatchId) ||
-          transaction.description.startsWith('Transfer Plan: Fund '))
+        transaction.isTransfer
     )
     .sort((a, b) => {
       const createdCompare = (b.createdAt || '').localeCompare(a.createdAt || '');
@@ -1237,7 +1235,7 @@ export function undoLatestLocalTransferPlanFunding(
 
   const latest = candidates[0];
   if (!latest) {
-    throw new Error('No recorded Transfer Plan funding is available to undo for this account.');
+    throw new Error('No incoming funding transfer is available to undo for this account.');
   }
 
   const latestBatchId = latest.metadata?.transferBatchId as string | undefined;
