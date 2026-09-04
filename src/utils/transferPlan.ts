@@ -24,8 +24,11 @@ export function calculateAccountFunding(
     (p) => p.accountId === account.id && p.includeInTransferPlan === true
   );
 
-  const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
-  const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
+  const paidPayments = selectedPayments.filter(
+    (p) => p.status === 'paid' || Boolean(p.actualTransactionId)
+  );
+  const paidIds = new Set(paidPayments.map((payment) => payment.id));
+  const unpaidPayments = selectedPayments.filter((p) => !paidIds.has(p.id));
 
   // Sort upcoming unpaid obligations chronologically by due date
   const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
@@ -91,12 +94,20 @@ export function generateTransferPlan(
   let totalTransferRequiredPence = 0;
   let totalSelectedPaymentsPence = 0;
   let totalSelectedPaymentsCount = 0;
+  let totalPaidSelectedPaymentsCount = 0;
 
   // Only consider active accounts
   const activeAccounts = accounts.filter((a) => a.isActive !== false);
 
   for (const account of activeAccounts) {
     const funding = calculateAccountFunding(account, relevantPayments);
+
+    totalPaidSelectedPaymentsCount += funding.paidPayments.length;
+
+    // Funding cards represent destination accounts that currently have unpaid
+    // selected bills. Accounts with no unpaid selected bills are not "fully
+    // funded" — they simply have nothing to fund and belong outside this list.
+    if (funding.unpaidPayments.length === 0) continue;
 
     if (funding.transferRequiredPence > 0) {
       accountsNeedingFunding.push(funding);
@@ -106,7 +117,7 @@ export function generateTransferPlan(
     }
 
     totalSelectedPaymentsPence += funding.totalSelectedPaymentsPence;
-    totalSelectedPaymentsCount += funding.selectedPayments.length;
+    totalSelectedPaymentsCount += funding.unpaidPayments.length;
   }
 
   // Sort accounts needing funding by highest transfer required first
@@ -119,6 +130,7 @@ export function generateTransferPlan(
     totalTransferRequiredPence,
     totalSelectedPaymentsPence,
     totalSelectedPaymentsCount,
+    totalPaidSelectedPaymentsCount,
   };
 }
 
