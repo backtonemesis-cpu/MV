@@ -3784,3 +3784,300 @@ html[data-theme] button.bg-white:hover {
 .mv-density-root .text-danger {
   color: #EF4444 !important;
 }
+
+
+/* ==========================================================================
+   ELITE QOL — AMBIENT SURFACES, PRIVACY MASK, COMMAND PALETTE
+   ========================================================================== */
+
+/* Accent-aware 2% ambient depth. Theme surface remains authoritative so Light,
+   Dark and Slate preserve their contrast ramps. */
+.mv-density-root :is(
+  .mv-card,
+  .finance-panel,
+  .finance-summary-card,
+  .mv-settings-panel,
+  .mv-modal-card,
+  .mv-modal-section,
+  .mv-backup-section,
+  .mv-accent-console,
+  .mv-card-customization
+) {
+  background:
+    linear-gradient(
+      135deg,
+      var(--surface) 0%,
+      rgba(var(--accent-rgb), 0.02) 100%
+    ) !important;
+  background-color: var(--surface) !important;
+}
+
+/* Respect the existing border customization engine. In its Subtle mode, the
+   requested ambient accent border becomes the actual card border. */
+[data-card-border="subtle"] .mv-density-root :is(
+  .mv-card,
+  .finance-panel,
+  .finance-summary-card,
+  .mv-settings-panel,
+  .mv-modal-card,
+  .mv-modal-section,
+  .mv-backup-section,
+  .mv-accent-console,
+  .mv-card-customization
+) {
+  border-color: rgba(var(--accent-rgb), 0.08) !important;
+}
+
+/* A tiny inset highlight preserves texture even when the user selects a
+   non-subtle border mode, without changing the box model. */
+.mv-density-root :is(
+  .mv-card,
+  .finance-panel,
+  .finance-summary-card,
+  .mv-settings-panel,
+  .mv-modal-card
+) {
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--accent-rgb), 0.025),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Privacy masking is visual only: dimensions never change. Titles and labels
+   remain sharp while financial-value nodes are blurred in place. */
+.mv-privacy-mask .mv-workspace :is(
+  .finance-amount,
+  .mv-rollover-amount,
+  .mv-private-value,
+  .tabular-nums,
+  .font-mono
+),
+.mv-privacy-mask .mv-modal-card :is(
+  .finance-amount,
+  .mv-rollover-amount,
+  .mv-private-value,
+  .tabular-nums,
+  .font-mono
+) {
+  filter: blur(5px);
+  pointer-events: none !important;
+  user-select: none;
+  transition: filter 120ms ease;
+}
+
+.mv-density-root:not(.mv-privacy-mask) .mv-workspace :is(
+  .finance-amount,
+  .mv-rollover-amount,
+  .mv-private-value,
+  .tabular-nums,
+  .font-mono
+),
+.mv-density-root:not(.mv-privacy-mask) .mv-modal-card :is(
+  .finance-amount,
+  .mv-rollover-amount,
+  .mv-private-value,
+  .tabular-nums,
+  .font-mono
+) {
+  filter: none;
+}
+
+.mv-privacy-toggle {
+  flex: 0 0 auto;
+}
+
+/* Command palette */
+.mv-command-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: min(16vh, 140px) 16px 16px;
+  background: rgba(0, 0, 0, 0.60);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.mv-command-palette {
+  width: min(400px, calc(100vw - 24px));
+  overflow: hidden;
+  border: 1px solid #26314D;
+  border-radius: 6px;
+  background: #181F32;
+  color: #F8FAFC;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.46);
+}
+
+.mv-command-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #26314D;
+}
+
+.mv-command-input {
+  width: 100%;
+  height: 32px !important;
+  min-height: 32px !important;
+  border: 1px solid #26314D !important;
+  border-radius: 5px !important;
+  padding: 6px 10px 6px 30px !important;
+  background: #111522 !important;
+  color: #F8FAFC !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mv-command-input::placeholder {
+  color: #64748B;
+}
+
+.mv-command-input:focus {
+  border-color: rgb(var(--accent-rgb)) !important;
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.10) !important;
+}
+
+.mv-command-close {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #94A3B8;
+}
+
+.mv-command-close:hover,
+.mv-command-close:focus-visible {
+  border-color: #26314D;
+  background: #1E273E;
+  color: #F8FAFC;
+  outline: none;
+}
+
+.mv-command-list {
+  max-height: 248px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.mv-command-item {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  border-radius: 4px;
+  padding: 5px 8px;
+  text-align: left;
+  transition: background-color 100ms ease;
+}
+
+.mv-command-item:hover,
+.mv-command-item:focus-visible {
+  background: #1E273E;
+  outline: none;
+}
+
+.mv-command-token {
+  overflow: hidden;
+  color: rgb(var(--accent-rgb));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-command-description {
+  overflow: hidden;
+  color: #94A3B8;
+  font-size: 11px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-command-empty {
+  padding: 18px 10px;
+  color: #64748B;
+  font-size: 11px;
+  text-align: center;
+}
+
+.mv-command-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #26314D;
+  padding: 5px 10px;
+  color: #64748B;
+  font-size: 10px;
+}
+
+/* Rollover intelligence */
+.mv-rollover-recurring-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  border: 1px solid rgba(var(--accent-rgb), 0.16);
+  border-radius: 999px;
+  padding: 1px 5px;
+  background: rgba(var(--accent-rgb), 0.08);
+  color: rgb(var(--accent-rgb));
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* Simulator keeps header controls compact. */
+.mv-device-simulator .mv-privacy-label {
+  display: none !important;
+}
+
+.mv-device-simulator #header-privacy-mask-btn {
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  padding: 0 !important;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .mv-privacy-label {
+    display: none;
+  }
+
+  .mv-command-backdrop {
+    align-items: flex-start;
+    padding-top: 64px;
+  }
+
+  .mv-command-item {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-command-item,
+  .mv-privacy-mask .mv-workspace :is(
+    .finance-amount,
+    .mv-rollover-amount,
+    .mv-private-value,
+    .tabular-nums,
+    .font-mono
+  ) {
+    transition: none !important;
+  }
+}
