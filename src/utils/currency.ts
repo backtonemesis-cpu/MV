@@ -1,4 +1,4 @@
-import { Account, Transaction, PlannedPayment, PlannedIncome } from '../types';
+import { Account, Transaction, PlannedPayment, PlannedIncome, SavingsGoal } from '../types';
 
 /**
  * Formats integer pence into standard GBP representation e.g. 15000 -> "£150.00"
@@ -230,6 +230,55 @@ export function isSavingsPositionAccount(account: Account): boolean {
   return account.type === 'savings' || account.type === 'cash';
 }
 
+/**
+ * Household liquid funds excludes liabilities/credit accounts.
+ * Current, joint, savings and cash balances are liquid assets.
+ */
+export function calculateLiquidFundsPence(accounts: Account[]): number {
+  return accounts
+    .filter(
+      (account) =>
+        account.isActive !== false &&
+        account.type !== 'credit'
+    )
+    .reduce((sum, account) => sum + account.currentBalancePence, 0);
+}
+
+export function calculateSavingsGoalAllocationIntegrity(
+  accounts: Account[],
+  goals: SavingsGoal[]
+) {
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
+  const allocatedByAccount = new Map<string, number>();
+
+  for (const goal of goals) {
+    allocatedByAccount.set(
+      goal.accountId,
+      (allocatedByAccount.get(goal.accountId) || 0) + goal.currentPence
+    );
+  }
+
+  return goals.map((goal) => {
+    const account = accountById.get(goal.accountId);
+    const accountBalancePence =
+      account && account.isActive !== false ? account.currentBalancePence : 0;
+    const accountAllocatedPence = allocatedByAccount.get(goal.accountId) || 0;
+    const overallocatedPence = Math.max(
+      0,
+      accountAllocatedPence - Math.max(0, accountBalancePence)
+    );
+
+    return {
+      goalId: goal.id,
+      accountId: goal.accountId,
+      accountBalancePence,
+      accountAllocatedPence,
+      overallocatedPence,
+      isOverallocated: overallocatedPence > 0,
+    };
+  });
+}
+
 export function calculateNetSavingsMovementPence(
   accounts: Account[],
   transactions: Transaction[],
@@ -242,7 +291,6 @@ export function calculateNetSavingsMovementPence(
   return transactions
     .filter(
       (tx) =>
-        tx.isSavings &&
         tx.date.startsWith(month) &&
         tx.isTransfer &&
         tx.type === 'transfer' &&
