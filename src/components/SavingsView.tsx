@@ -344,11 +344,19 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
               Moved To Savings
             </h2>
-            <div className="mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-main whitespace-nowrap">
+            <div
+              className={`mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums whitespace-nowrap ${
+                savingsPosition.savingsTransfersPence > 0
+                  ? 'text-success'
+                  : savingsPosition.savingsTransfersPence < 0
+                  ? 'text-danger'
+                  : 'text-main'
+              }`}
+            >
               {formatPence(savingsPosition.savingsTransfersPence)}
             </div>
             <span className="mt-1 block text-[11px] leading-4 text-subtle">
-              actual savings transfer movements
+              net movement into Savings/Cash
             </span>
           </article>
         </div>
