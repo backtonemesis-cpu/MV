@@ -113,6 +113,44 @@ export function calculateFinancialSummary(transactions: Transaction[]) {
   };
 }
 
+export function linkedActualTransactionForPayment(
+  payment: PlannedPayment,
+  transactions: Transaction[]
+): Transaction | undefined {
+  if (!payment.actualTransactionId) return undefined;
+
+  return transactions.find(
+    (tx) =>
+      tx.id === payment.actualTransactionId &&
+      tx.plannedPaymentId === payment.id &&
+      tx.type === 'expense' &&
+      !tx.isTransfer &&
+      !tx.isRepayment &&
+      !tx.isSavings &&
+      !tx.isRefund
+  );
+}
+
+export function isPlannedPaymentEffectivelyPaid(
+  payment: PlannedPayment,
+  transactions: Transaction[]
+): boolean {
+  if (linkedActualTransactionForPayment(payment, transactions)) return true;
+  return payment.status === 'paid' && !payment.actualTransactionId;
+}
+
+export function effectivePlannedPaymentAmountPence(
+  payment: PlannedPayment,
+  transactions: Transaction[]
+): number {
+  const linked = linkedActualTransactionForPayment(payment, transactions);
+  if (linked) return linked.amountPence;
+  if (payment.status === 'paid' && payment.actualAmountPence !== undefined) {
+    return payment.actualAmountPence;
+  }
+  return payment.amountPence;
+}
+
 /**
  * Computes Available Surplus according to the exact MV formula:
  * Available Surplus = Actual Income Received + Refunds/Credits Returned − Fixed Bills − Gross Other Spending
@@ -177,11 +215,14 @@ export function calculateMonthlySurplus(
   let fixedBillsUnpaidPence = 0;
 
   for (const p of monthPayments) {
-    const effectiveAmountPence =
-      p.status === 'paid' ? (p.actualAmountPence ?? p.amountPence) : p.amountPence;
+    const effectiveAmountPence = effectivePlannedPaymentAmountPence(
+      p,
+      monthTransactions
+    );
+    const isPaid = isPlannedPaymentEffectivelyPaid(p, monthTransactions);
 
     fixedBillsTotalPence += effectiveAmountPence;
-    if (p.status === 'paid') {
+    if (isPaid) {
       fixedBillsPaidPence += effectiveAmountPence;
     } else {
       fixedBillsUnpaidPence += effectiveAmountPence;
