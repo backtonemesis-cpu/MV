@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PiggyBank, Plus, ArrowUpRight, Calendar, X, Trash2 } from 'lucide-react';
 import {
   SavingsGoal,
@@ -74,6 +74,24 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      if (showTransferModal) {
+        setShowTransferModal(false);
+      } else if (showEditGoalModal) {
+        setShowEditGoalModal(false);
+        setSelectedGoal(null);
+      } else if (showGoalModal) {
+        setShowGoalModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showEditGoalModal, showGoalModal, showTransferModal]);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
   const personOptions = useMemo(
@@ -536,9 +554,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
       {/* MODAL: Add Savings Pot */}
       {showGoalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl border border-muted bg-surface p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-muted pb-3">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <div>
                 <h3 className="text-base font-bold text-main">Add Savings Pot</h3>
                 <p className="mt-0.5 text-xs text-muted">
@@ -548,13 +566,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowGoalModal(false)}
-                className="rounded-lg p-1.5 text-muted transition hover:bg-surface-muted hover:text-main"
+                className="mv-modal-close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleGoalSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleGoalSubmit} className="mv-modal-form">
               {error && (
                 <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
                   {error}
@@ -564,6 +582,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Pot Name</label>
                 <input
+                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(event) => setGoalName(event.target.value)}
@@ -589,7 +608,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted">Current (£)</label>
                   <input
@@ -621,7 +640,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 />
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-muted pt-4">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowGoalModal(false)}
@@ -644,21 +663,21 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
       {/* MODAL: Transfer into Savings */}
       {showTransferModal && selectedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Transfer to {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowTransferModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleTransferSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleTransferSubmit} className="mv-modal-form">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
@@ -684,12 +703,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
                     Amount (£)
                   </label>
                   <input
+                    autoFocus
                     type="text"
                     value={transferAmountStr}
                     onChange={(e) => setTransferAmountStr(e.target.value)}
@@ -717,7 +737,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowTransferModal(false)}
@@ -740,26 +760,27 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
       {/* MODAL: Edit Goal */}
       {showEditGoalModal && selectedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
             <div className="flex items-center justify-between pb-3 border-b border-muted">
               <h3 className="text-base font-bold text-main">
                 Edit {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowEditGoalModal(false)}
-                className="p-1 rounded-lg text-muted text-subtle hover:text-muted"
+                className="mv-modal-close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleEditGoalSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleEditGoalSubmit} className="mv-modal-form">
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Pot Name
                 </label>
                 <input
+                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
@@ -768,7 +789,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
                     Current (£)
@@ -824,7 +845,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-between gap-2">
+              <div className="mv-modal-actions justify-between">
                 <button
                   type="button"
                   onClick={() => handleDeleteGoal(selectedGoal)}
