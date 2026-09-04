@@ -138,67 +138,65 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           />
         </div>
 
-        <div className="mv-hscroll mv-edge-safe pb-0.5">
-          <div className="flex min-w-max items-center gap-2">
-            {selectedMonth && (
-              <label className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filterBySelectedMonth}
-                  onChange={(e) => setFilterBySelectedMonth(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-neutral-600"
-                />
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                <span>{selectedMonth}</span>
-              </label>
-            )}
+        <div className="grid grid-cols-2 gap-2">
+          {selectedMonth && (
+            <label className="inline-flex min-w-0 h-9 items-center gap-2 rounded-xl bg-[#f8fafc] dark:bg-neutral-800 px-3 text-[12px] font-medium text-slate-700 dark:text-neutral-200 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterBySelectedMonth}
+                onChange={(e) => setFilterBySelectedMonth(e.target.checked)}
+                className="w-3.5 h-3.5 shrink-0 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-neutral-600"
+              />
+              <Calendar className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+              <span className="truncate">{selectedMonth}</span>
+            </label>
+          )}
 
-            <div className="relative shrink-0">
-              <select
-                value={selectedPayer}
-                onChange={(e) => setSelectedPayer(e.target.value)}
-                className="h-9 shrink-0 whitespace-nowrap appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
-              >
-                <option value="all">All Payers</option>
-                <option value="Joint">Joint</option>
-                <option value="Marius">Marius</option>
-                <option value="Vesta">Vesta</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
+          <div className="relative min-w-0">
+            <select
+              value={selectedPayer}
+              onChange={(e) => setSelectedPayer(e.target.value)}
+              className="w-full h-9 min-w-0 appearance-none rounded-xl border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3 pr-7 text-[12px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+            >
+              <option value="all">All Payers</option>
+              <option value="Joint">Joint</option>
+              <option value="Marius">Marius</option>
+              <option value="Vesta">Vesta</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          </div>
 
-            <div className="relative shrink-0">
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="h-9 shrink-0 whitespace-nowrap appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
-              >
-                <option value="all">All Classifications</option>
-                <option value="expense">Expenses</option>
-                <option value="income">Income</option>
-                <option value="transfer">Transfers</option>
-                <option value="repayment">Repayments</option>
-                <option value="refund">Refunds</option>
-                <option value="savings">Savings</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
+          <div className="relative min-w-0">
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="w-full h-9 min-w-0 appearance-none rounded-xl border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3 pr-7 text-[12px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+            >
+              <option value="all">All Classifications</option>
+              <option value="expense">Expenses</option>
+              <option value="income">Income</option>
+              <option value="transfer">Transfers</option>
+              <option value="repayment">Repayments</option>
+              <option value="refund">Refunds</option>
+              <option value="savings">Savings</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          </div>
 
-            <div className="relative shrink-0">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="h-9 shrink-0 whitespace-nowrap appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
-              >
-                <option value="all">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            </div>
+          <div className="relative min-w-0">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full h-9 min-w-0 appearance-none rounded-xl border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3 pr-7 text-[12px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+            >
+              <option value="all">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
       </div>
