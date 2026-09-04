@@ -47,7 +47,11 @@ import { createFirestoreCoreFinanceRouter } from './server/firestoreCoreFinanceR
 import { createFirestorePlanningRouter } from './server/firestorePlanningRoutes';
 import { createFirestoreAdminDataRouter } from './server/firestoreAdminDataRoutes';
 
-const PORT = 3000;
+const configuredPort = Number(process.env.PORT || 3000);
+if (!Number.isSafeInteger(configuredPort) || configuredPort <= 0 || configuredPort > 65535) {
+  throw new Error(`Invalid PORT '${String(process.env.PORT || '')}'`);
+}
+const PORT = configuredPort;
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DATA_BACKEND = resolveRuntimeDataBackend();
 
