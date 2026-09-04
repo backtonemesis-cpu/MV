@@ -311,6 +311,109 @@ function renameFinancialPersonReferences(
   }));
 }
 
+
+function repairImportedDuplicateAccountRouting(state: HouseholdData): number {
+  const normalized = (value?: string) => value?.trim().toLowerCase() || '';
+  const isImported = (metadata?: Record<string, any>) =>
+    Boolean(metadata?.sourceImportId || metadata?.source);
+
+  const resolve = (
+    currentAccountId: string,
+    person: string,
+    metadata?: Record<string, any>
+  ): string | undefined => {
+    if (!isImported(metadata)) return undefined;
+    const personKey = normalized(person);
+    if (!personKey || personKey === 'joint') return undefined;
+
+    const current = state.accounts.find((account) => account.id === currentAccountId);
+    if (!current) return undefined;
+    if (normalized(current.ownerPerson) === personKey) return undefined;
+
+    const candidates = state.accounts.filter(
+      (account) =>
+        account.isActive !== false &&
+        account.id !== current.id &&
+        normalized(account.name) === normalized(current.name) &&
+        account.type === current.type &&
+        normalized(account.ownerPerson) === personKey
+    );
+
+    return candidates.length === 1 ? candidates[0].id : undefined;
+  };
+
+  let repairs = 0;
+
+  state.transactions = state.transactions.map((transaction) => {
+    if (transaction.isTransfer || transaction.type === 'transfer') return transaction;
+    const targetAccountId = resolve(
+      transaction.accountId,
+      transaction.payer,
+      transaction.metadata
+    );
+    if (!targetAccountId) return transaction;
+    repairs += 1;
+    return {
+      ...transaction,
+      accountId: targetAccountId,
+      metadata: {
+        ...(transaction.metadata || {}),
+        accountRoutingRepair: {
+          fromAccountId: transaction.accountId,
+          toAccountId: targetAccountId,
+          reason: 'unique imported same-bank owner match',
+        },
+      },
+    };
+  });
+
+  state.plannedPayments = state.plannedPayments.map((payment) => {
+    const targetAccountId = resolve(
+      payment.accountId,
+      payment.responsiblePerson,
+      payment.metadata
+    );
+    if (!targetAccountId) return payment;
+    repairs += 1;
+    return {
+      ...payment,
+      accountId: targetAccountId,
+      metadata: {
+        ...(payment.metadata || {}),
+        accountRoutingRepair: {
+          fromAccountId: payment.accountId,
+          toAccountId: targetAccountId,
+          reason: 'unique imported same-bank owner match',
+        },
+      },
+    };
+  });
+
+  state.plannedIncomes = (state.plannedIncomes || []).map((income) => {
+    const targetAccountId = resolve(
+      income.accountId,
+      income.sourcePerson,
+      income.metadata
+    );
+    if (!targetAccountId) return income;
+    repairs += 1;
+    return {
+      ...income,
+      accountId: targetAccountId,
+      metadata: {
+        ...(income.metadata || {}),
+        accountRoutingRepair: {
+          fromAccountId: income.accountId,
+          toAccountId: targetAccountId,
+          reason: 'unique imported same-bank owner match',
+        },
+      },
+    };
+  });
+
+  return repairs;
+}
+
 function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
@@ -359,6 +462,14 @@ function normalizeHousehold(input: HouseholdData): HouseholdData {
   state.members = [owner, ...otherMembers, ...inferredMembers];
 
   state.plannedIncomes = state.plannedIncomes || [];
+
+  // Imported rows were originally linked before the app could distinguish
+  // same-named accounts owned by different household members. Repair only
+  // deterministic imported cases: same bank name + same account type + one
+  // unique active account whose owner matches the imported person. Manual
+  // records are never reassigned by this compatibility repair.
+  repairImportedDuplicateAccountRouting(state);
+
   state.accounts = state.accounts.map((account) => ({
     ...account,
     currency: 'GBP',
@@ -767,6 +878,11 @@ export function updateLocalPlannedPayment(
       const index = state.plannedPayments.findIndex((item) => item.id === id);
       if (index < 0) throw new Error('Planned bill not found.');
       const next = plannedPaymentFromPartial({ ...state.plannedPayments[index], ...data, id });
+      if (next.actualTransactionId) {
+        // A recorded actual transaction is authoritative evidence that the bill
+        // has already been paid. Prevent Transfer Plan from funding it twice.
+        next.status = 'paid';
+      }
       next.updatedAt = nowIso();
       next.updatedBy = OWNER_EMAIL;
       assertAccountExists(state, next.accountId);
@@ -800,7 +916,13 @@ export function deleteLocalPlannedPayment(id: string, expectedVersion: number): 
 }
 
 export function bulkToggleLocalPlannedPayments(
-  params: { month?: string; include: boolean; onlyUnpaid?: boolean; paymentIds?: string[] },
+  params: {
+    month?: string;
+    include: boolean;
+    onlyUnpaid?: boolean;
+    status?: 'paid' | 'unpaid';
+    paymentIds?: string[];
+  },
   expectedVersion: number
 ): { version: number } {
   const result = mutateLocalHousehold(
@@ -816,8 +938,16 @@ export function bulkToggleLocalPlannedPayments(
       state.plannedPayments = state.plannedPayments.map((payment) => {
         if (params.month && payment.month !== params.month) return payment;
         if (ids && !ids.has(payment.id)) return payment;
-        if (params.onlyUnpaid && payment.status === 'paid') return payment;
-        return { ...payment, includeInTransferPlan: params.include, updatedAt: nowIso(), updatedBy: OWNER_EMAIL };
+        const effectivelyPaid = payment.status === 'paid' || Boolean(payment.actualTransactionId);
+        if (params.onlyUnpaid && effectivelyPaid) return payment;
+        if (params.status === 'paid' && !effectivelyPaid) return payment;
+        if (params.status === 'unpaid' && effectivelyPaid) return payment;
+        return {
+          ...payment,
+          includeInTransferPlan: params.include,
+          updatedAt: nowIso(),
+          updatedBy: OWNER_EMAIL,
+        };
       });
     }
   );
@@ -839,6 +969,23 @@ export function executeLocalTransfer(
     throw new Error('Source and destination accounts must be different.');
   }
   const state = loadLocalHousehold();
+  const source = state.accounts.find((account) => account.id === payload.sourceAccountId);
+  const destination = state.accounts.find(
+    (account) => account.id === payload.destinationAccountId
+  );
+  if (!source || source.isActive === false) throw new Error('Funding source account is unavailable.');
+  if (!destination || destination.isActive === false) {
+    throw new Error('Destination account is unavailable.');
+  }
+  if (source.type === 'credit') {
+    throw new Error('Credit accounts cannot be used as Transfer Plan funding sources.');
+  }
+  if (!isSafePence(payload.amountPence) || payload.amountPence <= 0) {
+    throw new Error('Transfer amount must be exact positive integer pence.');
+  }
+  if (source.currentBalancePence < payload.amountPence) {
+    throw new Error('Funding source does not have enough available balance for this transfer.');
+  }
   const category = state.categories.find((item) => item.id === 'cat-transfer');
   if (!category) throw new Error('Internal Transfer category is missing.');
   return createLocalTransaction(
@@ -848,7 +995,7 @@ export function executeLocalTransfer(
       amountPence: payload.amountPence,
       description: payload.description || 'Internal transfer',
       date: payload.date || new Date().toISOString().slice(0, 10),
-      payer: (payload.payer as any) || 'Marius',
+      payer: payload.payer || source.ownerPerson || 'Joint',
       categoryId: category.id,
       type: 'transfer',
       isTransfer: true,
