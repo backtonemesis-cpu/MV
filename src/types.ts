@@ -241,9 +241,16 @@ export type AccentColor =
   | 'rose'
   | 'gold';
 
+export interface AccentRgb {
+  r: number;
+  g: number;
+  b: number;
+}
+
 export interface UserPreferences {
   theme: ThemePreference;
   accent: AccentColor;
+  accentRgb?: AccentRgb;
 }
 
 export interface MonthImportParams {
