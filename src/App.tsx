@@ -542,7 +542,7 @@ export default function App() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 flex flex-col font-sans text-neutral-900 dark:text-neutral-100 transition-colors">
+    <div className="mv-app min-h-screen flex flex-col font-sans transition-colors">
       {/* Top Header */}
       <Header
         session={session}
@@ -585,8 +585,8 @@ export default function App() {
         {/* Loading State */}
         {isLoading && !household && (
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+            <Loader2 className="mv-primary-text w-8 h-8 animate-spin" />
+            <span className="mv-text-muted text-xs font-medium">
               Loading...
             </span>
           </div>
