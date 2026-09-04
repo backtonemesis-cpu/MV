@@ -27,7 +27,7 @@ import {
 } from '../types';
 
 const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string }[] = [
-  { id: 'emerald', name: 'Emerald Green', color: '#059669' },
+  { id: 'emerald', name: 'Emerald Green', color: '#22C55E' },
   { id: 'sapphire', name: 'Sapphire Blue', color: '#2563eb' },
   { id: 'amethyst', name: 'Amethyst Purple', color: '#8b5cf6' },
   { id: 'crimson', name: 'Crimson Ruby', color: '#e11d48' },
@@ -241,7 +241,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="mv-settings space-y-7 pb-12 px-1 sm:px-0">
+    <div className="mv-settings space-y-4 pb-8">
       {/* Header */}
       <div className="px-1 sm:px-0">
         <h1 className="text-main text-xl sm:text-2xl font-bold tracking-tight leading-tight">
@@ -250,17 +250,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* Settings Tabs */}
-      <div className="bg-surface-muted border-muted rounded-xl border p-1.5 shadow-inner">
-        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div className="mv-settings-tabs" role="tablist" aria-label="Settings sections">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
           <button
             id="settings-tab-appearance"
+            role="tab"
+            aria-selected={activeTab === 'appearance'}
             onClick={() => setActiveTab('appearance')}
             onKeyDown={(event) => handleSettingsTabKeyDown(event, 'appearance')}
-            className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
-              activeTab === 'appearance'
-                ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
-                : 'text-muted hover:text-main hover:bg-surface'
-            }`}
+            className={`mv-settings-tab ${activeTab === 'appearance' ? 'is-active' : ''}`}
           >
             <Palette className="w-4 h-4 shrink-0" />
             <span className="leading-none">Appearance</span>
@@ -268,13 +266,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
               id="settings-tab-members"
+            role="tab"
+            aria-selected={activeTab === 'members'}
               onClick={() => setActiveTab('members')}
               onKeyDown={(event) => handleSettingsTabKeyDown(event, 'members')}
-              className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
-                activeTab === 'members'
-                  ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
-                  : 'text-muted hover:text-main hover:bg-surface'
-              }`}
+              className={`mv-settings-tab ${activeTab === 'members' ? 'is-active' : ''}`}
             >
               <Users className="w-4 h-4 shrink-0" />
               <span className="leading-none">Household</span>
@@ -285,13 +281,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             id="settings-tab-audit"
+            role="tab"
+            aria-selected={activeTab === 'audit'}
             onClick={() => setActiveTab('audit')}
             onKeyDown={(event) => handleSettingsTabKeyDown(event, 'audit')}
-            className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
-              activeTab === 'audit'
-                ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
-                : 'text-muted hover:text-main hover:bg-surface'
-            }`}
+            className={`mv-settings-tab ${activeTab === 'audit' ? 'is-active' : ''}`}
           >
             <Clock className="w-4 h-4 shrink-0" />
             <span className="leading-none">Audit</span>
@@ -299,13 +293,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             id="settings-tab-backup"
+            role="tab"
+            aria-selected={activeTab === 'backup'}
             onClick={() => setActiveTab('backup')}
             onKeyDown={(event) => handleSettingsTabKeyDown(event, 'backup')}
-            className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
-              activeTab === 'backup'
-                ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
-                : 'text-muted hover:text-main hover:bg-surface'
-            }`}
+            className={`mv-settings-tab ${activeTab === 'backup' ? 'is-active' : ''}`}
           >
             <Download className="w-4 h-4 shrink-0" />
             <span className="leading-none">Backup</span>
@@ -315,8 +307,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* TAB 1: Appearance & Themes */}
       {activeTab === 'appearance' && (
-        <div className="space-y-6 max-w-3xl">
-          <div className="mv-card p-5 sm:p-7 rounded-2xl space-y-7">
+        <div className="mv-settings-stack max-w-3xl">
+          <div className="mv-settings-panel space-y-4">
             <div>
               <h2 className="text-main text-base font-bold tracking-tight">
                 Appearance
@@ -328,7 +320,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <label className="text-muted block text-xs font-semibold uppercase tracking-[0.08em] mb-3">
                 Base Theme
               </label>
-              <div className="grid grid-cols-3 gap-2 rounded-xl bg-surface-muted p-1.5">
+              <div className="mv-settings-segmented">
                 {[
                   { id: 'light' as ThemePreference, name: 'Light', icon: Sun },
                   { id: 'dark' as ThemePreference, name: 'Dark', icon: Moon },
@@ -341,9 +333,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onUpdatePreferences({ theme: item.id })}
-                      className={`mv-theme-choice flex min-w-0 flex-col sm:flex-row items-center justify-center gap-1.5 text-[11px] sm:text-xs font-semibold ${
-                        isSelected ? 'is-active' : ''
-                      }`}
+                      className={`mv-settings-segment ${isSelected ? 'is-active' : ''}`}
                       aria-pressed={isSelected}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
@@ -392,7 +382,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            <div className="border-muted pt-5 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="mv-settings-actions">
               <button
                 type="button"
                 id="save-appearance-button"
@@ -412,7 +402,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     setIsSavingAppearance(false);
                   }
                 }}
-                className="bg-accent text-on-accent border border-accent px-7 py-3.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2.5 cursor-pointer disabled:opacity-50 disabled:shadow-none"
+                className="mv-settings-primary inline-flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 {isSavingAppearance ? 'Saving...' : 'Save Appearance'}
@@ -431,8 +421,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* TAB 2: Household people */}
       {activeTab === 'members' && (
-        <div className="space-y-4 max-w-3xl">
-          <div className="rounded-2xl border border-muted bg-surface p-5 shadow-sm">
+        <div className="mv-settings-stack max-w-3xl">
+          <div className="mv-settings-panel">
             <div className="flex items-start gap-3">
               <Users className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
               <div>
@@ -452,7 +442,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {isOwner && (
             <form
               onSubmit={handleAddMember}
-              className="rounded-2xl border border-muted bg-surface p-5 shadow-sm"
+              className="mv-settings-panel"
             >
               <div className="mb-4">
                 <h3 className="text-sm font-bold text-main">Add Household Member</h3>
@@ -475,7 +465,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         event.currentTarget.blur();
                       }
                     }}
-                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                    className="mv-settings-control w-full"
                     placeholder="e.g. Vesta"
                     required
                   />
@@ -483,7 +473,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   type="submit"
                   disabled={isAddingMember || !memberName.trim()}
-                  className="h-11 rounded-xl bg-accent px-5 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="mv-settings-primary"
                 >
                   {isAddingMember ? 'Adding...' : 'Add Member'}
                 </button>
@@ -495,7 +485,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </form>
           )}
 
-          <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs">
+          <div className="mv-settings-panel">
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="text-sm font-bold text-main">Active Members</h2>
               <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted">
@@ -532,7 +522,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                 setEditMemberName('');
                               }
                             }}
-                            className="h-10 w-full rounded-xl border border-muted bg-surface px-3 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                            className="mv-settings-control w-full"
                           />
                         </div>
 
@@ -540,7 +530,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           <button
                             type="button"
                             onClick={() => setEditingMemberId(null)}
-                            className="h-9 rounded-xl px-3 text-xs font-semibold text-muted transition hover:bg-surface"
+                            className="mv-settings-secondary"
                           >
                             Cancel
                           </button>
@@ -548,7 +538,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             type="button"
                             disabled={isUpdatingMember || !editMemberName.trim()}
                             onClick={() => saveEditedMember(member.id)}
-                            className="h-9 rounded-xl bg-accent px-3 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                            className="mv-settings-primary"
                           >
                             {isUpdatingMember ? 'Saving...' : 'Save Member'}
                           </button>
@@ -599,7 +589,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           {members.some((member) => member.role === 'removed') && (
-            <div className="bg-surface p-5 rounded-2xl border border-muted shadow-xs">
+            <div className="mv-settings-panel">
               <h3 className="text-xs font-bold text-muted mb-3">Removed from future selections</h3>
               <div className="space-y-2">
                 {members
@@ -637,7 +627,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* TAB 3: Audit Trail */}
       {activeTab === 'audit' && (
-        <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs max-w-4xl">
+        <div className="mv-settings-panel max-w-4xl">
           <h2 className="text-sm font-bold text-main mb-4">
             Audit Trail ({auditLogs.length} Events)
           </h2>
@@ -646,7 +636,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {auditLogs.map((log) => (
               <div
                 key={log.id}
-                className="p-3 bg-surface-muted rounded-xl border border-muted text-xs"
+                className="mv-settings-log-row"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -672,9 +662,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* TAB 4: Backup & Testing */}
       {activeTab === 'backup' && (
-        <div className="space-y-6 max-w-3xl">
+        <div className="mv-settings-stack max-w-3xl">
           {showDevelopmentTools && (
-            <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="mv-settings-panel flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-bold text-main">
                   Diagnostics
@@ -682,7 +672,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
               <button
                 onClick={onOpenAcceptanceTests}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-semibold hover:bg-success-soft shadow-xs transition"
+                className="mv-settings-primary inline-flex items-center gap-1.5"
               >
                 <Play className="w-3.5 h-3.5" />
                 Run Diagnostics
@@ -691,7 +681,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* Backup & Export */}
-          <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
+          <div className="mv-settings-panel space-y-3">
             <div>
               <h2 className="text-sm font-bold text-main">
                 Backup
@@ -699,7 +689,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
             <button
               onClick={onDownloadBackup}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-surface text-on-accent text-xs font-semibold rounded-xl hover:bg-surface-muted transition"
+              className="mv-settings-secondary inline-flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" />
               Download Backup
@@ -709,7 +699,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Restore */}
           {isOwner && (
             <>
-              <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
+              <div className="mv-settings-panel space-y-3">
               <div>
                 <h2 className="text-sm font-bold text-main">
                   Restore
@@ -732,19 +722,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-subtle file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-surface-muted file:text-muted hover:file:bg-surface-muted"
+                  className="mv-settings-file w-full"
                 />
                 <textarea
                   value={restoreJson}
                   onChange={(e) => setRestoreJson(e.target.value)}
                   placeholder="Paste backup JSON"
                   rows={4}
-                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs font-mono text-main"
+                  className="mv-settings-textarea w-full font-mono"
                 />
                 <button
                   type="submit"
                   disabled={!restoreJson.trim() || isRestoring}
-                  className="px-4 py-2 bg-danger-soft hover:bg-danger-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
+                  className="mv-settings-primary"
                 >
                   {isRestoring ? 'Restoring...' : 'Restore'}
                 </button>
@@ -752,7 +742,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             {/* Clean Production Reset */}
-            <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
+            <div className="mv-settings-panel space-y-3">
               <div>
                 <h2 className="text-sm font-bold text-main">
                   Reset Data
@@ -768,7 +758,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {!showResetConfirm ? (
                 <button
                   onClick={() => setShowResetConfirm(true)}
-                  className="px-4 py-2 border border-danger text-danger hover:bg-danger-soft rounded-xl text-xs font-semibold transition"
+                  className="mv-settings-danger"
                 >
                   Reset Data
                 </button>
@@ -781,13 +771,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <button
                       onClick={handleResetExecute}
                       disabled={isResetting}
-                      className="shrink-0 whitespace-nowrap px-4 py-2 bg-danger-soft hover:bg-danger-soft text-on-accent rounded-xl text-xs font-bold shadow-xs transition"
+                      className="mv-settings-danger is-confirm"
                     >
                       {isResetting ? 'Resetting...' : 'Delete All Data'}
                     </button>
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="shrink-0 whitespace-nowrap px-3 py-2 bg-surface-muted text-muted rounded-xl text-xs font-semibold hover:bg-surface-muted transition"
+                      className="mv-settings-secondary"
                     >
                       Cancel
                     </button>
@@ -799,7 +789,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {showDevelopmentTools && (
               <>
                 {/* Opt-in Sample Fixture Data */}
-                <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
+                <div className="mv-settings-panel space-y-3">
                 <div>
                 <h2 className="text-sm font-bold text-main">
                 Sample Data
