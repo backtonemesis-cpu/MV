@@ -450,9 +450,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     const statusLabel =
                       income.status === 'partial' ? 'Partial' : received ? 'Received' : 'Expected';
                     const statusClassName =
-                      received && income.status !== 'partial'
+                      income.status === 'partial'
+                        ? 'finance-status-neutral'
+                        : received
                         ? 'finance-status-positive'
-                        : 'finance-status-negative';
+                        : 'finance-status-accent';
                     const shownAmountPence =
                       income.actualAmountPence ?? linkedTx?.amountPence ?? income.expectedAmountPence;
                     const showExpectedComparison =
