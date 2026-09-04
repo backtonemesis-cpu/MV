@@ -95,22 +95,22 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs animate-in fade-in">
-      <div className="bg-surface rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-muted">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-muted">
+    <div className="mv-modal-backdrop">
+      <div className="mv-modal-card">
+        <div className="mv-modal-header">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-success" />
             <h2 className="text-base font-bold text-main">Backup & Restore</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition"
+            className="mv-modal-close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="mv-modal-body space-y-3 overflow-y-auto">
           {error && (
             <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
