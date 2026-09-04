@@ -2,6 +2,8 @@ export type UserRole = 'owner' | 'editor' | 'view_only' | 'pending' | 'removed';
 
 export type Payer = string;
 
+export const JOINT_ACCOUNT_OWNER_ID = 'joint';
+
 export type AccountType = 'current' | 'joint' | 'savings' | 'credit' | 'cash';
 
 export type TransactionType = 'expense' | 'income' | 'transfer' | 'repayment' | 'refund';
@@ -24,6 +26,9 @@ export interface Account {
   currency: 'GBP';
   startingBalancePence: number;
   currentBalancePence: number;
+  /** Stable HouseholdMember.id, or JOINT_ACCOUNT_OWNER_ID. Legacy data may omit this until normalized. */
+  ownerMemberId?: string;
+  /** Denormalized display/audit label retained for backwards compatibility. */
   ownerPerson?: Payer;
   isActive?: boolean;
   reconciledAt?: string;
