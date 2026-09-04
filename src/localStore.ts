@@ -1005,6 +1005,127 @@ export function executeLocalTransfer(
   );
 }
 
+
+export function executeLocalTransferAllocations(
+  payload: {
+    destinationAccountId: string;
+    expectedTotalPence: number;
+    allocations: Array<{
+      sourceAccountId: string;
+      amountPence: number;
+    }>;
+    description?: string;
+    date?: string;
+  },
+  expectedVersion: number
+): { transactions: Transaction[]; version: number } {
+  if (!Array.isArray(payload.allocations) || payload.allocations.length === 0) {
+    throw new Error('At least one funding allocation is required.');
+  }
+  if (!isSafePence(payload.expectedTotalPence) || payload.expectedTotalPence <= 0) {
+    throw new Error('Required transfer total must be exact positive integer pence.');
+  }
+
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'transfer_plan_funded',
+      entityType: 'account',
+      entityId: payload.destinationAccountId,
+      summary: `Transfer Plan funding allocated across ${payload.allocations.length} source account${
+        payload.allocations.length === 1 ? '' : 's'
+      }`,
+    },
+    (state) => {
+      const destination = state.accounts.find(
+        (account) => account.id === payload.destinationAccountId
+      );
+      if (!destination || destination.isActive === false) {
+        throw new Error('Destination account is unavailable.');
+      }
+
+      const category = state.categories.find((item) => item.id === 'cat-transfer');
+      if (!category) throw new Error('Internal Transfer category is missing.');
+
+      const seenSources = new Set<string>();
+      let allocatedTotalPence = 0;
+      const validated = payload.allocations.map((allocation) => {
+        if (seenSources.has(allocation.sourceAccountId)) {
+          throw new Error('Each funding account can only appear once in an allocation.');
+        }
+        seenSources.add(allocation.sourceAccountId);
+
+        if (allocation.sourceAccountId === payload.destinationAccountId) {
+          throw new Error('A funding source cannot be the same as the destination account.');
+        }
+        if (!isSafePence(allocation.amountPence) || allocation.amountPence <= 0) {
+          throw new Error('Every funding allocation must be exact positive integer pence.');
+        }
+
+        const source = state.accounts.find(
+          (account) => account.id === allocation.sourceAccountId
+        );
+        if (!source || source.isActive === false) {
+          throw new Error('One of the funding source accounts is unavailable.');
+        }
+        if (source.type === 'credit') {
+          throw new Error('Credit accounts cannot be used as Transfer Plan funding sources.');
+        }
+        if (source.currentBalancePence < allocation.amountPence) {
+          throw new Error(
+            `${source.name} does not have enough available balance for its allocation.`
+          );
+        }
+
+        allocatedTotalPence += allocation.amountPence;
+        return { source, amountPence: allocation.amountPence };
+      });
+
+      if (allocatedTotalPence !== payload.expectedTotalPence) {
+        throw new Error(
+          `Funding allocations must total exactly ${payload.expectedTotalPence} pence.`
+        );
+      }
+
+      const batchId = createId('transfer-batch');
+      const createdAt = nowIso();
+      const date = payload.date || new Date().toISOString().slice(0, 10);
+      const transactions = validated.map(({ source, amountPence }, index) => {
+        const tx: Transaction = {
+          id: createId('tx'),
+          date,
+          description:
+            payload.description ||
+            `Transfer Plan: Fund ${destination.name}`,
+          amountPence,
+          type: 'transfer',
+          categoryId: category.id,
+          accountId: source.id,
+          targetAccountId: destination.id,
+          payer: source.ownerPerson || 'Joint',
+          isTransfer: true,
+          isRepayment: false,
+          isSavings: false,
+          isRefund: false,
+          metadata: {
+            transferBatchId: batchId,
+            allocationIndex: index,
+            allocationCount: validated.length,
+          },
+          createdAt,
+          createdBy: OWNER_EMAIL,
+        };
+        return tx;
+      });
+
+      state.transactions.unshift(...transactions);
+      return transactions;
+    }
+  );
+
+  return { transactions: result.value, version: result.state.version };
+}
+
 function plannedIncomeFromPartial(data: Partial<PlannedIncome>): PlannedIncome {
   if (!data.name?.trim()) throw new Error('Income name is required.');
   if (!data.month || !/^\d{4}-\d{2}$/.test(data.month)) throw new Error('Valid month is required.');
