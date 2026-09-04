@@ -77,15 +77,15 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-neutral-200">
+      <div className="mv-surface bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border mv-border border-neutral-200">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 mv-surface-muted bg-neutral-50">
           <div>
-            <h3 className="text-base font-semibold text-neutral-900">Transfer Funds</h3>
+            <h3 className="text-base font-semibold mv-text text-neutral-900">Transfer Funds</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,7 +98,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               <span className="text-xs font-medium text-amber-800 uppercase tracking-wide">
                 Needs Funding
               </span>
-              <div className="text-sm font-semibold text-neutral-900 mt-0.5">
+              <div className="text-sm font-semibold mv-text text-neutral-900 mt-0.5">
                 {targetAccount.name}
               </div>
               <div className="text-xs text-neutral-600 mt-0.5">
@@ -125,13 +125,13 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
           )}
 
           {/* Transfer Route Visualizer */}
-          <div className="grid grid-cols-2 gap-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200 items-center">
+          <div className="grid grid-cols-2 gap-3 p-3 mv-surface-muted bg-neutral-50 rounded-lg border mv-border border-neutral-200 items-center">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">From Account</label>
               <select
                 value={sourceAccountId}
                 onChange={(e) => setSourceAccountId(e.target.value)}
-                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               >
                 <option value="">Select account</option>
                 {availableSourceAccounts
@@ -146,14 +146,14 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">To Account</label>
-              <div className="p-2 border border-neutral-200 bg-neutral-100 rounded-md text-xs font-semibold text-neutral-800 truncate">
+              <div className="p-2 border mv-border border-neutral-200 bg-neutral-100 rounded-md text-xs font-semibold text-neutral-800 truncate">
                 {targetAccount.name}
               </div>
             </div>
           </div>
 
           {selectedSourceAccount && (
-            <div className="text-xs text-neutral-500 flex justify-between px-1">
+            <div className="text-xs mv-text-muted text-neutral-500 flex justify-between px-1">
               <span>Source available: {formatPence(selectedSourceAccount.currentBalancePence)}</span>
               {selectedSourceAccount.currentBalancePence < enteredPence && (
                 <span className="text-rose-600 font-medium">Warning: Exceeds source balance</span>
@@ -168,14 +168,14 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-sm text-neutral-400 font-medium">£</span>
+                <span className="absolute left-3 top-2 text-sm mv-text-muted text-neutral-400 font-medium">£</span>
                 <input
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
                   required
                 />
               </div>
@@ -187,7 +187,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-sm border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
                 required
               />
             </div>
@@ -201,7 +201,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-xs border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
                 required
               />
             </div>
@@ -210,7 +210,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               <select
                 value={payer}
                 onChange={(e) => setPayer(e.target.value)}
-                className="w-full px-2 py-1.5 text-xs border border-neutral-300 rounded-md bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-2 py-1.5 text-xs border mv-border border-neutral-300 rounded-md mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               >
                 <option value="Marius">Marius</option>
                 <option value="Vesta">Vesta</option>
