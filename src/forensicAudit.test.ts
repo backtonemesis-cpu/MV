@@ -301,18 +301,119 @@ describe('Forensic Financial Audit Regression Suite', () => {
     );
     state = loadLocalHousehold();
 
-    updateLocalPlannedPayment(mariusBill.payment.id, { status: 'paid' }, state.version);
+    markLocalPaymentPaid(
+      mariusBill.payment.id,
+      {
+        actualAmountPence: 45_00,
+        actualDate: '2026-09-04',
+        accountId: mariusLloyds.account.id,
+      },
+      state.version
+    );
     state = loadLocalHousehold();
 
     const updatedMariusBill = state.plannedPayments.find((p) => p.id === mariusBill.payment.id);
     const updatedVestaBill = state.plannedPayments.find((p) => p.id === vestaBill.payment.id);
 
     expect(updatedMariusBill?.status).toBe('paid');
+    expect(updatedMariusBill?.actualTransactionId).toBeTruthy();
     expect(updatedVestaBill?.status).toBe('unpaid');
+    expect(updatedVestaBill?.actualTransactionId).toBeUndefined();
     expect(updatedVestaBill?.accountId).toBe(vestaLloyds.account.id);
   });
 
-  it('8. Select Paid / Select Unpaid calculates transfer requirements correctly and prevents duplicate funding of paid bills', () => {
+  it('8. Direct paid status without actual payment evidence is rejected with no write', () => {
+    let state = loadLocalHousehold();
+    const account = createLocalAccount(
+      {
+        name: 'Status Guard Current',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Status Guard Bill',
+        amountPence: 20_00,
+        month: '2026-09',
+        accountId: account.account.id,
+        responsiblePerson: 'Marius',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const versionBefore = state.version;
+    expect(() =>
+      updateLocalPlannedPayment(
+        bill.payment.id,
+        { status: 'paid' },
+        state.version
+      )
+    ).toThrow('A bill can only be marked paid by recording its actual payment.');
+
+    const after = loadLocalHousehold();
+    expect(after.version).toBe(versionBefore);
+    expect(after.plannedPayments.find((p) => p.id === bill.payment.id)?.status).toBe('unpaid');
+  });
+
+  it('11. A linked actual payment cannot be flipped back to unpaid from the bill record', () => {
+    let state = loadLocalHousehold();
+    const account = createLocalAccount(
+      {
+        name: 'Linked Status Current',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Linked Status Bill',
+        amountPence: 25_00,
+        month: '2026-09',
+        accountId: account.account.id,
+        responsiblePerson: 'Marius',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 25_00,
+        actualDate: '2026-09-04',
+        accountId: account.account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+    const versionBefore = state.version;
+
+    expect(() =>
+      updateLocalPlannedPayment(
+        bill.payment.id,
+        { status: 'unpaid' },
+        state.version
+      )
+    ).toThrow('A bill with a linked actual expense transaction cannot be marked unpaid.');
+
+    const after = loadLocalHousehold();
+    expect(after.version).toBe(versionBefore);
+    expect(after.plannedPayments.find((p) => p.id === bill.payment.id)?.status).toBe('paid');
+  });
+
+  it('12. Select Paid / Select Unpaid calculates transfer requirements correctly and prevents duplicate funding of paid bills', () => {
     const account: Account = {
       id: 'acc-test',
       name: 'Test Current',
@@ -537,7 +638,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(position.savingsTransfersPence).toBe(125_00);
   });
 
-  it('11. Savings contribution rejects credit funding without partial writes', () => {
+  it('13. Savings contribution rejects credit funding without partial writes', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -604,7 +705,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(snapshot.goalCurrent);
   });
 
-  it('12. Savings goals cannot be linked to Current or Credit accounts', () => {
+  it('14. Savings goals cannot be linked to Current or Credit accounts', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -637,7 +738,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(after.savingsGoals).toHaveLength(0);
   });
 
-  it('13. Editing a linked paid-bill transaction keeps the bill and savings surplus reconciled', () => {
+  it('15. Editing a linked paid-bill transaction keeps the bill and savings surplus reconciled', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -703,7 +804,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(monthly.availableSurplusPence).toBe(-125_00);
   });
 
-  it('14. Deleting a linked actual bill transaction safely returns the bill to unpaid', () => {
+  it('16. Deleting a linked actual bill transaction safely returns the bill to unpaid', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -762,7 +863,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(monthly.fixedBillsUnpaidPence).toBe(40_00);
   });
 
-  it('15. Savings goal contribution transactions cannot be edited or deleted outside Savings', () => {
+  it('17. Savings goal contribution transactions cannot be edited or deleted outside Savings', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -838,7 +939,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(state.transactions.some((tx) => tx.id === contribution.transaction.id)).toBe(true);
   });
 
-  it('16. Savings contributions update balances correctly across reconciliation anchors', () => {
+  it('18. Savings contributions update balances correctly across reconciliation anchors', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -898,7 +999,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(175_00);
   });
 
-  it('17. Savings position uses true account balances and excludes goal allocations', () => {
+  it('19. Savings position uses true account balances and excludes goal allocations', () => {
     const savingsAcc: Account = {
       id: 'savings-1',
       name: 'Chase Saver',
@@ -923,7 +1024,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(position.savingsAccounts[0].id).toBe('savings-1');
   });
 
-  it('18. Savings pot creation cannot allocate more than the linked account actually holds', () => {
+  it('20. Savings pot creation cannot allocate more than the linked account actually holds', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -956,7 +1057,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(after.savingsGoals.some((goal) => goal.name === 'Impossible Pot')).toBe(false);
   });
 
-  it('19. Multiple savings pots cannot collectively over-allocate one linked account', () => {
+  it('21. Multiple savings pots cannot collectively over-allocate one linked account', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
