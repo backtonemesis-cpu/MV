@@ -51,6 +51,7 @@ interface SettingsViewProps {
     email: string;
     role?: 'editor' | 'view_only' | 'pending';
   }) => Promise<void>;
+  onUpdateMember: (memberId: string, data: { name?: string; email?: string }) => Promise<void>;
   onApproveMember: (memberId: string, role: 'editor' | 'view_only') => Promise<void>;
   onChangeRole: (memberId: string, newRole: UserRole) => Promise<void>;
   onRemoveMember: (memberId: string) => Promise<void>;
@@ -69,6 +70,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onUpdatePreferences,
   onSaveAppearance,
   onCreateMember,
+  onUpdateMember,
   onApproveMember,
   onChangeRole,
   onRemoveMember,
@@ -96,6 +98,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [memberRole, setMemberRole] = useState<'editor' | 'view_only'>('editor');
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [memberMessage, setMemberMessage] = useState<string | null>(null);
+  const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
+  const [editMemberName, setEditMemberName] = useState('');
+  const [editMemberEmail, setEditMemberEmail] = useState('');
+  const [isUpdatingMember, setIsUpdatingMember] = useState(false);
 
   const activeAccentName =
     ACCENT_OPTIONS.find((item) => item.id === (hoveredAccent ?? userPreferences.accent))?.name ??
@@ -179,6 +185,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setMemberMessage(err.message || 'Failed to add household member.');
     } finally {
       setIsAddingMember(false);
+    }
+  };
+
+  const beginEditMember = (member: HouseholdMember) => {
+    setEditingMemberId(member.id);
+    setEditMemberName(member.name);
+    setEditMemberEmail(member.email);
+    setMemberMessage(null);
+  };
+
+  const saveEditedMember = async (memberId: string) => {
+    try {
+      setIsUpdatingMember(true);
+      setMemberMessage(null);
+      await onUpdateMember(memberId, {
+        name: editMemberName.trim(),
+        email: editMemberEmail.trim(),
+      });
+      setEditingMemberId(null);
+      setMemberMessage('Household member updated.');
+    } catch (err: any) {
+      setMemberMessage(err.message || 'Failed to update household member.');
+    } finally {
+      setIsUpdatingMember(false);
     }
   };
 
@@ -452,65 +482,123 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {members.map((m) => (
                 <div
                   key={m.id}
-                  className="p-4 bg-surface-muted rounded-xl border border-muted flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                  className="rounded-xl border border-muted bg-surface-muted p-4"
                 >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-main">
-                        {m.name}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                          m.role === 'owner'
-                            ? 'bg-accent-soft text-accent'
-                            : m.role === 'editor'
-                            ? 'bg-success-soft text-success'
-                            : m.role === 'view_only'
-                            ? 'bg-accent-soft text-accent'
-                            : 'bg-warning-soft text-warning'
-                        }`}
-                      >
-                        {m.role}
-                      </span>
-                    </div>
-                    <span className="text-xs text-subtle block mt-0.5">
-                      {m.email}
-                    </span>
-                  </div>
+                  {editingMemberId === m.id ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
+                          <input
+                            value={editMemberName}
+                            onChange={(event) => setEditMemberName(event.target.value)}
+                            className="h-10 w-full rounded-xl border border-muted bg-surface px-3 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-semibold text-muted">Email</label>
+                          <input
+                            type="email"
+                            value={editMemberEmail}
+                            onChange={(event) => setEditMemberEmail(event.target.value)}
+                            className="h-10 w-full rounded-xl border border-muted bg-surface px-3 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                          />
+                        </div>
+                      </div>
 
-                  {isOwner && m.role !== 'owner' && (
-                    <div className="mv-hscroll items-center max-w-full">
-                      {m.role === 'pending' ? (
-                        <>
-                          <button
-                            onClick={() => onApproveMember(m.id, 'editor')}
-                            className="px-2.5 py-1.5 bg-accent text-on-accent rounded-lg text-xs font-semibold hover:bg-success-soft transition"
-                          >
-                            Editor
-                          </button>
-                          <button
-                            onClick={() => onApproveMember(m.id, 'view_only')}
-                            className="px-2.5 py-1.5 bg-surface-muted text-main rounded-lg text-xs font-semibold hover:bg-surface-muted transition"
-                          >
-                            View Only
-                          </button>
-                        </>
-                      ) : (
-                        <select
-                          value={m.role}
-                          onChange={(e) => onChangeRole(m.id, e.target.value as UserRole)}
-                          className="px-2 py-1 bg-surface border border-muted rounded-lg text-xs font-medium text-main"
+                      <div className="flex justify-end gap-2 border-t border-muted pt-3">
+                        <button
+                          type="button"
+                          onClick={() => setEditingMemberId(null)}
+                          className="h-9 rounded-xl px-3 text-xs font-semibold text-muted transition hover:bg-surface"
                         >
-                          <option value="editor">Household Editor</option>
-                          <option value="view_only">View Only</option>
-                        </select>
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isUpdatingMember}
+                          onClick={() => saveEditedMember(m.id)}
+                          className="h-9 rounded-xl bg-accent px-3 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                        >
+                          {isUpdatingMember ? 'Saving...' : 'Save Member'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-main">{m.name}</span>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                              m.role === 'owner'
+                                ? 'bg-accent-soft text-accent'
+                                : m.role === 'editor'
+                                ? 'bg-success-soft text-success'
+                                : m.role === 'view_only'
+                                ? 'bg-accent-soft text-accent'
+                                : m.role === 'removed'
+                                ? 'bg-danger-soft text-danger'
+                                : 'bg-warning-soft text-warning'
+                            }`}
+                          >
+                            {m.role.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <span className="mt-0.5 block text-xs text-subtle">{m.email}</span>
+                      </div>
+
+                      {isOwner && m.role !== 'owner' && m.role !== 'removed' && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {m.role === 'pending' ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => onApproveMember(m.id, 'editor')}
+                                className="h-9 rounded-xl bg-accent px-3 text-xs font-semibold text-on-accent"
+                              >
+                                Approve Editor
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onApproveMember(m.id, 'view_only')}
+                                className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main"
+                              >
+                                Approve View Only
+                              </button>
+                            </>
+                          ) : (
+                            <select
+                              value={m.role}
+                              onChange={(e) => onChangeRole(m.id, e.target.value as UserRole)}
+                              className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-medium text-main"
+                            >
+                              <option value="editor">Household Editor</option>
+                              <option value="view_only">View Only</option>
+                            </select>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => beginEditMember(m)}
+                            className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition hover:bg-surface-muted"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Remove ${m.name} from the household record?`)) {
+                                onRemoveMember(m.id);
+                              }
+                            }}
+                            className="h-9 rounded-xl border border-danger bg-danger-soft px-3 text-xs font-semibold text-danger transition hover:opacity-80"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       )}
-                      <button
-                        onClick={() => onRemoveMember(m.id)}
-                        className="p-1.5 text-danger hover:bg-danger-soft rounded-lg text-xs font-semibold"
-                      >
-                        Remove
-                      </button>
                     </div>
                   )}
                 </div>
