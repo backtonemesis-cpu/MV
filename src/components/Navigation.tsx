@@ -29,11 +29,11 @@ export const Navigation: React.FC<NavigationProps> = ({
   pendingMembersCount,
 }) => {
   const tabs: TabItem[] = [
-    { id: 'dashboard', label: 'Dashboard', mobileLabel: 'Home', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Home', mobileLabel: 'Home', icon: LayoutDashboard },
     { id: 'activity', label: 'Activity', mobileLabel: 'Activity', icon: Receipt },
     { id: 'accounts', label: 'Accounts', mobileLabel: 'Accounts', icon: Landmark },
     { id: 'savings', label: 'Savings', mobileLabel: 'Savings', icon: PiggyBank },
-    { id: 'transfer_plan', label: 'Transfer Plan', mobileLabel: 'Plan', icon: ArrowLeftRight },
+    { id: 'transfer_plan', label: 'Plan', mobileLabel: 'Plan', icon: ArrowLeftRight },
     {
       id: 'settings',
       label: 'Settings',
