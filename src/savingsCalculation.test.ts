@@ -5,6 +5,8 @@ import {
   calculateMonthlySurplus,
   calculateNetSavingsMovementPence,
   calculateSavingsPosition,
+  calculateLiquidFundsPence,
+  calculateSavingsGoalAllocationIntegrity,
 } from './utils/currency';
 
 function savingsTransfer(): Transaction {
@@ -26,6 +28,72 @@ function savingsTransfer(): Transaction {
     createdBy: 'test',
   };
 }
+
+describe('liquid funds and savings integrity', () => {
+  it('excludes credit balances from household liquid funds', () => {
+    const accounts: Account[] = [
+      {
+        id: 'current-1',
+        name: 'Current',
+        type: 'current',
+        currency: 'GBP',
+        startingBalancePence: 100_00,
+        currentBalancePence: 100_00,
+      },
+      {
+        id: 'savings-1',
+        name: 'Savings',
+        type: 'savings',
+        currency: 'GBP',
+        startingBalancePence: 500_00,
+        currentBalancePence: 500_00,
+      },
+      {
+        id: 'credit-1',
+        name: 'Credit',
+        type: 'credit',
+        currency: 'GBP',
+        startingBalancePence: 0,
+        currentBalancePence: 38_98,
+        balanceOwedPence: 0,
+      },
+    ];
+
+    expect(calculateLiquidFundsPence(accounts)).toBe(600_00);
+  });
+
+  it('flags goal allocations that exceed the real linked account balance', () => {
+    const accounts: Account[] = [
+      {
+        id: 'savings-1',
+        name: 'Savings',
+        type: 'savings',
+        currency: 'GBP',
+        startingBalancePence: 1000_00,
+        currentBalancePence: 800_00,
+      },
+    ];
+
+    const rows = calculateSavingsGoalAllocationIntegrity(accounts, [
+      {
+        id: 'goal-1',
+        name: 'Emergency',
+        targetPence: 2000_00,
+        currentPence: 900_00,
+        accountId: 'savings-1',
+      },
+    ]);
+
+    expect(rows[0]).toEqual(
+      expect.objectContaining({
+        accountBalancePence: 800_00,
+        accountAllocatedPence: 900_00,
+        overallocatedPence: 100_00,
+        isOverallocated: true,
+      })
+    );
+  });
+});
 
 describe('savings transfer classification', () => {
   it('tracks an isSavings transfer as savings, not as a generic internal transfer', () => {
@@ -138,6 +206,47 @@ describe('savings calculation reconciliation', () => {
     expect(monthly.fixedBillsPaidPence).toBe(125_00);
     expect(monthly.grossOtherSpendingPence).toBe(0);
     expect(monthly.availableSurplusPence).toBe(875_00);
+  });
+
+  it('counts ordinary internal transfers crossing the savings boundary even without isSavings flag', () => {
+    const accounts: Account[] = [
+      {
+        id: 'current-1',
+        name: 'Current',
+        type: 'current',
+        currency: 'GBP',
+        startingBalancePence: 1000_00,
+        currentBalancePence: 1000_00,
+      },
+      {
+        id: 'savings-1',
+        name: 'Savings',
+        type: 'savings',
+        currency: 'GBP',
+        startingBalancePence: 500_00,
+        currentBalancePence: 500_00,
+      },
+    ];
+
+    const tx: Transaction = {
+      id: 'fund-bills',
+      date: '2026-09-04',
+      description: 'Transfer Plan: Fund Current',
+      amountPence: 125_00,
+      type: 'transfer',
+      categoryId: 'cat-transfer',
+      accountId: 'savings-1',
+      targetAccountId: 'current-1',
+      payer: 'Marius',
+      isTransfer: true,
+      isRepayment: false,
+      isSavings: false,
+      isRefund: false,
+      createdAt: '2026-09-04T10:00:00.000Z',
+      createdBy: 'test',
+    };
+
+    expect(calculateNetSavingsMovementPence(accounts, [tx], '2026-09')).toBe(-125_00);
   });
 
   it('calculates net savings movement by direction without treating savings-to-savings transfers as new savings', () => {
