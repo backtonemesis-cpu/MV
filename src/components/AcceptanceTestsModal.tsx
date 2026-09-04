@@ -48,10 +48,10 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs animate-in fade-in">
-      <div className="bg-surface rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-muted max-h-[85vh] flex flex-col">
+    <div className="mv-modal-backdrop">
+      <div className="mv-modal-card mv-modal-wide flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-muted shrink-0">
+        <div className="mv-modal-header shrink-0">
           <div className="flex items-center gap-2">
             <FileCheck2 className="w-5 h-5 text-success" />
             <div>
@@ -62,14 +62,14 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition"
+            className="mv-modal-close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Body Content */}
-        <div className="p-6 overflow-y-auto space-y-4">
+        <div className="mv-modal-body overflow-y-auto space-y-3">
           {summary && (
             <div className="p-4 rounded-xl bg-success-soft border border-success flex items-center justify-between">
               <div>
