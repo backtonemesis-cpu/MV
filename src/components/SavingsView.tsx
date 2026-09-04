@@ -12,7 +12,6 @@ import {
 } from '../types';
 import {
   calculateSavingsPosition,
-  calculateSavingsGoalAllocationIntegrity,
   formatPence,
   parseToPence,
 } from '../utils/currency';
@@ -60,11 +59,8 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   // New Goal form state
   const [goalName, setGoalName] = useState('');
   const [goalTargetStr, setGoalTargetStr] = useState('');
-  const [goalCurrentStr, setGoalCurrentStr] = useState('');
-  const [goalAccountId, setGoalAccountId] = useState(
-    accounts.find((a) => a.isActive !== false && (a.type === 'savings' || a.type === 'cash'))?.id || ''
-  );
   const [goalDate, setGoalDate] = useState('');
+  const [goalMonthlyPlanStr, setGoalMonthlyPlanStr] = useState('');
 
   // Quick savings transfer state
   const [sourceAccountId, setSourceAccountId] = useState(
@@ -147,52 +143,24 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     });
   }, [transactions, selectedMonth, savingsAccountIds]);
 
-  const goalAllocatedPence = useMemo(() => {
-    return savingsGoals.reduce((sum, goal) => sum + goal.currentPence, 0);
-  }, [savingsGoals]);
-
-  const totalTargetPence = useMemo(() => {
-    return savingsGoals.reduce((sum, goal) => sum + goal.targetPence, 0);
-  }, [savingsGoals]);
-
-  const goalIntegrityById = useMemo(() => {
-    const rows = calculateSavingsGoalAllocationIntegrity(accounts, savingsGoals);
-    return new Map(rows.map((row) => [row.goalId, row]));
-  }, [accounts, savingsGoals]);
-
-  const totalOverallocatedPence = useMemo(
-    () =>
-      Array.from(goalIntegrityById.values()).reduce(
-        (sum, row) => sum + row.overallocatedPence,
-        0
-      ),
-    [goalIntegrityById]
-  );
-
-  const overallPercent =
-    totalTargetPence > 0
-      ? Math.min(100, Math.round((goalAllocatedPence / totalTargetPence) * 100))
-      : 0;
-
   // Handle Create Goal
   const handleGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!goalName.trim() || !goalAccountId) return;
+    if (!goalName.trim()) return;
     try {
       setIsSubmitting(true);
       setError(null);
       const targetPence = parseToPence(goalTargetStr);
-      const currentPence = parseToPence(goalCurrentStr);
       await onCreateSavingsGoal({
         name: goalName.trim(),
         targetPence,
-        currentPence,
-        accountId: goalAccountId,
+        currentPence: 0,
+        accountId: savingsAccounts[0]?.id || '',
         targetDate: goalDate || undefined,
+        monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setGoalName('');
       setGoalTargetStr('');
-      setGoalCurrentStr('');
       setShowGoalModal(false);
     } catch (err: any) {
       setError(err.message || 'Failed to create savings goal');
@@ -206,8 +174,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     setSelectedGoal(goal);
     setGoalName(goal.name);
     setGoalTargetStr((goal.targetPence / 100).toFixed(2));
-    setGoalCurrentStr((goal.currentPence / 100).toFixed(2));
-    setGoalAccountId(goal.accountId);
+    setGoalMonthlyPlanStr(goal.monthlyPlanPence ? (goal.monthlyPlanPence / 100).toFixed(2) : '');
     setGoalDate(goal.targetDate || '');
     setError(null);
     setShowEditGoalModal(true);
@@ -221,13 +188,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       setIsSubmitting(true);
       setError(null);
       const targetPence = parseToPence(goalTargetStr);
-      const currentPence = parseToPence(goalCurrentStr);
       await onUpdateSavingsGoal(selectedGoal.id, {
         name: goalName.trim(),
         targetPence,
-        currentPence,
-        accountId: goalAccountId,
         targetDate: goalDate || undefined,
+        monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setShowEditGoalModal(false);
     } catch (err: any) {
@@ -311,9 +276,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 setError(null);
                 setGoalName('');
                 setGoalTargetStr('');
-                setGoalCurrentStr('');
                 setGoalDate('');
-                setGoalAccountId(savingsAccounts[0]?.id || '');
                 setShowGoalModal(true);
               }}
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent px-3.5 text-[13px] font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
@@ -370,7 +333,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
           <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-sm">
             <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
-              Net Savings Movement
+              Transferred From Savings
             </h2>
             <div
               className={`mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums whitespace-nowrap ${
@@ -381,10 +344,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   : 'text-main'
               }`}
             >
-              {formatPence(savingsPosition.savingsTransfersPence)}
+              {formatPence(Math.abs(Math.min(0, savingsPosition.savingsTransfersPence)))}
             </div>
             <span className="mt-1 block text-[11px] leading-4 text-subtle">
-              net movement into Savings/Cash
+              Moved to fund other accounts
             </span>
           </article>
         </div>
@@ -437,14 +400,8 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               Active Savings Goals
             </h2>
             <p className="text-[11px] text-subtle">
-              Recorded allocations {formatPence(goalAllocatedPence)} of {formatPence(totalTargetPence)}
-              {totalTargetPence > 0 ? ` · ${overallPercent}%` : ''}
+              Household goals use total Savings + Cash balances
             </p>
-            {totalOverallocatedPence > 0 && (
-              <p className="mt-1 text-[11px] font-semibold text-danger">
-                Allocation integrity warning: {formatPence(totalOverallocatedPence)} exceeds linked account funds.
-              </p>
-            )}
           </div>
 
           {savingsGoals.length === 0 ? (
@@ -456,12 +413,24 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           ) : (
             <div className="mv-fluid-card-grid">
               {savingsGoals.map((goal) => {
-                const percent =
-                  goal.targetPence > 0
-                    ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
-                    : 100;
-                const linkedAccount = accounts.find((a) => a.id === goal.accountId);
-                const integrity = goalIntegrityById.get(goal.id);
+                const currentPence = savingsPosition.currentSavingsPence;
+                const projectedPence = savingsPosition.projectedEndSavingsPence;
+                const percent = goal.targetPence > 0
+                  ? Math.min(100, Math.round((currentPence / goal.targetPence) * 100))
+                  : 100;
+                const projectedPercent = goal.targetPence > 0
+                  ? Math.min(100, Math.round((projectedPence / goal.targetPence) * 100))
+                  : 100;
+                const remainingPence = Math.max(0, goal.targetPence - currentPence);
+                const projectedOverPence = Math.max(0, projectedPence - goal.targetPence);
+                const financeMonthlyPence = Math.max(0, savingsPosition.savedThisMonthPence);
+                const financeMonths = financeMonthlyPence > 0 && remainingPence > 0
+                  ? Math.ceil(remainingPence / financeMonthlyPence)
+                  : remainingPence === 0 ? 0 : null;
+                const planMonthlyPence = goal.monthlyPlanPence || 0;
+                const planMonths = planMonthlyPence > 0 && remainingPence > 0
+                  ? Math.ceil(remainingPence / planMonthlyPence)
+                  : remainingPence === 0 ? 0 : null;
 
                 return (
                   <article
@@ -479,7 +448,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                               {goal.name}
                             </h3>
                             <span className="mt-0.5 block text-[12px] font-normal leading-4 text-muted break-words">
-                              {linkedAccount?.name || 'Account'}
+                              Household savings goal
                             </span>
                           </div>
                         </div>
@@ -495,32 +464,48 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 mt-3 text-[12px]">
-                        <div className="min-w-0">
-                          <span className="block text-muted">recorded allocation</span>
-                          <span className="block mt-0.5 font-semibold text-main whitespace-nowrap">
-                            {formatPence(goal.currentPence)}
-                          </span>
+                      <div className="mt-3 space-y-2 text-[12px]">
+                        <div className="rounded-xl bg-surface-muted px-3 py-2.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-muted">Current progress</span>
+                            <span className="font-semibold text-main">{percent}%</span>
+                          </div>
+                          <div className="mt-1 font-semibold text-main">{formatPence(currentPence)} of {formatPence(goal.targetPence)}</div>
+                          <div className="mt-0.5 text-[11px] text-subtle">
+                            {remainingPence > 0 ? `${formatPence(remainingPence)} remaining` : 'Goal achieved'}
+                          </div>
                         </div>
-                        <div className="min-w-0 text-right">
-                          <span className="block text-muted">target</span>
-                          <span className="block mt-0.5 font-semibold text-main whitespace-nowrap">
-                            {formatPence(goal.targetPence)}
-                          </span>
+                        <div className="rounded-xl bg-accent-soft px-3 py-2.5">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-muted">Projected progress</span>
+                            <span className="font-semibold text-main">{projectedPercent}%</span>
+                          </div>
+                          <div className="mt-1 font-semibold text-main">{formatPence(projectedPence)} of {formatPence(goal.targetPence)}</div>
+                          <div className="mt-0.5 text-[11px] text-subtle">
+                            {projectedOverPence > 0 ? `Projected ${formatPence(projectedOverPence)} above goal` : projectedPence >= goal.targetPence ? 'Projected to reach goal' : 'Based on current monthly position'}
+                          </div>
                         </div>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <div className="rounded-xl border border-muted px-3 py-2.5">
+                            <span className="block text-muted">Based on my finances</span>
+                            <span className="mt-1 block font-semibold text-main">
+                              {financeMonths === null ? 'No positive saving rate yet' : financeMonths === 0 ? 'Goal achieved' : `${financeMonths} month${financeMonths === 1 ? '' : 's'} at ${formatPence(financeMonthlyPence)}/month`}
+                            </span>
+                          </div>
+                          <div className="rounded-xl border border-muted px-3 py-2.5">
+                            <span className="block text-muted">My monthly saving plan</span>
+                            <span className="mt-1 block font-semibold text-main">
+                              {planMonths === null ? 'Set a monthly amount in Edit' : planMonths === 0 ? 'Goal achieved' : `${planMonths} month${planMonths === 1 ? '' : 's'} at ${formatPence(planMonthlyPence)}/month`}
+                            </span>
+                          </div>
+                        </div>
+                        {goal.targetDate && (
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted">
+                            <Calendar className="w-3.5 h-3.5 shrink-0" />
+                            <span>{goal.targetDate}</span>
+                          </div>
+                        )}
                       </div>
-
-                      {goal.targetDate && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted mt-2">
-                          <Calendar className="w-3.5 h-3.5 shrink-0" />
-                          <span className="break-words">{goal.targetDate}</span>
-                        </div>
-                      )}
-                      {integrity?.isOverallocated && (
-                        <div className="mt-2 rounded-lg border border-danger bg-danger-soft px-2.5 py-2 text-[11px] leading-4 text-danger">
-                          Linked account holds {formatPence(integrity.accountBalancePence)}; recorded allocations exceed it by {formatPence(integrity.overallocatedPence)}.
-                        </div>
-                      )}
                     </div>
 
                     <div className="mv-hscroll mt-4 pt-3 border-t border-muted">
@@ -599,7 +584,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     const tone = isIncoming
                       ? 'text-success'
                       : isOutgoing
-                      ? 'text-danger'
+                      ? 'text-muted'
                       : 'text-muted';
 
                     return (
@@ -653,41 +638,24 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Savings Account</label>
-                <select
-                  value={goalAccountId}
-                  onChange={(event) => setGoalAccountId(event.target.value)}
+                <label className="mb-1 block text-xs font-semibold text-muted">Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span></label>
+                <input
+                  value={goalMonthlyPlanStr}
+                  onChange={(event) => setGoalMonthlyPlanStr(event.target.value)}
                   className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                  required
-                >
-                  {savingsAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.name} ({formatPence(account.currentBalancePence)})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="e.g. 500.00"
+                />
               </div>
 
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Current (£)</label>
-                  <input
-                    value={goalCurrentStr}
-                    onChange={(event) => setGoalCurrentStr(event.target.value)}
-                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Target (£)</label>
-                  <input
-                    value={goalTargetStr}
-                    onChange={(event) => setGoalTargetStr(event.target.value)}
-                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">Target (£)</label>
+                <input
+                  value={goalTargetStr}
+                  onChange={(event) => setGoalTargetStr(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                  placeholder="20000.00"
+                  required
+                />
               </div>
 
               <div>
@@ -768,134 +736,26 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </select>
               </div>
 
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Amount (£)
-                  </label>
-                  <input
-                    autoFocus
-                    type="text"
-                    value={transferAmountStr}
-                    onChange={(e) => setTransferAmountStr(e.target.value)}
-                    placeholder="e.g. 250.00"
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-bold focus:ring-2 focus:ring-accent focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    By
-                  </label>
-                  <select
-                    value={transferPayer}
-                    onChange={(e) => setTransferPayer(e.target.value as Payer)}
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                  >
-                    {personOptions.map((person) => (
-                      <option key={person} value={person}>
-                        {person}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="mv-modal-actions">
-                <button
-                  type="button"
-                  onClick={() => setShowTransferModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Transferring...' : 'Transfer'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Edit Goal */}
-      {showEditGoalModal && selectedGoal && (
-        <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
-            <div className="mv-modal-header">
-              <h3 className="text-base font-bold text-main">
-                Edit {selectedGoal.name}
-              </h3>
-              <button
-                onClick={() => setShowEditGoalModal(false)}
-                className="mv-modal-close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditGoalSubmit} className="mv-modal-form">
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
-                  Pot Name
-                </label>
+                <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
                 <input
-                  autoFocus
                   type="text"
-                  value={goalName}
-                  onChange={(e) => setGoalName(e.target.value)}
+                  value={goalTargetStr}
+                  onChange={(e) => setGoalTargetStr(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 />
               </div>
 
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Current (£)
-                  </label>
-                  <input
-                    type="text"
-                    value={goalCurrentStr}
-                    onChange={(e) => setGoalCurrentStr(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Target (£)
-                  </label>
-                  <input
-                    type="text"
-                    value={goalTargetStr}
-                    onChange={(e) => setGoalTargetStr(e.target.value)}
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
-                  Savings Account
-                </label>
-                <select
-                  value={goalAccountId}
-                  onChange={(e) => setGoalAccountId(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface-muted border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent-soft focus:border-accent focus:outline-none"
-                  required
-                >
-                  {savingsAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.name} ({formatPence(account.currentBalancePence)})
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-xs font-semibold text-muted mb-1">Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span></label>
+                <input
+                  type="text"
+                  value={goalMonthlyPlanStr}
+                  onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  placeholder="e.g. 500.00"
+                />
               </div>
 
               <div>
