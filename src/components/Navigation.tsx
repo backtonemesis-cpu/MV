@@ -46,7 +46,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* Desktop Navigation Bar */}
-      <nav className="hidden sm:block border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 transition-colors">
+      <nav className="hidden sm:block border-b mv-border border-neutral-200 dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-1">
             {tabs.map((tab) => {
@@ -63,7 +63,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                       : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:border-neutral-300 dark:hover:border-neutral-700'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-400 dark:text-neutral-500'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'mv-text-muted text-neutral-400 dark:text-neutral-500'}`} />
                   <span>{tab.label}</span>
                   {tab.badge && (
                     <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-rose-500 text-white">
@@ -78,7 +78,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       </nav>
 
       {/* Mobile Bottom Navigation Bar (iPhone-first with 44px+ touch ergonomics) */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 pb-safe transition-colors">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 mv-surface bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-t mv-border border-neutral-200 dark:border-neutral-800 pb-safe transition-colors">
         <div className="grid grid-cols-6 h-14">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -91,10 +91,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                 className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
                   isActive
                     ? 'text-emerald-700 dark:text-emerald-400 font-bold'
-                    : 'text-neutral-500 dark:text-neutral-400'
+                    : 'mv-text-muted text-neutral-500 dark:text-neutral-400'
                 }`}
               >
-                <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-400 dark:text-neutral-500'}`} />
+                <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'mv-text-muted text-neutral-400 dark:text-neutral-500'}`} />
                 <span className="truncate max-w-[48px]">{tab.mobileLabel}</span>
                 {tab.badge && (
                   <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-rose-500" />
