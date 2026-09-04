@@ -476,16 +476,16 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                             openEdit(income);
                           }
                         }}
-                        className={`finance-row group flex items-center justify-between gap-3 px-3 py-3 sm:px-4 ${canEdit ? 'is-clickable' : ''}`}
+                        className={`finance-row finance-ledger-row group ${canEdit ? 'is-clickable' : ''}`}
                       >
-                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="finance-row-left">
                           <div className="finance-leading-icon">
                             <Banknote className="h-4 w-4" aria-hidden="true" />
                           </div>
 
-                          <div className="min-w-0 flex-1">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <h3 className="truncate text-[14px] font-semibold leading-5 text-main sm:text-[15px]">
+                          <div className="finance-row-copy">
+                            <div className="finance-row-titleline">
+                              <h3 className="finance-row-title">
                                 {income.name}
                               </h3>
 
@@ -496,7 +496,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                               </span>
                             </div>
 
-                            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-normal text-muted">
+                            <div className="finance-metadata-line">
                               <span>{income.sourcePerson}</span>
                               <span className="text-subtle" aria-hidden="true">·</span>
                               <span>{categoryName}</span>
@@ -504,24 +504,21 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                               <span>{accountName}</span>
                             </div>
 
-                            {income.notes && (
-                              <p className="mt-0.5 max-w-[650px] truncate text-[11px] font-normal text-subtle">
-                                {income.notes}
-                              </p>
-                            )}
                           </div>
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-2">
-                          <div className="min-w-[96px] text-right">
-                            <div className="font-mono text-[16px] font-semibold leading-5 tabular-nums text-main sm:text-[18px]">
+                        <div className="finance-row-side">
+                          <div className="finance-amount-block">
+                            <div className="finance-amount">
                               {formatPence(shownAmountPence)}
                             </div>
-                            {showExpectedComparison && (
-                              <div className="mt-0.5 text-[11px] font-normal text-subtle">
-                                Expected {formatPence(income.expectedAmountPence)}
-                              </div>
-                            )}
+                            <div
+                              className={`finance-amount-detail ${showExpectedComparison ? '' : 'is-placeholder'}`}
+                            >
+                              {showExpectedComparison
+                                ? `Expected ${formatPence(income.expectedAmountPence)}`
+                                : 'Expected —'}
+                            </div>
                           </div>
 
                           {canEdit && (
