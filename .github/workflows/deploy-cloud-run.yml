@@ -1,6 +1,9 @@
 name: Deploy MV to Cloud Run
 
 on:
+  push:
+    branches:
+      - deploy-production
   workflow_dispatch:
     inputs:
       ref:
@@ -45,7 +48,7 @@ jobs:
       - name: Checkout selected ref
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref || 'main' }}
+          ref: ${{ github.event_name == 'push' && github.sha || inputs.ref || 'main' }}
           fetch-depth: 0
 
       - name: Resolve deployment source
@@ -54,8 +57,15 @@ jobs:
           set -euo pipefail
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Refuse unverified main mismatch
-        if: ${{ (inputs.ref || 'main') == 'main' }}
+      - name: Refuse unverified manual main mismatch
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.ref || 'main') == 'main' }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+
+      - name: Refuse deploy-production drift from main
+        if: ${{ github.event_name == 'push' }}
         run: |
           set -euo pipefail
           git fetch origin main --depth=1
@@ -128,7 +138,7 @@ jobs:
           {
             echo "## MV production deployment"
             echo
-            echo "- Ref: \`${{ inputs.ref || 'main' }}\`"
+            echo "- Ref: \`${{ github.event_name == 'push' && 'deploy-production' || inputs.ref || 'main' }}\`"
             echo "- Commit: \`${{ steps.source.outputs.sha }}\`"
             echo "- Project: \`$PROJECT_ID\`"
             echo "- Region: \`$REGION\`"
