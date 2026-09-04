@@ -4,7 +4,8 @@ import {
   Plus,
   CheckCircle2,
   AlertCircle,
-    Layers,
+  Calendar,
+  Layers,
   ChevronDown,
   ChevronUp,
   CheckSquare,
@@ -28,8 +29,6 @@ import { formatPence, isPlannedPaymentEffectivelyPaid } from '../utils/currency'
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
-import { MonthPicker } from './MonthPicker';
-import { MarkPaymentPaidModal } from './MarkPaymentPaidModal';
 
 interface TransferPlanViewProps {
   accounts: Account[];
@@ -88,12 +87,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onCreatePlannedPayment,
   onUpdatePlannedPayment,
   onDeletePlannedPayment,
-  onMarkPaymentPaid,
   onBulkTogglePlannedPayments,
   onExecuteTransfer,
   onUndoFunding,
 }) => {
   const isViewOnly = userRole === 'view_only';
+
+  // Familiar Plan month selector: derive available billing months from existing bills.
+  const availableMonths = useMemo(() => {
+    const monthsSet = new Set<string>();
+    monthsSet.add('2026-09');
+    monthsSet.add('2026-10');
+    for (const payment of plannedPayments) {
+      if (payment.month) monthsSet.add(payment.month);
+    }
+    return Array.from(monthsSet).sort();
+  }, [plannedPayments]);
 
   const [internalSelectedMonth, setInternalSelectedMonth] = useState<string>('2026-09');
   const selectedMonth = propSelectedMonth || internalSelectedMonth;
@@ -109,7 +118,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     useState<AccountFundingRequirement | null>(null);
   const [lastFundingSourceAccountId, setLastFundingSourceAccountId] = useState<string>('');
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
-  const [markingPayment, setMarkingPayment] = useState<PlannedPayment | null>(null);
   const [undoingFundingAccountId, setUndoingFundingAccountId] = useState<string | null>(null);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
@@ -231,23 +239,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const handleTogglePaymentStatus = async (payment: PlannedPayment) => {
     if (isViewOnly) return;
 
-    if (isPaymentPaid(payment)) {
-      if (payment.actualTransactionId) {
-        window.alert(
-          'This bill is paid because it has a linked actual expense transaction. Edit or delete that Activity transaction to change the payment record.'
-        );
-        return;
-      }
-
-      try {
-        await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
-      } catch (err: any) {
-        window.alert(err.message || 'Failed to update bill status.');
-      }
+    // Recorded Activity is authoritative; manual bills keep the former one-click toggle.
+    if (payment.actualTransactionId) {
+      window.alert(
+        'This bill is paid because it has a linked actual expense transaction. Edit or delete that Activity transaction to change the payment record.'
+      );
       return;
     }
 
-    setMarkingPayment(payment);
+    const newStatus = payment.status === 'unpaid' ? 'paid' : 'unpaid';
+    try {
+      await onUpdatePlannedPayment(payment.id, {
+        status: newStatus,
+      });
+    } catch (err: any) {
+      window.alert(err.message || 'Failed to update bill status.');
+    }
   };
 
   const handleBulkIncludeUnpaid = async () => {
@@ -315,24 +322,31 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
         <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:min-w-[360px]">
           {/* Month Selector */}
-          <div className="col-span-2">
-            <MonthPicker
+          <div className="col-span-2 flex min-w-0 items-center gap-1.5 bg-surface border border-muted rounded-xl p-1 shadow-2xs">
+            <Calendar className="w-4 h-4 shrink-0 text-muted text-subtle ml-2" />
+            <select
               id="transfer-plan-month-select"
               value={selectedMonth}
-              onChange={handleSelectMonth}
-              ariaLabel="Transfer plan month"
-              className="is-fluid"
-            />
+              onChange={(e) => handleSelectMonth(e.target.value)}
+              className="w-full min-w-0 text-xs font-semibold text-main bg-transparent pr-3 py-1 focus:outline-none cursor-pointer"
+              aria-label="Transfer plan month"
+            >
+              {availableMonths.map((month) => (
+                <option key={month} value={month}>
+                  {formatMonthLabel(month)}
+                </option>
+              ))}
+            </select>
           </div>
 
           {onOpenMonthImport && !isViewOnly && (
             <button
               onClick={onOpenMonthImport}
               className="min-w-0 px-3 py-2 text-xs font-medium text-muted bg-surface border border-muted hover:bg-surface-muted rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
-              title="Prepare next month"
+              title="Copy bills"
             >
               <Layers className="w-3.5 h-3.5 shrink-0 text-muted text-subtle" />
-              <span>Prepare Next Month</span>
+              <span>Copy Bills</span>
             </button>
           )}
 
@@ -611,10 +625,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
-                        Bills paid from
-                      </div>
-                      <div className="mt-1 flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-bold tracking-tight text-main">
                           {req.account.name}
                         </h3>
@@ -648,108 +659,42 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-5">
-                    <div className="text-xs font-medium text-subtle">
-                      {latestFundingBatchByDestination.has(req.account.id)
-                        ? 'Balance after funding'
-                        : 'Current balance'}
+                  <div className="mt-6">
+                    <div className="text-xs font-medium text-muted text-subtle">
+                      Current balance
                     </div>
-                    <div className="mt-1 text-2xl font-extrabold tracking-tight text-main">
+                    <div className="mv-private-value mt-1 text-2xl font-extrabold tracking-tight text-main">
                       {formatPence(req.currentBalancePence)}
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
-                        <div className="text-[11px] font-medium text-subtle">Selected bills</div>
-                        <div className="mt-0.5 text-[13px] font-bold text-main">
-                          {formatPence(req.totalSelectedPaymentsPence)}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
-                        <div className="text-[11px] font-medium text-subtle">Left after bills</div>
-                        <div className="mt-0.5 text-[13px] font-bold text-main">
-                          {formatPence(
-                            Math.max(
-                              0,
-                              req.amountAvailablePence - req.totalSelectedPaymentsPence
-                            )
-                          )}
-                        </div>
-                      </div>
-                      <div className="col-span-2 sm:col-span-1 rounded-xl bg-surface-muted px-3.5 py-2.5">
-                        <div className="text-[11px] font-medium text-subtle">Bills selected</div>
-                        <div className="mt-0.5 text-[13px] font-bold text-main">
-                          {req.selectedPayments.length}
-                        </div>
-                      </div>
+                    <div className="mt-3 rounded-xl bg-surface-muted px-3.5 py-2.5 text-[13px] font-medium text-muted">
+                      Available: <span className="mv-private-value">{formatPence(req.amountAvailablePence)}</span>{' '}
+                      <span aria-hidden="true">•</span> Bills:{' '}
+                      <span className="mv-private-value">{formatPence(req.totalSelectedPaymentsPence)}</span>{' '}
+                      <span aria-hidden="true">•</span> {req.selectedPayments.length} selected
                     </div>
-
-                    {latestFundingBatchByDestination.has(req.account.id) ? (
-                      <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5">
-                        <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
-                          Funding received
-                        </div>
-                        <div className="mt-1.5 divide-y divide-muted">
-                          {latestFundingBatchByDestination
-                            .get(req.account.id)!
-                            .allocations.map((allocation, index) => {
-                              const sourceAccount = accounts.find(
-                                (account) => account.id === allocation.sourceAccountId
-                              );
-                              const sourceName = sourceAccount?.name || 'Unknown account';
-                              const sourceOwner = sourceAccount?.ownerPerson || 'Unknown owner';
-                              const sourceType = sourceAccount
-                                ? `${sourceAccount.type.charAt(0).toUpperCase()}${sourceAccount.type.slice(1)} account`
-                                : '';
-
-                              return (
-                                <div
-                                  key={`${allocation.sourceAccountId}-${index}`}
-                                  className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
-                                >
-                                  <div className="min-w-0">
-                                    <div className="text-[12px] font-semibold text-main">
-                                      From {sourceName}
-                                    </div>
-                                    <div className="text-[11px] text-subtle">
-                                      {sourceOwner}{sourceType ? ` · ${sourceType}` : ''}
-                                    </div>
-                                  </div>
-                                  <div className="shrink-0 text-[13px] font-bold text-main">
-                                    {formatPence(allocation.amountPence)}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
-                        No transfer needed — the existing account balance already covers the selected bills.
-                      </div>
-                    )}
                   </div>
 
                   <div className="mt-5">
                     {req.selectedPayments.length > 0 ? (
                       <div className="rounded-xl border border-muted bg-surface-muted px-4 py-2">
                         <div className="divide-y divide-muted">
-                          {req.selectedPayments.map((p) => (
-                            <div key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
+                          {req.selectedPayments.map((payment) => (
+                            <div key={payment.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <input
                                   type="checkbox"
-                                  checked={p.includeInTransferPlan}
-                                  onChange={() => handleTogglePaymentInPlan(p)}
+                                  checked={payment.includeInTransferPlan}
+                                  onChange={() => handleTogglePaymentInPlan(payment)}
                                   disabled={isViewOnly}
                                   className="w-3.5 h-3.5 text-main rounded border-muted focus:ring-muted cursor-pointer"
                                 />
                                 <span className="font-semibold text-main truncate">
-                                  {p.name}
+                                  {payment.name}
                                 </span>
                               </div>
-                              <span className="font-bold text-main shrink-0">
-                                {formatPence(p.amountPence)}
+                              <span className="mv-private-value font-bold text-main shrink-0">
+                                {formatPence(payment.amountPence)}
                               </span>
                             </div>
                           ))}
@@ -1043,15 +988,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               month: selectedMonth,
             });
           }}
-        />
-      )}
-
-      {markingPayment && (
-        <MarkPaymentPaidModal
-          payment={markingPayment}
-          accounts={accounts}
-          onClose={() => setMarkingPayment(null)}
-          onConfirm={(payload) => onMarkPaymentPaid(markingPayment.id, payload)}
         />
       )}
 
