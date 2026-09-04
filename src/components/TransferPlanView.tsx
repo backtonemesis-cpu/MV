@@ -186,7 +186,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Monthly Transfer Plan</h1>
+            <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Plan</h1>
             <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-neutral-100 text-neutral-800 border border-neutral-200">
               {formatMonthLabel(selectedMonth)}
             </span>
@@ -243,7 +243,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
-              Total Transfer Required
+              Transfer Required
             </span>
             <ArrowLeftRight
               className={`w-4 h-4 shrink-0 ${
@@ -288,7 +288,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
-              Accounts Requiring Funds
+              Accounts
             </span>
             <AlertCircle
               className={`w-4 h-4 shrink-0 ${
@@ -579,7 +579,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
           <div>
             <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-              Scheduled Payments · {formatMonthLabel(selectedMonth)}
+              Bills · {formatMonthLabel(selectedMonth)}
             </h2>
           </div>
 
@@ -590,7 +590,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                   onClick={handleBulkIncludeUnpaid}
                   className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
                 >
-                  Include All Unpaid
+                  Include Unpaid
                 </button>
                 <button
                   onClick={handleBulkSelectAll}
