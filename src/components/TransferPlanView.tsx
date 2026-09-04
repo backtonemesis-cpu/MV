@@ -27,6 +27,7 @@ import {
 } from '../types';
 import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
+import { accountDisplayLabel } from '../utils/accountLabels';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
 
@@ -137,6 +138,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         createdAt: string;
         totalPence: number;
         sourceAccountIds: string[];
+        allocations: Array<{
+          sourceAccountId: string;
+          amountPence: number;
+        }>;
       }
     >();
 
@@ -166,6 +171,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           createdAt,
           totalPence: sameBatch.reduce((sum, item) => sum + item.amountPence, 0),
           sourceAccountIds: Array.from(new Set(sameBatch.map((item) => item.accountId))),
+          allocations: sameBatch.map((item) => ({
+            sourceAccountId: item.accountId,
+            amountPence: item.amountPence,
+          })),
         });
       }
     }
@@ -644,6 +653,30 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       {formatPence(req.totalSelectedPaymentsPence)} <span aria-hidden="true">•</span>{' '}
                       {req.selectedPayments.length} selected
                     </div>
+
+                    {latestFundingBatchByDestination.has(req.account.id) && (
+                      <div className="mt-2 rounded-xl border border-muted bg-surface px-3.5 py-2 text-[12px] text-muted">
+                        <span className="font-semibold text-main">Transferred:</span>{' '}
+                        {latestFundingBatchByDestination
+                          .get(req.account.id)!
+                          .allocations.map((allocation, index) => {
+                            const sourceAccount = accounts.find(
+                              (account) => account.id === allocation.sourceAccountId
+                            );
+                            const sourceLabel = sourceAccount
+                              ? accountDisplayLabel(sourceAccount)
+                              : 'Unknown account';
+
+                            return (
+                              <React.Fragment key={`${allocation.sourceAccountId}-${index}`}>
+                                {index > 0 && <span className="mx-1 text-subtle">+</span>}
+                                <span className="font-medium text-main">{sourceLabel}</span>{' '}
+                                <span>{formatPence(allocation.amountPence)}</span>
+                              </React.Fragment>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-5">
