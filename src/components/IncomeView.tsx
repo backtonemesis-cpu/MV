@@ -6,7 +6,6 @@ import {
   Edit2,
   Plus,
   Trash2,
-  WalletCards,
   X,
 } from 'lucide-react';
 import { JOINT_ACCOUNT_OWNER_ID } from '../types';
@@ -107,6 +106,43 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   );
 
   const monthOutstandingPence = Math.max(0, monthExpectedPence - monthReceivedPence);
+
+  const monthFullyReceivedCount = useMemo(
+    () =>
+      monthIncomes.filter(
+        (income) =>
+          Boolean(income.actualTransactionId || income.linkedTransactionId) ||
+          income.status === 'received'
+      ).length,
+    [monthIncomes]
+  );
+
+  const monthRemainingCount = Math.max(0, monthIncomes.length - monthFullyReceivedCount);
+
+  const incomeDateGroups = useMemo(() => {
+    const groups = new Map<string, PlannedIncome[]>();
+
+    for (const income of monthIncomes) {
+      const key = income.expectedDate || 'date-tbc';
+      const existing = groups.get(key) || [];
+      existing.push(income);
+      groups.set(key, existing);
+    }
+
+    return Array.from(groups.entries()).map(([date, items]) => ({
+      date,
+      label:
+        date === 'date-tbc'
+          ? 'DATE TBC'
+          : new Intl.DateTimeFormat('en-GB', {
+              day: '2-digit',
+              month: 'long',
+            })
+              .format(new Date(`${date}T12:00:00`))
+              .toUpperCase(),
+      items,
+    }));
+  }, [monthIncomes]);
 
   const linkedTransactionFor = (income: PlannedIncome) => {
     const linkedId = income.actualTransactionId || income.linkedTransactionId;
@@ -286,52 +322,59 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
         </div>
       </div>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <article className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Income summary">
+        <article className="rounded-[14px] border border-muted/70 bg-surface p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025),0_8px_24px_rgba(0,0,0,0.12)]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
             Expected
           </span>
-          <div className="mt-2 font-mono text-2xl font-bold tracking-tight tabular-nums text-main">
+          <div className="mt-2 font-mono text-[30px] font-bold leading-none tracking-[-0.025em] tabular-nums text-main">
             {formatPence(monthExpectedPence)}
           </div>
+          <p className="mt-3 text-[11px] leading-4 text-subtle">
+            {monthIncomes.length} income source{monthIncomes.length === 1 ? '' : 's'}
+          </p>
         </article>
 
-        <article className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+        <article className="rounded-[14px] border border-muted/70 bg-surface p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025),0_8px_24px_rgba(0,0,0,0.12)]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
             Received
           </span>
-          <div className="mt-2 font-mono text-2xl font-bold tracking-tight tabular-nums text-success">
+          <div className="mt-2 font-mono text-[30px] font-bold leading-none tracking-[-0.025em] tabular-nums text-success">
             {formatPence(monthReceivedPence)}
           </div>
+          <p className="mt-3 text-[11px] leading-4 text-subtle">
+            {monthFullyReceivedCount} of {monthIncomes.length} received
+          </p>
         </article>
 
-        <article className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+        <article className="rounded-[14px] border border-muted/70 bg-surface p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025),0_8px_24px_rgba(0,0,0,0.12)]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">
             Outstanding
           </span>
-          <div className="mt-2 font-mono text-2xl font-bold tracking-tight tabular-nums text-main">
+          <div className="mt-2 font-mono text-[30px] font-bold leading-none tracking-[-0.025em] tabular-nums text-warning">
             {formatPence(monthOutstandingPence)}
           </div>
+          <p className="mt-3 text-[11px] leading-4 text-subtle">
+            {monthRemainingCount} payment{monthRemainingCount === 1 ? '' : 's'} remaining
+          </p>
         </article>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-muted bg-table shadow-sm">
-        <header className="flex items-center justify-between gap-3 border-b border-muted bg-table-header px-5 py-4">
+      <section aria-labelledby="income-schedule-title">
+        <header className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Income Schedule
+            <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-subtle">
+              Income schedule
             </div>
-            <h2 className="mt-0.5 text-base font-semibold text-main">
+            <h2 id="income-schedule-title" className="mt-1 text-base font-semibold tracking-tight text-main">
               {selectedMonth} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
             </h2>
           </div>
-
-          <WalletCards className="h-5 w-5 text-accent" />
         </header>
 
         {monthIncomes.length === 0 ? (
-          <div className="bg-table p-5">
-            <div className="flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed border-muted bg-surface-muted p-8 text-center">
+          <div className="rounded-[14px] border border-dashed border-muted bg-surface p-5">
+            <div className="flex min-h-[160px] flex-col items-center justify-center rounded-xl bg-surface-muted p-8 text-center">
               <Banknote className="h-5 w-5 text-subtle" />
               <p className="mt-2 text-sm font-medium text-muted">No income sources for {selectedMonth}</p>
               {canEdit && (
@@ -347,124 +390,135 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-muted bg-table">
-            {monthIncomes.map((income) => {
-              const linkedTx = linkedTransactionFor(income);
-              const received =
-                Boolean(income.actualTransactionId || income.linkedTransactionId) ||
-                income.status === 'received' ||
-                income.status === 'partial';
-              const categoryName =
-                categories.find(
-                  (category) => category.id === (income.categoryId || linkedTx?.categoryId)
-                )?.name || 'Income';
-              const targetAccount = accounts.find((account) => account.id === income.accountId);
-              const targetOwnerName = targetAccount
-                ? targetAccount.ownerMemberId === JOINT_ACCOUNT_OWNER_ID
-                  ? 'Joint'
-                  : members.find((member) => member.id === targetAccount.ownerMemberId)?.name ||
-                    targetAccount.ownerPerson
-                : undefined;
-              const accountName = targetAccount
-                ? `${targetAccount.name}${targetOwnerName ? ` (${targetOwnerName})` : ''}`
-                : 'Account';
+          <div className="space-y-5">
+            {incomeDateGroups.map((group) => (
+              <div key={group.date}>
+                <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-subtle">
+                  {group.label}
+                </div>
 
-              return (
-                <article
-                  key={income.id}
-                  className="flex flex-col gap-3 px-5 py-4 transition-all hover:bg-surface-muted/30 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 className="truncate text-sm font-semibold text-main">{income.name}</h3>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                          income.status === 'received'
-                            ? 'bg-success-soft text-success'
-                            : income.status === 'partial'
-                            ? 'bg-warning-soft text-warning'
-                            : 'bg-surface-muted text-muted'
-                        }`}
+                <div className="mt-2 space-y-2">
+                  {group.items.map((income) => {
+                    const linkedTx = linkedTransactionFor(income);
+                    const received =
+                      Boolean(income.actualTransactionId || income.linkedTransactionId) ||
+                      income.status === 'received' ||
+                      income.status === 'partial';
+                    const categoryName =
+                      categories.find(
+                        (category) => category.id === (income.categoryId || linkedTx?.categoryId)
+                      )?.name || 'Income';
+                    const targetAccount = accounts.find((account) => account.id === income.accountId);
+                    const targetOwnerName = targetAccount
+                      ? targetAccount.ownerMemberId === JOINT_ACCOUNT_OWNER_ID
+                        ? 'Joint'
+                        : members.find((member) => member.id === targetAccount.ownerMemberId)?.name ||
+                          targetAccount.ownerPerson
+                      : undefined;
+                    const accountName = targetAccount
+                      ? `${targetAccount.name}${targetOwnerName ? ` (${targetOwnerName})` : ''}`
+                      : 'Account';
+                    const statusLabel =
+                      income.status === 'partial' ? 'Partial' : received ? 'Received' : 'Expected';
+                    const statusClassName =
+                      income.status === 'partial'
+                        ? 'border-warning bg-warning-soft text-warning'
+                        : received
+                        ? 'border-success bg-success-soft text-success'
+                        : 'border-muted bg-surface-muted text-muted';
+                    const shownAmountPence =
+                      income.actualAmountPence ?? linkedTx?.amountPence ?? income.expectedAmountPence;
+                    const showExpectedComparison =
+                      received && shownAmountPence !== income.expectedAmountPence;
+
+                    return (
+                      <article
+                        key={income.id}
+                        className="group grid gap-3 rounded-[14px] border border-muted/70 bg-surface px-[18px] py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02),0_6px_18px_rgba(0,0,0,0.10)] transition-[background-color,border-color,box-shadow] duration-150 hover:border-strong hover:bg-surface-muted/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
                       >
-                        {income.status}
-                      </span>
-                    </div>
+                        <div className="min-w-0">
+                          <h3 className="truncate text-[15px] font-semibold leading-5 text-main">
+                            {income.name}
+                          </h3>
 
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
-                        {income.sourcePerson}
-                      </span>
-                      <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
-                        {categoryName}
-                      </span>
-                      <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
-                        {accountName}
-                      </span>
-                      {income.expectedDate && (
-                        <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
-                          Due {income.expectedDate}
-                        </span>
-                      )}
-                    </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span
+                              className={`inline-flex h-[22px] items-center gap-1.5 rounded-[7px] border px-2 text-[10px] font-semibold tracking-[0.02em] ${statusClassName}`}
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                              {statusLabel}
+                            </span>
 
-                    {income.notes && (
-                      <span className="mt-1 block max-w-[650px] truncate text-[10px] font-normal italic tracking-wide text-subtle opacity-50">
-                        {income.notes}
-                      </span>
-                    )}
-                  </div>
+                            <span className="text-[11px] font-medium text-muted">{income.sourcePerson}</span>
+                            <span className="text-[11px] text-subtle" aria-hidden="true">·</span>
+                            <span className="text-[11px] font-medium text-muted">{categoryName}</span>
+                            <span className="text-[11px] text-subtle" aria-hidden="true">·</span>
+                            <span className="text-[11px] font-medium text-muted">{accountName}</span>
+                          </div>
 
-                  <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
-                    <div className="text-right">
-                      <div className="font-mono text-base font-semibold tracking-tight tabular-nums text-main">
-                        {formatPence(income.actualAmountPence ?? income.expectedAmountPence)}
-                      </div>
-                      <div className="mt-0.5 text-[10px] text-subtle">
-                        {received
-                          ? `Expected ${formatPence(income.expectedAmountPence)}`
-                          : 'Expected'}
-                      </div>
-                    </div>
+                          {income.notes && (
+                            <p className="mt-1.5 max-w-[650px] truncate text-xs font-normal leading-4 text-subtle">
+                              {income.notes}
+                            </p>
+                          )}
+                        </div>
 
-                    {canEdit && (
-                      <div className="flex items-center gap-1">
-                        {!received && (
-                          <button
-                            type="button"
-                            onClick={() => openReceive(income)}
-                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-muted bg-surface px-2.5 text-[11px] font-semibold text-success transition-all hover:bg-surface-muted active:scale-[0.97]"
-                            title="Mark received"
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Receive
-                          </button>
-                        )}
+                        <div className="flex min-w-[150px] items-start justify-between gap-3 sm:justify-end">
+                          <div className="text-left sm:text-right">
+                            <div className="font-mono text-[17px] font-semibold leading-6 tracking-tight tabular-nums text-main">
+                              {formatPence(shownAmountPence)}
+                            </div>
+                            {showExpectedComparison && (
+                              <div className="mt-0.5 text-[10px] leading-4 text-subtle">
+                                Expected {formatPence(income.expectedAmountPence)}
+                              </div>
+                            )}
+                          </div>
 
-                        <button
-                          type="button"
-                          onClick={() => openEdit(income)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-muted bg-surface text-muted transition-all hover:bg-surface-muted hover:text-main active:scale-[0.97]"
-                          title="Edit income"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
+                          {canEdit && (
+                            <div className="flex items-center gap-1">
+                              {!received && (
+                                <button
+                                  type="button"
+                                  onClick={() => openReceive(income)}
+                                  className="inline-flex h-7 items-center gap-1 rounded-[8px] border border-success bg-success-soft px-2.5 text-[10px] font-semibold text-success transition-all hover:brightness-110 active:scale-[0.97]"
+                                  title="Mark received"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Receive
+                                </button>
+                              )}
 
-                        {!received && (
-                          <button
-                            type="button"
-                            onClick={() => removeIncome(income)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-danger bg-danger-soft text-danger transition-all hover:opacity-80 active:scale-[0.97]"
-                            title="Delete expected income"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </article>
-              );
-            })}
+                              <button
+                                type="button"
+                                onClick={() => openEdit(income)}
+                                className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-transparent text-muted opacity-60 transition-all hover:bg-surface-muted hover:text-main hover:opacity-100 focus:opacity-100 active:scale-[0.97] sm:opacity-30 sm:group-hover:opacity-100"
+                                title="Edit income"
+                                aria-label={`Edit ${income.name}`}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+
+                              {!received && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeIncome(income)}
+                                  className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-transparent text-subtle opacity-60 transition-all hover:bg-danger-soft hover:text-danger hover:opacity-100 focus:opacity-100 active:scale-[0.97] sm:opacity-0 sm:group-hover:opacity-100"
+                                  title="Delete expected income"
+                                  aria-label={`Delete ${income.name}`}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
