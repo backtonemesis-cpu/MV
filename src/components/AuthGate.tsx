@@ -105,7 +105,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
           </div>
           <h1 className="mt-5 text-2xl font-black text-neutral-900 dark:text-neutral-100">MV Finance</h1>
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-            MV is currently private and restricted to Marius. Sign in with ${MV_OWNER_EMAIL}.
+            MV is currently private and restricted to Marius. Sign in with <strong>{MV_OWNER_EMAIL}</strong>.
           </p>
 
           {error && (
