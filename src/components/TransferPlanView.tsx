@@ -69,6 +69,7 @@ interface TransferPlanViewProps {
     }>;
     description: string;
     date: string;
+    month: string;
   }) => Promise<void>;
   onUndoFunding: (destinationAccountId: string) => Promise<void>;
 }
@@ -1037,7 +1038,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             if (payload.allocations[0]?.sourceAccountId) {
               setLastFundingSourceAccountId(payload.allocations[0].sourceAccountId);
             }
-            await onExecuteTransfer(payload);
+            await onExecuteTransfer({
+              ...payload,
+              month: selectedMonth,
+            });
           }}
         />
       )}
