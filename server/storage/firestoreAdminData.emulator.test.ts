@@ -135,10 +135,9 @@ describeEmulator('Firestore admin data service', () => {
     expect(backup.accounts.map((item: any) => item.id)).toEqual(
       expect.arrayContaining(['acc-main', 'acc-archived'])
     );
-    expect(
-      backup.accounts.find((item: any) => item.id === 'acc-main')
-        .currentBalancePence
-    ).toBe(90000);
+    const mainAccount = backup.accounts.find((item: any) => item.id === 'acc-main');
+    expect(mainAccount).toBeDefined();
+    expect(mainAccount?.currentBalancePence).toBe(90000);
     expect(backup.splits).toHaveLength(2);
     expect(backup.splits).toEqual(
       expect.arrayContaining([
