@@ -360,7 +360,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
                   <div className="finance-row-side">
                     <div className="finance-amount-block">
-                      <div className="finance-amount">
+                      <div
+                        className={`finance-amount ${
+                          isNegative ? 'is-negative' : isPositive ? 'is-positive' : 'is-neutral'
+                        }`}
+                      >
                         {isNegative ? '-' : '+'}
                         {formatPence(tx.amountPence)}
                       </div>
