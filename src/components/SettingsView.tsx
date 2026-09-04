@@ -24,6 +24,9 @@ import {
   ThemePreference,
   AccentColor,
   AccentRgb,
+  CardBorderPreference,
+  CardDensityPreference,
+  CardRadiusPreference,
   UserPreferences,
 } from '../types';
 import { accentRgbForPreference } from '../themeEngine';
@@ -429,6 +432,85 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     </label>
                   );
                 })}
+              </div>
+            </div>
+
+            <div className="mv-card-customization" aria-label="Card customization">
+              <div className="mv-card-customization-row">
+                <div className="mv-card-customization-label">
+                  <span>Card View Display Density</span>
+                </div>
+                <div className="mv-settings-segmented mv-card-toggle-grid is-two">
+                  {([
+                    ['compact', 'Compact'],
+                    ['comfortable', 'Comfortable'],
+                  ] as [CardDensityPreference, string][]).map(([id, label]) => {
+                    const active = userPreferences.cardDensity === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`mv-settings-segment ${active ? 'is-active' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => onUpdatePreferences({ cardDensity: id })}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mv-card-customization-row">
+                <div className="mv-card-customization-label">
+                  <span>Card Corner Geometry</span>
+                </div>
+                <div className="mv-settings-segmented mv-card-toggle-grid is-three">
+                  {([
+                    ['sharp', 'Sharp'],
+                    ['subtle', 'Subtle'],
+                    ['rounded', 'Rounded'],
+                  ] as [CardRadiusPreference, string][]).map(([id, label]) => {
+                    const active = userPreferences.cardRadius === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`mv-settings-segment ${active ? 'is-active' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => onUpdatePreferences({ cardRadius: id })}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mv-card-customization-row">
+                <div className="mv-card-customization-label">
+                  <span>Border Contrast Intensity</span>
+                </div>
+                <div className="mv-settings-segmented mv-card-toggle-grid is-three">
+                  {([
+                    ['none', 'None'],
+                    ['subtle', 'Subtle'],
+                    ['high', 'High Contrast'],
+                  ] as [CardBorderPreference, string][]).map(([id, label]) => {
+                    const active = userPreferences.cardBorder === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`mv-settings-segment ${active ? 'is-active' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => onUpdatePreferences({ cardBorder: id })}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
