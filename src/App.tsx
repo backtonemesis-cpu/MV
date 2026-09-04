@@ -440,6 +440,7 @@ export default function App() {
     month?: string;
     include: boolean;
     onlyUnpaid?: boolean;
+    status?: 'paid' | 'unpaid';
     paymentIds?: string[];
   }) => {
     if (!household) return;
