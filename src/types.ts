@@ -149,8 +149,12 @@ export interface TransferPlanSummary {
   accountsNeedingFunding: AccountFundingRequirement[];
   accountsFullyFunded: AccountFundingRequirement[];
   totalTransferRequiredPence: number;
+  /** Unpaid selected bills only: this is the amount the plan is actually funding. */
   totalSelectedPaymentsPence: number;
+  /** Unpaid selected bills only: kept aligned with totalSelectedPaymentsPence. */
   totalSelectedPaymentsCount: number;
+  /** Paid/recorded bills may remain selected for audit/reference but never require funding. */
+  totalPaidSelectedPaymentsCount: number;
 }
 
 export interface SavingsGoal {
