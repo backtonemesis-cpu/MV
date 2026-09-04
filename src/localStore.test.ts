@@ -14,6 +14,7 @@ import {
   importLocalMonth,
   loadLocalHousehold,
   markLocalIncomeReceived,
+  markLocalPaymentPaid,
   preflightLocalRestore,
   resetLocalHousehold,
   restoreLocalBackup,
@@ -892,7 +893,7 @@ describe('Penny-style local MV storage', () => {
     ).toBe(vestaLloyds.account.id);
   });
 
-  it('selects paid and unpaid bills independently using the explicit Plan status', () => {
+  it('selects paid and unpaid bills independently using linked actual payment evidence', () => {
     let state = loadLocalHousehold();
     const account = state.accounts.find((item) => item.name === 'Lloyds');
     expect(account).toBeTruthy();
@@ -911,15 +912,26 @@ describe('Penny-style local MV storage', () => {
     );
     state = loadLocalHousehold();
 
-    const paid = createLocalPlannedPayment(
+    const paidDraft = createLocalPlannedPayment(
       {
         name: 'October paid',
         amountPence: 2000,
         month: '2026-10',
         responsiblePerson: 'Marius',
         accountId: account!.id,
-        status: 'paid',
+        status: 'unpaid',
         includeInTransferPlan: false,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    markLocalPaymentPaid(
+      paidDraft.payment.id,
+      {
+        actualAmountPence: 2000,
+        actualDate: '2026-10-04',
+        accountId: account!.id,
       },
       state.version
     );
@@ -931,21 +943,23 @@ describe('Penny-style local MV storage', () => {
     );
     state = loadLocalHousehold();
     expect(state.plannedPayments.find((item) => item.id === unpaid.payment.id)?.includeInTransferPlan).toBe(true);
-    expect(state.plannedPayments.find((item) => item.id === paid.payment.id)?.includeInTransferPlan).toBe(false);
+    expect(state.plannedPayments.find((item) => item.id === paidDraft.payment.id)?.includeInTransferPlan).toBe(false);
 
     bulkToggleLocalPlannedPayments(
       { month: '2026-10', include: true, status: 'paid' },
       state.version
     );
     state = loadLocalHousehold();
-    expect(state.plannedPayments.find((item) => item.id === paid.payment.id)?.includeInTransferPlan).toBe(true);
+    expect(state.plannedPayments.find((item) => item.id === paidDraft.payment.id)?.includeInTransferPlan).toBe(true);
     expect(state.plannedPayments.find((item) => item.id === unpaid.payment.id)?.includeInTransferPlan).toBe(false);
 
-    const linked = state.plannedPayments.find((payment) => Boolean(payment.actualTransactionId));
-    expect(linked).toBeTruthy();
-    updateLocalPlannedPayment(linked!.id, { status: 'unpaid' }, state.version);
-    state = loadLocalHousehold();
-    expect(state.plannedPayments.find((item) => item.id === linked!.id)?.status).toBe('unpaid');
+    expect(() =>
+      updateLocalPlannedPayment(
+        paidDraft.payment.id,
+        { status: 'unpaid' },
+        state.version
+      )
+    ).toThrow('A bill with a linked actual expense transaction cannot be marked unpaid.');
   });
 
   it('keeps received income and its linked Activity transaction reconciled when edited', () => {
