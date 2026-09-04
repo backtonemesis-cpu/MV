@@ -1,12 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { PiggyBank, Plus, ArrowUpRight, CheckCircle2, Target, Calendar, Landmark, X, AlertCircle, Trash2 } from 'lucide-react';
-import { SavingsGoal, Account, Transaction, UserRole, Payer } from '../types';
-import { formatPence, parseToPence } from '../utils/currency';
+import {
+  SavingsGoal,
+  Account,
+  Transaction,
+  UserRole,
+  Payer,
+  PlannedPayment,
+  PlannedIncome,
+} from '../types';
+import {
+  calculateSavingsPosition,
+  formatPence,
+  parseToPence,
+} from '../utils/currency';
 
 interface SavingsViewProps {
   savingsGoals: SavingsGoal[];
   accounts: Account[];
   transactions: Transaction[];
+  plannedPayments: PlannedPayment[];
+  plannedIncomes: PlannedIncome[];
   selectedMonth: string;
   userRole: UserRole;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
@@ -26,6 +40,8 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   savingsGoals,
   accounts,
   transactions,
+  plannedPayments,
+  plannedIncomes,
   selectedMonth,
   userRole,
   onCreateSavingsGoal,
@@ -55,24 +71,35 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
 
-  // Savings movements for the selected month
+  // Authoritative savings position. Goals are allocations only; they do not define total savings.
+  const savingsPosition = useMemo(
+    () =>
+      calculateSavingsPosition(
+        accounts,
+        transactions,
+        plannedPayments,
+        selectedMonth,
+        plannedIncomes
+      ),
+    [accounts, transactions, plannedPayments, plannedIncomes, selectedMonth]
+  );
+
   const monthSavingsTxs = useMemo(() => {
-    return transactions.filter((t) => t.isSavings && t.date.startsWith(selectedMonth));
+    return transactions.filter((tx) => tx.isSavings && tx.date.startsWith(selectedMonth));
   }, [transactions, selectedMonth]);
 
-  const monthSavingsTotalPence = useMemo(() => {
-    return monthSavingsTxs.reduce((sum, t) => sum + t.amountPence, 0);
-  }, [monthSavingsTxs]);
-
-  const totalSavedPence = useMemo(() => {
-    return savingsGoals.reduce((sum, g) => sum + g.currentPence, 0);
+  const goalAllocatedPence = useMemo(() => {
+    return savingsGoals.reduce((sum, goal) => sum + goal.currentPence, 0);
   }, [savingsGoals]);
 
   const totalTargetPence = useMemo(() => {
-    return savingsGoals.reduce((sum, g) => sum + g.targetPence, 0);
+    return savingsGoals.reduce((sum, goal) => sum + goal.targetPence, 0);
   }, [savingsGoals]);
 
-  const overallPercent = totalTargetPence > 0 ? Math.min(100, Math.round((totalSavedPence / totalTargetPence) * 100)) : 100;
+  const overallPercent =
+    totalTargetPence > 0
+      ? Math.min(100, Math.round((goalAllocatedPence / totalTargetPence) * 100))
+      : 0;
 
   // Handle Create Goal
   const handleGoalSubmit = async (e: React.FormEvent) => {
@@ -232,36 +259,116 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
       {/* Savings Summary, Goals & Movements */}
       <section className="mv-edge-safe rounded-2xl border border-muted bg-surface p-3 sm:p-4 space-y-5">
-        <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
-          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-            <h2 className="text-[15px] font-semibold leading-5 text-main">
-              Total Savings
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-sm">
+            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
+              Current Savings
             </h2>
-            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-main whitespace-nowrap">
-              {formatPence(totalSavedPence)}
+            <div className="mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-main whitespace-nowrap">
+              {formatPence(savingsPosition.currentSavingsPence)}
             </div>
-            <span className="mt-1 block text-[12px] font-normal leading-4 text-muted">
-              target {formatPence(totalTargetPence)} · {overallPercent}%
+            <span className="mt-1 block text-[11px] leading-4 text-subtle">
+              confirmed savings / liquid balances
             </span>
           </article>
 
-          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-            <h2 className="text-[15px] font-semibold leading-5 text-main">
-              {selectedMonth} Contributions
+          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-sm">
+            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
+              Saved This Month
             </h2>
-            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-success whitespace-nowrap">
-              {formatPence(monthSavingsTotalPence)}
+            <div
+              className={`mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums whitespace-nowrap ${
+                savingsPosition.savedThisMonthPence >= 0 ? 'text-success' : 'text-danger'
+              }`}
+            >
+              {formatPence(savingsPosition.savedThisMonthPence)}
             </div>
-            <span className="mt-1 block text-[12px] font-normal leading-4 text-muted">
-              excluded from living spend
+            <span className="mt-1 block text-[11px] leading-4 text-subtle">
+              income + refunds − bills − spending
+            </span>
+          </article>
+
+          <article className="min-w-0 rounded-[14px] border border-muted bg-accent-soft p-4 shadow-sm">
+            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
+              Projected End Savings
+            </h2>
+            <div className="mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-main whitespace-nowrap">
+              {formatPence(savingsPosition.projectedEndSavingsPence)}
+            </div>
+            <span className="mt-1 block text-[11px] leading-4 text-subtle">
+              current savings + monthly saved
+            </span>
+          </article>
+
+          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-sm">
+            <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
+              Moved To Savings
+            </h2>
+            <div className="mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-main whitespace-nowrap">
+              {formatPence(savingsPosition.savingsTransfersPence)}
+            </div>
+            <span className="mt-1 block text-[11px] leading-4 text-subtle">
+              actual savings transfer movements
             </span>
           </article>
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-[15px] font-semibold leading-5 text-main">
-            Active Savings Goals
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[15px] font-semibold leading-5 text-main">
+              Savings Balance Breakdown
+            </h2>
+            <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted">
+              {savingsPosition.savingsAccounts.length} account{savingsPosition.savingsAccounts.length === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          {savingsPosition.savingsAccounts.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-6 text-left">
+              <p className="text-[13px] font-medium leading-5 text-subtle">
+                No savings or liquid-balance accounts are configured.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-[14px] border border-muted bg-table">
+              <div className="divide-y divide-muted">
+                {savingsPosition.savingsAccounts.map((account) => (
+                  <div
+                    key={account.id}
+                    className="flex items-center justify-between gap-4 px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <span className="block truncate text-[13px] font-semibold text-main">
+                        {account.name}
+                      </span>
+                      <span className="mt-0.5 block text-[10px] uppercase tracking-wider text-subtle">
+                        {account.metadata?.sourceBalanceKind === 'savings_snapshot'
+                          ? 'Savings snapshot'
+                          : account.type === 'cash'
+                          ? 'Cash'
+                          : 'Savings account'}
+                      </span>
+                    </div>
+                    <span className="shrink-0 font-mono text-sm font-semibold tracking-tight tabular-nums text-main">
+                      {formatPence(account.currentBalancePence)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-[15px] font-semibold leading-5 text-main">
+              Active Savings Goals
+            </h2>
+            <p className="text-[11px] text-subtle">
+              Allocated to goals {formatPence(goalAllocatedPence)} of {formatPence(totalTargetPence)}
+              {totalTargetPence > 0 ? ` · ${overallPercent}%` : ''}
+            </p>
+          </div>
 
           {savingsGoals.length === 0 ? (
             <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-6 text-left">
