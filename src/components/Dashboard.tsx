@@ -22,6 +22,7 @@ import {
   formatPence,
   calculateMonthlySurplus,
   calculateSavingsPosition,
+  calculateLiquidFundsPence,
 } from '../utils/currency';
 
 interface DashboardProps {
@@ -60,11 +61,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return (household.plannedPayments || []).filter((p) => p.month === selectedMonth);
   }, [household.plannedPayments, selectedMonth]);
 
-  const totalLiquidBalancePence = useMemo(() => {
-    return household.accounts
-      .filter((a) => a.isActive !== false)
-      .reduce((acc, a) => acc + a.currentBalancePence, 0);
-  }, [household.accounts]);
+  const totalLiquidBalancePence = useMemo(
+    () => calculateLiquidFundsPence(household.accounts),
+    [household.accounts]
+  );
 
   const surplusCalculation = useMemo(() => {
     return calculateMonthlySurplus(
@@ -185,9 +185,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       icon: Clock,
     },
     {
-      label: 'Moved To Savings',
+      label: 'Net Savings Movement',
       value: savingsPosition.savingsTransfersPence,
-      note: 'Net savings transfer movement',
+      note: 'Transfers crossing Savings/Cash boundary',
       icon: PiggyBank,
     },
   ];
