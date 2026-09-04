@@ -1,315 +1,476 @@
-import React, { useState, useMemo } from 'react';
-import { X, Calendar, ArrowRight, CheckCircle2, AlertCircle, Copy, Layers } from 'lucide-react';
-import { PlannedPayment, Account, Category } from '../types';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, CalendarDays, Layers, X } from 'lucide-react';
+import { Account, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
 
 interface MonthImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  availableMonths: string[];
   activeMonth: string;
   plannedPayments: PlannedPayment[];
+  plannedIncomes: PlannedIncome[];
   accounts: Account[];
-  categories: Category[];
-  onImport: (params: { sourceMonth: string; targetMonth: string; paymentIds: string[] }) => Promise<void>;
+  onImport: (params: {
+    sourceMonth: string;
+    targetMonth: string;
+    paymentIds: string[];
+    incomeIds: string[];
+  }) => Promise<void>;
+}
+
+function nextMonth(month: string): string {
+  if (!/^\d{4}-\d{2}$/.test(month)) return '';
+  const [yearText, monthText] = month.split('-');
+  let year = Number.parseInt(yearText, 10);
+  let monthNumber = Number.parseInt(monthText, 10) + 1;
+
+  if (monthNumber > 12) {
+    monthNumber = 1;
+    year += 1;
+  }
+
+  return `${year}-${String(monthNumber).padStart(2, '0')}`;
+}
+
+function monthLabel(month: string): string {
+  if (!/^\d{4}-\d{2}$/.test(month)) return month || 'Target Month';
+  return new Intl.DateTimeFormat('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${month}-01T12:00:00`));
+}
+
+function dayLabel(date: string | undefined, prefix: string): string {
+  if (!date || date.length < 10) return 'Flexible';
+  const day = Number.parseInt(date.slice(8, 10), 10);
+  return Number.isFinite(day) ? `${prefix} Day ${day}` : 'Flexible';
 }
 
 export const MonthImportModal: React.FC<MonthImportModalProps> = ({
   isOpen,
   onClose,
-  availableMonths,
   activeMonth,
   plannedPayments,
+  plannedIncomes,
   accounts,
-  categories,
   onImport,
 }) => {
-  // Derive default target month by taking activeMonth and adding 1 month
-  const defaultTargetMonth = useMemo(() => {
-    if (!activeMonth || !activeMonth.includes('-')) return '2026-10';
-    const [yearStr, monthStr] = activeMonth.split('-');
-    let y = parseInt(yearStr, 10);
-    let m = parseInt(monthStr, 10);
-    m += 1;
-    if (m > 12) {
-      m = 1;
-      y += 1;
-    }
-    return `${y}-${m.toString().padStart(2, '0')}`;
-  }, [activeMonth]);
+  const sourceMonthRef = useRef<HTMLInputElement>(null);
 
-  const [sourceMonth, setSourceMonth] = useState<string>(activeMonth || availableMonths[0] || '2026-09');
-  const [targetMonth, setTargetMonth] = useState<string>(defaultTargetMonth);
+  const [sourceMonth, setSourceMonth] = useState(activeMonth);
+  const [targetMonth, setTargetMonth] = useState(nextMonth(activeMonth));
+  const [includeIncomes, setIncludeIncomes] = useState(true);
+  const [includePayments, setIncludePayments] = useState(true);
+  const [selectedIncomeIds, setSelectedIncomeIds] = useState<Set<string>>(new Set());
   const [selectedPaymentIds, setSelectedPaymentIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Available source payments
-  const sourcePayments = useMemo(() => {
-    return plannedPayments.filter((p) => p.month === sourceMonth);
-  }, [plannedPayments, sourceMonth]);
+  const accountMap = useMemo(
+    () => new Map(accounts.map((account) => [account.id, account])),
+    [accounts]
+  );
 
-  // Existing target payments for duplicate check
-  const existingTargetPayments = useMemo(() => {
-    return plannedPayments.filter((p) => p.month === targetMonth);
-  }, [plannedPayments, targetMonth]);
+  const sourcePayments = useMemo(
+    () => plannedPayments.filter((payment) => payment.month === sourceMonth),
+    [plannedPayments, sourceMonth]
+  );
 
-  // When source month changes, default all valid non-duplicates as selected
-  React.useEffect(() => {
+  const sourceIncomes = useMemo(
+    () => plannedIncomes.filter((income) => income.month === sourceMonth),
+    [plannedIncomes, sourceMonth]
+  );
+
+  const targetPayments = useMemo(
+    () => plannedPayments.filter((payment) => payment.month === targetMonth),
+    [plannedPayments, targetMonth]
+  );
+
+  const targetIncomes = useMemo(
+    () => plannedIncomes.filter((income) => income.month === targetMonth),
+    [plannedIncomes, targetMonth]
+  );
+
+  const duplicatePaymentIds = useMemo(() => {
+    const duplicates = new Set<string>();
+
+    for (const payment of sourcePayments) {
+      const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
+      const name = payment.name.trim().toLowerCase();
+
+      const exists = targetPayments.some(
+        (candidate) =>
+          String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
+          (
+            candidate.name.trim().toLowerCase() === name &&
+            candidate.accountId === payment.accountId &&
+            candidate.amountPence === payment.amountPence &&
+            candidate.responsiblePerson === payment.responsiblePerson
+          )
+      );
+
+      if (exists) duplicates.add(payment.id);
+    }
+
+    return duplicates;
+  }, [sourcePayments, targetPayments]);
+
+  const duplicateIncomeIds = useMemo(() => {
+    const duplicates = new Set<string>();
+
+    for (const income of sourceIncomes) {
+      const copiedFromId = String(income.metadata?.copiedFromId || income.id);
+      const name = income.name.trim().toLowerCase();
+
+      const exists = targetIncomes.some(
+        (candidate) =>
+          String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
+          (
+            candidate.name.trim().toLowerCase() === name &&
+            candidate.accountId === income.accountId &&
+            candidate.expectedAmountPence === income.expectedAmountPence &&
+            candidate.sourcePerson === income.sourcePerson
+          )
+      );
+
+      if (exists) duplicates.add(income.id);
+    }
+
+    return duplicates;
+  }, [sourceIncomes, targetIncomes]);
+
+  useEffect(() => {
     if (!isOpen) return;
+
+    const source = activeMonth || new Date().toISOString().slice(0, 7);
+    setSourceMonth(source);
+    setTargetMonth(nextMonth(source));
+    setIncludeIncomes(true);
+    setIncludePayments(true);
+    setError(null);
+
+    const frame = requestAnimationFrame(() => sourceMonthRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [activeMonth, isOpen]);
+
+  useEffect(() => {
+    setSelectedPaymentIds(
+      new Set(
+        sourcePayments
+          .filter((payment) => !duplicatePaymentIds.has(payment.id))
+          .map((payment) => payment.id)
+      )
+    );
+
+    setSelectedIncomeIds(
+      new Set(
+        sourceIncomes
+          .filter((income) => !duplicateIncomeIds.has(income.id))
+          .map((income) => income.id)
+      )
+    );
+
+    setError(null);
+  }, [
+    duplicateIncomeIds,
+    duplicatePaymentIds,
+    sourceIncomes,
+    sourcePayments,
+    targetMonth,
+  ]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-      }
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      onClose();
     };
+
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  React.useEffect(() => {
-    const nonDuplicates = sourcePayments
-      .filter((src) => {
-        return !existingTargetPayments.some(
-          (t) =>
-            t.name.toLowerCase() === src.name.toLowerCase() &&
-            t.amountPence === src.amountPence &&
-            t.accountId === src.accountId
-        );
-      })
-      .map((p) => p.id);
-    setSelectedPaymentIds(new Set(nonDuplicates));
-    setError(null);
-  }, [sourceMonth, targetMonth, sourcePayments, existingTargetPayments]);
-
   if (!isOpen) return null;
 
-  const handleToggleSelectAll = () => {
-    if (selectedPaymentIds.size === sourcePayments.length) {
-      setSelectedPaymentIds(new Set());
-    } else {
-      setSelectedPaymentIds(new Set(sourcePayments.map((p) => p.id)));
+  const toggleIncome = (id: string) => {
+    if (!includeIncomes || duplicateIncomeIds.has(id)) return;
+
+    setSelectedIncomeIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const togglePayment = (id: string) => {
+    if (!includePayments || duplicatePaymentIds.has(id)) return;
+
+    setSelectedPaymentIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleIncomeScopeChange = (checked: boolean) => {
+    setIncludeIncomes(checked);
+    if (checked && selectedIncomeIds.size === 0) {
+      setSelectedIncomeIds(
+        new Set(
+          sourceIncomes
+            .filter((income) => !duplicateIncomeIds.has(income.id))
+            .map((income) => income.id)
+        )
+      );
     }
   };
 
-  const handleTogglePayment = (id: string) => {
-    const next = new Set(selectedPaymentIds);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
+  const handlePaymentScopeChange = (checked: boolean) => {
+    setIncludePayments(checked);
+    if (checked && selectedPaymentIds.size === 0) {
+      setSelectedPaymentIds(
+        new Set(
+          sourcePayments
+            .filter((payment) => !duplicatePaymentIds.has(payment.id))
+            .map((payment) => payment.id)
+        )
+      );
     }
-    setSelectedPaymentIds(next);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sourceMonth || !targetMonth) {
-      setError('Please provide valid source and target months (YYYY-MM).');
+  const selectedIncomeCount = includeIncomes ? selectedIncomeIds.size : 0;
+  const selectedPaymentCount = includePayments ? selectedPaymentIds.size : 0;
+  const selectedItemCount = selectedIncomeCount + selectedPaymentCount;
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!/^\d{4}-\d{2}$/.test(sourceMonth) || !/^\d{4}-\d{2}$/.test(targetMonth)) {
+      setError('Choose a valid source month and target month.');
       return;
     }
+
     if (sourceMonth === targetMonth) {
-      setError('Target month must be distinct from source month.');
+      setError('Target month must be different from the source month.');
       return;
     }
-    if (selectedPaymentIds.size === 0) {
-      setError('Please select at least one planned payment to copy.');
+
+    if (selectedItemCount === 0) {
+      setError('Select at least one income or bill to prepare.');
       return;
     }
 
     try {
       setIsSubmitting(true);
       setError(null);
+
       await onImport({
         sourceMonth,
         targetMonth,
-        paymentIds: Array.from(selectedPaymentIds),
+        paymentIds: includePayments ? Array.from(selectedPaymentIds) : [],
+        incomeIds: includeIncomes ? Array.from(selectedIncomeIds) : [],
       });
+
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to import month.');
+      setError(err.message || 'Failed to prepare the target month.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const accountMap = new Map(accounts.map((a) => [a.id, a]));
-  const categoryMap = new Map(categories.map((c) => [c.id, c]));
-
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-modal-wide flex flex-col">
-        {/* Header */}
+      <div className="mv-modal-card mv-modal-wide mv-rollover-modal">
         <div className="mv-modal-header">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-success-soft text-success flex items-center justify-center">
-              <Layers className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-success-soft text-success">
+              <Layers className="h-3.5 w-3.5" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-main">
-                Copy Bills to Month
-              </h3>
-            </div>
+            <h2>Prepare Next Month</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="mv-modal-close"
-          >
-            <X className="w-5 h-5" />
+
+          <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close">
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="mv-modal-form flex-1">
-          {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-xl flex items-start gap-2 text-danger text-xs">
-              <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Month Selectors */}
-          <div className="mv-modal-grid-2">
-            <div>
-              <label className="block text-xs font-semibold text-muted mb-1">
+        <form
+          onSubmit={handleSubmit}
+          className="mv-modal-form mv-rollover-form"
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter') return;
+            if (event.target instanceof HTMLButtonElement) return;
+            event.preventDefault();
+            event.currentTarget.requestSubmit();
+          }}
+        >
+          <div className="mv-rollover-controls">
+            <div className="mv-modal-grid-2">
+              <label>
                 From Month
+                <span className="mv-month-input-wrap">
+                  <input
+                    ref={sourceMonthRef}
+                    type="month"
+                    value={sourceMonth}
+                    onChange={(event) => setSourceMonth(event.target.value)}
+                    required
+                  />
+                  <CalendarDays className="mv-month-input-icon" aria-hidden="true" />
+                </span>
               </label>
-              <select
-                autoFocus
-                value={sourceMonth}
-                onChange={(e) => setSourceMonth(e.target.value)}
-                className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-medium focus:ring-2 focus:ring-accent focus:outline-none"
-              >
-                {availableMonths.map((m) => (
-                  <option key={m} value={m}>
-                    {m} ({plannedPayments.filter((p) => p.month === m).length} bills)
-                  </option>
-                ))}
-              </select>
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted mb-1">
-                To Month
+              <label>
+                Target Month
+                <span className="mv-month-input-wrap">
+                  <input
+                    type="month"
+                    value={targetMonth}
+                    onChange={(event) => setTargetMonth(event.target.value)}
+                    required
+                  />
+                  <CalendarDays className="mv-month-input-icon" aria-hidden="true" />
+                </span>
               </label>
-              <input
-                type="text"
-                value={targetMonth}
-                onChange={(e) => setTargetMonth(e.target.value.trim())}
-                placeholder="YYYY-MM"
-                pattern="\d{4}-\d{2}"
-                className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-medium focus:ring-2 focus:ring-accent focus:outline-none"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Integrity Guarantees Banner */}
-          <div className="p-3 bg-success-soft border border-success rounded-xl text-xs text-success flex items-start gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
-            <span className="text-[11px]">Copied bills reset to <strong>Unpaid</strong>; duplicates are skipped.</span>
-          </div>
-
-          {/* Bills Selection */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-main">
-                Bills ({selectedPaymentIds.size}/{sourcePayments.length})
-              </span>
-              <button
-                type="button"
-                onClick={handleToggleSelectAll}
-                className="text-xs font-semibold text-success hover:underline"
-              >
-                {selectedPaymentIds.size === sourcePayments.length ? 'Deselect All' : 'Select All'}
-              </button>
             </div>
 
-            {sourcePayments.length === 0 ? (
-              <div className="p-4 text-center text-xs text-muted text-subtle bg-surface-muted rounded-xl border border-muted">
-                No bills in {sourceMonth}.
-              </div>
-            ) : (
-              <div className="mv-modal-list">
-                {sourcePayments.map((payment) => {
-                  const acc = accountMap.get(payment.accountId);
-                  const isDup = existingTargetPayments.some(
-                    (t) =>
-                      t.name.toLowerCase() === payment.name.toLowerCase() &&
-                      t.amountPence === payment.amountPence &&
-                      t.accountId === payment.accountId
-                  );
-                  const isChecked = selectedPaymentIds.has(payment.id);
+            <div className="mv-rollover-scopes">
+              <label className="mv-rollover-scope">
+                <input
+                  type="checkbox"
+                  checked={includeIncomes}
+                  onChange={(event) => handleIncomeScopeChange(event.target.checked)}
+                />
+                <span>Rollover Expected Income &amp; Wages</span>
+              </label>
 
-                  return (
-                    <div
-                      key={payment.id}
-                      onClick={() => !isDup && handleTogglePayment(payment.id)}
-                      className={`mv-modal-list-row border transition-colors flex items-center justify-between cursor-pointer ${
-                        isDup
-                          ? 'bg-surface-muted border-muted opacity-60 cursor-not-allowed'
-                          : isChecked
-                          ? 'bg-success-soft border-success'
-                          : 'bg-surface border-muted hover:bg-surface-muted'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          disabled={isDup}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={() => handleTogglePayment(payment.id)}
-                          className="w-4 h-4 rounded text-success focus:ring-accent border-muted"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-main">
-                              {payment.name}
-                            </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-muted text-muted font-medium">
-                              {payment.responsiblePerson}
-                            </span>
-                            {isDup && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-warning-soft text-warning font-medium">
-                                Already in {targetMonth}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] text-muted text-subtle mt-0.5">
-                            {acc?.name || 'Account'} • Due {payment.dueDate ? payment.dueDate.split('-')[2] : 'Day 1'}
-                          </div>
-                        </div>
-                      </div>
+              <label className="mv-rollover-scope">
+                <input
+                  type="checkbox"
+                  checked={includePayments}
+                  onChange={(event) => handlePaymentScopeChange(event.target.checked)}
+                />
+                <span>Rollover Planned Household Bills</span>
+              </label>
+            </div>
 
-                      <div className="text-right">
-                        <div className="text-xs font-black text-main">
-                          {formatPence(payment.amountPence)}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+            {error && (
+              <div className="mv-rollover-error">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
           </div>
 
-          {/* Footer Actions */}
-          <div className="mv-modal-actions">
-            <button
-              type="button"
-              onClick={onClose}
-              className="shrink-0 whitespace-nowrap px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl transition"
-            >
+          <div className="mv-rollover-scroll">
+            <section className={includeIncomes ? '' : 'is-scope-disabled'}>
+              <div className="mv-rollover-section-header">
+                <span>Expected Income ({sourceIncomes.length} items)</span>
+                <span>{selectedIncomeCount} selected</span>
+              </div>
+
+              {sourceIncomes.length === 0 ? (
+                <div className="mv-rollover-empty">No expected income in {monthLabel(sourceMonth)}.</div>
+              ) : (
+                sourceIncomes.map((income) => {
+                  const account = accountMap.get(income.accountId);
+                  const duplicate = duplicateIncomeIds.has(income.id);
+                  const checked = selectedIncomeIds.has(income.id);
+                  const disabled = !includeIncomes || duplicate;
+
+                  return (
+                    <label
+                      key={income.id}
+                      className={`mv-rollover-row ${disabled ? 'is-disabled' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={disabled}
+                        onChange={() => toggleIncome(income.id)}
+                      />
+
+                      <span className="mv-rollover-row-main">
+                        <span className="mv-rollover-title">{income.name}</span>
+                        <span className="mv-rollover-meta">
+                          {income.sourcePerson} • {account?.name || 'Account'} • {dayLabel(income.expectedDate, 'Expected')}
+                          {duplicate ? ' • Exists' : ''}
+                        </span>
+                      </span>
+
+                      <span className="mv-rollover-row-side">
+                        <span className="mv-rollover-amount">{formatPence(income.expectedAmountPence)}</span>
+                        <span className="mv-rollover-pill mv-rollover-pill-expected">Expected</span>
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </section>
+
+            <section className={includePayments ? '' : 'is-scope-disabled'}>
+              <div className="mv-rollover-section-header">
+                <span>Planned Bills ({sourcePayments.length} items)</span>
+                <span>{selectedPaymentCount} selected</span>
+              </div>
+
+              {sourcePayments.length === 0 ? (
+                <div className="mv-rollover-empty">No planned bills in {monthLabel(sourceMonth)}.</div>
+              ) : (
+                sourcePayments.map((payment) => {
+                  const account = accountMap.get(payment.accountId);
+                  const duplicate = duplicatePaymentIds.has(payment.id);
+                  const checked = selectedPaymentIds.has(payment.id);
+                  const disabled = !includePayments || duplicate;
+
+                  return (
+                    <label
+                      key={payment.id}
+                      className={`mv-rollover-row ${disabled ? 'is-disabled' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={disabled}
+                        onChange={() => togglePayment(payment.id)}
+                      />
+
+                      <span className="mv-rollover-row-main">
+                        <span className="mv-rollover-title">{payment.name}</span>
+                        <span className="mv-rollover-meta">
+                          {payment.responsiblePerson} • {account?.name || 'Account'} • {dayLabel(payment.dueDate, 'Due')}
+                          {duplicate ? ' • Exists' : ''}
+                        </span>
+                      </span>
+
+                      <span className="mv-rollover-row-side">
+                        <span className="mv-rollover-amount">{formatPence(payment.amountPence)}</span>
+                        <span className="mv-rollover-pill mv-rollover-pill-unpaid">Unpaid</span>
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </section>
+          </div>
+
+          <div className="mv-rollover-footer">
+            <button type="button" onClick={onClose} className="mv-rollover-cancel">
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || selectedPaymentIds.size === 0}
-              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
+              disabled={isSubmitting || selectedItemCount === 0}
+              className="mv-rollover-submit"
             >
-              <Copy className="w-3.5 h-3.5" />
-              {isSubmitting ? 'Importing...' : `Copy ${selectedPaymentIds.size} Bills`}
+              {isSubmitting
+                ? 'Preparing…'
+                : `Prepare ${monthLabel(targetMonth)} (${selectedItemCount} Items)`}
             </button>
           </div>
         </form>
