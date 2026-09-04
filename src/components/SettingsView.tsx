@@ -154,7 +154,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       ? ACCENT_PRESETS.find((item) => item.id === hoveredAccent)?.name
       : selectedPreset?.name) ?? 'Custom RGB';
 
+  const previewAccentRgb = (rgb: AccentRgb) => {
+    if (typeof document === 'undefined') return;
+    const value = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+    document.documentElement.style.setProperty('--accent-rgb', value);
+    document.documentElement.style.setProperty('--primary', `rgb(${value})`);
+    document.documentElement.style.setProperty('--primary-light', `rgba(${value}, 0.10)`);
+    document.documentElement.style.setProperty('--primary-light-text', `rgb(${value})`);
+  };
+
   const applyPreset = (preset: (typeof ACCENT_PRESETS)[number]) => {
+    previewAccentRgb(preset.rgb);
     onUpdatePreferences({
       accent: preset.id,
       accentRgb: { ...preset.rgb },
@@ -166,6 +176,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       ...currentAccentRgb,
       [channel]: Math.max(0, Math.min(255, Math.round(value))),
     };
+    previewAccentRgb(nextRgb);
     onUpdatePreferences({ accentRgb: nextRgb });
   };
 
