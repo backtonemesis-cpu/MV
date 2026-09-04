@@ -152,10 +152,10 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             </span>
             <TrendingUp className="w-4 h-4 text-success" />
           </div>
-          <div className="text-2xl font-black text-main mt-2">
+          <div className="mv-private-value text-2xl font-black text-main mt-2">
             {formatPence(actualIncomePence)}
           </div>
-          <div className="text-xs text-muted text-subtle mt-1">
+          <div className="mv-private-value text-xs text-muted text-subtle mt-1">
             {totalExpectedIncomePence > 0
               ? `Expected: ${formatPence(totalExpectedIncomePence)}`
               : 'Actual income received'}
@@ -170,7 +170,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             </span>
             <Layers className="w-4 h-4 text-accent" />
           </div>
-          <div className="text-2xl font-black text-main mt-2">
+          <div className="mv-private-value text-2xl font-black text-main mt-2">
             {formatPence(totalBudgetedPence)}
           </div>
           <div className="text-xs text-muted text-subtle mt-1">
@@ -187,7 +187,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             <Clock className="w-4 h-4 text-warning" />
           </div>
           <div
-            className={`text-2xl font-black mt-2 ${
+            className={`mv-private-value text-2xl font-black mt-2 ${
               totalActualLivingPence > totalBudgetedPence
                 ? 'text-danger'
                 : 'text-success'
@@ -195,7 +195,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
           >
             {formatPence(totalActualLivingPence)}
           </div>
-          <div className="text-xs text-muted text-subtle mt-1">
+          <div className="mv-private-value text-xs text-muted text-subtle mt-1">
             {totalBudgetedPence >= totalActualLivingPence
               ? `${formatPence(totalBudgetedPence - totalActualLivingPence)} under envelope`
               : `Over by ${formatPence(totalActualLivingPence - totalBudgetedPence)}`}
@@ -212,7 +212,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                 Planned Income
               </h2>
             </div>
-            <span className="text-xs font-bold text-success">
+            <span className="mv-private-value text-xs font-bold text-success">
               Total Expected: {formatPence(totalExpectedIncomePence)}
             </span>
           </div>
@@ -227,7 +227,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                   <span className="text-xs font-bold text-main">
                     {inc.name}
                   </span>
-                  <span className="text-xs font-extrabold text-success">
+                  <span className="mv-private-value text-xs font-extrabold text-success">
                     {formatPence(inc.expectedAmountPence)}
                   </span>
                 </div>
@@ -270,7 +270,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                       <span className="text-xs font-bold text-main">
                         {cat.name}
                       </span>
-                      <div className="text-xs">
+                      <div className="mv-private-value text-xs">
                         <span
                           className={`font-bold ${
                             isOver
@@ -296,7 +296,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                       />
                     </div>
 
-                    <div className="flex justify-between items-center text-[10px] text-muted text-subtle mt-1.5">
+                    <div className="mv-private-value flex justify-between items-center text-[10px] text-muted text-subtle mt-1.5">
                       <span>{percent}% used</span>
                       {isOver ? (
                         <span className="text-danger font-bold">
