@@ -56,6 +56,18 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
 
   // When source month changes, default all valid non-duplicates as selected
   React.useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  React.useEffect(() => {
     const nonDuplicates = sourcePayments
       .filter((src) => {
         return !existingTargetPayments.some(
@@ -125,10 +137,10 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-      <div className="bg-surface rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-muted flex flex-col max-h-[90vh]">
+    <div className="mv-modal-backdrop">
+      <div className="mv-modal-card mv-modal-wide flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-surface-muted">
+        <div className="mv-modal-header">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-success-soft text-success flex items-center justify-center">
               <Layers className="w-4 h-4" />
@@ -141,14 +153,14 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
+            className="mv-modal-close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="mv-modal-form flex-1">
           {error && (
             <div className="p-3 bg-danger-soft border border-danger rounded-xl flex items-start gap-2 text-danger text-xs">
               <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
@@ -157,12 +169,13 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           )}
 
           {/* Month Selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-semibold text-muted mb-1">
                 From Month
               </label>
               <select
+                autoFocus
                 value={sourceMonth}
                 onChange={(e) => setSourceMonth(e.target.value)}
                 className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-medium focus:ring-2 focus:ring-accent focus:outline-none"
@@ -217,7 +230,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                 No bills in {sourceMonth}.
               </div>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div className="mv-modal-list">
                 {sourcePayments.map((payment) => {
                   const acc = accountMap.get(payment.accountId);
                   const isDup = existingTargetPayments.some(
@@ -232,7 +245,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                     <div
                       key={payment.id}
                       onClick={() => !isDup && handleTogglePayment(payment.id)}
-                      className={`p-3 rounded-xl border transition-colors flex items-center justify-between cursor-pointer ${
+                      className={`mv-modal-list-row border transition-colors flex items-center justify-between cursor-pointer ${
                         isDup
                           ? 'bg-surface-muted border-muted opacity-60 cursor-not-allowed'
                           : isChecked
@@ -245,6 +258,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                           type="checkbox"
                           checked={isChecked}
                           disabled={isDup}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={() => handleTogglePayment(payment.id)}
                           className="w-4 h-4 rounded text-success focus:ring-accent border-muted"
                         />
@@ -281,7 +295,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="mv-hscroll pt-3 border-t border-muted items-center justify-end">
+          <div className="mv-modal-actions">
             <button
               type="button"
               onClick={onClose}
