@@ -803,6 +803,7 @@ export function createLocalPlannedIncome(
     (state) => {
       const income = plannedIncomeFromPartial(data);
       assertAccountExists(state, income.accountId);
+      if (income.categoryId) assertCategoryExists(state, income.categoryId);
       state.plannedIncomes = [...(state.plannedIncomes || []), income];
       return income;
     }
