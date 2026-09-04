@@ -153,7 +153,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
           </div>
 
           {selectedSourceAccount && (
-            <div className="text-xs text-muted text-main0 flex justify-between px-1">
+            <div className="text-xs text-muted text-subtle flex justify-between px-1">
               <span>Source available: {formatPence(selectedSourceAccount.currentBalancePence)}</span>
               {selectedSourceAccount.currentBalancePence < enteredPence && (
                 <span className="text-danger font-medium">Warning: Exceeds source balance</span>
