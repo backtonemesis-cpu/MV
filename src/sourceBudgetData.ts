@@ -418,9 +418,18 @@ export function createSourceBudgetHousehold(existing?: HouseholdData): Household
       currentSchemaVersion: existing?.schemaStatus?.currentSchemaVersion || 1,
       minSupportedClientVersion: existing?.schemaStatus?.minSupportedClientVersion || 1,
       latestAppliedVersion: Math.max(existing?.schemaStatus?.latestAppliedVersion || 1, 1),
-      appliedMigrations: Array.from(
-        new Set([...(existing?.schemaStatus?.appliedMigrations || []), SOURCE_BUDGET_IMPORT_ID])
-      ),
+      appliedMigrations: [
+        ...(existing?.schemaStatus?.appliedMigrations || []).filter(
+          (migration) => migration.name !== SOURCE_BUDGET_IMPORT_ID
+        ),
+        {
+          version: 1,
+          name: SOURCE_BUDGET_IMPORT_ID,
+          appliedAt: SOURCE_CREATED_AT,
+          executionTimeMs: 0,
+          checksum: 'live-2026-september-budget-24-pass',
+        },
+      ],
       isUpToDate: true,
     },
     members: existing?.members || [],
