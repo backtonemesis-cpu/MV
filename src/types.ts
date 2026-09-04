@@ -247,10 +247,17 @@ export interface AccentRgb {
   b: number;
 }
 
+export type CardDensityPreference = 'compact' | 'comfortable';
+export type CardRadiusPreference = 'sharp' | 'subtle' | 'rounded';
+export type CardBorderPreference = 'none' | 'subtle' | 'high';
+
 export interface UserPreferences {
   theme: ThemePreference;
   accent: AccentColor;
   accentRgb?: AccentRgb;
+  cardDensity: CardDensityPreference;
+  cardRadius: CardRadiusPreference;
+  cardBorder: CardBorderPreference;
 }
 
 export interface MonthImportParams {
