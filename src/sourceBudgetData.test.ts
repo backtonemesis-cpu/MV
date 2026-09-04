@@ -80,6 +80,7 @@ describe('September source budget snapshot', () => {
 
     expect(state.transactions).toHaveLength(19);
     expect(state.plannedPayments).toHaveLength(13);
+    expect(state.plannedPayments.every((payment) => payment.isRecurring === true)).toBe(true);
     expect(state.plannedIncomes).toHaveLength(5);
     expect(
       state.schemaStatus?.appliedMigrations.some(
