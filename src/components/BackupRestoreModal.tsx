@@ -95,16 +95,16 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="mv-surface bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border mv-border border-neutral-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs animate-in fade-in">
+      <div className="bg-surface rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-muted">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-muted">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-700" />
-            <h2 className="text-base font-bold mv-text text-neutral-900">Backup & Restore</h2>
+            <ShieldCheck className="w-5 h-5 text-success" />
+            <h2 className="text-base font-bold text-main">Backup & Restore</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition"
+            className="p-1.5 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -112,21 +112,21 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
         <div className="p-6 space-y-6">
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Export Section */}
-          <div className="mv-surface-muted bg-neutral-50 p-4 rounded-xl border mv-border border-neutral-200">
-            <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
+          <div className="bg-surface-muted p-4 rounded-xl border border-muted">
+            <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Backup
             </h3>
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-surface text-on-accent rounded-xl text-xs font-semibold hover:bg-surface-muted transition disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
               {isExporting ? 'Generating...' : 'Download Backup'}
@@ -134,20 +134,20 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           </div>
 
           {/* Restore Section (Owner Only) */}
-          <div className="border-t mv-border border-neutral-200 pt-5">
-            <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
+          <div className="border-t border-muted pt-5">
+            <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Restore
             </h3>
-            <p className="text-xs mv-text-muted text-neutral-500 mb-3">Restoring replaces local data.</p>
+            <p className="text-xs text-muted text-main0 mb-3">Restoring replaces local data.</p>
 
             {!isOwner ? (
-              <div className="p-3 bg-neutral-100 rounded-xl text-xs text-neutral-600">
+              <div className="p-3 bg-surface-muted rounded-xl text-xs text-muted">
                 Owner only.
               </div>
             ) : restoreComplete ? (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-emerald-800">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <div className="bg-success-soft border border-success rounded-xl p-4 text-xs text-success space-y-2">
+                <div className="flex items-center gap-2 font-bold text-success">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
                   Local Backup Restored
                 </div>
               </div>
@@ -157,20 +157,20 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs mv-text-muted text-neutral-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  className="block w-full text-xs text-muted text-main0 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-success-soft file:text-success hover:file:bg-success-soft"
                 />
 
                 <textarea
                   placeholder="Paste backup JSON"
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
-                  className="w-full h-24 p-2 text-[11px] font-mono rounded-xl border mv-border border-neutral-300"
+                  className="w-full h-24 p-2 text-[11px] font-mono rounded-xl border border-muted"
                 />
 
                 <button
                   onClick={handleRestore}
                   disabled={isImporting || !importJson.trim()}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-on-accent rounded-xl text-xs font-semibold hover:bg-success-soft transition disabled:opacity-50"
                 >
                   <Upload className="w-4 h-4" />
                   {isImporting ? 'Restoring...' : 'Restore Backup'}
