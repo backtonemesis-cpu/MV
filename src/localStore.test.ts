@@ -9,6 +9,7 @@ import {
   createLocalTransaction,
   bulkToggleLocalPlannedPayments,
   executeLocalTransfer,
+  executeLocalTransferAllocations,
   loadLocalHousehold,
   markLocalIncomeReceived,
   preflightLocalRestore,
@@ -176,6 +177,82 @@ describe('Penny-style local MV storage', () => {
       state.accounts.find((item) => item.id === savings.account.id)?.currentBalancePence
     ).toBe(70_00);
     expect(state.transactions.every((tx) => Number.isSafeInteger(tx.amountPence))).toBe(true);
+  });
+
+  it('records multi-source Transfer Plan funding atomically and reconciles every account by ID', () => {
+    let state = loadLocalHousehold();
+
+    const sourceA = createLocalAccount(
+      {
+        name: 'Funding A',
+        type: 'savings',
+        startingBalancePence: 80_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const sourceB = createLocalAccount(
+      {
+        name: 'Funding B',
+        type: 'current',
+        startingBalancePence: 70_00,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Bills Account',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const beforeVersion = state.version;
+    const result = executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 100_00,
+        allocations: [
+          { sourceAccountId: sourceA.account.id, amountPence: 60_00 },
+          { sourceAccountId: sourceB.account.id, amountPence: 40_00 },
+        ],
+        description: 'Fund bills',
+        date: '2026-10-01',
+      },
+      beforeVersion
+    );
+
+    expect(result.version).toBe(beforeVersion + 1);
+    expect(result.transactions).toHaveLength(2);
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((item) => item.id === sourceA.account.id)?.currentBalancePence).toBe(20_00);
+    expect(state.accounts.find((item) => item.id === sourceB.account.id)?.currentBalancePence).toBe(30_00);
+    expect(state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence).toBe(100_00);
+
+    const batchTransfers = state.transactions.filter(
+      (transaction) =>
+        transaction.targetAccountId === destination.account.id &&
+        transaction.description === 'Fund bills'
+    );
+    expect(batchTransfers).toHaveLength(2);
+    expect(new Set(batchTransfers.map((transaction) => transaction.metadata?.transferBatchId)).size).toBe(1);
+    expect(
+      batchTransfers.map((transaction) => [transaction.accountId, transaction.payer])
+    ).toEqual(
+      expect.arrayContaining([
+        [sourceA.account.id, 'Marius'],
+        [sourceB.account.id, 'Vesta'],
+      ])
+    );
   });
 
   it('persists financial household members, renames finance references, and supports removal', () => {
