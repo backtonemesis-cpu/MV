@@ -375,13 +375,16 @@ export async function runAcceptanceTests(): Promise<{
     },
     {
       id: 2,
-      name: 'Marius-only identity',
-      description: 'Only the local Marius owner record is active.',
+      name: 'Household owner integrity',
+      description: 'Marius remains the single local household owner while member records may exist.',
       passed:
-        household.members.length === 1 &&
-        household.members[0]?.email === OWNER_EMAIL &&
-        household.members[0]?.role === 'owner',
-      details: household.members.map((member) => member.email).join(', '),
+        household.members.filter((member) => member.role === 'owner').length === 1 &&
+        household.members.some(
+          (member) => member.email === OWNER_EMAIL && member.role === 'owner'
+        ),
+      details: household.members
+        .map((member) => `${member.email}:${member.role}`)
+        .join(', '),
     },
     {
       id: 3,
