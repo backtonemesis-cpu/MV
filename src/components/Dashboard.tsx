@@ -571,7 +571,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
                   <div
                     className={`shrink-0 font-mono text-sm font-semibold tracking-tight tabular-nums ${
-                      isNegative ? 'text-main' : 'text-accent'
+                      isNegative ? 'finance-semantic-negative' : 'finance-semantic-positive'
                     }`}
                   >
                     {isNegative ? '-' : '+'}
