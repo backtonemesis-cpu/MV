@@ -75,8 +75,15 @@ export async function loginUser(
   return { token: 'local-browser', user: OWNER_SESSION };
 }
 
-export async function registerUser(): Promise<never> {
-  throw new Error('Registration is not used in local-only MV.');
+export async function registerUser(
+  email: string,
+  _password: string,
+  _displayName?: string
+): Promise<{ token: string; user: UserSession }> {
+  if (email.trim().toLowerCase() !== OWNER_EMAIL) {
+    throw new Error('MV is currently restricted to Marius on this browser.');
+  }
+  return { token: 'local-browser', user: OWNER_SESSION };
 }
 
 export async function logoutUser(): Promise<void> {}
@@ -292,15 +299,26 @@ export async function switchSession(email: string): Promise<void> {
   }
 }
 
-export async function approveMember(): Promise<never> {
+export async function approveMember(
+  _memberId: string,
+  _role: 'editor' | 'view_only',
+  _expectedVersion: number
+): Promise<never> {
   throw new Error('Household sharing is disabled in local-only MV.');
 }
 
-export async function changeMemberRole(): Promise<never> {
+export async function changeMemberRole(
+  _memberId: string,
+  _newRole: UserRole,
+  _expectedVersion: number
+): Promise<never> {
   throw new Error('Household sharing is disabled in local-only MV.');
 }
 
-export async function removeMember(): Promise<never> {
+export async function removeMember(
+  _memberId: string,
+  _expectedVersion: number
+): Promise<never> {
   throw new Error('Household sharing is disabled in local-only MV.');
 }
 
