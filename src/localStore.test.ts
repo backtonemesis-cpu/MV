@@ -386,7 +386,7 @@ describe('Penny-style local MV storage', () => {
     expect(mariusLloydsIncome?.accountId).toBe(originalLloyds!.id);
   });
 
-  it('selects paid and unpaid bills independently and treats linked actual transactions as paid', () => {
+  it('selects paid and unpaid bills independently using the explicit Plan status', () => {
     let state = loadLocalHousehold();
     const account = state.accounts.find((item) => item.name === 'Lloyds');
     expect(account).toBeTruthy();
@@ -434,11 +434,11 @@ describe('Penny-style local MV storage', () => {
     state = loadLocalHousehold();
     expect(state.plannedPayments.find((item) => item.id === paid.payment.id)?.includeInTransferPlan).toBe(true);
 
-    const importedPaid = state.plannedPayments.find((payment) => Boolean(payment.actualTransactionId));
-    expect(importedPaid).toBeTruthy();
-    updateLocalPlannedPayment(importedPaid!.id, { status: 'unpaid' }, state.version);
+    const linked = state.plannedPayments.find((payment) => Boolean(payment.actualTransactionId));
+    expect(linked).toBeTruthy();
+    updateLocalPlannedPayment(linked!.id, { status: 'unpaid' }, state.version);
     state = loadLocalHousehold();
-    expect(state.plannedPayments.find((item) => item.id === importedPaid!.id)?.status).toBe('paid');
+    expect(state.plannedPayments.find((item) => item.id === linked!.id)?.status).toBe('unpaid');
   });
 
   it('keeps received income and its linked Activity transaction reconciled when edited', () => {
