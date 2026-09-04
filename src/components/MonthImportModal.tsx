@@ -126,22 +126,22 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-neutral-200 dark:border-neutral-800 flex flex-col max-h-[90vh]">
+      <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 mv-surface-muted bg-neutral-50 dark:bg-neutral-850">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
               <Layers className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
                 Copy Bills to Month
               </h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -165,7 +165,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
               <select
                 value={sourceMonth}
                 onChange={(e) => setSourceMonth(e.target.value)}
-                className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               >
                 {availableMonths.map((m) => (
                   <option key={m} value={m}>
@@ -185,7 +185,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                 onChange={(e) => setTargetMonth(e.target.value.trim())}
                 placeholder="YYYY-MM"
                 pattern="\d{4}-\d{2}"
-                className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 required
               />
             </div>
@@ -213,7 +213,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
             </div>
 
             {sourcePayments.length === 0 ? (
-              <div className="p-4 text-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
+              <div className="p-4 text-center text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mv-surface-muted bg-neutral-50 dark:bg-neutral-800 rounded-xl border mv-border border-neutral-200 dark:border-neutral-700">
                 No bills in {sourceMonth}.
               </div>
             ) : (
@@ -234,10 +234,10 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                       onClick={() => !isDup && handleTogglePayment(payment.id)}
                       className={`p-3 rounded-xl border transition-colors flex items-center justify-between cursor-pointer ${
                         isDup
-                          ? 'bg-neutral-50 dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800 opacity-60 cursor-not-allowed'
+                          ? 'mv-surface-muted bg-neutral-50 dark:bg-neutral-850 mv-border border-neutral-200 dark:border-neutral-800 opacity-60 cursor-not-allowed'
                           : isChecked
                           ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750'
+                          : 'mv-surface bg-white dark:bg-neutral-800 mv-border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -246,11 +246,11 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                           checked={isChecked}
                           disabled={isDup}
                           onChange={() => handleTogglePayment(payment.id)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-neutral-300 dark:border-neutral-600"
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 mv-border border-neutral-300 dark:border-neutral-600"
                         />
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                            <span className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
                               {payment.name}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 font-medium">
@@ -262,14 +262,14 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                          <div className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-0.5">
                             {acc?.name || 'Account'} • Due {payment.dueDate ? payment.dueDate.split('-')[2] : 'Day 1'}
                           </div>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-xs font-black text-neutral-900 dark:text-neutral-100">
+                        <div className="text-xs font-black mv-text text-neutral-900 dark:text-neutral-100">
                           {formatPence(payment.amountPence)}
                         </div>
                       </div>
