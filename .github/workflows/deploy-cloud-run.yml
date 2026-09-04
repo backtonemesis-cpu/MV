@@ -48,6 +48,12 @@ jobs:
           ref: ${{ inputs.ref || 'main' }}
           fetch-depth: 0
 
+      - name: Resolve deployment source
+        id: source
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Refuse unverified main mismatch
         if: ${{ (inputs.ref || 'main') == 'main' }}
         run: |
@@ -123,7 +129,7 @@ jobs:
             echo "## MV production deployment"
             echo
             echo "- Ref: \`${{ inputs.ref || 'main' }}\`"
-            echo "- Commit: \`${{ github.sha }}\`"
+            echo "- Commit: \`${{ steps.source.outputs.sha }}\`"
             echo "- Project: \`$PROJECT_ID\`"
             echo "- Region: \`$REGION\`"
             echo "- Service: \`$SERVICE\`"
