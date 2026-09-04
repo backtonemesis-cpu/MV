@@ -187,7 +187,7 @@ describe('Penny-style local MV storage', () => {
 
     const account = createLocalAccount(
       {
-        name: 'Lloyds',
+        name: 'Vesta Current Test',
         type: 'current',
         startingBalancePence: 1000_00,
         ownerPerson: 'Vesta',
