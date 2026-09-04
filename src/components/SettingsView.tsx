@@ -717,7 +717,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               )}
 
-              <form onSubmit={handleRestoreSubmit} className="space-y-3">
+              <form onSubmit={handleRestoreSubmit} className="mv-settings-restore-stack">
                 <input
                   type="file"
                   accept=".json"
@@ -805,7 +805,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                 onClick={handleLoadSampleExecute}
                 disabled={isLoadingSample}
-                className="px-4 py-2 bg-surface-muted hover:bg-surface text-on-accent rounded-xl text-xs font-semibold shadow-xs transition"
+                className="mv-settings-secondary"
                 >
                 {isLoadingSample ? 'Loading Fixtures...' : 'Load Sample Data'}
                 </button>
