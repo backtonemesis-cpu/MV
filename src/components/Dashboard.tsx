@@ -361,7 +361,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   : 0;
 
               return (
-                <div key={row.label} className="py-4 first:pt-2 last:pb-0">
+                <div key={row.label} className="px-2 py-4 first:pt-2 last:pb-0">
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-sm font-medium text-slate-300">{row.label}</span>
                     <div className="text-right">
@@ -405,7 +405,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {household.accounts.filter((a) => a.isActive !== false).length === 0 ? (
-            <div className="mt-5 rounded-xl border border-dashed border-slate-800/80 bg-slate-900/20 p-8 text-center">
+            <div className="mt-5 flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-800/80 bg-slate-900/20 p-8 text-center">
               <Landmark className="mx-auto h-5 w-5 text-slate-600" />
               <p className="mt-2 text-sm text-slate-500">No active accounts</p>
             </div>
@@ -442,12 +442,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Bills */}
       <section className="rounded-2xl border border-slate-800/60 bg-[#0D121F] p-5 shadow-[0_18px_45px_-34px_rgba(2,6,23,0.95)]">
         <div className="flex items-center justify-between gap-3">
-          <div>
+          <div className="flex flex-col gap-0.5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               Bills
             </div>
-            <h2 className="mt-1 text-base font-semibold text-slate-100">
-              {selectedMonth} · {monthPlannedPayments.length}
+            <h2 className="text-base font-semibold text-slate-100">
+              {selectedMonth} • {monthPlannedPayments.length} bill{monthPlannedPayments.length === 1 ? '' : 's'}
             </h2>
           </div>
 
@@ -510,11 +510,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Recent Activity */}
       <section className="rounded-2xl border border-slate-800/60 bg-[#0D121F] p-5 shadow-[0_18px_45px_-34px_rgba(2,6,23,0.95)]">
         <div className="flex items-center justify-between gap-3">
-          <div>
+          <div className="flex flex-col gap-0.5">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               Activity
             </div>
-            <h2 className="mt-1 text-base font-semibold text-slate-100">Recent Activity</h2>
+            <h2 className="text-base font-semibold text-slate-100">
+              {selectedMonth} • {monthTransactions.length} transaction{monthTransactions.length === 1 ? '' : 's'}
+            </h2>
           </div>
 
           <button
