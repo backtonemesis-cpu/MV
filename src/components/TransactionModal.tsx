@@ -330,7 +330,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Paid by (Marius, Vesta, Joint) */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-              Payer Attribution
+              Paid by
             </label>
             <div className="grid grid-cols-3 gap-2">
               {(['Joint', 'Marius', 'Vesta'] as const).map((p) => (
@@ -426,7 +426,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800"
                 >
                   <Split className="w-3.5 h-3.5" />
-                  <span>{isSplitEnabled ? 'Remove Category Splits' : 'Split Across Multiple Categories'}</span>
+                  <span>{isSplitEnabled ? 'Remove Splits' : 'Split Categories'}</span>
                 </button>
 
                 {isSplitEnabled && (
@@ -492,14 +492,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 mt-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    Add Category Split
+                    Add Split
                   </button>
                 </div>
               )}
             </div>
           )}
 
-          {/* Financial Integrity Flags */}
+          {/* Financial Options */}
           <div className="pt-2 border-t border-neutral-100 dark:border-neutral-750 space-y-2">
             <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider block">
               Integrity Flags
@@ -529,7 +529,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Notes */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-              Notes (Optional)
+              Notes
             </label>
             <input
               type="text"
