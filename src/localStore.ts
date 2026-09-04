@@ -241,7 +241,9 @@ export function loadLocalHousehold(): HouseholdData {
   assertHouseholdShape(parsed);
 
   const hasSourceBudget =
-    parsed.schemaStatus?.appliedMigrations?.includes(SOURCE_BUDGET_IMPORT_ID) ?? false;
+    parsed.schemaStatus?.appliedMigrations?.some(
+      (migration) => migration.name === SOURCE_BUDGET_IMPORT_ID
+    ) ?? false;
 
   if (!hasSourceBudget) {
     // Keep a one-time local rollback copy before replacing old/test finance data.
