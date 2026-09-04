@@ -17,13 +17,15 @@ import {
   Calendar,
   Trash2,
 } from 'lucide-react';
-import { Account, SavingsGoal, UserRole, AccountType, Payer, Transaction } from '../types';
+import { Account, SavingsGoal, UserRole, AccountType, Payer, Transaction, HouseholdMember } from '../types';
+import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
 
 interface AccountsViewProps {
   accounts: Account[];
   savingsGoals: SavingsGoal[];
   transactions: Transaction[];
+  members: HouseholdMember[];
   userRole: UserRole;
   onCreateAccount: (data: Partial<Account>) => Promise<void>;
   onUpdateAccount: (id: string, data: Partial<Account> & { reconciledBalancePence?: number }) => Promise<void>;
@@ -37,6 +39,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   accounts,
   savingsGoals,
   transactions,
+  members,
   userRole,
   onCreateAccount,
   onUpdateAccount,
@@ -85,6 +88,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
+  const personOptions = useMemo(
+    () => householdPersonOptions(members, [accOwner, editOwner]),
+    [members, accOwner, editOwner]
+  );
 
   // Filter accounts
   const displayedAccounts = useMemo(() => {
@@ -645,9 +652,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     onChange={(e) => setAccOwner(e.target.value as Payer)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
-                    <option value="Joint">Joint</option>
-                    <option value="Marius">Marius</option>
-                    <option value="Vesta">Vesta</option>
+                    {personOptions.map((person) => (
+                      <option key={person} value={person}>
+                        {person}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -761,9 +770,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     onChange={(e) => setEditOwner(e.target.value as Payer)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
-                    <option value="Joint">Joint</option>
-                    <option value="Marius">Marius</option>
-                    <option value="Vesta">Vesta</option>
+                    {personOptions.map((person) => (
+                      <option key={person} value={person}>
+                        {person}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
