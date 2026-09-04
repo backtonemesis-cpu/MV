@@ -81,10 +81,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50">
           <div>
-            <h3 className="text-base font-semibold text-neutral-900">Execute Funding Transfer</h3>
-            <p className="text-xs text-neutral-500">
-              Move funds to cover upcoming scheduled payments
-            </p>
+            <h3 className="text-base font-semibold text-neutral-900">Transfer Funds</h3>
           </div>
           <button
             onClick={onClose}
@@ -99,13 +96,13 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-medium text-amber-800 uppercase tracking-wide">
-                Destination Deficit
+                Needs Funding
               </span>
               <div className="text-sm font-semibold text-neutral-900 mt-0.5">
                 {targetAccount.name}
               </div>
               <div className="text-xs text-neutral-600 mt-0.5">
-                Current balance: {formatPence(targetAccount.currentBalancePence)} · Selected bills:{' '}
+                Balance: {formatPence(targetAccount.currentBalancePence)} · Bills:{' '}
                 {formatPence(fundingRequirement.totalSelectedPaymentsPence)}
               </div>
             </div>
@@ -136,7 +133,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                 onChange={(e) => setSourceAccountId(e.target.value)}
                 className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               >
-                <option value="">Select funding source...</option>
+                <option value="">Select account</option>
                 {availableSourceAccounts
                   .filter((a) => a.id !== targetAccount.id)
                   .map((acc) => (
@@ -168,7 +165,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">
-                Amount to Transfer (£)
+                Amount
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2 text-sm text-neutral-400 font-medium">£</span>
@@ -209,7 +206,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">Authorized By</label>
+              <label className="block text-xs font-medium text-neutral-700 mb-1">By</label>
               <select
                 value={payer}
                 onChange={(e) => setPayer(e.target.value)}
@@ -219,15 +216,6 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                 <option value="Vesta">Vesta</option>
                 <option value="Joint">Joint</option>
               </select>
-            </div>
-          </div>
-
-          {/* Accounting Rule Notice */}
-          <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 text-xs text-neutral-600 flex items-start gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold text-neutral-800">Household Accounting Rule:</span> Internal
-              transfers between household accounts do not count as living expenses or gross income.
             </div>
           </div>
 
@@ -245,7 +233,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               disabled={isSubmitting || !sourceAccountId || enteredPence <= 0}
               className="px-4 py-2 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md shadow-xs disabled:opacity-50 flex items-center gap-1.5 transition-colors"
             >
-              {isSubmitting ? 'Transferring...' : 'Execute Transfer'}
+              {isSubmitting ? 'Transferring...' : 'Transfer'}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
