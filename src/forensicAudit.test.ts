@@ -922,4 +922,81 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(position.savingsAccounts).toHaveLength(1);
     expect(position.savingsAccounts[0].id).toBe('savings-1');
   });
+
+  it('18. Savings pot creation cannot allocate more than the linked account actually holds', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const saver = createLocalAccount(
+      {
+        name: 'Allocation Guard Saver',
+        type: 'savings',
+        startingBalancePence: 500_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      createLocalSavingsGoal(
+        {
+          name: 'Impossible Pot',
+          targetPence: 1000_00,
+          currentPence: 600_00,
+          accountId: saver.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Savings pot allocations cannot exceed the linked account balance.');
+
+    const after = loadLocalHousehold();
+    expect(after.version).toBe(state.version);
+    expect(after.savingsGoals.some((goal) => goal.name === 'Impossible Pot')).toBe(false);
+  });
+
+  it('19. Multiple savings pots cannot collectively over-allocate one linked account', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const saver = createLocalAccount(
+      {
+        name: 'Shared Saver',
+        type: 'savings',
+        startingBalancePence: 1000_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalSavingsGoal(
+      {
+        name: 'Pot A',
+        targetPence: 1000_00,
+        currentPence: 700_00,
+        accountId: saver.account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      createLocalSavingsGoal(
+        {
+          name: 'Pot B',
+          targetPence: 1000_00,
+          currentPence: 400_00,
+          accountId: saver.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Savings pot allocations cannot exceed the linked account balance.');
+
+    const after = loadLocalHousehold();
+    expect(after.version).toBe(state.version);
+    expect(after.savingsGoals.filter((goal) => goal.accountId === saver.account.id)).toHaveLength(1);
+  });
 });
