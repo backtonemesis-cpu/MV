@@ -22,6 +22,7 @@ import {
   changeLocalHouseholdMemberRole,
   removeLocalHouseholdMember,
 } from './localStore';
+import { generateTransferPlan } from './utils/transferPlan';
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -255,6 +256,98 @@ describe('Penny-style local MV storage', () => {
     );
   });
 
+  it('completed Transfer Plan funding clears the requirement even with future reconciliation anchors', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Future Snapshot Source',
+        type: 'savings',
+        startingBalancePence: 100_00,
+        currentBalancePence: 100_00,
+        ownerPerson: 'Marius',
+        reconciliationDate: '2026-09-30',
+        reconciledBalancePence: 100_00,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Future Snapshot Bills',
+        type: 'current',
+        startingBalancePence: 0,
+        currentBalancePence: 0,
+        ownerPerson: 'Vesta',
+        reconciliationDate: '2026-09-30',
+        reconciledBalancePence: 0,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalPlannedPayment(
+      {
+        name: 'Fund me once',
+        amountPence: 50_00,
+        month: '2026-09',
+        responsiblePerson: 'Vesta',
+        accountId: destination.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const beforePlan = generateTransferPlan(
+      state.accounts,
+      state.plannedPayments,
+      '2026-09'
+    );
+    expect(
+      beforePlan.accountsNeedingFunding.find(
+        (item) => item.account.id === destination.account.id
+      )?.transferRequiredPence
+    ).toBe(50_00);
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 50_00,
+        allocations: [{ sourceAccountId: source.account.id, amountPence: 50_00 }],
+        description: 'Fund September bills',
+        date: '2026-09-04',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
+    ).toBe(50_00);
+    expect(
+      state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence
+    ).toBe(50_00);
+
+    const afterPlan = generateTransferPlan(
+      state.accounts,
+      state.plannedPayments,
+      '2026-09'
+    );
+    expect(
+      afterPlan.accountsNeedingFunding.some(
+        (item) => item.account.id === destination.account.id
+      )
+    ).toBe(false);
+    expect(
+      afterPlan.accountsFullyFunded.some(
+        (item) => item.account.id === destination.account.id
+      )
+    ).toBe(true);
+  });
+
   it('persists financial household members, renames finance references, and supports removal', () => {
     let state = loadLocalHousehold();
 
@@ -386,6 +479,44 @@ describe('Penny-style local MV storage', () => {
     expect(mariusLloydsIncome?.accountId).toBe(originalLloyds!.id);
   });
 
+  it('repairs manually-created same-name bills to the matching household owner account', () => {
+    let state = loadLocalHousehold();
+    const originalLloyds = state.accounts.find((account) => account.name === 'Lloyds');
+    expect(originalLloyds).toBeTruthy();
+
+    updateLocalAccount(originalLloyds!.id, { ownerPerson: 'Marius' }, state.version);
+    state = loadLocalHousehold();
+
+    const vestaLloyds = createLocalAccount(
+      {
+        name: 'Lloyds',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Vesta test bill',
+        amountPence: 1234,
+        month: '2026-10',
+        responsiblePerson: 'Vesta',
+        accountId: originalLloyds!.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.accountId
+    ).toBe(vestaLloyds.account.id);
+  });
+
   it('selects paid and unpaid bills independently using the explicit Plan status', () => {
     let state = loadLocalHousehold();
     const account = state.accounts.find((item) => item.name === 'Lloyds');
@@ -433,6 +564,7 @@ describe('Penny-style local MV storage', () => {
     );
     state = loadLocalHousehold();
     expect(state.plannedPayments.find((item) => item.id === paid.payment.id)?.includeInTransferPlan).toBe(true);
+    expect(state.plannedPayments.find((item) => item.id === unpaid.payment.id)?.includeInTransferPlan).toBe(false);
 
     const linked = state.plannedPayments.find((payment) => Boolean(payment.actualTransactionId));
     expect(linked).toBeTruthy();
