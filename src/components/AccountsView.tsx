@@ -19,7 +19,11 @@ import {
 } from 'lucide-react';
 import { JOINT_ACCOUNT_OWNER_ID } from '../types';
 import type { Account, SavingsGoal, UserRole, AccountType, Transaction, HouseholdMember } from '../types';
-import { formatPence, parseToPence } from '../utils/currency';
+import {
+  calculateSavingsGoalAllocationIntegrity,
+  formatPence,
+  parseToPence,
+} from '../utils/currency';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -169,6 +173,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     () => displayedAccounts.filter((account) => account.type === 'credit'),
     [displayedAccounts]
   );
+
+  const goalIntegrityById = useMemo(() => {
+    const rows = calculateSavingsGoalAllocationIntegrity(accounts, savingsGoals);
+    return new Map(rows.map((row) => [row.goalId, row]));
+  }, [accounts, savingsGoals]);
 
   // Account creation
   const handleAccountSubmit = async (e: React.FormEvent) => {
@@ -619,6 +628,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
                   : 100;
               const linkedAccount = accounts.find((account) => account.id === goal.accountId);
+              const integrity = goalIntegrityById.get(goal.id);
 
               return (
                 <article
@@ -654,6 +664,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <span>{percent}% funded</span>
                     {goal.targetDate && <span>{goal.targetDate}</span>}
                   </div>
+                  {integrity?.isOverallocated && (
+                    <div className="mt-3 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-[11px] leading-4 text-danger">
+                      Recorded allocation exceeds the linked account balance by {formatPence(integrity.overallocatedPence)}.
+                    </div>
+                  )}
 
                   {canEdit && (
                     <div className="mt-4 flex items-center justify-end gap-2 border-t border-muted pt-3">
