@@ -20,7 +20,6 @@ import { HouseholdData, UserRole, NavTab, Account } from '../types';
 import { MonthPicker } from './MonthPicker';
 import {
   formatPence,
-  calculateFinancialSummary,
   calculateMonthlySurplus,
   calculateSavingsPosition,
 } from '../utils/currency';
@@ -60,10 +59,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const monthPlannedPayments = useMemo(() => {
     return (household.plannedPayments || []).filter((p) => p.month === selectedMonth);
   }, [household.plannedPayments, selectedMonth]);
-
-  const monthSummary = useMemo(() => {
-    return calculateFinancialSummary(monthTransactions);
-  }, [monthTransactions]);
 
   const totalLiquidBalancePence = useMemo(() => {
     return household.accounts
