@@ -736,3 +736,388 @@ html[data-theme] button.bg-white:hover {
     max-width: 100%;
   }
 }
+
+
+/* ==========================================================================
+   MV GLOBAL HIGH-DENSITY SYSTEM
+   Purpose: make every desktop view comfortable at 100% browser zoom while
+   preserving mobile touch ergonomics and the semantic colour architecture.
+   ========================================================================== */
+
+.mv-density-root {
+  --density-shell-max: 1440px;
+  --density-page-pad: 16px;
+  --density-card-pad-x: 12px;
+  --density-card-pad-y: 10px;
+  --density-row-pad-x: 12px;
+  --density-row-pad-y: 8px;
+  --density-control-height: 34px;
+  --density-radius-card: 10px;
+  --density-radius-control: 6px;
+  --density-gap: 8px;
+  --density-gap-lg: 12px;
+  min-width: 0;
+  background: var(--background);
+  color: var(--text);
+}
+
+.mv-density-root main {
+  width: 100%;
+  max-width: var(--density-shell-max);
+  margin-inline: auto;
+}
+
+/* Compact global type scale */
+.mv-density-root h1 {
+  margin-block: 0;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.015em;
+}
+
+.mv-density-root h2 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+}
+
+.mv-density-root h3,
+.mv-density-root h4 {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}
+
+.mv-density-root .text-5xl,
+.mv-density-root .text-4xl,
+.mv-density-root .text-3xl,
+.mv-density-root .text-2xl,
+.mv-density-root .text-xl {
+  font-size: 20px !important;
+  line-height: 1.25 !important;
+}
+
+.mv-density-root .text-lg {
+  font-size: 15px !important;
+  line-height: 1.3 !important;
+}
+
+.mv-density-root .text-base {
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+
+.mv-density-root .text-sm {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.mv-density-root .text-xs {
+  font-size: 11.5px !important;
+  line-height: 1.4 !important;
+}
+
+.mv-density-root .font-mono,
+.mv-density-root table [class*="font-mono"] {
+  font-size: 15px !important;
+  line-height: 1.3 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Universal component geometry */
+.mv-density-root .rounded-2xl {
+  border-radius: var(--density-radius-card) !important;
+}
+
+.mv-density-root .rounded-xl {
+  border-radius: 8px !important;
+}
+
+.mv-density-root .rounded-lg {
+  border-radius: var(--density-radius-control) !important;
+}
+
+.mv-density-root [class~="rounded-[24px]"] {
+  border-radius: var(--density-radius-card) !important;
+}
+
+.mv-density-root table {
+  width: 100%;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mv-density-root table th {
+  padding: 7px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+.mv-density-root table td {
+  padding: 8px 10px !important;
+  line-height: 1.3 !important;
+}
+
+/* Inputs/selectors stay visually unified and contained. */
+.mv-density-root input:not([type="checkbox"]):not([type="radio"]),
+.mv-density-root select,
+.mv-density-root textarea {
+  max-width: 100%;
+  border-radius: var(--density-radius-control) !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+.mv-density-root select {
+  background-position: right 10px center;
+}
+
+/* Strict isolation for custom popup menus/submenus when present. */
+.mv-density-root :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) {
+  position: absolute;
+  z-index: 70;
+  width: max-content;
+  min-width: 148px;
+  max-width: min(280px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--surface-muted);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.mv-density-root :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) :is(button, a, [role="menuitem"]) {
+  display: flex;
+  width: 100%;
+  min-height: 30px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Desktop compression. Mobile retains larger touch targets. */
+@media (min-width: 641px) {
+  .mv-density-root main {
+    padding: 16px !important;
+    padding-bottom: 20px !important;
+  }
+
+  .mv-density-root button {
+    min-height: 32px !important;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .mv-density-root input:not([type="checkbox"]):not([type="radio"]),
+  .mv-density-root select {
+    min-height: var(--density-control-height) !important;
+    height: var(--density-control-height) !important;
+    padding: 6px 10px !important;
+  }
+
+  .mv-density-root textarea {
+    min-height: 72px !important;
+    padding: 8px 10px !important;
+  }
+
+  .mv-density-root .h-11,
+  .mv-density-root .h-10 {
+    height: var(--density-control-height) !important;
+  }
+
+  .mv-density-root .h-9 {
+    height: 32px !important;
+  }
+
+  .mv-density-root .min-h-11,
+  .mv-density-root .min-h-10 {
+    min-height: var(--density-control-height) !important;
+  }
+
+  /* Deflate the large Tailwind padding scale globally. */
+  .mv-density-root .p-8,
+  .mv-density-root .p-7,
+  .mv-density-root .p-6,
+  .mv-density-root .p-5,
+  .mv-density-root .p-4 {
+    padding: 12px !important;
+  }
+
+  .mv-density-root .p-3 {
+    padding: 10px !important;
+  }
+
+  .mv-density-root .px-8,
+  .mv-density-root .px-7,
+  .mv-density-root .px-6,
+  .mv-density-root .px-5,
+  .mv-density-root .px-4 {
+    padding-inline: 12px !important;
+  }
+
+  .mv-density-root .px-3 {
+    padding-inline: 10px !important;
+  }
+
+  .mv-density-root .py-8,
+  .mv-density-root .py-7,
+  .mv-density-root .py-6,
+  .mv-density-root .py-5,
+  .mv-density-root .py-4 {
+    padding-block: 10px !important;
+  }
+
+  .mv-density-root .py-3 {
+    padding-block: 8px !important;
+  }
+
+  .mv-density-root .pt-8,
+  .mv-density-root .pt-7,
+  .mv-density-root .pt-6,
+  .mv-density-root .pt-5,
+  .mv-density-root .pt-4 {
+    padding-top: 10px !important;
+  }
+
+  .mv-density-root .pb-8,
+  .mv-density-root .pb-7,
+  .mv-density-root .pb-6,
+  .mv-density-root .pb-5,
+  .mv-density-root .pb-4 {
+    padding-bottom: 10px !important;
+  }
+
+  /* Compress repeated vertical whitespace between dashboard sections. */
+  .mv-density-root .space-y-7 > :not([hidden]) ~ :not([hidden]),
+  .mv-density-root .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 14px !important;
+  }
+
+  .mv-density-root .space-y-5 > :not([hidden]) ~ :not([hidden]),
+  .mv-density-root .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 12px !important;
+  }
+
+  .mv-density-root .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 8px !important;
+  }
+
+  .mv-density-root .gap-6,
+  .mv-density-root .gap-5,
+  .mv-density-root .gap-4 {
+    gap: 12px !important;
+  }
+
+  .mv-density-root .gap-3 {
+    gap: 8px !important;
+  }
+
+  .mv-density-root .gap-2 {
+    gap: 6px !important;
+  }
+
+  /* Common card/list surfaces become compact by default. */
+  .mv-density-root :is(
+    .mv-card,
+    .finance-panel,
+    .finance-summary-card,
+    section.bg-surface,
+    article.bg-surface,
+    div.bg-surface
+  ) {
+    box-shadow: none;
+  }
+
+  .mv-density-root .finance-row {
+    padding: var(--density-row-pad-y) var(--density-row-pad-x) !important;
+  }
+
+  .mv-density-root .finance-leading-icon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 6px;
+  }
+
+  .mv-density-root .finance-action-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mv-density-root .finance-receive-button {
+    height: 28px;
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+
+  .mv-density-root .finance-status-positive,
+  .mv-density-root .finance-status-negative,
+  .mv-density-root .finance-status-neutral {
+    padding: 1px 7px;
+    font-size: 10px;
+    line-height: 15px;
+  }
+
+  .mv-density-root .mv-theme-choice {
+    padding: 6px 8px;
+    border-radius: 7px;
+  }
+
+  .mv-density-root .mv-accent-picker {
+    gap: 12px;
+    padding: 8px 2px;
+  }
+
+  .mv-density-root .mv-accent-swatch {
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
+  }
+
+  .mv-density-root .mv-segmented {
+    gap: 4px;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .mv-density-root .mv-segmented-item {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .mv-density-root .mv-fluid-card-grid {
+    gap: 8px;
+  }
+}
+
+/* Keep mobile controls finger-friendly while retaining compact typography. */
+@media (max-width: 640px) {
+  .mv-density-root h1 {
+    font-size: 19px !important;
+  }
+
+  .mv-density-root input:not([type="checkbox"]):not([type="radio"]),
+  .mv-density-root select,
+  .mv-density-root button {
+    min-height: 40px;
+  }
+}
