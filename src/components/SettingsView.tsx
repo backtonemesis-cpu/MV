@@ -144,31 +144,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* Settings Tabs */}
-      <div className="mv-segmented shadow-inner shadow-slate-200/40 dark:shadow-none">
-        <div className="flex min-w-max items-center gap-2">
+      <div className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-[#f1f5f9] dark:bg-neutral-800/90 p-1.5 shadow-inner shadow-slate-200/40 dark:shadow-none">
+        <div className={`grid gap-1.5 ${MV_SINGLE_USER_MODE ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
           <button
             onClick={() => setActiveTab('appearance')}
-            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'appearance'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
             }`}
           >
-            <Palette className="w-4 h-4" />
-            Appearance
+            <Palette className="w-4 h-4 shrink-0" />
+            <span className="leading-none">Appearance</span>
           </button>
 
           {!MV_SINGLE_USER_MODE && (
             <button
               onClick={() => setActiveTab('members')}
-              className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'members'
                   ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                   : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
               }`}
             >
-              <Users className="w-4 h-4" />
-              Access
+              <Users className="w-4 h-4 shrink-0" />
+              <span className="leading-none">Access</span>
               {members.some((m) => m.role === 'pending') && (
                 <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
               )}
@@ -177,26 +177,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'audit'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
             }`}
           >
-            <Clock className="w-4 h-4" />
-            Audit
+            <Clock className="w-4 h-4 shrink-0" />
+            <span className="leading-none">Audit</span>
           </button>
 
           <button
             onClick={() => setActiveTab('backup')}
-            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'backup'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
             }`}
           >
-            <Download className="w-4 h-4" />
-            Backup
+            <Download className="w-4 h-4 shrink-0" />
+            <span className="leading-none">Backup</span>
           </button>
         </div>
       </div>

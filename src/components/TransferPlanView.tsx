@@ -193,15 +193,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
         </div>
 
-        <div className="mv-hscroll mv-edge-safe items-center md:justify-end">
+        <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:min-w-[360px]">
           {/* Month Selector */}
-          <div className="flex shrink-0 whitespace-nowrap items-center gap-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl p-1 shadow-2xs">
-            <Calendar className="w-4 h-4 text-neutral-400 ml-2" />
+          <div className="col-span-2 flex min-w-0 items-center gap-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl p-1 shadow-2xs">
+            <Calendar className="w-4 h-4 shrink-0 text-neutral-400 ml-2" />
             <select
               id="transfer-plan-month-select"
               value={selectedMonth}
               onChange={(e) => handleSelectMonth(e.target.value)}
-              className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 bg-transparent pr-3 py-1 focus:outline-none cursor-pointer"
+              className="w-full min-w-0 text-xs font-semibold text-neutral-800 dark:text-neutral-200 bg-transparent pr-3 py-1 focus:outline-none cursor-pointer"
             >
               {availableMonths.map((m) => (
                 <option key={m} value={m}>
@@ -214,10 +214,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           {onOpenMonthImport && !isViewOnly && (
             <button
               onClick={onOpenMonthImport}
-              className="shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750 rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+              className="min-w-0 px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
               title="Copy bills"
             >
-              <Layers className="w-3.5 h-3.5 text-neutral-500" />
+              <Layers className="w-3.5 h-3.5 shrink-0 text-neutral-500" />
               <span>Copy Bills</span>
             </button>
           )}
@@ -226,9 +226,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             <button
               id="add-planned-payment-button"
               onClick={() => setIsAddingPayment(true)}
-              className="shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-white bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+              className="min-w-0 px-3 py-2 text-xs font-medium text-white bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5 shrink-0" />
               <span>Add Bill</span>
             </button>
           )}
@@ -584,35 +584,124 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
 
           {!isViewOnly && (
-            <div className="mv-hscroll mv-edge-safe max-w-full">
-              <div className="flex min-w-max items-center gap-2 rounded-full border border-[#f1f5f9] dark:border-neutral-800 bg-[#f8fafc] dark:bg-neutral-900 p-1">
-                <button
-                  onClick={handleBulkIncludeUnpaid}
-                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
-                >
-                  Include Unpaid
-                </button>
-                <button
-                  onClick={handleBulkSelectAll}
-                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={handleBulkDeselectAll}
-                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
-                >
-                  Deselect All
-                </button>
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full lg:w-auto">
+              <button
+                onClick={handleBulkIncludeUnpaid}
+                className="min-w-0 px-3 py-2 text-[12px] font-medium text-slate-700 dark:text-neutral-200 rounded-xl bg-[#f8fafc] dark:bg-neutral-900 border border-[#f1f5f9] dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+              >
+                Include Unpaid
+              </button>
+              <button
+                onClick={handleBulkSelectAll}
+                className="min-w-0 px-3 py-2 text-[12px] font-medium text-slate-700 dark:text-neutral-200 rounded-xl bg-[#f8fafc] dark:bg-neutral-900 border border-[#f1f5f9] dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+              >
+                Select All
+              </button>
+              <button
+                onClick={handleBulkDeselectAll}
+                className="col-span-2 sm:col-span-1 min-w-0 px-3 py-2 text-[12px] font-medium text-slate-700 dark:text-neutral-200 rounded-xl bg-[#f8fafc] dark:bg-neutral-900 border border-[#f1f5f9] dark:border-neutral-800 hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+              >
+                Deselect All
+              </button>
             </div>
           )}
         </div>
 
-        {/* Payments Table */}
+        {/* Payments */}
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          {/* Mobile / tablet cards: everything visible without horizontal scrolling */}
+          <div className="lg:hidden divide-y divide-slate-100 dark:divide-neutral-800">
+            {monthPayments.length === 0 ? (
+              <div className="px-4 py-8 text-center text-[13px] text-slate-400">
+                No scheduled payments for {formatMonthLabel(selectedMonth)}
+              </div>
+            ) : (
+              monthPayments.map((payment) => {
+                const acc = accounts.find((a) => a.id === payment.accountId);
+                return (
+                  <article
+                    key={payment.id}
+                    className={`p-4 ${payment.includeInTransferPlan ? 'bg-white dark:bg-neutral-900' : 'bg-slate-50/60 dark:bg-neutral-950/30'}`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex items-start gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={payment.includeInTransferPlan}
+                            onChange={() => handleTogglePaymentInPlan(payment)}
+                            disabled={isViewOnly}
+                            title="In plan"
+                            className="mt-0.5 w-4 h-4 shrink-0 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                          />
+                          <div className="min-w-0">
+                            <h3 className="text-[13px] font-semibold leading-5 text-slate-950 dark:text-white break-words">
+                              {payment.name}
+                            </h3>
+                            <div className="mt-1 text-[11px] leading-4 text-[#64748b] dark:text-neutral-400 break-words">
+                              {acc ? acc.name : payment.accountId} · {payment.dueDate || 'Flexible'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <div className="text-[13px] font-bold text-slate-950 dark:text-white whitespace-nowrap">
+                          {formatPence(payment.amountPence)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <span className="inline-flex min-w-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 px-2.5 py-2 text-[12px] font-medium text-blue-800 dark:text-blue-200">
+                        {payment.responsiblePerson}
+                      </span>
+
+                      <button
+                        onClick={() => handleTogglePaymentStatus(payment)}
+                        disabled={isViewOnly}
+                        title="Status"
+                        className={`min-w-0 rounded-xl px-2.5 py-2 text-[12px] font-medium transition-colors capitalize ${
+                          payment.status === 'paid'
+                            ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-200'
+                            : 'bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-200'
+                        }`}
+                      >
+                        {payment.status}
+                      </button>
+                    </div>
+
+                    {payment.notes && (
+                      <div className="mt-3 text-[11px] leading-4 text-slate-400 dark:text-neutral-500 break-words">
+                        {payment.notes}
+                      </div>
+                    )}
+
+                    {!isViewOnly && (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => setEditingPayment(payment)}
+                          className="rounded-xl bg-[#f8fafc] dark:bg-neutral-800 px-3 py-2 text-[12px] font-medium text-slate-600 dark:text-neutral-300"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => onDeletePlannedPayment(payment.id)}
+                          className="rounded-xl bg-rose-50 dark:bg-rose-950/30 px-3 py-2 text-[12px] font-medium text-rose-700 dark:text-rose-300"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden lg:block">
+<table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-neutral-800 bg-slate-50/70 dark:bg-neutral-950/40 text-[12px] font-normal text-[#64748b] dark:text-neutral-400">
                   <th className="pt-3 pb-4 px-4 w-12 text-center whitespace-nowrap">In Plan?</th>
