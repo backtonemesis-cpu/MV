@@ -29,6 +29,7 @@ interface AccountsViewProps {
   userRole: UserRole;
   onCreateAccount: (data: Partial<Account>) => Promise<void>;
   onUpdateAccount: (id: string, data: Partial<Account> & { reconciledBalancePence?: number }) => Promise<void>;
+  onReconcileAccount: (id: string, reconciledBalancePence: number, reconciliationDate: string) => Promise<void>;
   onDeleteAccount: (id: string) => Promise<void>;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
   onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
@@ -43,6 +44,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   userRole,
   onCreateAccount,
   onUpdateAccount,
+  onReconcileAccount,
   onDeleteAccount,
   onCreateSavingsGoal,
   onUpdateSavingsGoal,
@@ -192,10 +194,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       setIsSubmitting(true);
       setError(null);
       const pence = parseToPence(reconcileBalanceStr);
-      await onUpdateAccount(selectedAccount.id, {
-        reconciledBalancePence: pence,
-        reconciliationDate: reconcileDate,
-      });
+      await onReconcileAccount(selectedAccount.id, pence, reconcileDate);
       setShowReconcileModal(false);
     } catch (err: any) {
       setError(err.message || 'Failed to reconcile balance');

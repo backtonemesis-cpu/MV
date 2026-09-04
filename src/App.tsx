@@ -8,6 +8,7 @@ import {
   deleteTransaction,
   createAccount,
   updateAccount,
+  reconcileAccount,
   deleteAccount,
   createSavingsGoal,
   updateSavingsGoal,
@@ -257,6 +258,30 @@ export default function App() {
       } else {
         setError(err.message || 'Failed to update account');
       }
+    }
+  };
+
+  const handleReconcileAccount = async (
+    id: string,
+    reconciledBalancePence: number,
+    reconciliationDate: string
+  ) => {
+    if (!household) return;
+    try {
+      await reconcileAccount(
+        id,
+        reconciledBalancePence,
+        reconciliationDate,
+        household.version
+      );
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to reconcile account');
+      }
+      throw err;
     }
   };
 
@@ -796,6 +821,7 @@ export default function App() {
                 userRole={session.role}
                 onCreateAccount={handleCreateAccount}
                 onUpdateAccount={handleUpdateAccount}
+                onReconcileAccount={handleReconcileAccount}
                 onDeleteAccount={handleDeleteAccount}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
                 onUpdateSavingsGoal={handleUpdateSavingsGoal}
