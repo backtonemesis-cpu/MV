@@ -367,7 +367,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               {formatPence(savingsPosition.projectedEndSavingsPence)}
             </div>
             <span className="mt-1 block text-[11px] leading-4 text-subtle">
-              current savings + monthly saved
+              Current savings + this month's surplus
             </span>
           </article>
 
@@ -673,12 +673,12 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       : false;
                     const isIncoming = !sourceIsSavings && targetIsSavings;
                     const isOutgoing = sourceIsSavings && !targetIsSavings;
-                    const sign = isIncoming ? '+' : isOutgoing ? '-' : '';
                     const tone = isIncoming ? 'text-success' : 'text-muted';
+                    const direction = isIncoming ? 'in' : isOutgoing ? 'out' : '';
 
                     return (
                       <div className={`shrink-0 font-semibold whitespace-nowrap ${tone}`}>
-                        {sign}{formatPence(tx.amountPence)}
+                        {formatPence(tx.amountPence)}{direction ? ` ${direction}` : ''}
                       </div>
                     );
                   })()}
