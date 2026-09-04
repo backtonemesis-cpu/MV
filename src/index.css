@@ -190,6 +190,15 @@
   color: var(--primary) !important;
 }
 
+.mv-on-primary {
+  color: var(--text-on-primary) !important;
+}
+
+.mv-on-primary-muted {
+  color: var(--text-on-primary) !important;
+  opacity: 0.74;
+}
+
 .mv-primary-soft {
   background: var(--primary-light) !important;
   color: var(--primary-light-text) !important;
@@ -315,6 +324,41 @@
 
 .mv-overlay {
   background: var(--overlay) !important;
+}
+
+
+/* Native form controls inherit the active token pair by default. */
+html[data-theme] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme] select,
+html[data-theme] textarea {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-theme] input:not([type="checkbox"]):not([type="radio"])::placeholder,
+html[data-theme] textarea::placeholder {
+  color: var(--text-muted);
+}
+
+html[data-theme] input:not([type="checkbox"]):not([type="radio"]):focus,
+html[data-theme] select:focus,
+html[data-theme] textarea:focus {
+  border-color: var(--primary);
+  outline-color: var(--primary);
+}
+
+/* Legacy emerald primary buttons now resolve through the active accent token. */
+html[data-accent] button.bg-emerald-700,
+html[data-accent] button.bg-emerald-600 {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+html[data-accent] button.bg-emerald-700:hover,
+html[data-accent] button.bg-emerald-600:hover {
+  filter: brightness(0.94);
 }
 
 /* Custom subtle scrollbar */
