@@ -295,3 +295,156 @@ export async function validateSavingsGoalAccountReferences(
 
   return errors;
 }
+
+
+export async function validateFirestorePlannedPaymentInput(
+  db: Firestore,
+  body: any
+): Promise<RuntimeValidationResult> {
+  const errors: Array<{ field: string; message: string }> = [];
+
+  if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
+    errors.push({ field: 'name', message: 'Payment name/obligation is required' });
+  }
+
+  if (!Number.isInteger(body.amountPence) || body.amountPence <= 0) {
+    errors.push({
+      field: 'amountPence',
+      message: 'Amount must be a positive integer in pence',
+    });
+  }
+
+  if (!body.month || typeof body.month !== 'string' || !/^\d{4}-\d{2}$/.test(body.month)) {
+    errors.push({ field: 'month', message: 'Month is required in YYYY-MM format' });
+  }
+
+  if (!body.responsiblePerson || !VALID_PAYERS.includes(body.responsiblePerson)) {
+    errors.push({
+      field: 'responsiblePerson',
+      message: `Responsible person must be one of: ${VALID_PAYERS.join(', ')}`,
+    });
+  }
+
+  if (!body.accountId || typeof body.accountId !== 'string') {
+    errors.push({ field: 'accountId', message: 'Payment account is required' });
+  } else if (!(await documentExists(db, 'accounts', body.accountId))) {
+    errors.push({
+      field: 'accountId',
+      message: `Referenced account '${body.accountId}' does not exist`,
+    });
+  }
+
+  if (body.categoryId) {
+    if (typeof body.categoryId !== 'string') {
+      errors.push({ field: 'categoryId', message: 'categoryId must be a string' });
+    } else if (!(await documentExists(db, 'categories', body.categoryId))) {
+      errors.push({
+        field: 'categoryId',
+        message: `Referenced category '${body.categoryId}' does not exist`,
+      });
+    }
+  }
+
+  if (body.dueDate && (typeof body.dueDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(body.dueDate))) {
+    errors.push({
+      field: 'dueDate',
+      message: 'dueDate must use YYYY-MM-DD format when provided',
+    });
+  }
+
+  if (errors.length > 0) return { errors };
+
+  return {
+    errors: [],
+    sanitized: {
+      name: body.name.trim(),
+      amountPence: body.amountPence,
+      month: body.month,
+      responsiblePerson: body.responsiblePerson,
+      accountId: body.accountId,
+      dueDate: body.dueDate ? String(body.dueDate).trim() : undefined,
+      categoryId: body.categoryId || undefined,
+      status: body.status === 'paid' ? 'paid' : 'unpaid',
+      includeInTransferPlan: body.includeInTransferPlan !== false,
+      notes: body.notes ? String(body.notes).trim() : undefined,
+    },
+  };
+}
+
+export async function validateFirestorePlannedIncomeInput(
+  db: Firestore,
+  body: any
+): Promise<RuntimeValidationResult> {
+  const errors: Array<{ field: string; message: string }> = [];
+
+  if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
+    errors.push({ field: 'name', message: 'Income source name is required' });
+  }
+
+  if (!Number.isInteger(body.expectedAmountPence) || body.expectedAmountPence <= 0) {
+    errors.push({
+      field: 'expectedAmountPence',
+      message: 'Expected amount must be a positive integer in pence',
+    });
+  }
+
+  if (!body.month || typeof body.month !== 'string' || !/^\d{4}-\d{2}$/.test(body.month)) {
+    errors.push({ field: 'month', message: 'Month is required in YYYY-MM format' });
+  }
+
+  if (!body.sourcePerson || !VALID_PAYERS.includes(body.sourcePerson)) {
+    errors.push({
+      field: 'sourcePerson',
+      message: `Source person must be one of: ${VALID_PAYERS.join(', ')}`,
+    });
+  }
+
+  if (!body.accountId || typeof body.accountId !== 'string') {
+    errors.push({ field: 'accountId', message: 'Receiving account is required' });
+  } else if (!(await documentExists(db, 'accounts', body.accountId))) {
+    errors.push({
+      field: 'accountId',
+      message: `Referenced account '${body.accountId}' does not exist`,
+    });
+  }
+
+  if (
+    body.expectedDate &&
+    (typeof body.expectedDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(body.expectedDate))
+  ) {
+    errors.push({
+      field: 'expectedDate',
+      message: 'expectedDate must use YYYY-MM-DD format when provided',
+    });
+  }
+
+  if (errors.length > 0) return { errors };
+
+  return {
+    errors: [],
+    sanitized: {
+      name: body.name.trim(),
+      expectedAmountPence: body.expectedAmountPence,
+      month: body.month,
+      sourcePerson: body.sourcePerson,
+      accountId: body.accountId,
+      expectedDate: body.expectedDate ? String(body.expectedDate).trim() : undefined,
+      status: body.status === 'received' ? 'received' : 'expected',
+      notes: body.notes ? String(body.notes).trim() : undefined,
+    },
+  };
+}
+
+export async function firestoreAccountExists(
+  db: Firestore,
+  accountId: string
+): Promise<boolean> {
+  return documentExists(db, 'accounts', accountId);
+}
+
+export async function firestoreCategoryExists(
+  db: Firestore,
+  categoryId: string
+): Promise<boolean> {
+  return documentExists(db, 'categories', categoryId);
+}

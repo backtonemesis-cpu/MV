@@ -36,7 +36,10 @@ describeEmulator('empty Firestore runtime identity and governance foundation', (
     let household = await store.getHouseholdData();
     expect(household.version).toBe(2);
     expect(household.accounts).toEqual([]);
-    expect(household.categories).toEqual([]);
+    expect(household.categories.length).toBeGreaterThanOrEqual(16);
+    expect(household.categories.map((category) => category.id)).toEqual(
+      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer'])
+    );
     expect(household.transactions).toEqual([]);
     expect(household.savingsGoals).toEqual([]);
     expect(household.plannedPayments).toEqual([]);
@@ -134,6 +137,32 @@ describeEmulator('empty Firestore runtime identity and governance foundation', (
         email: 'backtonemesis@gmail.com',
       }),
     ]);
+  });
+
+  it('does not inject standard categories into an existing or migrated household', async () => {
+    await householdRef.set({
+      id: HOUSEHOLD_ID,
+      name: 'Existing Household',
+      currency: 'GBP',
+    });
+    await householdRef.collection('meta').doc('state').set({
+      version: 9,
+      schemaVersion: 3,
+      updatedAt: '2026-09-04T00:00:00.000Z',
+    });
+    await householdRef.collection('categories').doc('cat-custom').set({
+      name: 'Custom',
+      group: 'Custom',
+      monthlyBudgetPence: 0,
+      isArchived: false,
+    });
+
+    await store.ensureHousehold();
+
+    const categories = await householdRef.collection('categories').get();
+    expect(categories.docs.map((doc) => doc.id)).toEqual(['cat-custom']);
+    const meta = await householdRef.collection('meta').doc('state').get();
+    expect(meta.data()?.version).toBe(9);
   });
 
   it('refuses a verified email already bound to a different Firebase UID', async () => {
