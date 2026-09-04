@@ -879,6 +879,135 @@ function shiftDateToMonth(date: string | undefined, targetMonth: string): string
   return `${targetMonth}-${day}`;
 }
 
+export function markLocalPaymentPaid(
+  id: string,
+  payload: { actualAmountPence?: number; actualDate?: string; accountId?: string },
+  expectedVersion: number
+): { transaction: Transaction; payment: PlannedPayment; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'planned_payment_paid',
+      entityType: 'planned_payment',
+      entityId: id,
+      summary: 'Planned bill marked paid with linked actual transaction',
+    },
+    (state) => {
+      const index = state.plannedPayments.findIndex((payment) => payment.id === id);
+      if (index < 0) throw new Error('Planned bill not found.');
+      const payment = state.plannedPayments[index];
+      if (payment.actualTransactionId) throw new Error('Planned bill is already linked to an actual transaction.');
+
+      const accountId = payload.accountId || payment.accountId;
+      assertAccountExists(state, accountId);
+      const categoryId = payment.categoryId || 'cat-housing';
+      assertCategoryExists(state, categoryId);
+      const amountPence = payload.actualAmountPence ?? payment.amountPence;
+      if (!isSafePence(amountPence) || amountPence < 0) {
+        throw new Error('Actual payment amount must be exact integer pence.');
+      }
+      const actualDate = payload.actualDate || payment.dueDate || `${payment.month}-01`;
+      const tx: Transaction = {
+        id: createId('tx'),
+        date: actualDate,
+        description: payment.name,
+        amountPence,
+        type: 'expense',
+        categoryId,
+        accountId,
+        payer: payment.responsiblePerson,
+        isTransfer: false,
+        isRepayment: false,
+        isSavings: false,
+        isRefund: false,
+        plannedPaymentId: payment.id,
+        createdAt: nowIso(),
+        createdBy: OWNER_EMAIL,
+      };
+      state.transactions.unshift(tx);
+      const nextPayment: PlannedPayment = {
+        ...payment,
+        status: 'paid',
+        actualAmountPence: amountPence,
+        actualDate,
+        actualTransactionId: tx.id,
+        updatedAt: nowIso(),
+        updatedBy: OWNER_EMAIL,
+      };
+      state.plannedPayments[index] = nextPayment;
+      return { transaction: tx, payment: nextPayment };
+    }
+  );
+  return { ...result.value, version: result.state.version };
+}
+
+export function markLocalIncomeReceived(
+  id: string,
+  payload: { actualAmountPence?: number; actualDate?: string; accountId?: string },
+  expectedVersion: number
+): { transaction: Transaction; income: PlannedIncome; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'planned_income_received',
+      entityType: 'planned_income',
+      entityId: id,
+      summary: 'Planned income marked received with linked actual transaction',
+    },
+    (state) => {
+      const incomes = state.plannedIncomes || [];
+      const index = incomes.findIndex((income) => income.id === id);
+      if (index < 0) throw new Error('Planned income not found.');
+      const income = incomes[index];
+      if (income.actualTransactionId || income.linkedTransactionId) {
+        throw new Error('Planned income is already linked to an actual transaction.');
+      }
+
+      const accountId = payload.accountId || income.accountId;
+      assertAccountExists(state, accountId);
+      assertCategoryExists(state, 'cat-salary');
+      const amountPence = payload.actualAmountPence ?? income.expectedAmountPence;
+      if (!isSafePence(amountPence) || amountPence < 0) {
+        throw new Error('Actual income amount must be exact integer pence.');
+      }
+      const actualDate = payload.actualDate || income.expectedDate || `${income.month}-01`;
+      const tx: Transaction = {
+        id: createId('tx'),
+        date: actualDate,
+        description: income.name,
+        amountPence,
+        type: 'income',
+        categoryId: 'cat-salary',
+        accountId,
+        payer: income.sourcePerson,
+        isTransfer: false,
+        isRepayment: false,
+        isSavings: false,
+        isRefund: false,
+        plannedIncomeId: income.id,
+        createdAt: nowIso(),
+        createdBy: OWNER_EMAIL,
+      };
+      state.transactions.unshift(tx);
+      const nextIncome: PlannedIncome = {
+        ...income,
+        status: amountPence < income.expectedAmountPence ? 'partial' : 'received',
+        actualAmountPence: amountPence,
+        actualDate,
+        actualTransactionId: tx.id,
+        linkedTransactionId: tx.id,
+        receivedDate: actualDate,
+        updatedAt: nowIso(),
+        updatedBy: OWNER_EMAIL,
+      };
+      incomes[index] = nextIncome;
+      state.plannedIncomes = incomes;
+      return { transaction: tx, income: nextIncome };
+    }
+  );
+  return { ...result.value, version: result.state.version };
+}
+
 export function importLocalMonth(
   params: { sourceMonth: string; targetMonth: string; paymentIds?: string[] },
   expectedVersion: number
