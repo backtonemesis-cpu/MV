@@ -1655,6 +1655,101 @@ export function deleteLocalPlannedIncome(id: string, expectedVersion: number): {
   return { version: result.state.version };
 }
 
+export function contributeLocalSavingsGoal(
+  payload: {
+    goalId: string;
+    sourceAccountId: string;
+    amountPence: number;
+    payer?: string;
+    date?: string;
+  },
+  expectedVersion: number
+): { transaction: Transaction; goal: SavingsGoal; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'savings_goal_contribution',
+      entityType: 'savings',
+      entityId: payload.goalId,
+      summary: 'Savings goal contribution recorded',
+    },
+    (state) => {
+      const goalIndex = state.savingsGoals.findIndex((goal) => goal.id === payload.goalId);
+      if (goalIndex < 0) throw new Error('Savings goal not found.');
+
+      const goal = state.savingsGoals[goalIndex];
+      const source = state.accounts.find((account) => account.id === payload.sourceAccountId);
+      const destination = state.accounts.find((account) => account.id === goal.accountId);
+
+      if (!source || source.isActive === false) {
+        throw new Error('Savings funding source account is unavailable.');
+      }
+      if (!destination || destination.isActive === false) {
+        throw new Error('Savings destination account is unavailable.');
+      }
+      if (destination.type !== 'savings' && destination.type !== 'cash') {
+        throw new Error('Savings goals must be linked to an active Savings or Cash account.');
+      }
+      if (source.type === 'credit') {
+        throw new Error('Credit accounts cannot be used to fund savings.');
+      }
+      if (source.id === destination.id) {
+        throw new Error('Source account must be different from the savings destination.');
+      }
+      if (!isSafePence(payload.amountPence) || payload.amountPence <= 0) {
+        throw new Error('Savings contribution must be exact positive integer pence.');
+      }
+      if (source.currentBalancePence < payload.amountPence) {
+        throw new Error('Savings funding source does not have enough available balance.');
+      }
+
+      const category = state.categories.find((item) => item.id === 'cat-transfer');
+      if (!category) throw new Error('Internal Transfer category is missing.');
+
+      const date = payload.date || localTodayDateKey();
+
+      // Keep reconciliation anchors consistent so the transfer changes visible
+      // account balances even when the transfer date is on/before the anchor date.
+      adjustAnchoredBalanceForNewTransfer(source, -payload.amountPence, date);
+      adjustAnchoredBalanceForNewTransfer(destination, payload.amountPence, date);
+
+      const transaction: Transaction = {
+        id: createId('tx'),
+        date,
+        description: `Savings Contribution: ${goal.name}`,
+        amountPence: payload.amountPence,
+        type: 'transfer',
+        categoryId: category.id,
+        accountId: source.id,
+        targetAccountId: destination.id,
+        payer: payload.payer || source.ownerPerson || 'Joint',
+        notes: 'Savings allocation',
+        isTransfer: true,
+        isRepayment: false,
+        isSavings: true,
+        isRefund: false,
+        createdAt: nowIso(),
+        createdBy: OWNER_EMAIL,
+      };
+
+      state.transactions.unshift(transaction);
+
+      const nextGoal: SavingsGoal = {
+        ...goal,
+        currentPence: goal.currentPence + payload.amountPence,
+      };
+      state.savingsGoals[goalIndex] = nextGoal;
+
+      return { transaction, goal: nextGoal };
+    }
+  );
+
+  return {
+    ...result.value,
+    version: result.state.version,
+  };
+}
+
 export function createLocalSavingsGoal(
   data: Partial<SavingsGoal>,
   expectedVersion: number
@@ -1670,7 +1765,13 @@ export function createLocalSavingsGoal(
     (state) => {
       if (!data.name?.trim()) throw new Error('Savings goal name is required.');
       if (!data.accountId) throw new Error('Savings account is required.');
-      assertAccountExists(state, data.accountId);
+      const linkedAccount = assertAccountExists(state, data.accountId);
+      if (
+        linkedAccount.isActive === false ||
+        (linkedAccount.type !== 'savings' && linkedAccount.type !== 'cash')
+      ) {
+        throw new Error('Savings goals must be linked to an active Savings or Cash account.');
+      }
       const targetPence = data.targetPence ?? 0;
       const currentPence = data.currentPence ?? 0;
       if (!isSafePence(targetPence) || !isSafePence(currentPence)) {
@@ -1712,7 +1813,13 @@ export function updateLocalSavingsGoal(
       if (!isSafePence(next.targetPence) || !isSafePence(next.currentPence)) {
         throw new Error('Savings amounts must be exact integer pence.');
       }
-      assertAccountExists(state, next.accountId);
+      const linkedAccount = assertAccountExists(state, next.accountId);
+      if (
+        linkedAccount.isActive === false ||
+        (linkedAccount.type !== 'savings' && linkedAccount.type !== 'cash')
+      ) {
+        throw new Error('Savings goals must be linked to an active Savings or Cash account.');
+      }
       state.savingsGoals[index] = next;
       return next;
     }
