@@ -175,11 +175,14 @@ export function calculateMonthlySurplus(
   let fixedBillsUnpaidPence = 0;
 
   for (const p of monthPayments) {
-    fixedBillsTotalPence += p.amountPence;
+    const effectiveAmountPence =
+      p.status === 'paid' ? (p.actualAmountPence ?? p.amountPence) : p.amountPence;
+
+    fixedBillsTotalPence += effectiveAmountPence;
     if (p.status === 'paid') {
-      fixedBillsPaidPence += p.amountPence;
+      fixedBillsPaidPence += effectiveAmountPence;
     } else {
-      fixedBillsUnpaidPence += p.amountPence;
+      fixedBillsUnpaidPence += effectiveAmountPence;
     }
   }
 
@@ -225,13 +228,43 @@ export function isSavingsPositionAccount(account: Account): boolean {
   return account.type === 'savings' || account.type === 'cash';
 }
 
+export function calculateNetSavingsMovementPence(
+  accounts: Account[],
+  transactions: Transaction[],
+  month: string
+): number {
+  const savingsAccountIds = new Set(
+    accounts.filter(isSavingsPositionAccount).map((account) => account.id)
+  );
+
+  return transactions
+    .filter(
+      (tx) =>
+        tx.isSavings &&
+        tx.date.startsWith(month) &&
+        tx.isTransfer &&
+        tx.type === 'transfer' &&
+        Boolean(tx.targetAccountId)
+    )
+    .reduce((sum, tx) => {
+      const sourceIsSavings = savingsAccountIds.has(tx.accountId);
+      const targetIsSavings = tx.targetAccountId
+        ? savingsAccountIds.has(tx.targetAccountId)
+        : false;
+
+      if (!sourceIsSavings && targetIsSavings) return sum + tx.amountPence;
+      if (sourceIsSavings && !targetIsSavings) return sum - tx.amountPence;
+      return sum;
+    }, 0);
+}
+
 /**
  * Computes the authoritative savings position without using goal progress as money.
  *
  * Current Savings = balances of designated savings/liquid accounts.
  * Saved This Month = Income + Refunds - Fixed Bills - Gross Other Spending.
  * Projected End Savings = Current Savings + Saved This Month.
- * Savings Transfers = actual transactions explicitly flagged isSavings.
+ * Savings Transfers = net movement into designated Savings/Cash accounts.
  *
  * Savings goals are deliberately excluded; they are allocation targets, not bank balances.
  */
@@ -256,9 +289,11 @@ export function calculateSavingsPosition(
     plannedIncomes
   );
 
-  const monthSavingsTransfersPence = transactions
-    .filter((tx) => tx.isSavings && tx.date.startsWith(month))
-    .reduce((sum, tx) => sum + tx.amountPence, 0);
+  const monthSavingsTransfersPence = calculateNetSavingsMovementPence(
+    accounts,
+    transactions,
+    month
+  );
 
   return {
     month,
