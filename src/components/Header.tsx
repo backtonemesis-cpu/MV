@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   isLoading,
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-white/95 dark:bg-neutral-900/95 backdrop-blur border-b border-neutral-200 dark:border-neutral-800 transition-colors">
+    <header className="sticky top-0 z-30 mv-surface bg-white/95 dark:bg-neutral-900/95 backdrop-blur border-b mv-border border-neutral-200 dark:border-neutral-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -34,10 +34,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-bold text-neutral-900 dark:text-neutral-100 tracking-tight text-base sm:text-lg">
+                <span className="font-bold mv-text text-neutral-900 dark:text-neutral-100 tracking-tight text-base sm:text-lg">
                   MV Finance
                 </span>
-                <span className="hidden sm:inline-block text-xs font-medium px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-md border border-neutral-200 dark:border-neutral-700">
+                <span className="hidden sm:inline-block text-xs font-medium px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 rounded-md border mv-border border-neutral-200 dark:border-neutral-700">
                   v{datasetVersion}
                 </span>
               </div>
@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-emerald-600' : ''}`} />
             </button>
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border mv-border border-neutral-200 dark:border-neutral-700 mv-surface bg-white dark:bg-neutral-800">
               <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center justify-center">
                 <Shield className="w-3.5 h-3.5" />
               </div>
