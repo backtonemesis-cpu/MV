@@ -55,13 +55,25 @@ describe('token theme engine', () => {
     expect(normalizeThemePreference('system')).toBe('light');
   });
 
-  it('maps legacy accents into the new three-accent palette', () => {
+  it('accepts the nine premium accents and migrates legacy values', () => {
     expect(normalizeAccentPreference('emerald')).toBe('emerald');
+    expect(normalizeAccentPreference('sapphire')).toBe('sapphire');
+    expect(normalizeAccentPreference('amethyst')).toBe('amethyst');
+    expect(normalizeAccentPreference('crimson')).toBe('crimson');
+    expect(normalizeAccentPreference('amber')).toBe('amber');
+    expect(normalizeAccentPreference('teal')).toBe('teal');
+    expect(normalizeAccentPreference('indigo')).toBe('indigo');
+    expect(normalizeAccentPreference('rose')).toBe('rose');
+    expect(normalizeAccentPreference('gold')).toBe('gold');
+
     expect(normalizeAccentPreference('blue')).toBe('sapphire');
-    expect(normalizeAccentPreference('indigo')).toBe('sapphire');
     expect(normalizeAccentPreference('lilac')).toBe('amethyst');
     expect(normalizeAccentPreference('purple')).toBe('amethyst');
-    expect(normalizeAccentPreference('orange')).toBe('emerald');
+    expect(normalizeAccentPreference('red')).toBe('crimson');
+    expect(normalizeAccentPreference('yellow')).toBe('amber');
+    expect(normalizeAccentPreference('orange')).toBe('amber');
+    expect(normalizeAccentPreference('green')).toBe('emerald');
+    expect(normalizeAccentPreference('default')).toBe('emerald');
   });
 
   it('normalizes stored legacy preferences safely', () => {
