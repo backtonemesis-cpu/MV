@@ -9,6 +9,7 @@ import {
   WalletCards,
   X,
 } from 'lucide-react';
+import { JOINT_ACCOUNT_OWNER_ID } from '../types';
 import type {
   Account,
   Category,
@@ -358,8 +359,14 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                   (category) => category.id === (income.categoryId || linkedTx?.categoryId)
                 )?.name || 'Income';
               const targetAccount = accounts.find((account) => account.id === income.accountId);
+              const targetOwnerName = targetAccount
+                ? targetAccount.ownerMemberId === JOINT_ACCOUNT_OWNER_ID
+                  ? 'Joint'
+                  : members.find((member) => member.id === targetAccount.ownerMemberId)?.name ||
+                    targetAccount.ownerPerson
+                : undefined;
               const accountName = targetAccount
-                ? `${targetAccount.name}${targetAccount.ownerPerson ? ` (${targetAccount.ownerPerson})` : ''}`
+                ? `${targetAccount.name}${targetOwnerName ? ` (${targetOwnerName})` : ''}`
                 : 'Account';
 
               return (
