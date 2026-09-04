@@ -49,12 +49,14 @@ interface TransferPlanViewProps {
     paymentIds?: string[];
   }) => Promise<void>;
   onExecuteTransfer: (payload: {
-    sourceAccountId: string;
     destinationAccountId: string;
-    amountPence: number;
+    expectedTotalPence: number;
+    allocations: Array<{
+      sourceAccountId: string;
+      amountPence: number;
+    }>;
     description: string;
     date: string;
-    payer: string;
   }) => Promise<void>;
 }
 
@@ -99,6 +101,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
   const [fundingAccountToTransfer, setFundingAccountToTransfer] =
     useState<AccountFundingRequirement | null>(null);
+  const [lastFundingSourceAccountId, setLastFundingSourceAccountId] = useState<string>('');
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
@@ -856,8 +859,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           fundingRequirement={fundingAccountToTransfer}
           availableSourceAccounts={accounts}
           members={members}
+          defaultSourceAccountId={lastFundingSourceAccountId}
           onClose={() => setFundingAccountToTransfer(null)}
-          onExecute={onExecuteTransfer}
+          onExecute={async (payload) => {
+            if (payload.allocations[0]?.sourceAccountId) {
+              setLastFundingSourceAccountId(payload.allocations[0].sourceAccountId);
+            }
+            await onExecuteTransfer(payload);
+          }}
         />
       )}
 
