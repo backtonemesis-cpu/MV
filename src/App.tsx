@@ -796,7 +796,8 @@ export default function App() {
                 household={household}
                 userRole={session.role}
                 selectedMonth={selectedMonth}
-                      onSelectMonth={setSelectedMonth}
+                availableMonths={availableMonths}
+                onSelectMonth={setSelectedMonth}
                 onOpenMonthImport={() => setShowMonthImportModal(true)}
                 onOpenAddTransaction={() => {
                   setEditingTx(null);
@@ -813,7 +814,8 @@ export default function App() {
             {activeTab === 'transfer_plan' && (
               <TransferPlanView
                 accounts={household.accounts}
-                      plannedPayments={household.plannedPayments || []}
+                categories={household.categories}
+                plannedPayments={household.plannedPayments || []}
                 transactions={household.transactions}
                 members={household.members}
                 userRole={session.role}
@@ -1010,11 +1012,9 @@ export default function App() {
           isOpen={showMonthImportModal}
           onClose={() => setShowMonthImportModal(false)}
           activeMonth={selectedMonth}
-          availableMonths={availableMonths}
           plannedPayments={household.plannedPayments || []}
           plannedIncomes={household.plannedIncomes || []}
           accounts={household.accounts}
-          categories={household.categories}
           onImport={handleImportMonth}
         />
       )}
