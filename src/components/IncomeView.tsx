@@ -574,7 +574,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
       {showEditModal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div className="mv-modal-card mv-income-modal">
             <header className="mv-modal-header">
               <h2 className="text-base font-bold text-main">
                 {selectedIncome ? 'Edit Income' : 'Add Income'}
@@ -588,7 +588,8 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               </button>
             </header>
 
-            <form onSubmit={saveIncome} className="mv-modal-form">
+            <form onSubmit={saveIncome} className="flex min-h-0 flex-1 flex-col">
+              <div className="mv-modal-scroll-body space-y-3">
               {error && (
                 <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
                   {error}
@@ -682,7 +683,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
               {selectedIncome &&
                 (selectedIncome.actualTransactionId || selectedIncome.linkedTransactionId) && (
-                  <div className="rounded-xl border border-muted bg-surface-muted p-4">
+                  <div className="mv-modal-section">
                     <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
                       Received amount
                     </div>
@@ -718,18 +719,20 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 />
               </div>
 
-              <div className="mv-modal-actions">
+              </div>
+
+              <div className="mv-modal-fixed-actions">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="h-10 rounded-xl px-4 text-xs font-semibold text-muted transition hover:bg-surface-muted"
+                  className="mv-income-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-10 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="mv-income-primary"
                 >
                   {isSubmitting ? 'Saving...' : selectedIncome ? 'Save Changes' : 'Add Income'}
                 </button>
@@ -741,7 +744,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
       {showReceiveModal && selectedIncome && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div className="mv-modal-card mv-income-modal">
             <div className="mv-modal-header">
               <div>
                 <h2 className="text-base font-bold text-main">Record Income Received</h2>
@@ -750,13 +753,14 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowReceiveModal(false)}
-                className="rounded-lg p-1.5 text-muted transition hover:bg-surface-muted hover:text-main"
+                className="mv-modal-close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={markReceived} className="mv-modal-form">
+            <form onSubmit={markReceived} className="flex min-h-0 flex-1 flex-col">
+              <div className="mv-modal-scroll-body space-y-3">
               {error && (
                 <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
                   {error}
@@ -805,18 +809,20 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </select>
               </div>
 
-              <div className="mv-modal-actions">
+              </div>
+
+              <div className="mv-modal-fixed-actions">
                 <button
                   type="button"
                   onClick={() => setShowReceiveModal(false)}
-                  className="h-10 rounded-xl px-4 text-xs font-semibold text-muted transition hover:bg-surface-muted"
+                  className="mv-income-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="mv-income-primary inline-flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   {isSubmitting ? 'Recording...' : 'Record Received'}
