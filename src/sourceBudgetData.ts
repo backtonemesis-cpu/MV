@@ -98,8 +98,6 @@ const SOURCE_ACCOUNTS: Account[] = [
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 1568747,
-    notes:
-      'Source savings snapshot: £15,687.47. Technical snapshot anchor prevents September budget rows from changing this source-reported balance.',
     metadata: {
       source: SOURCE_BUDGET_NAME,
       sourceSheet: 'Transactions',
@@ -118,8 +116,6 @@ const SOURCE_ACCOUNTS: Account[] = [
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 400000,
-    notes:
-      'Source savings snapshot: £4,000.00. The workbook also routes September bills through Santander; it does not provide a separate full bank-ledger balance.',
     metadata: {
       source: SOURCE_BUDGET_NAME,
       sourceSheet: 'Transactions',
@@ -138,7 +134,6 @@ const SOURCE_ACCOUNTS: Account[] = [
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
-    notes: 'Source savings snapshot: £0.00.',
     metadata: {
       source: SOURCE_BUDGET_NAME,
       sourceSheet: 'Transactions',
@@ -157,8 +152,6 @@ const SOURCE_ACCOUNTS: Account[] = [
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
-    notes:
-      'Used by source income/expense rows. No Lloyds balance is supplied in the source workbook; £0.00 is a routing placeholder pending confirmation.',
     metadata: {
       source: SOURCE_BUDGET_NAME,
       sourceSheet: 'Transactions',
@@ -175,8 +168,6 @@ const SOURCE_ACCOUNTS: Account[] = [
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
-    notes:
-      'Used by source income rows. No NatWest balance is supplied in the source workbook; £0.00 is a routing placeholder pending confirmation.',
     metadata: {
       source: SOURCE_BUDGET_NAME,
       sourceSheet: 'Transactions',
@@ -194,8 +185,6 @@ const SOURCE_ACCOUNTS: Account[] = [
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
-    notes:
-      'Used by source expense rows. No credit-card balance is supplied in the source workbook; £0.00 is a routing placeholder pending confirmation.',
     metadata: {
       source: SOURCE_BUDGET_NAME,
       sourceSheet: 'Transactions',
@@ -282,8 +271,6 @@ function sourceTransactions(): Transaction[] {
       categoryId: expense.categoryId,
       accountId: expense.accountId,
       payer: expense.payer,
-      notes:
-        'Imported from the source workbook. Expense date is blank in the workbook, so 2026-09-01 is used only as the app-compatible month date.',
       isTransfer: false,
       isRepayment: false,
       isSavings: false,
@@ -313,7 +300,6 @@ function sourceTransactions(): Transaction[] {
     categoryId: income.categoryId,
     accountId: income.accountId,
     payer: income.payer,
-    notes: `Imported from source workbook income row; source date label: ${income.sourceDateLabel}.`,
     isTransfer: false,
     isRepayment: false,
     isSavings: false,
@@ -349,8 +335,6 @@ function sourcePlannedPayments(): PlannedPayment[] {
     categoryId: expense.categoryId,
     status: 'paid',
     includeInTransferPlan: true,
-    notes:
-      'Imported from a paid Fixed row in the source workbook. The source expense date is blank; the app-compatible actual date is 2026-09-01.',
     createdAt: SOURCE_CREATED_AT,
     createdBy: SOURCE_ACTOR,
     metadata: {
@@ -378,7 +362,6 @@ function sourcePlannedIncomes(): PlannedIncome[] {
     actualDate: income.date,
     actualTransactionId: incomeTransactionId(income.row),
     status: 'received',
-    notes: `Imported from source workbook. Income type: ${income.incomeType}; source date label: ${income.sourceDateLabel}.`,
     createdAt: SOURCE_CREATED_AT,
     createdBy: SOURCE_ACTOR,
     metadata: {
@@ -479,8 +462,7 @@ function sourceAuditEntry(existingAuditCount: number): AuditLogEntry {
     action: 'source_budget_imported',
     entityType: 'system',
     entityId: SOURCE_BUDGET_IMPORT_ID,
-    summary:
-      'Imported LIVE - 2026 September budget: 24/24 workbook checks PASS; income £5,761.02; expenses £2,894.63; current savings £19,687.47.',
+    summary: 'September 2026 budget imported.',
   };
 }
 
