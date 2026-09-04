@@ -257,7 +257,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Type Selector Tabs */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-              Classification
+              Type
             </label>
             <div className="grid grid-cols-4 gap-1.5 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
               {(['expense', 'income', 'transfer', 'refund'] as const).map((t) => (
@@ -281,7 +281,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                Amount (GBP £)
+                Amount
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-sm font-bold text-neutral-500 dark:text-neutral-400">
@@ -296,9 +296,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   required
                 />
               </div>
-              <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1 block">
-                Calculated strictly in minor units (pence)
-              </span>
             </div>
 
             <div>
@@ -318,11 +315,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Description */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-              Description / Merchant
+              Description
             </label>
             <input
               type="text"
-              placeholder="e.g. Waitrose Groceries, Council Tax, Salary"
+              placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -330,7 +327,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             />
           </div>
 
-          {/* Payer Attribution (Marius, Vesta, Joint) */}
+          {/* Paid by (Marius, Vesta, Joint) */}
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
               Payer Attribution
@@ -375,14 +372,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             {isTransfer && (
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  To Destination Account
+                  To Account
                 </label>
                 <select
                   value={targetAccountId}
                   onChange={(e) => setTargetAccountId(e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 >
-                  <option value="">Select target account...</option>
+                  <option value="">Select account</option>
                   {accounts
                     .filter((a) => a.id !== accountId)
                     .map((acc) => (
@@ -515,7 +512,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) => setIsRepayment(e.target.checked)}
                 className="w-4 h-4 text-emerald-600 rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-500"
               />
-              <span>Credit card repayment (prevents double-counting against merchant spend)</span>
+              <span>Card repayment</span>
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer text-xs text-neutral-700 dark:text-neutral-300">
@@ -525,7 +522,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 onChange={(e) => setIsSavings(e.target.checked)}
                 className="w-4 h-4 text-emerald-600 rounded border-neutral-300 dark:border-neutral-700 focus:ring-emerald-500"
               />
-              <span>Savings allocation (tracked distinctly from living expenditure)</span>
+              <span>Savings</span>
             </label>
           </div>
 
@@ -536,7 +533,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </label>
             <input
               type="text"
-              placeholder="Additional details, itemized breakdown, etc."
+              placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-3 py-2 text-sm rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500"
