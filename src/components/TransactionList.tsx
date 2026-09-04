@@ -126,7 +126,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Activity</h1>
-          <p className="mt-0.5 text-[12px] font-normal text-muted">
+          <p className="mt-0.5 text-[12px] font-normal text-subtle">
             {filteredTransactions.length} of {transactions.length} transactions
           </p>
         </div>
@@ -296,7 +296,20 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               return (
                 <article
                   key={tx.id}
-                  className="finance-row group flex items-center justify-between gap-3 px-3 py-3 sm:px-4"
+                  tabIndex={canEdit ? 0 : undefined}
+                  onClick={(event) => {
+                    if (!canEdit) return;
+                    if ((event.target as HTMLElement).closest('button, input, a, select, textarea')) return;
+                    onEditTransaction(tx);
+                  }}
+                  onKeyDown={(event) => {
+                    if (!canEdit || event.target !== event.currentTarget) return;
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onEditTransaction(tx);
+                    }
+                  }}
+                  className={`finance-row group flex items-center justify-between gap-3 px-3 py-3 sm:px-4 ${canEdit ? 'is-clickable' : ''}`}
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div
@@ -368,7 +381,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       <div className="finance-row-actions flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => onEditTransaction(tx)}
+                          onClick={(event) => { event.stopPropagation(); onEditTransaction(tx); }}
                           className="finance-action-button"
                           title="Edit transaction"
                           aria-label={`Edit ${tx.description}`}
@@ -378,7 +391,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(event) => {
+                            event.stopPropagation();
                             if (window.confirm(`Delete transaction "${tx.description}"?`)) {
                               onDeleteTransaction(tx.id);
                             }
