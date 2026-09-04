@@ -28,6 +28,7 @@ import {
   deleteLocalSavingsGoal,
   deleteLocalTransaction,
   executeLocalTransfer,
+  executeLocalTransferAllocations,
   getLocalPreferences,
   importLocalMonth,
   loadLocalHousehold,
@@ -297,6 +298,22 @@ export async function executeTransferPlanTransfer(payload: {
 }) {
   const { expectedVersion, ...transfer } = payload;
   return executeLocalTransfer(transfer, expectedVersion);
+}
+
+
+export async function executeTransferPlanAllocations(payload: {
+  destinationAccountId: string;
+  expectedTotalPence: number;
+  allocations: Array<{
+    sourceAccountId: string;
+    amountPence: number;
+  }>;
+  description?: string;
+  date?: string;
+  expectedVersion: number;
+}) {
+  const { expectedVersion, ...transfer } = payload;
+  return executeLocalTransferAllocations(transfer, expectedVersion);
 }
 
 export async function switchSession(email: string): Promise<void> {
