@@ -1860,6 +1860,7 @@ export function contributeLocalSavingsGoal(
   payload: {
     goalId: string;
     sourceAccountId: string;
+    destinationAccountId: string;
     amountPence: number;
     payer?: string;
     date?: string;
@@ -1875,14 +1876,13 @@ export function contributeLocalSavingsGoal(
       summary: 'Savings goal contribution recorded',
     },
     (state) => {
-      const goalIndex = state.savingsGoals.findIndex((goal) => goal.id === payload.goalId);
-      if (goalIndex < 0) throw new Error('Savings goal not found.');
-
-      const goal = state.savingsGoals[goalIndex];
-      assertSavingsAllocationCapacity(state, goal.accountId, goal.currentPence, goal.id);
+      const goal = state.savingsGoals.find((item) => item.id === payload.goalId);
+      if (!goal) throw new Error('Savings goal not found.');
 
       const source = state.accounts.find((account) => account.id === payload.sourceAccountId);
-      const destination = state.accounts.find((account) => account.id === goal.accountId);
+      const destination = state.accounts.find(
+        (account) => account.id === payload.destinationAccountId
+      );
 
       if (!source || source.isActive === false) {
         throw new Error('Savings funding source account is unavailable.');
@@ -1891,7 +1891,7 @@ export function contributeLocalSavingsGoal(
         throw new Error('Savings destination account is unavailable.');
       }
       if (destination.type !== 'savings' && destination.type !== 'cash') {
-        throw new Error('Savings goals must be linked to an active Savings or Cash account.');
+        throw new Error('Savings contributions must go to an active Savings or Cash account.');
       }
       if (source.type === 'credit') {
         throw new Error('Credit accounts cannot be used to fund savings.');
@@ -1911,8 +1911,6 @@ export function contributeLocalSavingsGoal(
 
       const date = payload.date || localTodayDateKey();
 
-      // Keep reconciliation anchors consistent so the transfer changes visible
-      // account balances even when the transfer date is on/before the anchor date.
       adjustAnchoredBalanceForNewTransfer(source, -payload.amountPence, date);
       adjustAnchoredBalanceForNewTransfer(destination, payload.amountPence, date);
 
@@ -1926,7 +1924,7 @@ export function contributeLocalSavingsGoal(
         accountId: source.id,
         targetAccountId: destination.id,
         payer: payload.payer || source.ownerPerson || 'Joint',
-        notes: 'Savings allocation',
+        notes: 'Household savings contribution',
         isTransfer: true,
         isRepayment: false,
         isSavings: true,
@@ -1940,13 +1938,9 @@ export function contributeLocalSavingsGoal(
 
       state.transactions.unshift(transaction);
 
-      const nextGoal: SavingsGoal = {
-        ...goal,
-        currentPence: goal.currentPence + payload.amountPence,
-      };
-      state.savingsGoals[goalIndex] = nextGoal;
-
-      return { transaction, goal: nextGoal };
+      // Household goal progress is derived from all Savings + Cash balances.
+      // The goal itself is intentionally unchanged by a transfer.
+      return { transaction, goal };
     }
   );
 
@@ -1954,27 +1948,6 @@ export function contributeLocalSavingsGoal(
     ...result.value,
     version: result.state.version,
   };
-}
-
-function assertSavingsAllocationCapacity(
-  state: HouseholdData,
-  accountId: string,
-  proposedCurrentPence: number,
-  excludedGoalId?: string
-): void {
-  const account = assertAccountExists(state, accountId);
-  const allocatedByOtherGoals = state.savingsGoals
-    .filter((goal) => goal.id !== excludedGoalId && goal.accountId === accountId)
-    .reduce((sum, goal) => sum + goal.currentPence, 0);
-
-  const totalProposedAllocation = allocatedByOtherGoals + proposedCurrentPence;
-  const availableBalance = Math.max(0, account.currentBalancePence);
-
-  if (totalProposedAllocation > availableBalance) {
-    throw new Error(
-      `Savings pot allocations cannot exceed the linked account balance. Available: ${availableBalance} pence; proposed allocation: ${totalProposedAllocation} pence.`
-    );
-  }
 }
 
 export function createLocalSavingsGoal(
@@ -1991,38 +1964,34 @@ export function createLocalSavingsGoal(
     },
     (state) => {
       if (!data.name?.trim()) throw new Error('Savings goal name is required.');
-      if (!data.accountId) throw new Error('Savings account is required.');
-      const linkedAccount = assertAccountExists(state, data.accountId);
-      if (
-        linkedAccount.isActive === false ||
-        (linkedAccount.type !== 'savings' && linkedAccount.type !== 'cash')
-      ) {
-        throw new Error('Savings goals must be linked to an active Savings or Cash account.');
-      }
+
       const targetPence = data.targetPence ?? 0;
-      const currentPence = data.currentPence ?? 0;
-      if (
-        !isSafePence(targetPence) ||
-        !isSafePence(currentPence) ||
-        targetPence < 0 ||
-        currentPence < 0
-      ) {
-        throw new Error('Savings amounts must be non-negative exact integer pence.');
+      const monthlyPlanPence = data.monthlyPlanPence;
+
+      if (!isSafePence(targetPence) || targetPence <= 0) {
+        throw new Error('Savings goal target must be exact positive integer pence.');
       }
-      assertSavingsAllocationCapacity(state, data.accountId, currentPence);
+      if (
+        monthlyPlanPence !== undefined &&
+        (!isSafePence(monthlyPlanPence) || monthlyPlanPence < 0)
+      ) {
+        throw new Error('Monthly saving plan must be non-negative exact integer pence.');
+      }
+
       const goal: SavingsGoal = {
         id: data.id || createId('goal'),
         name: data.name.trim(),
         targetPence,
-        currentPence,
+        currentPence: 0,
         targetDate: data.targetDate,
-        accountId: data.accountId,
-        linkedAccountId: data.linkedAccountId,
+        monthlyPlanPence,
       };
+
       state.savingsGoals.push(goal);
       return goal;
     }
   );
+
   return { goal: result.value, version: result.state.version };
 }
 
@@ -2042,27 +2011,38 @@ export function updateLocalSavingsGoal(
     (state) => {
       const index = state.savingsGoals.findIndex((goal) => goal.id === id);
       if (index < 0) throw new Error('Savings goal not found.');
-      const next = { ...state.savingsGoals[index], ...data, id };
-      if (
-        !isSafePence(next.targetPence) ||
-        !isSafePence(next.currentPence) ||
-        next.targetPence < 0 ||
-        next.currentPence < 0
-      ) {
-        throw new Error('Savings amounts must be non-negative exact integer pence.');
+
+      const existing = state.savingsGoals[index];
+      const next: SavingsGoal = {
+        ...existing,
+        id,
+        name: data.name?.trim() || existing.name,
+        targetPence: data.targetPence ?? existing.targetPence,
+        targetDate:
+          Object.prototype.hasOwnProperty.call(data, 'targetDate')
+            ? data.targetDate
+            : existing.targetDate,
+        monthlyPlanPence:
+          Object.prototype.hasOwnProperty.call(data, 'monthlyPlanPence')
+            ? data.monthlyPlanPence
+            : existing.monthlyPlanPence,
+      };
+
+      if (!isSafePence(next.targetPence) || next.targetPence <= 0) {
+        throw new Error('Savings goal target must be exact positive integer pence.');
       }
-      const linkedAccount = assertAccountExists(state, next.accountId);
       if (
-        linkedAccount.isActive === false ||
-        (linkedAccount.type !== 'savings' && linkedAccount.type !== 'cash')
+        next.monthlyPlanPence !== undefined &&
+        (!isSafePence(next.monthlyPlanPence) || next.monthlyPlanPence < 0)
       ) {
-        throw new Error('Savings goals must be linked to an active Savings or Cash account.');
+        throw new Error('Monthly saving plan must be non-negative exact integer pence.');
       }
-      assertSavingsAllocationCapacity(state, next.accountId, next.currentPence, id);
+
       state.savingsGoals[index] = next;
       return next;
     }
   );
+
   return { goal: result.value, version: result.state.version };
 }
 
