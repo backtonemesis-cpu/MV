@@ -1257,7 +1257,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleEditGoalSubmit} className="mv-modal-form">
               {error && (
-                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                <div className="mv-savings-warning-banner">
                   {error}
                 </div>
               )}
