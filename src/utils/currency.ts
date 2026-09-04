@@ -217,18 +217,12 @@ export function calculateMonthlySurplus(
  *
  * Rules:
  * - Active Savings and Cash accounts are savings/liquid assets.
- * - A source workbook may explicitly mark another account (for example Santander)
- *   as a savings snapshot via metadata.sourceBalanceKind === 'savings_snapshot'.
- * - Ordinary current accounts are not assumed to be savings.
+ * - Current, Joint and Credit accounts are excluded even if historical/source
+ *   metadata described part of their balance as a savings snapshot.
  */
 export function isSavingsPositionAccount(account: Account): boolean {
   if (account.isActive === false) return false;
-
-  return (
-    account.type === 'savings' ||
-    account.type === 'cash' ||
-    account.metadata?.sourceBalanceKind === 'savings_snapshot'
-  );
+  return account.type === 'savings' || account.type === 'cash';
 }
 
 /**
