@@ -173,7 +173,7 @@ export interface SavingsGoal {
   /** Optional user-chosen monthly saving amount used only for goal forecasting. */
   monthlyPlanPence?: number;
   /** Legacy storage fields retained for backwards compatibility; household goals no longer use them for progress. */
-  accountId: string;
+  accountId?: string;
   linkedAccountId?: string;
 }
 
