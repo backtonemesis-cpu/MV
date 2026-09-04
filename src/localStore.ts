@@ -4,6 +4,7 @@ import type {
   AuditLogEntry,
   HouseholdData,
   HouseholdMember,
+  Payer,
   PlannedIncome,
   PlannedPayment,
   SavingsGoal,
