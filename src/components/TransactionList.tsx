@@ -1,20 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  Search,
-  Filter,
-  Plus,
-  ArrowUpRight,
   ArrowDownLeft,
-  Repeat,
-  Trash2,
-  Edit2,
+  ArrowUpRight,
   Calendar,
-  CreditCard,
-  CheckCircle,
-  PiggyBank,
   ChevronDown,
+  Edit2,
+  PiggyBank,
+  Plus,
+  Repeat,
+  Search,
+  Trash2,
 } from 'lucide-react';
-import { Transaction, Account, Category, UserRole } from '../types';
+import { Account, Category, Transaction, UserRole } from '../types';
 import { formatPence } from '../utils/currency';
 
 interface TransactionListProps {
@@ -39,53 +36,63 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   onDeleteTransaction,
 }) => {
   const [search, setSearch] = useState('');
-  const [selectedPayer, setSelectedPayer] = useState<string>('all');
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [filterBySelectedMonth, setFilterBySelectedMonth] = useState<boolean>(true);
+  const [selectedPayer, setSelectedPayer] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [filterBySelectedMonth, setFilterBySelectedMonth] = useState(true);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
 
-  const accountsMap = useMemo(() => {
-    return new Map(accounts.map((a) => [a.id, a.name]));
-  }, [accounts]);
+  const accountsMap = useMemo(
+    () => new Map(accounts.map((account) => [account.id, account.name])),
+    [accounts]
+  );
 
-  const categoriesMap = useMemo(() => {
-    return new Map(categories.map((c) => [c.id, c.name]));
-  }, [categories]);
+  const categoriesMap = useMemo(
+    () => new Map(categories.map((category) => [category.id, category.name])),
+    [categories]
+  );
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
-      // Month filter
       if (filterBySelectedMonth && selectedMonth && !tx.date.startsWith(selectedMonth)) {
         return false;
       }
 
-      // Search filter
       if (search.trim()) {
-        const q = search.toLowerCase();
-        const descMatch = tx.description.toLowerCase().includes(q);
-        const catMatch = (categoriesMap.get(tx.categoryId) || '').toLowerCase().includes(q);
-        const notesMatch = (tx.notes || '').toLowerCase().includes(q);
-        if (!descMatch && !catMatch && !notesMatch) return false;
+        const query = search.trim().toLowerCase();
+        const descriptionMatch = tx.description.toLowerCase().includes(query);
+        const categoryMatch = (categoriesMap.get(tx.categoryId) || '')
+          .toLowerCase()
+          .includes(query);
+        const accountMatch = (accountsMap.get(tx.accountId) || '')
+          .toLowerCase()
+          .includes(query);
+        const noteMatch = (tx.notes || '').toLowerCase().includes(query);
+
+        if (!descriptionMatch && !categoryMatch && !accountMatch && !noteMatch) {
+          return false;
+        }
       }
 
-      // Payer filter
       if (selectedPayer !== 'all' && tx.payer !== selectedPayer) {
         return false;
       }
 
-      // Type filter
       if (selectedType !== 'all') {
         if (selectedType === 'transfer' && !tx.isTransfer) return false;
-        if (selectedType === 'expense' && (tx.type !== 'expense' || tx.isTransfer || tx.isRepayment)) return false;
+        if (
+          selectedType === 'expense' &&
+          (tx.type !== 'expense' || tx.isTransfer || tx.isRepayment)
+        ) {
+          return false;
+        }
         if (selectedType === 'income' && tx.type !== 'income') return false;
         if (selectedType === 'repayment' && !tx.isRepayment) return false;
-        if (selectedType === 'refund' && (!tx.isRefund && tx.type !== 'refund')) return false;
+        if (selectedType === 'refund' && !tx.isRefund && tx.type !== 'refund') return false;
         if (selectedType === 'savings' && !tx.isSavings) return false;
       }
 
-      // Category filter
       if (selectedCategory !== 'all' && tx.categoryId !== selectedCategory) {
         return false;
       }
@@ -93,86 +100,95 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       return true;
     });
   }, [
-    transactions,
+    accountsMap,
+    categoriesMap,
+    filterBySelectedMonth,
     search,
+    selectedCategory,
+    selectedMonth,
     selectedPayer,
     selectedType,
-    selectedCategory,
-    filterBySelectedMonth,
-    selectedMonth,
-    categoriesMap,
+    transactions,
   ]);
 
+  const filterInputClassName =
+    'w-full bg-surface border border-muted text-main rounded-xl px-3.5 h-11 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all';
+
   return (
-    <div className="space-y-4 pb-12">
-      {/* Header with Search and Action Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-main">
-            Activity
-          </h1>
+    <div className="bg-app space-y-5 pb-16 text-main">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-0.5">
+          <h1 className="text-xl font-bold tracking-tight text-main">Activity</h1>
+          <p className="text-xs text-muted">
+            {filteredTransactions.length} of {transactions.length} transactions
+          </p>
         </div>
 
         {canEdit && (
           <button
             id="tx-list-add-btn"
+            type="button"
             onClick={onAddTransaction}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-accent text-on-accent font-semibold text-xs hover:bg-success-soft active:scale-95 transition shadow-xs"
+            className="bg-accent text-on-accent font-semibold text-sm px-4 h-10 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:brightness-95 active:scale-[0.97] shadow-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             Add
           </button>
         )}
-      </div>
+      </header>
 
-      {/* Search + Compact Filter Chips */}
-      <div className="space-y-2.5">
-        <div className="relative">
-          <Search className="w-4 h-4 text-subtle absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search transactions"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-[13px] rounded-xl border-0 bg-surface-muted text-main placeholder:text-subtle focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-        </div>
+      <section className="rounded-2xl border border-muted bg-surface p-4 shadow-sm sm:p-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 mb-6">
+          <label className="relative block min-w-0">
+            <span className="sr-only">Search transactions</span>
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <input
+              type="search"
+              placeholder="Search transactions"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className={`${filterInputClassName} pl-10`}
+            />
+          </label>
 
-        <div className="grid grid-cols-2 gap-2">
-          {selectedMonth && (
-            <label className="inline-flex min-w-0 h-9 items-center gap-2 rounded-xl bg-surface-muted px-3 text-[12px] font-medium text-muted cursor-pointer">
-              <input
-                type="checkbox"
-                checked={filterBySelectedMonth}
-                onChange={(e) => setFilterBySelectedMonth(e.target.checked)}
-                className="w-3.5 h-3.5 shrink-0 rounded text-success focus:ring-accent border-muted"
-              />
-              <Calendar className="w-3.5 h-3.5 shrink-0 text-subtle" />
-              <span className="truncate">{selectedMonth}</span>
-            </label>
-          )}
+          <label className="relative block min-w-0">
+            <span className="sr-only">Date filter</span>
+            <Calendar className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <select
+              value={filterBySelectedMonth && selectedMonth ? 'selected-month' : 'all'}
+              onChange={(event) => setFilterBySelectedMonth(event.target.value === 'selected-month')}
+              className={`${filterInputClassName} appearance-none pl-10 pr-9`}
+              disabled={!selectedMonth}
+            >
+              {selectedMonth && <option value="selected-month">{selectedMonth}</option>}
+              <option value="all">All dates</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          </label>
 
-          <div className="relative min-w-0">
+          <label className="relative block min-w-0">
+            <span className="sr-only">Payer filter</span>
             <select
               value={selectedPayer}
-              onChange={(e) => setSelectedPayer(e.target.value)}
-              className="w-full h-9 min-w-0 appearance-none rounded-xl border-0 bg-surface-muted pl-3 pr-7 text-[12px] font-medium text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+              onChange={(event) => setSelectedPayer(event.target.value)}
+              className={`${filterInputClassName} appearance-none pr-9`}
             >
-              <option value="all">All Payers</option>
+              <option value="all">All payers</option>
               <option value="Joint">Joint</option>
               <option value="Marius">Marius</option>
               <option value="Vesta">Vesta</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle" />
-          </div>
+            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          </label>
 
-          <div className="relative min-w-0">
+          <label className="relative block min-w-0">
+            <span className="sr-only">Classification filter</span>
             <select
               value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full h-9 min-w-0 appearance-none rounded-xl border-0 bg-surface-muted pl-3 pr-7 text-[12px] font-medium text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+              onChange={(event) => setSelectedType(event.target.value)}
+              className={`${filterInputClassName} appearance-none pr-9`}
             >
-              <option value="all">All Classifications</option>
+              <option value="all">All classifications</option>
               <option value="expense">Expenses</option>
               <option value="income">Income</option>
               <option value="transfer">Transfers</option>
@@ -180,190 +196,203 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <option value="refund">Refunds</option>
               <option value="savings">Savings</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle" />
-          </div>
+            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          </label>
 
-          <div className="relative min-w-0">
+          <label className="relative block min-w-0">
+            <span className="sr-only">Category filter</span>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full h-9 min-w-0 appearance-none rounded-xl border-0 bg-surface-muted pl-3 pr-7 text-[12px] font-medium text-muted focus:outline-none focus:ring-2 focus:ring-accent"
+              onChange={(event) => setSelectedCategory(event.target.value)}
+              className={`${filterInputClassName} appearance-none pr-9`}
             >
-              <option value="all">All Categories</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              <option value="all">All categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle" />
-          </div>
+            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+          </label>
         </div>
-      </div>
 
-      {/* Transaction Table / Card List */}
-      <div className="bg-surface rounded-2xl border border-muted shadow-xs overflow-hidden">
-        {filteredTransactions.length === 0 ? (
-          <div className="m-4 rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-10 text-center">
-            <p className="text-[13px] font-medium text-subtle">
-              No matching transactions
-            </p>
+        <div className="overflow-hidden rounded-2xl border border-muted bg-surface shadow-sm">
+          <div className="hidden items-center justify-between border-b border-muted bg-table-header px-5 py-2.5 sm:flex">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+              Transaction
+            </div>
+            <div className="min-w-[100px] text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
+              Amount
+            </div>
           </div>
-        ) : (
-          <div className="divide-y divide-muted">
-            {filteredTransactions.map((tx) => {
-              const isNegative = tx.type === 'expense' || tx.type === 'repayment';
-              const accountName = accountsMap.get(tx.accountId) || 'Account';
-              const targetName = tx.targetAccountId ? accountsMap.get(tx.targetAccountId) : null;
-              const categoryName = categoriesMap.get(tx.categoryId) || 'General';
 
-              return (
-                <div
-                  key={tx.id}
-                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-surface-muted transition"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                        tx.isSavings
-                          ? 'bg-warning-soft text-warning'
-                          : tx.isTransfer
-                          ? 'bg-accent-soft text-accent'
-                          : tx.type === 'income'
-                          ? 'bg-success-soft text-success'
-                          : tx.isRefund
-                          ? 'bg-accent-soft text-accent'
-                          : 'bg-surface-muted text-muted'
-                      }`}
-                    >
-                      {tx.isSavings ? (
-                        <PiggyBank className="w-4 h-4" />
-                      ) : tx.isTransfer ? (
-                        <Repeat className="w-4 h-4" />
-                      ) : tx.type === 'income' ? (
-                        <ArrowDownLeft className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpRight className="w-4 h-4" />
-                      )}
+          {filteredTransactions.length === 0 ? (
+            <div className="bg-table p-5">
+              <div className="flex min-h-[150px] flex-col items-center justify-center rounded-xl border border-dashed border-muted bg-surface-muted p-8 text-center">
+                <Search className="h-5 w-5 text-subtle" />
+                <p className="mt-2 text-sm font-medium text-muted">No matching transactions</p>
+                <p className="mt-1 text-xs text-subtle">
+                  Adjust the filters or add a new transaction.
+                </p>
+
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={onAddTransaction}
+                    className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition-all hover:bg-surface-muted active:scale-[0.98]"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-accent" />
+                    Add transaction
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="divide-y divide-muted bg-table">
+              {filteredTransactions.map((tx) => {
+                const isNegative = tx.type === 'expense' || tx.type === 'repayment';
+                const accountName = accountsMap.get(tx.accountId) || 'Account';
+                const targetName = tx.targetAccountId
+                  ? accountsMap.get(tx.targetAccountId) || 'Account'
+                  : null;
+                const categoryName = categoriesMap.get(tx.categoryId) || 'General';
+
+                const classification = tx.isSavings
+                  ? 'Savings'
+                  : tx.isTransfer
+                  ? 'Transfer'
+                  : tx.isRepayment
+                  ? 'Repayment'
+                  : tx.isRefund || tx.type === 'refund'
+                  ? 'Refund'
+                  : tx.type === 'income'
+                  ? 'Income'
+                  : 'Expense';
+
+                const iconClassName =
+                  tx.isSavings ||
+                  tx.isTransfer ||
+                  tx.type === 'income' ||
+                  tx.isRefund ||
+                  tx.type === 'refund'
+                    ? 'bg-accent-soft text-accent'
+                    : 'bg-surface-muted text-muted';
+
+                return (
+                  <article
+                    key={tx.id}
+                    className="bg-table py-3 px-5 flex items-center justify-between gap-4 hover:bg-surface-muted/30 transition-all"
+                  >
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div
+                        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconClassName}`}
+                        aria-hidden="true"
+                      >
+                        {tx.isSavings ? (
+                          <PiggyBank className="h-4 w-4" />
+                        ) : tx.isTransfer ? (
+                          <Repeat className="h-4 w-4" />
+                        ) : tx.type === 'income' || tx.isRefund || tx.type === 'refund' ? (
+                          <ArrowDownLeft className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpRight className="h-4 w-4" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <h2 className="truncate text-sm font-semibold text-main">
+                            {tx.description}
+                          </h2>
+
+                          <span className="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent">
+                            {classification}
+                          </span>
+                        </div>
+
+                        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
+                            {tx.date}
+                          </span>
+
+                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
+                            {categoryName}
+                          </span>
+
+                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
+                            {accountName}
+                            {targetName ? ` → ${targetName}` : ''}
+                          </span>
+
+                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
+                            {tx.payer}
+                          </span>
+                        </div>
+
+                        {tx.notes && (
+                          <span className="text-[10px] text-subtle font-normal italic tracking-wide mt-1 max-w-[550px] opacity-50 truncate block">
+                            {tx.notes}
+                          </span>
+                        )}
+
+                        {tx.splits && tx.splits.length > 0 && (
+                          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+                            {tx.splits.map((split) => (
+                              <span
+                                key={split.id}
+                                className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted"
+                              >
+                                {categoriesMap.get(split.categoryId) || 'Category'} ·{' '}
+                                {formatPence(split.amountPence)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-main">
-                          {tx.description}
-                        </span>
-                        {tx.isSavings && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-warning-soft text-warning">
-                            Savings
-                          </span>
-                        )}
-                        {tx.isTransfer && !tx.isSavings && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-accent-soft text-accent">
-                            Transfer
-                          </span>
-                        )}
-                        {tx.isRepayment && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-accent-soft text-accent">
-                            Repayment
-                          </span>
-                        )}
-                        {tx.isRefund && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-accent-soft text-accent">
-                            Refund
-                          </span>
-                        )}
+                    <div className="flex shrink-0 items-center gap-2">
+                      <div className="font-mono tracking-tight tabular-nums font-semibold text-base text-main text-right min-w-[100px]">
+                        {isNegative ? '-' : '+'}
+                        {formatPence(tx.amountPence)}
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-muted text-subtle mt-1 flex-wrap">
-                        <span>{tx.date}</span>
-                        <span>•</span>
-                        <span className="font-semibold text-muted">
-                          {categoryName}
-                        </span>
-                        <span>•</span>
-                        <span>
-                          {accountName}
-                          {targetName && ` → ${targetName}`}
-                        </span>
-                        <span>•</span>
-                        <span
-                          className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
-                            tx.payer === 'Joint'
-                              ? 'bg-success-soft text-success'
-                              : tx.payer === 'Marius'
-                              ? 'bg-accent-soft text-accent'
-                              : 'bg-accent-soft text-accent'
-                          }`}
-                        >
-                          {tx.payer}
-                        </span>
-                      </div>
+                      {canEdit && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => onEditTransaction(tx)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-muted bg-surface text-muted transition-all hover:bg-surface-muted hover:text-main active:scale-[0.96]"
+                            title="Edit transaction"
+                            aria-label={`Edit ${tx.description}`}
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
 
-                      {tx.notes && (
-                        <p className="text-[11px] text-muted text-subtle mt-1 italic">
-                          {tx.notes}
-                        </p>
-                      )}
-
-                      {tx.splits && tx.splits.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {tx.splits.map((s, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] bg-surface-muted text-muted border border-muted"
-                            >
-                              <span className="font-medium">
-                                {categoriesMap.get(s.categoryId) || 'Category'}:
-                              </span>
-                              <span className="font-bold">{formatPence(s.amountPence)}</span>
-                              {s.notes && <span className="text-muted text-subtle">({s.notes})</span>}
-                            </span>
-                          ))}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Delete transaction "${tx.description}"?`)) {
+                                onDeleteTransaction(tx.id);
+                              }
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-muted bg-surface text-subtle transition-all hover:bg-surface-muted hover:text-main active:scale-[0.96]"
+                            title="Delete transaction"
+                            aria-label={`Delete ${tx.description}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                       )}
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-muted">
-                    <div
-                      className={`text-base font-black ${
-                        isNegative
-                          ? 'text-main'
-                          : 'text-success'
-                      }`}
-                    >
-                      {isNegative ? '-' : '+'}{formatPence(tx.amountPence)}
-                    </div>
-
-                    {canEdit && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => onEditTransaction(tx)}
-                          className="p-1.5 text-muted text-subtle hover:text-muted hover:bg-surface-muted rounded-lg transition"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Delete transaction "${tx.description}"?`)) {
-                              onDeleteTransaction(tx.id);
-                            }
-                          }}
-                          className="p-1.5 text-muted text-subtle hover:text-danger hover:bg-danger-soft rounded-lg transition"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 };
