@@ -120,14 +120,14 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   ]);
 
   const filterInputClassName =
-    'w-full bg-surface border border-muted text-main rounded-xl px-3.5 h-11 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all';
+    'h-10 w-full rounded-md border border-[rgba(255,255,255,0.06)] bg-[#1F2937] px-3 text-[12px] font-medium text-[#F9FAFB] outline-none transition-colors placeholder:text-[#6B7280] focus:border-[#2E374A] focus:bg-[#374151]';
 
   return (
-    <div className="bg-app space-y-5 pb-16 text-main">
+    <div className="space-y-5 bg-[#0B0F19] pb-16 text-white">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-xl font-bold tracking-tight text-main">Activity</h1>
-          <p className="text-xs text-muted">
+        <div>
+          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-white">Activity</h1>
+          <p className="mt-0.5 text-[12px] font-normal text-[#9CA3AF]">
             {filteredTransactions.length} of {transactions.length} transactions
           </p>
         </div>
@@ -137,7 +137,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             id="tx-list-add-btn"
             type="button"
             onClick={onAddTransaction}
-            className="bg-accent text-on-accent font-semibold text-sm px-4 h-10 rounded-xl flex items-center justify-center gap-1.5 transition-all hover:brightness-95 active:scale-[0.97] shadow-sm"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-md bg-accent px-4 text-sm font-semibold text-on-accent transition-all hover:brightness-95 active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
             Add
@@ -145,33 +145,36 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         )}
       </header>
 
-      <section className="rounded-2xl border border-muted bg-surface p-4 shadow-sm sm:p-5">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 mb-6">
+      <section
+        className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#111827] p-3 sm:p-4"
+        aria-label="Activity filters"
+      >
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           <label className="relative block min-w-0">
             <span className="sr-only">Search transactions</span>
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
             <input
               type="search"
               placeholder="Search transactions"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className={`${filterInputClassName} pl-10`}
+              className={`${filterInputClassName} pl-9`}
             />
           </label>
 
           <label className="relative block min-w-0">
             <span className="sr-only">Date filter</span>
-            <Calendar className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
             <select
               value={filterBySelectedMonth && selectedMonth ? 'selected-month' : 'all'}
               onChange={(event) => setFilterBySelectedMonth(event.target.value === 'selected-month')}
-              className={`${filterInputClassName} appearance-none pl-10 pr-9`}
+              className={`${filterInputClassName} appearance-none pl-9 pr-9`}
               disabled={!selectedMonth}
             >
               {selectedMonth && <option value="selected-month">{selectedMonth}</option>}
               <option value="all">All dates</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
           </label>
 
           <label className="relative block min-w-0">
@@ -188,7 +191,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
           </label>
 
           <label className="relative block min-w-0">
@@ -206,7 +209,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <option value="refund">Refunds</option>
               <option value="savings">Savings</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
           </label>
 
           <label className="relative block min-w-0">
@@ -223,185 +226,178 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
           </label>
         </div>
+      </section>
 
-        <div className="overflow-hidden rounded-2xl border border-muted bg-surface shadow-sm">
-          <div className="hidden items-center justify-between border-b border-muted bg-table-header px-5 py-2.5 sm:flex">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Transaction
-            </div>
-            <div className="min-w-[100px] text-right text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-              Amount
+      <section
+        className="overflow-hidden rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#111827]"
+        aria-label="Activity transactions"
+      >
+        <div className="hidden items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-4 py-2.5 sm:flex">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
+            Transaction
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
+            Amount
+          </span>
+        </div>
+
+        {filteredTransactions.length === 0 ? (
+          <div className="p-4">
+            <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(255,255,255,0.06)] bg-[#1F2937] p-8 text-center">
+              <Search className="h-5 w-5 text-[#6B7280]" />
+              <p className="mt-2 text-sm font-medium text-[#9CA3AF]">No matching transactions</p>
+              <p className="mt-1 text-[11px] font-normal text-[#6B7280]">
+                Adjust the filters or add a new transaction.
+              </p>
+
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={onAddTransaction}
+                  className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[#1F2937] px-3 text-xs font-semibold text-[#F9FAFB] transition-colors hover:bg-[#374151]"
+                >
+                  <Plus className="h-3.5 w-3.5 text-accent" />
+                  Add transaction
+                </button>
+              )}
             </div>
           </div>
+        ) : (
+          <div className="space-y-px bg-[#111827] p-1.5">
+            {filteredTransactions.map((tx) => {
+              const isNegative = tx.type === 'expense' || tx.type === 'repayment';
+              const isPositive = tx.type === 'income' || tx.isRefund || tx.type === 'refund';
+              const accountName = accountsMap.get(tx.accountId) || 'Account';
+              const targetName = tx.targetAccountId
+                ? accountsMap.get(tx.targetAccountId) || 'Account'
+                : null;
+              const categoryName = categoriesMap.get(tx.categoryId) || 'General';
 
-          {filteredTransactions.length === 0 ? (
-            <div className="bg-table p-5">
-              <div className="flex min-h-[150px] flex-col items-center justify-center rounded-xl border border-dashed border-muted bg-surface-muted p-8 text-center">
-                <Search className="h-5 w-5 text-subtle" />
-                <p className="mt-2 text-sm font-medium text-muted">No matching transactions</p>
-                <p className="mt-1 text-xs text-subtle">
-                  Adjust the filters or add a new transaction.
-                </p>
+              const classification = tx.isSavings
+                ? 'Savings'
+                : tx.isTransfer
+                ? 'Transfer'
+                : tx.isRepayment
+                ? 'Repayment'
+                : tx.isRefund || tx.type === 'refund'
+                ? 'Refund'
+                : tx.type === 'income'
+                ? 'Income'
+                : 'Expense';
 
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={onAddTransaction}
-                    className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition-all hover:bg-surface-muted active:scale-[0.98]"
-                  >
-                    <Plus className="h-3.5 w-3.5 text-accent" />
-                    Add transaction
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="divide-y divide-muted bg-table">
-              {filteredTransactions.map((tx) => {
-                const isNegative = tx.type === 'expense' || tx.type === 'repayment';
-                const accountName = accountsMap.get(tx.accountId) || 'Account';
-                const targetName = tx.targetAccountId
-                  ? accountsMap.get(tx.targetAccountId) || 'Account'
-                  : null;
-                const categoryName = categoriesMap.get(tx.categoryId) || 'General';
+              const statusClassName = isPositive
+                ? 'border-[rgba(34,197,94,0.20)] bg-[rgba(34,197,94,0.10)] text-[#4ADE80]'
+                : isNegative
+                ? 'border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.10)] text-[#F87171]'
+                : 'border-[rgba(255,255,255,0.06)] bg-[#111827] text-[#9CA3AF]';
 
-                const classification = tx.isSavings
-                  ? 'Savings'
-                  : tx.isTransfer
-                  ? 'Transfer'
-                  : tx.isRepayment
-                  ? 'Repayment'
-                  : tx.isRefund || tx.type === 'refund'
-                  ? 'Refund'
-                  : tx.type === 'income'
-                  ? 'Income'
-                  : 'Expense';
-
-                const iconClassName =
-                  tx.isSavings ||
-                  tx.isTransfer ||
-                  tx.type === 'income' ||
-                  tx.isRefund ||
-                  tx.type === 'refund'
-                    ? 'bg-accent-soft text-accent'
-                    : 'bg-surface-muted text-muted';
-
-                return (
-                  <article
-                    key={tx.id}
-                    className="bg-table py-3 px-5 flex items-center justify-between gap-4 hover:bg-surface-muted/30 transition-all"
-                  >
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div
-                        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconClassName}`}
-                        aria-hidden="true"
-                      >
-                        {tx.isSavings ? (
-                          <PiggyBank className="h-4 w-4" />
-                        ) : tx.isTransfer ? (
-                          <Repeat className="h-4 w-4" />
-                        ) : tx.type === 'income' || tx.isRefund || tx.type === 'refund' ? (
-                          <ArrowDownLeft className="h-4 w-4" />
-                        ) : (
-                          <ArrowUpRight className="h-4 w-4" />
-                        )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <h2 className="truncate text-sm font-semibold text-main">
-                            {tx.description}
-                          </h2>
-
-                          <span className="shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent">
-                            {classification}
-                          </span>
-                        </div>
-
-                        <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
-                            {tx.date}
-                          </span>
-
-                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
-                            {categoryName}
-                          </span>
-
-                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
-                            {accountName}
-                            {targetName ? ` → ${targetName}` : ''}
-                          </span>
-
-                          <span className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted">
-                            {tx.payer}
-                          </span>
-                        </div>
-
-                        {tx.notes && (
-                          <span className="text-[10px] text-subtle font-normal italic tracking-wide mt-1 max-w-[550px] opacity-50 truncate block">
-                            {tx.notes}
-                          </span>
-                        )}
-
-                        {tx.splits && tx.splits.length > 0 && (
-                          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-                            {tx.splits.map((split) => (
-                              <span
-                                key={split.id}
-                                className="px-1.5 py-0.5 bg-surface-muted rounded text-[10px] font-medium border border-muted/40 text-muted"
-                              >
-                                {categoriesMap.get(split.categoryId) || 'Category'} ·{' '}
-                                {formatPence(split.amountPence)}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+              return (
+                <article
+                  key={tx.id}
+                  className="group flex items-center justify-between gap-3 rounded-lg border border-transparent bg-[#1F2937] px-3 py-3 transition-colors hover:border-[#2E374A] hover:bg-[#374151] sm:px-4"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#111827] text-[#9CA3AF]"
+                      aria-hidden="true"
+                    >
+                      {tx.isSavings ? (
+                        <PiggyBank className="h-4 w-4" />
+                      ) : tx.isTransfer ? (
+                        <Repeat className="h-4 w-4" />
+                      ) : isPositive ? (
+                        <ArrowDownLeft className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpRight className="h-4 w-4" />
+                      )}
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2">
-                      <div className="font-mono tracking-tight tabular-nums font-semibold text-base text-main text-right min-w-[100px]">
-                        {isNegative ? '-' : '+'}
-                        {formatPence(tx.amountPence)}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <h2 className="truncate text-[14px] font-semibold leading-5 text-[#F9FAFB] sm:text-[15px]">
+                          {tx.description}
+                        </h2>
+                        <span
+                          className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.04em] ${statusClassName}`}
+                        >
+                          {classification}
+                        </span>
                       </div>
 
-                      {canEdit && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => onEditTransaction(tx)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-muted bg-surface text-muted transition-all hover:bg-surface-muted hover:text-main active:scale-[0.96]"
-                            title="Edit transaction"
-                            aria-label={`Edit ${tx.description}`}
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
+                      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-normal text-[#9CA3AF]">
+                        <span>{tx.date}</span>
+                        <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                        <span>{categoryName}</span>
+                        <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                        <span>
+                          {accountName}
+                          {targetName ? ` → ${targetName}` : ''}
+                        </span>
+                        <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                        <span>{tx.payer}</span>
+                      </div>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm(`Delete transaction "${tx.description}"?`)) {
-                                onDeleteTransaction(tx.id);
-                              }
-                            }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-muted bg-surface text-subtle transition-all hover:bg-surface-muted hover:text-main active:scale-[0.96]"
-                            title="Delete transaction"
-                            aria-label={`Delete ${tx.description}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                      {tx.notes && (
+                        <p className="mt-0.5 max-w-[650px] truncate text-[11px] font-normal text-[#6B7280]">
+                          {tx.notes}
+                        </p>
+                      )}
+
+                      {tx.splits && tx.splits.length > 0 && (
+                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#6B7280]">
+                          {tx.splits.map((split) => (
+                            <span key={split.id}>
+                              {categoriesMap.get(split.categoryId) || 'Category'} ·{' '}
+                              {formatPence(split.amountPence)}
+                            </span>
+                          ))}
                         </div>
                       )}
                     </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <div className="min-w-[96px] text-right font-mono text-[16px] font-semibold leading-5 tabular-nums text-white sm:text-[18px]">
+                      {isNegative ? '-' : '+'}
+                      {formatPence(tx.amountPence)}
+                    </div>
+
+                    {canEdit && (
+                      <div className="flex items-center gap-1 opacity-70 transition-opacity sm:opacity-40 sm:group-hover:opacity-100">
+                        <button
+                          type="button"
+                          onClick={() => onEditTransaction(tx)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2E374A] text-[#9CA3AF] transition-colors hover:text-white active:scale-[0.96]"
+                          title="Edit transaction"
+                          aria-label={`Edit ${tx.description}`}
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Delete transaction "${tx.description}"?`)) {
+                              onDeleteTransaction(tx.id);
+                            }
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2E374A] text-[#9CA3AF] transition-colors hover:text-[#F87171] active:scale-[0.96]"
+                          title="Delete transaction"
+                          aria-label={`Delete ${tx.description}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );
