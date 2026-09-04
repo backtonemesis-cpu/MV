@@ -1193,7 +1193,18 @@ export function createLocalPlannedPayment(
       summary: data.name || 'Planned bill created',
     },
     (state) => {
-      const payment = plannedPaymentFromPartial(data);
+      if (
+        data.status === 'paid' ||
+        data.actualTransactionId !== undefined ||
+        data.actualAmountPence !== undefined ||
+        data.actualDate !== undefined
+      ) {
+        throw new Error(
+          'New bills must start unpaid. Record the actual payment through the Mark Paid workflow.'
+        );
+      }
+
+      const payment = plannedPaymentFromPartial({ ...data, status: 'unpaid' });
       assertAccountExists(state, payment.accountId);
       if (payment.categoryId) assertCategoryExists(state, payment.categoryId);
       state.plannedPayments.push(payment);
@@ -1219,7 +1230,63 @@ export function updateLocalPlannedPayment(
     (state) => {
       const index = state.plannedPayments.findIndex((item) => item.id === id);
       if (index < 0) throw new Error('Planned bill not found.');
-      const next = plannedPaymentFromPartial({ ...state.plannedPayments[index], ...data, id });
+
+      const existing = state.plannedPayments[index];
+      const linkedActual = existing.actualTransactionId
+        ? state.transactions.find(
+            (tx) =>
+              tx.id === existing.actualTransactionId &&
+              tx.plannedPaymentId === existing.id &&
+              tx.type === 'expense' &&
+              !tx.isTransfer &&
+              !tx.isRepayment &&
+              !tx.isSavings &&
+              !tx.isRefund
+          )
+        : undefined;
+
+      if (existing.actualTransactionId && !linkedActual) {
+        throw new Error(
+          'This bill references a missing actual payment transaction. Resolve the linked transaction before editing the bill.'
+        );
+      }
+
+      if (
+        data.actualTransactionId !== undefined ||
+        data.actualAmountPence !== undefined ||
+        data.actualDate !== undefined
+      ) {
+        throw new Error(
+          'Actual payment evidence cannot be edited from the bill form. Edit the linked Activity transaction instead.'
+        );
+      }
+
+      if (data.status === 'paid' && !linkedActual) {
+        throw new Error(
+          'A bill can only be marked paid by recording its actual payment.'
+        );
+      }
+
+      if (data.status === 'unpaid' && linkedActual) {
+        throw new Error(
+          'A bill with a linked actual expense transaction cannot be marked unpaid.'
+        );
+      }
+
+      const next = plannedPaymentFromPartial({ ...existing, ...data, id });
+
+      if (linkedActual) {
+        next.status = 'paid';
+        next.actualAmountPence = linkedActual.amountPence;
+        next.actualDate = linkedActual.date;
+        next.actualTransactionId = linkedActual.id;
+      } else {
+        next.status = 'unpaid';
+        next.actualAmountPence = undefined;
+        next.actualDate = undefined;
+        next.actualTransactionId = undefined;
+      }
+
       next.updatedAt = nowIso();
       next.updatedBy = OWNER_EMAIL;
       assertAccountExists(state, next.accountId);
