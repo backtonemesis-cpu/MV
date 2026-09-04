@@ -1,4 +1,12 @@
-import type { AccentColor, AccentRgb, ThemePreference, UserPreferences } from './types';
+import type {
+  AccentColor,
+  AccentRgb,
+  CardBorderPreference,
+  CardDensityPreference,
+  CardRadiusPreference,
+  ThemePreference,
+  UserPreferences,
+} from './types';
 
 export const THEME_STORAGE_KEY = 'mv_local_preferences_v1';
 export const LEGACY_THEME_KEY = 'mv-theme-mode';
@@ -51,6 +59,20 @@ export function normalizeThemePreference(value: unknown): ThemePreference {
   return 'light';
 }
 
+export function normalizeCardDensityPreference(value: unknown): CardDensityPreference {
+  return value === 'comfortable' ? 'comfortable' : 'compact';
+}
+
+export function normalizeCardRadiusPreference(value: unknown): CardRadiusPreference {
+  if (value === 'sharp' || value === 'rounded') return value;
+  return 'subtle';
+}
+
+export function normalizeCardBorderPreference(value: unknown): CardBorderPreference {
+  if (value === 'none' || value === 'high') return value;
+  return 'subtle';
+}
+
 export function normalizeAccentPreference(value: unknown): AccentColor {
   if (
     value === 'emerald' ||
@@ -82,6 +104,9 @@ export function normalizeUserPreferences(
   const normalized: UserPreferences = {
     theme: normalizeThemePreference(value?.theme),
     accent: normalizeAccentPreference(value?.accent),
+    cardDensity: normalizeCardDensityPreference(value?.cardDensity),
+    cardRadius: normalizeCardRadiusPreference(value?.cardRadius),
+    cardBorder: normalizeCardBorderPreference(value?.cardBorder),
   };
 
   const accentRgb = normalizeAccentRgb(value?.accentRgb);
@@ -101,7 +126,15 @@ export function readStoredUserPreferences(storage?: Storage | null): UserPrefere
     resolvedStorage = null;
   }
 
-  if (!resolvedStorage) return { theme: 'light', accent: 'emerald' };
+  if (!resolvedStorage) {
+    return {
+      theme: 'light',
+      accent: 'emerald',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
+    };
+  }
 
   try {
     const saved = resolvedStorage.getItem(THEME_STORAGE_KEY);
@@ -112,9 +145,18 @@ export function readStoredUserPreferences(storage?: Storage | null): UserPrefere
     return {
       theme: normalizeThemePreference(resolvedStorage.getItem(LEGACY_THEME_KEY)),
       accent: 'emerald',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
     };
   } catch {
-    return { theme: 'light', accent: 'emerald' };
+    return {
+      theme: 'light',
+      accent: 'emerald',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
+    };
   }
 }
 
@@ -138,6 +180,42 @@ export function applyThemePreferences(
   resolvedRoot.style.setProperty('--primary', `rgb(${accentRgbCss})`);
   resolvedRoot.style.setProperty('--primary-light', `rgba(${accentRgbCss}, 0.10)`);
   resolvedRoot.style.setProperty('--primary-light-text', `rgb(${accentRgbCss})`);
+
+  const cardDensity =
+    normalized.cardDensity === 'comfortable'
+      ? {
+          padding: '16px 20px',
+          gap: '14px',
+          fontScale: '14px',
+        }
+      : {
+          padding: '8px 12px',
+          gap: '8px',
+          fontScale: '13px',
+        };
+
+  const cardRadius =
+    normalized.cardRadius === 'sharp'
+      ? '0px'
+      : normalized.cardRadius === 'rounded'
+      ? '8px'
+      : '4px';
+
+  const cardBorder =
+    normalized.cardBorder === 'none'
+      ? 'none'
+      : normalized.cardBorder === 'high'
+      ? '1px solid #3B4B75'
+      : '1px solid #26314D';
+
+  resolvedRoot.setAttribute('data-card-density', normalized.cardDensity);
+  resolvedRoot.setAttribute('data-card-radius', normalized.cardRadius);
+  resolvedRoot.setAttribute('data-card-border', normalized.cardBorder);
+  resolvedRoot.style.setProperty('--card-padding', cardDensity.padding);
+  resolvedRoot.style.setProperty('--card-gap', cardDensity.gap);
+  resolvedRoot.style.setProperty('--card-font-scale', cardDensity.fontScale);
+  resolvedRoot.style.setProperty('--card-radius', cardRadius);
+  resolvedRoot.style.setProperty('--card-border', cardBorder);
 
   // Compatibility only: semantic CSS variables remain the source of truth.
   resolvedRoot.classList.toggle('dark', normalized.theme !== 'light');
