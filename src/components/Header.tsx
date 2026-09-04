@@ -28,14 +28,14 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 bg-surface backdrop-blur border-b border-muted transition-colors">
       <div className="mx-auto w-full max-w-[1440px] px-4">
-        <div className="flex h-[52px] items-center justify-between gap-3">
+        <div className="flex h-[44px] items-center justify-between gap-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-sm font-bold text-on-accent shadow-xs">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-[12px] font-bold text-on-accent">
               MV
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[15px] font-semibold tracking-tight text-main">
+                <span className="text-[14px] font-semibold tracking-tight text-main">
                   MV Finance
                 </span>
                 <span
@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
                   v{APP_VERSION}
                 </span>
                 <span
-                  className="hidden sm:inline-block text-xs font-medium px-2 py-0.5 bg-surface-muted text-muted rounded-md border border-muted"
+                  className="hidden rounded-md border border-muted bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted sm:inline-block"
                   title="Local financial dataset revision"
                 >
                   Data v{datasetVersion}
