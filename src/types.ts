@@ -219,20 +219,8 @@ export interface TestResult {
   details: string;
 }
 
-export type ThemePreference = 'light' | 'dark' | 'system';
-export type AccentColor =
-  | 'default'
-  | 'blue'
-  | 'lilac'
-  | 'yellow'
-  | 'red'
-  | 'green'
-  | 'teal'
-  | 'orange'
-  | 'rose'
-  | 'emerald'
-  | 'indigo'
-  | 'slate';
+export type ThemePreference = 'light' | 'dark' | 'slate';
+export type AccentColor = 'emerald' | 'sapphire' | 'amethyst';
 
 export interface UserPreferences {
   theme: ThemePreference;
