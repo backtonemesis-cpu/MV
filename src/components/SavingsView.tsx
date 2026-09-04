@@ -32,6 +32,7 @@ interface SavingsViewProps {
   onExecuteTransfer: (payload: {
     goalId: string;
     sourceAccountId: string;
+    destinationAccountId: string;
     amountPence: number;
     payer?: Payer;
   }) => Promise<void>;
@@ -59,10 +60,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   // New Goal form state
   const [goalName, setGoalName] = useState('');
   const [goalTargetStr, setGoalTargetStr] = useState('');
-  const [goalCurrentStr, setGoalCurrentStr] = useState('');
-  const [goalAccountId, setGoalAccountId] = useState(
-    accounts.find((a) => a.isActive !== false && (a.type === 'savings' || a.type === 'cash'))?.id || ''
-  );
   const [goalDate, setGoalDate] = useState('');
   const [goalMonthlyPlanStr, setGoalMonthlyPlanStr] = useState('');
 
@@ -71,6 +68,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     accounts.find((a) => a.isActive !== false && a.type === 'current')?.id ||
       accounts.find((a) => a.isActive !== false && a.type !== 'credit')?.id ||
       ''
+  );
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    accounts.find(
+      (a) => a.isActive !== false && (a.type === 'savings' || a.type === 'cash')
+    )?.id || ''
   );
   const [transferAmountStr, setTransferAmountStr] = useState('');
   const [transferPayer, setTransferPayer] = useState<Payer>('Joint');
@@ -159,26 +161,25 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     [monthSavingsTxs, savingsAccountIds]
   );
 
-  // Handle Create Goal
+  // Household savings goals are targets only. Progress is derived from all
+  // active Savings + Cash balances, never from an account-specific allocation.
   const handleGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!goalName.trim() || !goalAccountId) return;
+    if (!goalName.trim()) return;
     try {
       setIsSubmitting(true);
       setError(null);
-      const targetPence = parseToPence(goalTargetStr);
-      const currentPence = 0;
       await onCreateSavingsGoal({
         name: goalName.trim(),
-        targetPence,
-        currentPence,
-        accountId: goalAccountId,
+        targetPence: parseToPence(goalTargetStr),
+        currentPence: 0,
         targetDate: goalDate || undefined,
         monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setGoalName('');
       setGoalTargetStr('');
-      setGoalCurrentStr('');
+      setGoalDate('');
+      setGoalMonthlyPlanStr('');
       setShowGoalModal(false);
     } catch (err: any) {
       setError(err.message || 'Failed to create savings goal');
@@ -187,37 +188,32 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     }
   };
 
-  // Open Edit Goal
   const openEditGoal = (goal: SavingsGoal) => {
     setSelectedGoal(goal);
     setGoalName(goal.name);
     setGoalTargetStr((goal.targetPence / 100).toFixed(2));
-    setGoalCurrentStr((goal.currentPence / 100).toFixed(2));
-    setGoalAccountId(goal.accountId);
     setGoalDate(goal.targetDate || '');
-    setGoalMonthlyPlanStr(goal.monthlyPlanPence ? (goal.monthlyPlanPence / 100).toFixed(2) : '');
+    setGoalMonthlyPlanStr(
+      goal.monthlyPlanPence ? (goal.monthlyPlanPence / 100).toFixed(2) : ''
+    );
     setError(null);
     setShowEditGoalModal(true);
   };
 
-  // Handle Edit Goal
   const handleEditGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGoal || !goalName.trim()) return;
     try {
       setIsSubmitting(true);
       setError(null);
-      const targetPence = parseToPence(goalTargetStr);
-      const currentPence = parseToPence(goalCurrentStr);
       await onUpdateSavingsGoal(selectedGoal.id, {
         name: goalName.trim(),
-        targetPence,
-        currentPence,
-        accountId: goalAccountId,
+        targetPence: parseToPence(goalTargetStr),
         targetDate: goalDate || undefined,
         monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setShowEditGoalModal(false);
+      setSelectedGoal(null);
     } catch (err: any) {
       setError(err.message || 'Failed to update savings goal');
     } finally {
@@ -243,15 +239,31 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     }
   };
 
-  // Open Transfer Modal for specific goal
+  // Open a transfer for this goal, but let the user choose where savings are held.
   const openTransferModal = (goal: SavingsGoal) => {
     setSelectedGoal(goal);
     setTransferAmountStr('');
+    const firstDestination = savingsAccounts[0]?.id || '';
+    setDestinationAccountId(firstDestination);
+    const preferredSource =
+      accounts.find(
+        (account) =>
+          account.isActive !== false &&
+          account.type !== 'credit' &&
+          account.id !== firstDestination &&
+          (account.type === 'current' || account.type === 'joint')
+      ) ||
+      accounts.find(
+        (account) =>
+          account.isActive !== false &&
+          account.type !== 'credit' &&
+          account.id !== firstDestination
+      );
+    setSourceAccountId(preferredSource?.id || '');
     setError(null);
     setShowTransferModal(true);
   };
 
-  // Handle Transfer into Savings
   const handleTransferSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedGoal) return;
@@ -260,8 +272,12 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       setError('Please enter a valid transfer amount greater than £0.00');
       return;
     }
-    if (sourceAccountId === selectedGoal.accountId) {
-      setError('Source account must be distinct from destination savings account.');
+    if (!destinationAccountId) {
+      setError('Choose a Savings or Cash account to receive the transfer.');
+      return;
+    }
+    if (sourceAccountId === destinationAccountId) {
+      setError('Source account must be different from the savings destination.');
       return;
     }
 
@@ -271,6 +287,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       await onExecuteTransfer({
         goalId: selectedGoal.id,
         sourceAccountId,
+        destinationAccountId,
         amountPence: pence,
         payer: transferPayer,
       });
@@ -294,21 +311,18 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         {canEdit && (
           <div className="mt-3">
             <button
-              disabled={savingsAccounts.length === 0}
               onClick={() => {
                 setError(null);
                 setGoalName('');
                 setGoalTargetStr('');
-                setGoalCurrentStr('');
                 setGoalDate('');
                 setGoalMonthlyPlanStr('');
-                setGoalAccountId(savingsAccounts[0]?.id || '');
                 setShowGoalModal(true);
               }}
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent px-3.5 text-[13px] font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add Pot
+              Add Goal
             </button>
           </div>
         )}
@@ -347,7 +361,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
           <article className="min-w-0 rounded-[14px] border border-muted bg-accent-soft p-4 shadow-sm">
             <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
-              Projected End Savings
+              Projected Total Savings
             </h2>
             <div className="mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-main whitespace-nowrap">
               {formatPence(savingsPosition.projectedEndSavingsPence)}
@@ -437,14 +451,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               {savingsGoals.map((goal) => {
                 const currentPence = savingsPosition.currentSavingsPence;
                 const projectedPence = savingsPosition.projectedEndSavingsPence;
-                const percent =
-                  goal.targetPence > 0
-                    ? Math.min(100, Math.round((currentPence / goal.targetPence) * 100))
-                    : 100;
-                const projectedPercent =
-                  goal.targetPence > 0
-                    ? Math.min(100, Math.round((projectedPence / goal.targetPence) * 100))
-                    : 100;
+                const currentPercentRaw =
+                  goal.targetPence > 0 ? (currentPence / goal.targetPence) * 100 : 100;
+                const projectedPercentRaw =
+                  goal.targetPence > 0 ? (projectedPence / goal.targetPence) * 100 : 100;
+                const percent = Math.round(currentPercentRaw * 10) / 10;
+                const projectedPercent = Math.round(projectedPercentRaw * 10) / 10;
+                const progressBarPercent = Math.min(100, Math.max(0, currentPercentRaw));
                 const remainingPence = Math.max(0, goal.targetPence - currentPence);
                 const projectedOverPence = Math.max(0, projectedPence - goal.targetPence);
                 const financeMonthlyPence = Math.max(0, savingsPosition.savedThisMonthPence);
@@ -460,6 +473,28 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     ? 0
                     : planMonthlyPence > 0
                     ? Math.ceil(remainingPence / planMonthlyPence)
+                    : null;
+                const selectedYear = Number(selectedMonth.slice(0, 4));
+                const selectedMonthNumber = Number(selectedMonth.slice(5, 7));
+                const targetYear = goal.targetDate
+                  ? Number(goal.targetDate.slice(0, 4))
+                  : 0;
+                const targetMonthNumber = goal.targetDate
+                  ? Number(goal.targetDate.slice(5, 7))
+                  : 0;
+                const monthsToTarget = goal.targetDate
+                  ? Math.max(
+                      0,
+                      (targetYear - selectedYear) * 12 +
+                        (targetMonthNumber - selectedMonthNumber) +
+                        1
+                    )
+                  : 0;
+                const requiredMonthlyPence =
+                  remainingPence > 0 && monthsToTarget > 0
+                    ? Math.ceil(remainingPence / monthsToTarget)
+                    : remainingPence === 0
+                    ? 0
                     : null;
 
                 return (
@@ -490,7 +525,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       <div className="w-full bg-surface-muted rounded-full h-2 mt-4 overflow-hidden">
                         <div
                           className="bg-accent h-2 rounded-full transition-all"
-                          style={{ width: `${percent}%` }}
+                          style={{ width: `${progressBarPercent}%` }}
                         />
                       </div>
 
@@ -549,9 +584,18 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                         </div>
 
                         {goal.targetDate && (
-                          <div className="flex items-center gap-1.5 text-[11px] text-muted">
-                            <Calendar className="w-3.5 h-3.5 shrink-0" />
-                            <span className="break-words">{goal.targetDate}</span>
+                          <div className="rounded-xl border border-muted px-3 py-2.5">
+                            <div className="flex items-center gap-1.5 text-[11px] text-muted">
+                              <Calendar className="w-3.5 h-3.5 shrink-0" />
+                              <span>Target {goal.targetDate}</span>
+                            </div>
+                            <div className="mt-1 text-[12px] font-semibold text-main">
+                              {requiredMonthlyPence === null
+                                ? 'Target date has passed'
+                                : requiredMonthlyPence === 0
+                                ? 'Goal achieved'
+                                : `Save ${formatPence(requiredMonthlyPence)}/month to reach this date`}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -645,7 +689,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         </div>
       </section>
 
-      {/* MODAL: Add Savings Pot */}
+      {/* MODAL: Add Savings Goal */}
       {showGoalModal && (
         <div className="mv-modal-backdrop">
           <div className="mv-modal-card">
@@ -670,7 +714,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               )}
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Pot Name</label>
+                <label className="mb-1 block text-xs font-semibold text-muted">Goal Name</label>
                 <input
                   autoFocus
                   type="text"
@@ -773,13 +817,31 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       (a) =>
                         a.isActive !== false &&
                         a.type !== 'credit' &&
-                        a.id !== selectedGoal.accountId
+                        a.id !== destinationAccountId
                     )
                     .map((acc) => (
                       <option key={acc.id} value={acc.id}>
                         {acc.name} ({formatPence(acc.currentBalancePence)})
                       </option>
                     ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  To Savings Account
+                </label>
+                <select
+                  value={destinationAccountId}
+                  onChange={(e) => setDestinationAccountId(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  required
+                >
+                  {savingsAccounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name} ({formatPence(account.currentBalancePence)})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -827,7 +889,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !sourceAccountId || !destinationAccountId}
                   className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Transferring...' : 'Transfer'}
@@ -912,7 +974,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   className="inline-flex items-center gap-1.5 rounded-xl border border-danger bg-danger-soft px-4 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Delete Pot
+                  Delete Goal
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -928,7 +990,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     disabled={isSubmitting}
                     className="px-4 py-2 bg-accent text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition-all active:scale-[0.98]"
                   >
-                    {isSubmitting ? 'Saving...' : 'Update Pot'}
+                    {isSubmitting ? 'Saving...' : 'Update Goal'}
                   </button>
                 </div>
               </div>
