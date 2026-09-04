@@ -2208,7 +2208,15 @@ export function removeLocalHouseholdMember(
 
 export function getLocalPreferences(): UserPreferences {
   const storage = getStorage();
-  if (!storage) return { theme: 'light', accent: 'emerald' };
+  if (!storage) {
+    return {
+      theme: 'light',
+      accent: 'emerald',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
+    };
+  }
   try {
     const parsed = JSON.parse(storage.getItem(PREFS_KEY) || '{}');
     const normalized = normalizeUserPreferences(parsed);
@@ -2217,7 +2225,13 @@ export function getLocalPreferences(): UserPreferences {
     }
     return normalized;
   } catch {
-    return { theme: 'light', accent: 'emerald' };
+    return {
+      theme: 'light',
+      accent: 'emerald',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
+    };
   }
 }
 
