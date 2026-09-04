@@ -136,6 +136,38 @@ export default function App() {
     applyThemePreferences(userPreferences);
   }, [userPreferences]);
 
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      if (conflictServerVersion !== null) {
+        setConflictServerVersion(null);
+      } else if (showTestsModal) {
+        setShowTestsModal(false);
+      } else if (showBackupModal) {
+        setShowBackupModal(false);
+      } else if (showMonthImportModal) {
+        setShowMonthImportModal(false);
+      } else if (showPlannedPaymentModal) {
+        setShowPlannedPaymentModal(false);
+        setEditingPlannedPayment(null);
+      } else if (showTxModal) {
+        setShowTxModal(false);
+        setEditingTx(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [
+    conflictServerVersion,
+    showTestsModal,
+    showBackupModal,
+    showMonthImportModal,
+    showPlannedPaymentModal,
+    showTxModal,
+  ]);
+
   // Load Session & Household Data
   const loadData = useCallback(async () => {
     try {
