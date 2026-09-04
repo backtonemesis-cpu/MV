@@ -11,6 +11,7 @@ import {
   reconcileAccount,
   deleteAccount,
   createSavingsGoal,
+  contributeSavingsGoal,
   updateSavingsGoal,
   deleteSavingsGoal,
   createPlannedPayment,
@@ -344,39 +345,26 @@ export default function App() {
     }
   };
 
-  // Savings Transfer handler (moves money between accounts, e.g. liquid to savings pot or vice-versa)
+  // Savings contribution handler: transfer + pot allocation commit atomically.
   const handleSavingsTransfer = async (payload: {
+    goalId: string;
     sourceAccountId: string;
-    destinationAccountId: string;
     amountPence: number;
-    description?: string;
     payer?: Payer;
-    isSavings?: boolean;
   }) => {
     if (!household) return;
     try {
       setIsSubmitting(true);
-      const sourceAcc = household.accounts.find((a) => a.id === payload.sourceAccountId);
-      const destAcc = household.accounts.find((a) => a.id === payload.destinationAccountId);
-      if (!sourceAcc || !destAcc) throw new Error('Account not found');
-
-      // Create a savings transfer transaction
-      await createTransaction(
+      await contributeSavingsGoal(
         {
-          accountId: payload.sourceAccountId,
-          targetAccountId: payload.destinationAccountId,
+          goalId: payload.goalId,
+          sourceAccountId: payload.sourceAccountId,
           amountPence: payload.amountPence,
-          description: payload.description || `Transfer to ${destAcc.name}`,
-          type: 'transfer',
-          isTransfer: true,
-          isSavings: payload.isSavings ?? (destAcc.type === 'savings' || sourceAcc.type === 'savings'),
-          payer: payload.payer || (sourceAcc.ownerPerson as any) || 'Joint',
+          payer: payload.payer,
           date: new Date().toISOString().substring(0, 10),
-          notes: 'Savings allocation',
         },
         household.version
       );
-
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
@@ -384,6 +372,7 @@ export default function App() {
       } else {
         setError(err.message || 'Failed to process savings allocation');
       }
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
