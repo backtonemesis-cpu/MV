@@ -17,6 +17,7 @@ import {
   Banknote,
 } from 'lucide-react';
 import { HouseholdData, UserRole, NavTab, Account } from '../types';
+import { MonthPicker } from './MonthPicker';
 import {
   formatPence,
   calculateFinancialSummary,
@@ -27,7 +28,6 @@ interface DashboardProps {
   household: HouseholdData;
   userRole: UserRole;
   selectedMonth: string;
-  availableMonths: string[];
   onSelectMonth: (month: string) => void;
   onOpenMonthImport: () => void;
   onOpenAddTransaction: () => void;
@@ -46,7 +46,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   household,
   userRole,
   selectedMonth,
-  availableMonths,
   onSelectMonth,
   onOpenMonthImport,
   onOpenAddTransaction,
@@ -197,17 +196,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 Active period
               </div>
 
-              <select
+              <MonthPicker
                 value={selectedMonth}
-                onChange={(e) => onSelectMonth(e.target.value)}
-                className="mt-1 h-9 min-w-[150px] rounded-xl border border-muted bg-surface-muted px-3 text-sm font-semibold text-main outline-none transition focus:border-strong"
-              >
-                {availableMonths.map((month) => (
-                  <option key={month} value={month}>
-                    {month}
-                  </option>
-                ))}
-              </select>
+                onChange={onSelectMonth}
+                ariaLabel="Dashboard month"
+                className="mt-1 min-w-[170px]"
+              />
             </div>
           </div>
 
