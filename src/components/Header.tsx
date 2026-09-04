@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-emerald-700 dark:bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
+            <div className="mv-primary-bg w-9 h-9 rounded-xl flex items-center justify-center font-bold text-lg shadow-xs shrink-0">
               MV
             </div>
             <div className="min-w-0">
@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="header-backup-btn"
               onClick={onOpenBackupModal}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+              className="mv-secondary-button inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
               title="Backup"
             >
               <DownloadCloud className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="p-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
               title="Refresh"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-emerald-600' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin mv-primary-text' : 'mv-text-muted'}`} />
             </button>
 
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border mv-border border-neutral-200 dark:border-neutral-700 mv-surface bg-white dark:bg-neutral-800">
