@@ -831,7 +831,6 @@ export default function App() {
                 transactions={household.transactions}
                 members={household.members}
                 selectedMonth={selectedMonth}
-                availableMonths={availableMonths}
                 userRole={session.role}
                 onSelectMonth={setSelectedMonth}
                 onCreateIncome={handleCreatePlannedIncome}
@@ -909,7 +908,6 @@ export default function App() {
                 plannedIncomes={household.plannedIncomes || []}
                 plannedPayments={household.plannedPayments || []}
                 selectedMonth={selectedMonth}
-                availableMonths={availableMonths}
                 onSelectMonth={setSelectedMonth}
               />
             )}
