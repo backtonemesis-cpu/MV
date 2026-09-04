@@ -23,20 +23,26 @@ import {
   UserSession,
   ThemePreference,
   AccentColor,
+  AccentRgb,
   UserPreferences,
 } from '../types';
+import { accentRgbForPreference } from '../themeEngine';
 
-const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string }[] = [
-  { id: 'emerald', name: 'Emerald Green', color: '#22C55E' },
-  { id: 'sapphire', name: 'Sapphire Blue', color: '#2563eb' },
-  { id: 'amethyst', name: 'Amethyst Purple', color: '#8b5cf6' },
-  { id: 'crimson', name: 'Crimson Ruby', color: '#e11d48' },
-  { id: 'amber', name: 'Sunset Amber', color: '#d97706' },
-  { id: 'teal', name: 'Ocean Teal', color: '#0d9488' },
-  { id: 'indigo', name: 'Midnight Indigo', color: '#4f46e5' },
-  { id: 'rose', name: 'Rose Quartz', color: '#db2777' },
-  { id: 'gold', name: 'Classic Gold', color: '#b45309' },
+const ACCENT_PRESETS: {
+  id: AccentColor;
+  name: string;
+  rgb: AccentRgb;
+}[] = [
+  { id: 'emerald', name: 'Emerald Mint', rgb: { r: 34, g: 197, b: 94 } },
+  { id: 'teal', name: 'Electric Teal', rgb: { r: 6, g: 182, b: 212 } },
+  { id: 'indigo', name: 'Royal Indigo', rgb: { r: 99, g: 102, b: 241 } },
+  { id: 'amber', name: 'Amber Gold', rgb: { r: 234, g: 179, b: 8 } },
+  { id: 'sapphire', name: 'Crisp Silver', rgb: { r: 148, g: 163, b: 184 } },
 ];
+
+function sameRgb(left: AccentRgb, right: AccentRgb): boolean {
+  return left.r === right.r && left.g === right.g && left.b === right.b;
+}
 
 interface SettingsViewProps {
   currentSession: UserSession;
@@ -138,9 +144,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [editingMemberId, showResetConfirm]);
 
+  const currentAccentRgb = accentRgbForPreference(userPreferences);
+  const selectedPreset = ACCENT_PRESETS.find((item) => sameRgb(item.rgb, currentAccentRgb));
   const activeAccentName =
-    ACCENT_OPTIONS.find((item) => item.id === (hoveredAccent ?? userPreferences.accent))?.name ??
-    'Emerald Green';
+    (hoveredAccent
+      ? ACCENT_PRESETS.find((item) => item.id === hoveredAccent)?.name
+      : selectedPreset?.name) ?? 'Custom RGB';
+
+  const applyPreset = (preset: (typeof ACCENT_PRESETS)[number]) => {
+    onUpdatePreferences({
+      accent: preset.id,
+      accentRgb: { ...preset.rgb },
+    });
+  };
+
+  const updateRgbChannel = (channel: keyof AccentRgb, value: number) => {
+    const nextRgb: AccentRgb = {
+      ...currentAccentRgb,
+      [channel]: Math.max(0, Math.min(255, Math.round(value))),
+    };
+    onUpdatePreferences({ accentRgb: nextRgb });
+  };
 
   const showDevelopmentTools = !import.meta.env.PROD;
 
@@ -344,28 +368,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            {/* Accent Highlights */}
-            <div className="pb-2">
-              <div className="flex items-center justify-between gap-3">
-                <label className="text-muted text-xs font-semibold uppercase tracking-[0.08em]">
-                  Accent Highlight
-                </label>
+            {/* Hybrid Accent Console */}
+            <div className="mv-accent-console">
+              <div className="mv-accent-console-head">
+                <label>Accent Highlight</label>
                 <span className="mv-accent-current-label" aria-live="polite">
                   {activeAccentName}
                 </span>
               </div>
 
               <div
-                className="mv-accent-picker"
+                className="mv-accent-quick-row"
                 role="group"
-                aria-label="Accent highlight"
+                aria-label="Quick accent presets"
                 onMouseLeave={() => setHoveredAccent(null)}
               >
-                {ACCENT_OPTIONS.map((item) => {
-                  const isSelected = userPreferences.accent === item.id;
+                {ACCENT_PRESETS.map((item) => {
+                  const isSelected = sameRgb(item.rgb, currentAccentRgb);
+                  const swatch = `rgb(${item.rgb.r}, ${item.rgb.g}, ${item.rgb.b})`;
                   return (
                     <button
-                      key={item.id}
+                      key={item.name}
                       type="button"
                       aria-label={item.name}
                       title={item.name}
@@ -373,10 +396,37 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       onMouseEnter={() => setHoveredAccent(item.id)}
                       onFocus={() => setHoveredAccent(item.id)}
                       onBlur={() => setHoveredAccent(null)}
-                      onClick={() => onUpdatePreferences({ accent: item.id })}
-                      className={`mv-accent-swatch ${isSelected ? 'is-active' : ''}`}
-                      style={{ '--swatch': item.color } as React.CSSProperties}
-                    />
+                      onClick={() => applyPreset(item)}
+                      className={`mv-accent-quick-swatch ${isSelected ? 'is-active' : ''}`}
+                      style={{ '--swatch': swatch } as React.CSSProperties}
+                    >
+                      {isSelected && <Check className="h-2.5 w-2.5" aria-hidden="true" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mv-rgb-sliders" aria-label="Custom RGB accent controls">
+                {([
+                  ['r', 'R'],
+                  ['g', 'G'],
+                  ['b', 'B'],
+                ] as const).map(([channel, label]) => {
+                  const value = currentAccentRgb[channel];
+                  return (
+                    <label key={channel} className="mv-rgb-slider-row">
+                      <span className="mv-rgb-channel">{label}</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="255"
+                        step="1"
+                        value={value}
+                        onChange={(event) => updateRgbChannel(channel, Number(event.target.value))}
+                        aria-label={`${label} channel`}
+                      />
+                      <span className="mv-rgb-value">{label}: {value}</span>
+                    </label>
                   );
                 })}
               </div>
