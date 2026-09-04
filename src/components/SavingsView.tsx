@@ -30,12 +30,10 @@ interface SavingsViewProps {
   onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
   onDeleteSavingsGoal: (id: string) => Promise<void>;
   onExecuteTransfer: (payload: {
+    goalId: string;
     sourceAccountId: string;
-    destinationAccountId: string;
     amountPence: number;
-    description?: string;
     payer?: Payer;
-    isSavings?: boolean;
   }) => Promise<void>;
 }
 
@@ -245,19 +243,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
-      // Execute transfer with isSavings flag (non-spending)
       await onExecuteTransfer({
+        goalId: selectedGoal.id,
         sourceAccountId,
-        destinationAccountId: selectedGoal.accountId,
         amountPence: pence,
-        description: `Savings Contribution: ${selectedGoal.name}`,
         payer: transferPayer,
-        isSavings: true,
-      });
-
-      // Update the goal's currentPence
-      await onUpdateSavingsGoal(selectedGoal.id, {
-        currentPence: selectedGoal.currentPence + pence,
       });
 
       setShowTransferModal(false);
@@ -691,7 +681,12 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 >
                   {accounts
-                    .filter((a) => a.isActive !== false && a.id !== selectedGoal.accountId)
+                    .filter(
+                      (a) =>
+                        a.isActive !== false &&
+                        a.type !== 'credit' &&
+                        a.id !== selectedGoal.accountId
+                    )
                     .map((acc) => (
                       <option key={acc.id} value={acc.id}>
                         {acc.name} ({formatPence(acc.currentBalancePence)})
