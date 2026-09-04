@@ -571,6 +571,45 @@ function repairDuplicateAccountRouting(state: HouseholdData): number {
   return repairs;
 }
 
+function stripImportedNarrativeNotes(state: HouseholdData): void {
+  const importedNarrativePrefixes = [
+    'imported from source workbook',
+    'imported from the source workbook',
+    'imported from a paid fixed row in the source workbook',
+    'source savings snapshot:',
+    'used by source income/expense rows.',
+    'used by source income rows.',
+    'used by source expense rows.',
+  ];
+
+  const shouldStrip = (notes?: string): boolean => {
+    const normalized = notes?.trim().toLowerCase() || '';
+    return importedNarrativePrefixes.some((prefix) => normalized.startsWith(prefix));
+  };
+
+  state.accounts = (state.accounts || []).map((account) =>
+    shouldStrip(account.notes) ? { ...account, notes: undefined } : account
+  );
+
+  state.transactions = (state.transactions || []).map((transaction) =>
+    shouldStrip(transaction.notes) ? { ...transaction, notes: undefined } : transaction
+  );
+
+  state.plannedPayments = (state.plannedPayments || []).map((payment) =>
+    shouldStrip(payment.notes) ? { ...payment, notes: undefined } : payment
+  );
+
+  state.plannedIncomes = (state.plannedIncomes || []).map((income) =>
+    shouldStrip(income.notes) ? { ...income, notes: undefined } : income
+  );
+
+  state.auditLogs = (state.auditLogs || []).map((entry) =>
+    entry.action === 'source_budget_imported'
+      ? { ...entry, summary: 'September 2026 budget imported.' }
+      : entry
+  );
+}
+
 function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
@@ -619,6 +658,7 @@ function normalizeHousehold(input: HouseholdData): HouseholdData {
   state.members = [owner, ...otherMembers, ...inferredMembers];
 
   state.plannedIncomes = state.plannedIncomes || [];
+  stripImportedNarrativeNotes(state);
   normalizeAccountOwnership(state);
 
   // Same-named bank accounts are distinguished by stable account ID and owner.
