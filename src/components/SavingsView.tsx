@@ -187,7 +187,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     <div className="space-y-6 pb-12">
       {/* Header */}
       <div>
-        <h1 className="w-full whitespace-nowrap text-xl font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <h1 className="w-full whitespace-nowrap text-xl font-bold text-main">
           Savings
         </h1>
 
@@ -201,7 +201,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 setGoalCurrentStr('');
                 setShowGoalModal(true);
               }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-emerald-800 transition"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent px-3.5 text-[13px] font-semibold text-on-accent shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-success-soft transition"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Pot
@@ -211,41 +211,41 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       </div>
 
       {/* Savings Summary, Goals & Movements */}
-      <section className="mv-edge-safe rounded-2xl border mv-border border-slate-200/80 dark:border-neutral-800 mv-surface bg-white/70 dark:bg-neutral-900/50 p-3 sm:p-4 space-y-5">
+      <section className="mv-edge-safe rounded-2xl border border-muted bg-surface p-3 sm:p-4 space-y-5">
         <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
-          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-            <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+            <h2 className="text-[15px] font-semibold leading-5 text-main">
               Total Savings
             </h2>
-            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight mv-text text-slate-950 dark:text-white whitespace-nowrap">
+            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-main whitespace-nowrap">
               {formatPence(totalSavedPence)}
             </div>
-            <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
+            <span className="mt-1 block text-[12px] font-normal leading-4 text-muted">
               target {formatPence(totalTargetPence)} · {overallPercent}%
             </span>
           </article>
 
-          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-            <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+          <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+            <h2 className="text-[15px] font-semibold leading-5 text-main">
               {selectedMonth} Contributions
             </h2>
-            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-success whitespace-nowrap">
               {formatPence(monthSavingsTotalPence)}
             </div>
-            <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
+            <span className="mt-1 block text-[12px] font-normal leading-4 text-muted">
               excluded from living spend
             </span>
           </article>
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+          <h2 className="text-[15px] font-semibold leading-5 text-main">
             Active Savings Goals
           </h2>
 
           {savingsGoals.length === 0 ? (
-            <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-6 text-left">
-              <p className="text-[13px] font-medium leading-5 text-[#94a3b8] dark:text-neutral-500">
+            <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-6 text-left">
+              <p className="text-[13px] font-medium leading-5 text-subtle">
                 No active savings goals
               </p>
             </div>
@@ -261,62 +261,62 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 return (
                   <article
                     key={goal.id}
-                    className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] flex flex-col justify-between"
+                    className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex min-w-0 items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="w-9 h-9 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                          <div className="w-9 h-9 shrink-0 rounded-xl bg-success-soft text-success flex items-center justify-center">
                             <PiggyBank className="w-4.5 h-4.5" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white break-words">
+                            <h3 className="text-[15px] font-semibold leading-5 text-main break-words">
                               {goal.name}
                             </h3>
-                            <span className="mt-0.5 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400 break-words">
+                            <span className="mt-0.5 block text-[12px] font-normal leading-4 text-muted break-words">
                               {linkedAccount?.name || 'Account'}
                             </span>
                           </div>
                         </div>
-                        <span className="shrink-0 text-[13px] font-semibold text-slate-700 dark:text-neutral-200">
+                        <span className="shrink-0 text-[13px] font-semibold text-muted">
                           {percent}%
                         </span>
                       </div>
 
-                      <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-2 mt-4 overflow-hidden">
+                      <div className="w-full bg-surface-muted rounded-full h-2 mt-4 overflow-hidden">
                         <div
-                          className="bg-emerald-600 dark:bg-emerald-500 h-2 rounded-full transition-all"
+                          className="bg-accent h-2 rounded-full transition-all"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 mt-3 text-[12px]">
                         <div className="min-w-0">
-                          <span className="block text-[#64748b] dark:text-neutral-400">saved</span>
-                          <span className="block mt-0.5 font-semibold mv-text text-slate-950 dark:text-white whitespace-nowrap">
+                          <span className="block text-muted">saved</span>
+                          <span className="block mt-0.5 font-semibold text-main whitespace-nowrap">
                             {formatPence(goal.currentPence)}
                           </span>
                         </div>
                         <div className="min-w-0 text-right">
-                          <span className="block text-[#64748b] dark:text-neutral-400">target</span>
-                          <span className="block mt-0.5 font-semibold mv-text text-slate-950 dark:text-white whitespace-nowrap">
+                          <span className="block text-muted">target</span>
+                          <span className="block mt-0.5 font-semibold text-main whitespace-nowrap">
                             {formatPence(goal.targetPence)}
                           </span>
                         </div>
                       </div>
 
                       {goal.targetDate && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-[#64748b] dark:text-neutral-400 mt-2">
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted mt-2">
                           <Calendar className="w-3.5 h-3.5 shrink-0" />
                           <span className="break-words">{goal.targetDate}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="mv-hscroll mt-4 pt-3 border-t border-slate-100 dark:border-neutral-800">
+                    <div className="mv-hscroll mt-4 pt-3 border-t border-muted">
                       <button
                         onClick={() => openTransferModal(goal)}
-                        className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 text-[13px] font-semibold text-emerald-700 dark:text-emerald-300"
+                        className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-full bg-success-soft px-3 py-1.5 text-[13px] font-semibold text-success"
                       >
                         <ArrowUpRight className="w-3.5 h-3.5" />
                         Transfer
@@ -325,7 +325,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       {canEdit && (
                         <button
                           onClick={() => openEditGoal(goal)}
-                          className="shrink-0 whitespace-nowrap rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3 py-1.5 text-[13px] font-medium mv-text-muted text-slate-600 dark:text-neutral-300"
+                          className="shrink-0 whitespace-nowrap rounded-full bg-surface-muted px-3 py-1.5 text-[13px] font-medium text-muted"
                         >
                           Edit
                         </button>
@@ -340,17 +340,17 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
         <div className="space-y-3">
           <div className="flex min-w-0 items-center justify-between gap-3">
-            <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+            <h2 className="text-[15px] font-semibold leading-5 text-main">
               Savings Movements
             </h2>
-            <span className="shrink-0 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-2.5 py-1 text-[12px] font-medium text-[#64748b] dark:text-neutral-400">
+            <span className="shrink-0 rounded-full bg-surface-muted px-2.5 py-1 text-[12px] font-medium text-muted">
               {selectedMonth}
             </span>
           </div>
 
           {monthSavingsTxs.length === 0 ? (
-            <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-6 text-left">
-              <p className="text-[13px] font-medium leading-5 text-[#94a3b8] dark:text-neutral-500">
+            <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-6 text-left">
+              <p className="text-[13px] font-medium leading-5 text-subtle">
                 No savings movements for {selectedMonth}
               </p>
             </div>
@@ -359,17 +359,17 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               {monthSavingsTxs.map((tx) => (
                 <div
                   key={tx.id}
-                  className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 px-4 py-3 flex items-center justify-between gap-3 text-xs"
+                  className="min-w-0 rounded-[14px] border border-muted bg-surface px-4 py-3 flex items-center justify-between gap-3 text-xs"
                 >
                   <div className="min-w-0">
-                    <span className="block text-[13px] font-semibold text-[#0f172a] dark:text-white break-words">
+                    <span className="block text-[13px] font-semibold text-main break-words">
                       {tx.description}
                     </span>
-                    <div className="text-[11px] text-[#64748b] dark:text-neutral-400 mt-0.5">
+                    <div className="text-[11px] text-muted mt-0.5">
                       {tx.date} · {tx.payer}
                     </div>
                   </div>
-                  <div className="shrink-0 font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                  <div className="shrink-0 font-semibold text-success whitespace-nowrap">
                     +{formatPence(tx.amountPence)}
                   </div>
                 </div>
@@ -381,15 +381,15 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
       {/* MODAL: Transfer into Savings */}
       {showTransferModal && selectedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">
                 Transfer to {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowTransferModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -397,19 +397,19 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
             <form onSubmit={handleTransferSubmit} className="mt-4 space-y-4">
               {error && (
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   From Account
                 </label>
                 <select
                   value={sourceAccountId}
                   onChange={(e) => setSourceAccountId(e.target.value)}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 >
                   {accounts
                     .filter((a) => a.isActive !== false && a.id !== selectedGoal.accountId)
@@ -423,7 +423,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Amount (£)
                   </label>
                   <input
@@ -431,19 +431,19 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     value={transferAmountStr}
                     onChange={(e) => setTransferAmountStr(e.target.value)}
                     placeholder="e.g. 250.00"
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-bold focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     By
                   </label>
                   <select
                     value={transferPayer}
                     onChange={(e) => setTransferPayer(e.target.value as Payer)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
                     <option value="Joint">Joint</option>
                     <option value="Marius">Marius</option>
@@ -452,18 +452,18 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowTransferModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Transferring...' : 'Transfer'}
                 </button>
@@ -475,15 +475,15 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
       {/* MODAL: Edit Goal */}
       {showEditGoalModal && selectedGoal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">
                 Edit {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowEditGoalModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -491,68 +491,68 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
             <form onSubmit={handleEditGoalSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Pot Name
                 </label>
                 <input
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Current (£)
                   </label>
                   <input
                     type="text"
                     value={goalCurrentStr}
                     onChange={(e) => setGoalCurrentStr(e.target.value)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Target (£)
                   </label>
                   <input
                     type="text"
                     value={goalTargetStr}
                     onChange={(e) => setGoalTargetStr(e.target.value)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Target Date
                 </label>
                 <input
                   type="date"
                   value={goalDate}
                   onChange={(e) => setGoalDate(e.target.value)}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowEditGoalModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Update Pot'}
                 </button>
