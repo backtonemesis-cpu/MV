@@ -49,8 +49,8 @@ export const Navigation: React.FC<NavigationProps> = ({
     <>
       {/* Desktop Navigation Bar */}
       <nav className="hidden sm:block border-b border-muted bg-surface transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1">
+        <div className="mx-auto w-full max-w-[1440px] px-4">
+          <div className="flex gap-0.5">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -59,13 +59,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
                   onClick={() => onTabChange(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-[12px] font-medium transition-colors ${
                     isActive
                       ? 'border-accent text-accent bg-accent-soft text-accent'
                       : 'border-transparent text-muted hover:text-main'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-muted'}`} />
+                  <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-accent' : 'text-muted'}`} />
                   <span>{tab.label}</span>
                   {tab.badge && (
                     <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-danger-soft text-on-accent">
