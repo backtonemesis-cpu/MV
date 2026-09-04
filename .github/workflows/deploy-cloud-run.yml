@@ -1,0 +1,138 @@
+name: Deploy MV to Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to deploy (default: current main)"
+        required: false
+        default: "main"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: mv-production-deploy
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: regal-campus-198sv
+  REGION: us-east1
+  SERVICE: mv
+
+jobs:
+  deploy:
+    name: Deploy verified Firestore revision
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Require deployment identity configuration
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          DEPLOY_SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -z "$WIF_PROVIDER" ]; then
+            echo "::error::Missing production variable GCP_WORKLOAD_IDENTITY_PROVIDER"
+            exit 1
+          fi
+          if [ -z "$DEPLOY_SERVICE_ACCOUNT" ]; then
+            echo "::error::Missing production variable GCP_DEPLOY_SERVICE_ACCOUNT"
+            exit 1
+          fi
+
+      - name: Checkout selected ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || 'main' }}
+          fetch-depth: 0
+
+      - name: Resolve deployment source
+        id: source
+        run: |
+          set -euo pipefail
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse unverified main mismatch
+        if: ${{ (inputs.ref || 'main') == 'main' }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Verify default Firestore exists
+        run: |
+          set -euo pipefail
+          gcloud firestore databases describe             --project="$PROJECT_ID"             --database="(default)"             --format="value(name,type,locationId)"
+
+      - name: Deploy deny-all Firestore browser rules
+        run: |
+          set -euo pipefail
+          npx --yes firebase-tools@15.28.2 deploy             --project "$PROJECT_ID"             --only firestore:rules             --non-interactive
+
+      - name: Deploy Cloud Run source
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          source: .
+          env_vars_update_strategy: merge
+          env_vars: |-
+            NODE_ENV=production
+            MV_DATA_BACKEND=firestore
+            MV_FIRESTORE_DATABASE_ID=(default)
+
+      - name: Verify deployed revision is Ready
+        run: |
+          set -euo pipefail
+          gcloud run services describe "$SERVICE"             --project="$PROJECT_ID"             --region="$REGION"             --format="yaml(status.url,status.latestReadyRevisionName,status.conditions,spec.template.spec.serviceAccountName)"
+
+      - name: Verify live Firestore backend
+        env:
+          SERVICE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SERVICE_URL" ]; then
+            echo "::error::Cloud Run deploy action returned no service URL"
+            exit 1
+          fi
+
+          curl --fail --silent --show-error             "$SERVICE_URL/api/system/schema-status"             -o /tmp/schema-status.json
+
+          cat /tmp/schema-status.json
+          grep --fixed-strings '"backend":"firestore"' /tmp/schema-status.json
+
+          curl --fail --silent --show-error             "$SERVICE_URL/"             -o /tmp/mv-index.html
+
+          grep --ignore-case --fixed-strings '<!doctype html>' /tmp/mv-index.html
+
+      - name: Deployment summary
+        env:
+          SERVICE_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          {
+            echo "## MV production deployment"
+            echo
+            echo "- Ref: \`${{ inputs.ref || 'main' }}\`"
+            echo "- Commit: \`${{ steps.source.outputs.sha }}\`"
+            echo "- Project: \`$PROJECT_ID\`"
+            echo "- Region: \`$REGION\`"
+            echo "- Service: \`$SERVICE\`"
+            echo "- URL: $SERVICE_URL"
+            echo "- Backend verification: Firestore"
+          } >> "$GITHUB_STEP_SUMMARY"
