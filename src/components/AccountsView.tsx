@@ -234,22 +234,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             Accounts
           </h1>
 
-          <div className="mt-3 overflow-x-auto scrollbar-none">
-            <div className="inline-flex min-w-max items-center gap-2">
+          <div className="mv-hscroll mv-edge-safe mt-3">
+            <div className="flex min-w-max items-center gap-2">
               {canEdit && (
                 <button
                   onClick={() => {
                     setError(null);
                     setShowAccModal(true);
                   }}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-emerald-800 transition"
+                  className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-emerald-800 transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add Account
                 </button>
               )}
 
-              <label className="inline-flex h-9 items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium text-slate-600 dark:text-neutral-300 cursor-pointer">
+              <label className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium text-slate-600 dark:text-neutral-300 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showArchived}
@@ -290,7 +290,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                         <Landmark className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="mv-hscroll max-w-[70%] items-center gap-1.5">
                       <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 border border-neutral-200 dark:border-neutral-600">
                         {acc.type}
                       </span>
@@ -411,10 +411,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           </h2>
 
           {canEdit && (
-            <div className="mt-3">
+            <div className="mv-hscroll mv-edge-safe mt-3">
               <button
                 onClick={() => setShowGoalModal(true)}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-semibold text-slate-700 dark:text-neutral-200 shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-100 dark:hover:bg-neutral-700 transition"
+                className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-semibold text-slate-700 dark:text-neutral-200 shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-100 dark:hover:bg-neutral-700 transition"
               >
                 <Plus className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
                 Add Pot
