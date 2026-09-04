@@ -869,13 +869,13 @@ export class FirestoreAdminDataService {
       throw error;
     }
 
-    const result = await this.store.runMutation(
+    const result = await this.store.runMutation<{ deletedRecords: number }>(
       {
         expectedVersion,
         actorEmail,
         audit: {
           action: 'household_reset',
-          entityType: 'household',
+          entityType: 'system',
           entityId: HOUSEHOLD_ID,
           summary: 'Reset all household financial data to empty zero state',
           details: {
