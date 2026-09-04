@@ -100,7 +100,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-700" />
-            <h2 className="text-base font-bold text-neutral-900">Backup & Restore Local Data</h2>
+            <h2 className="text-base font-bold text-neutral-900">Backup & Restore</h2>
           </div>
           <button
             onClick={onClose}
@@ -121,33 +121,28 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           {/* Export Section */}
           <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
             <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
-              Export Local Backup
+              Backup
             </h3>
-            <p className="text-xs text-neutral-500 mb-3">
-              Downloads a validated JSON copy of the data stored in this browser. Keep it somewhere safe so you can restore MV on this or another device.
-            </p>
             <button
               onClick={handleExport}
               disabled={isExporting}
               className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-xs font-semibold hover:bg-neutral-800 transition disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
-              {isExporting ? 'Generating...' : 'Download Full JSON Archive'}
+              {isExporting ? 'Generating...' : 'Download Backup'}
             </button>
           </div>
 
           {/* Restore Section (Owner Only) */}
           <div className="border-t border-neutral-200 pt-5">
             <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
-              Restore Local Backup
+              Restore
             </h3>
-            <p className="text-xs text-neutral-500 mb-3">
-              Validates the backup and exact-pence fields before replacing the local browser copy. MV keeps an automatic pre-restore recovery copy.
-            </p>
+            <p className="text-xs text-neutral-500 mb-3">Restoring replaces local data.</p>
 
             {!isOwner ? (
               <div className="p-3 bg-neutral-100 rounded-xl text-xs text-neutral-600">
-                Only the Household Owner (Marius) can execute dataset restores.
+                Owner only.
               </div>
             ) : restoreComplete ? (
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-2">
@@ -155,9 +150,6 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   Local Backup Restored
                 </div>
-                <p className="text-[11px] text-emerald-700 mt-1">
-                  The validated backup is now stored locally in this browser and the restore is recorded in the audit trail.
-                </p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -169,7 +161,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                 />
 
                 <textarea
-                  placeholder="Or paste backup JSON contents here..."
+                  placeholder="Paste backup JSON"
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
                   className="w-full h-24 p-2 text-[11px] font-mono rounded-xl border border-neutral-300"
@@ -181,7 +173,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition disabled:opacity-50"
                 >
                   <Upload className="w-4 h-4" />
-                  {isImporting ? 'Validating & Restoring...' : 'Validate & Execute Restore'}
+                  {isImporting ? 'Restoring...' : 'Restore Backup'}
                 </button>
               </div>
             )}
