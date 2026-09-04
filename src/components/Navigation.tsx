@@ -59,7 +59,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
                   onClick={() => onTabChange(tab.id)}
-                  className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-[12px] font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 border-b-2 px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                     isActive
                       ? 'border-accent text-accent bg-accent-soft text-accent'
                       : 'border-transparent text-muted hover:text-main'
