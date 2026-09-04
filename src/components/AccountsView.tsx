@@ -226,40 +226,47 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   }, [transactions, selectedAccount]);
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 pb-12">
       {/* Accounts Section */}
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              Accounts
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showArchived}
-                onChange={(e) => setShowArchived(e.target.checked)}
-                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-neutral-300 dark:border-neutral-700"
-              />
-              Show Archived
-            </label>
-            {canEdit && (
-              <button
-                onClick={() => {
-                  setError(null);
-                  setShowAccModal(true);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 shadow-xs transition"
-              >
-                <Plus className="w-4 h-4" />
-                Add Account
-              </button>
-            )}
+        <div className="mb-4">
+          <h1 className="w-full whitespace-nowrap text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            Accounts
+          </h1>
+
+          <div className="mt-3 overflow-x-auto scrollbar-none">
+            <div className="inline-flex min-w-max items-center gap-2">
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    setError(null);
+                    setShowAccModal(true);
+                  }}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-emerald-800 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Account
+                </button>
+              )}
+
+              <label className="inline-flex h-9 items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium text-slate-600 dark:text-neutral-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-neutral-600"
+                />
+                Show Archived
+              </label>
+            </div>
           </div>
         </div>
 
+        {displayedAccounts.length === 0 ? (
+          <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
+            No accounts
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayedAccounts.map((acc) => {
             const isArchived = acc.isActive === false;
@@ -393,27 +400,34 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             );
           })}
         </div>
+        )}
       </div>
 
       {/* Savings Pots Section */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              Savings Pots
-            </h2>
-          </div>
+        <div className="mb-4">
+          <h2 className="w-full whitespace-nowrap text-lg font-bold text-neutral-900 dark:text-neutral-100">
+            Savings Pots
+          </h2>
+
           {canEdit && (
-            <button
-              onClick={() => setShowGoalModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-750 transition"
-            >
-              <Plus className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-              Add Pot
-            </button>
+            <div className="mt-3">
+              <button
+                onClick={() => setShowGoalModal(true)}
+                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-semibold text-slate-700 dark:text-neutral-200 shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-100 dark:hover:bg-neutral-700 transition"
+              >
+                <Plus className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
+                Add Pot
+              </button>
+            </div>
           )}
         </div>
 
+        {savingsGoals.length === 0 ? (
+          <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
+            No savings pots
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {savingsGoals.map((goal) => {
             const percent =
@@ -460,6 +474,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             );
           })}
         </div>
+        )}
       </div>
 
       {/* MODAL: Add Account */}
