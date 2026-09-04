@@ -285,6 +285,10 @@ export function calculateLiquidFundsPence(accounts: Account[]): number {
     .reduce((sum, account) => sum + account.currentBalancePence, 0);
 }
 
+/**
+ * Legacy diagnostic retained for old backups that still contain account-linked
+ * savings allocations. Household savings goals no longer use this for progress.
+ */
 export function calculateSavingsGoalAllocationIntegrity(
   accounts: Account[],
   goals: SavingsGoal[]
@@ -293,6 +297,7 @@ export function calculateSavingsGoalAllocationIntegrity(
   const allocatedByAccount = new Map<string, number>();
 
   for (const goal of goals) {
+    if (!goal.accountId) continue;
     allocatedByAccount.set(
       goal.accountId,
       (allocatedByAccount.get(goal.accountId) || 0) + goal.currentPence
@@ -300,6 +305,17 @@ export function calculateSavingsGoalAllocationIntegrity(
   }
 
   return goals.map((goal) => {
+    if (!goal.accountId) {
+      return {
+        goalId: goal.id,
+        accountId: undefined,
+        accountBalancePence: 0,
+        accountAllocatedPence: 0,
+        overallocatedPence: 0,
+        isOverallocated: false,
+      };
+    }
+
     const account = accountById.get(goal.accountId);
     const accountBalancePence =
       account && account.isActive !== false ? account.currentBalancePence : 0;
