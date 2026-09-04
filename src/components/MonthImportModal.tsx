@@ -135,11 +135,8 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                Create New Month & Import Bills
+                Copy Bills to Month
               </h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Copy recurring household commitments with automatic reset to Unpaid
-              </p>
             </div>
           </div>
           <button
@@ -163,7 +160,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                Source Month (Copy From)
+                From Month
               </label>
               <select
                 value={sourceMonth}
@@ -180,13 +177,13 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                Target Month (New Period)
+                To Month
               </label>
               <input
                 type="text"
                 value={targetMonth}
                 onChange={(e) => setTargetMonth(e.target.value.trim())}
-                placeholder="YYYY-MM (e.g. 2026-10)"
+                placeholder="YYYY-MM"
                 pattern="\d{4}-\d{2}"
                 className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 required
@@ -197,19 +194,14 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           {/* Integrity Guarantees Banner */}
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <span className="font-bold">Authoritative Month Roll Forward:</span>
-              <p className="text-[11px] leading-relaxed text-emerald-700 dark:text-emerald-400">
-                Imported commitments reset to <strong>Unpaid</strong>. Due dates roll forward into {targetMonth}. Duplicate records are automatically prevented.
-              </p>
-            </div>
+            <span className="text-[11px]">Copied bills reset to <strong>Unpaid</strong>; duplicates are skipped.</span>
           </div>
 
           {/* Bills Selection */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200">
-                Select Bills to Copy ({selectedPaymentIds.size} of {sourcePayments.length})
+                Bills ({selectedPaymentIds.size}/{sourcePayments.length})
               </span>
               <button
                 type="button"
@@ -222,7 +214,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
 
             {sourcePayments.length === 0 ? (
               <div className="p-4 text-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
-                No planned commitments found in {sourceMonth}.
+                No bills in {sourceMonth}.
               </div>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -280,7 +272,6 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                         <div className="text-xs font-black text-neutral-900 dark:text-neutral-100">
                           {formatPence(payment.amountPence)}
                         </div>
-                        <span className="text-[10px] text-neutral-400">Resets to Unpaid</span>
                       </div>
                     </div>
                   );
@@ -304,7 +295,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
             >
               <Copy className="w-3.5 h-3.5" />
-              {isSubmitting ? 'Importing...' : `Import ${selectedPaymentIds.size} Bills into ${targetMonth}`}
+              {isSubmitting ? 'Importing...' : `Copy ${selectedPaymentIds.size} Bills`}
             </button>
           </div>
         </form>
