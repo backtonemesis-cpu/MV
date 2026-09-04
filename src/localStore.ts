@@ -1875,33 +1875,64 @@ export function markLocalIncomeReceived(
 }
 
 export function importLocalMonth(
-  params: { sourceMonth: string; targetMonth: string; paymentIds?: string[] },
+  params: {
+    sourceMonth: string;
+    targetMonth: string;
+    paymentIds?: string[];
+    incomeIds?: string[];
+  },
   expectedVersion: number
-): { imported: number; version: number } {
+): {
+  imported: number;
+  importedPayments: number;
+  importedIncomes: number;
+  version: number;
+} {
   const result = mutateLocalHousehold(
     expectedVersion,
     {
       action: 'month_imported',
-      entityType: 'planned_payment',
+      entityType: 'system',
       entityId: params.targetMonth,
-      summary: `Month copied from ${params.sourceMonth} to ${params.targetMonth}`,
+      summary: `Prepared ${params.targetMonth} from ${params.sourceMonth}`,
     },
     (state) => {
-      const selectedIds = params.paymentIds ? new Set(params.paymentIds) : null;
-      const source = state.plannedPayments.filter(
+      const selectedPaymentIds = params.paymentIds ? new Set(params.paymentIds) : null;
+      const selectedIncomeIds = params.incomeIds ? new Set(params.incomeIds) : new Set<string>();
+
+      const sourcePayments = state.plannedPayments.filter(
         (payment) =>
           payment.month === params.sourceMonth &&
-          (!selectedIds || selectedIds.has(payment.id))
+          (!selectedPaymentIds || selectedPaymentIds.has(payment.id))
       );
-      let imported = 0;
-      for (const payment of source) {
+
+      const sourceIncomes = (state.plannedIncomes || []).filter(
+        (income) =>
+          income.month === params.sourceMonth &&
+          selectedIncomeIds.has(income.id)
+      );
+
+      let importedPayments = 0;
+      let importedIncomes = 0;
+
+      for (const payment of sourcePayments) {
         const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
+        const normalizedName = payment.name.trim().toLowerCase();
         const exists = state.plannedPayments.some(
           (candidate) =>
             candidate.month === params.targetMonth &&
-            String(candidate.metadata?.copiedFromId || '') === copiedFromId
+            (
+              String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
+              (
+                candidate.name.trim().toLowerCase() === normalizedName &&
+                candidate.accountId === payment.accountId &&
+                candidate.amountPence === payment.amountPence &&
+                candidate.responsiblePerson === payment.responsiblePerson
+              )
+            )
         );
         if (exists) continue;
+
         state.plannedPayments.push({
           ...payment,
           id: createId('bill'),
@@ -1917,12 +1948,62 @@ export function importLocalMonth(
           updatedBy: undefined,
           metadata: { ...(payment.metadata || {}), copiedFromId },
         });
-        imported += 1;
+        importedPayments += 1;
       }
-      return imported;
+
+      const incomes = state.plannedIncomes || [];
+      for (const income of sourceIncomes) {
+        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
+        const normalizedName = income.name.trim().toLowerCase();
+        const exists = incomes.some(
+          (candidate) =>
+            candidate.month === params.targetMonth &&
+            (
+              String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
+              (
+                candidate.name.trim().toLowerCase() === normalizedName &&
+                candidate.accountId === income.accountId &&
+                candidate.expectedAmountPence === income.expectedAmountPence &&
+                candidate.sourcePerson === income.sourcePerson
+              )
+            )
+        );
+        if (exists) continue;
+
+        incomes.push({
+          ...income,
+          id: createId('income'),
+          month: params.targetMonth,
+          expectedDate: shiftDateToMonth(income.expectedDate, params.targetMonth),
+          status: 'expected',
+          actualAmountPence: undefined,
+          actualDate: undefined,
+          actualTransactionId: undefined,
+          linkedTransactionId: undefined,
+          receivedDate: undefined,
+          createdAt: nowIso(),
+          createdBy: OWNER_EMAIL,
+          updatedAt: undefined,
+          updatedBy: undefined,
+          metadata: { ...(income.metadata || {}), copiedFromId },
+        });
+        importedIncomes += 1;
+      }
+
+      state.plannedIncomes = incomes;
+
+      return {
+        importedPayments,
+        importedIncomes,
+        imported: importedPayments + importedIncomes,
+      };
     }
   );
-  return { imported: result.value, version: result.state.version };
+
+  return {
+    ...result.value,
+    version: result.state.version,
+  };
 }
 
 export function createLocalHouseholdMember(
