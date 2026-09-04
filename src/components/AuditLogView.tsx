@@ -90,7 +90,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
 
                 <p className="text-xs text-main font-medium">{entry.summary}</p>
 
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted text-main0">
+                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted text-subtle">
                   <span>By:</span>
                   <span className="font-semibold text-muted">{entry.actorEmail}</span>
                   <span>•</span>
