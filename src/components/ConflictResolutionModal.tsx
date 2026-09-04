@@ -27,13 +27,11 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
           <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
             Concurrent Save Conflict
           </h2>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5 leading-relaxed">
-            Another household member (Marius or Vesta) submitted a newer change while you were editing (Current Rev #{serverVersion}).
-          </p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5">Reload before saving again.</p>
         </div>
 
         <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-left text-[11px] text-neutral-600 dark:text-neutral-300 border border-neutral-100 dark:border-neutral-700">
-          <p className="font-semibold text-neutral-700 dark:text-neutral-200">Financial Concurrency Protection:</p>
+          <p className="font-semibold text-neutral-700 dark:text-neutral-200">Unsaved changes:</p>
           <p className="mt-0.5 text-neutral-500 dark:text-neutral-400">
             Per the handoff guidelines, stale saves are rejected by the server to prevent silent overwrites. Please synchronize with the latest state.
           </p>
