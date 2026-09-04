@@ -467,6 +467,8 @@ export const SOURCE_BUDGET_EXPECTED = {
   savedThisMonthPence: 286639,
   currentSavingsPence: 1968747,
   projectedEndSavingsPence: 2255386,
+  savingsAccountBalancesPence: 1568747,
+  savingsAccountProjectedPence: 1855386,
   unpaidBillsPence: 0,
   workbookAuditPassCount: 24,
   workbookAuditFailCount: 0,
