@@ -686,7 +686,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Add Account */}
       {showAccModal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div className="mv-modal-card mv-account-modal">
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Add Account
@@ -699,7 +699,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleAccountSubmit} className="mv-modal-form">
+            <form onSubmit={handleAccountSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="mv-modal-scroll-body space-y-3">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
@@ -786,18 +787,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="mv-modal-actions">
+              </div>
+              <div className="mv-modal-fixed-actions">
                 <button
                   type="button"
                   onClick={() => setShowAccModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
+                  className="mv-account-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="mv-account-primary"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Account'}
                 </button>
@@ -810,7 +812,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Edit Account */}
       {showEditModal && selectedAccount && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div className="mv-modal-card mv-account-modal">
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Edit {selectedAccount.name}
@@ -823,7 +825,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="mv-modal-form">
+            <form onSubmit={handleEditSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="mv-modal-scroll-body space-y-3">
               {error && (
                 <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
@@ -886,7 +889,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Status
                 </label>
-                <label className="flex items-center gap-2 text-xs text-main mt-1 cursor-pointer">
+                <label className="mv-account-toggle">
                   <input
                     type="checkbox"
                     checked={editIsActive}
@@ -909,18 +912,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 />
               </div>
 
-              <div className="mv-modal-actions">
+              </div>
+              <div className="mv-modal-fixed-actions">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
+                  className="mv-account-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="mv-account-primary"
                 >
                   {isSubmitting ? 'Saving...' : 'Update Account'}
                 </button>
