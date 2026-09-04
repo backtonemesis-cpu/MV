@@ -8,6 +8,43 @@ import { getFirestore } from 'firebase-admin/firestore';
 const EXIT_CONFIG = 78;
 const DEFAULT_DATABASE_ID = '(default)';
 const HOUSEHOLD_STATE_PATH = 'households/household-mv/meta/state';
+const readinessTimeoutMs = Number(
+  process.env.MV_FIRESTORE_PREFLIGHT_TIMEOUT_MS || 10000
+);
+
+if (
+  !Number.isSafeInteger(readinessTimeoutMs) ||
+  readinessTimeoutMs < 1000 ||
+  readinessTimeoutMs > 60000
+) {
+  console.error(
+    '[MV Firestore] Refusing startup: MV_FIRESTORE_PREFLIGHT_TIMEOUT_MS must be an integer between 1000 and 60000.'
+  );
+  process.exit(EXIT_CONFIG);
+}
+
+async function withTimeout(promise, timeoutMs) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(
+      () =>
+        reject(
+          new Error(
+            'Firestore readiness timed out after ' +
+              timeoutMs +
+              'ms'
+          )
+        ),
+      timeoutMs
+    );
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 const isCloudRun = Boolean(
   process.env.K_SERVICE ||
@@ -75,7 +112,10 @@ try {
   // getFirestore() without a database ID is intentional: production must use
   // the stable default-database Admin API, never the named-database overload.
   const db = getFirestore();
-  const stateSnapshot = await db.doc(HOUSEHOLD_STATE_PATH).get();
+  const stateSnapshot = await withTimeout(
+    db.doc(HOUSEHOLD_STATE_PATH).get(),
+    readinessTimeoutMs
+  );
 
   if (stateSnapshot.exists) {
     const state = stateSnapshot.data() || {};
