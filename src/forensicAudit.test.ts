@@ -543,7 +543,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(finalSummary.actualIncomeReceivedPence).toBe(3361_02 + 1200_00);
   });
 
-  it('10. Savings contribution is atomic, updates both balances and pot once, and remains non-spending', () => {
+  it('10. Savings contribution is atomic, updates the chosen savings balance, and remains non-spending', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
@@ -574,8 +574,6 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         name: 'Emergency Fund',
         targetPence: 1000_00,
-        currentPence: 100_00,
-        accountId: saver.account.id,
       },
       state.version
     );
@@ -588,6 +586,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         goalId: goal.goal.id,
         sourceAccountId: current.account.id,
+        destinationAccountId: saver.account.id,
         amountPence: 125_00,
         payer: 'Marius',
         date: '2026-09-04',
@@ -614,7 +613,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     expect(state.accounts.find((a) => a.id === current.account.id)?.currentBalancePence).toBe(375_00);
     expect(state.accounts.find((a) => a.id === saver.account.id)?.currentBalancePence).toBe(225_00);
-    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(225_00);
+    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(0);
 
     const monthly = calculateMonthlySurplus(
       state.transactions,
@@ -669,8 +668,6 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         name: 'Protected Goal',
         targetPence: 1000_00,
-        currentPence: 200_00,
-        accountId: saver.account.id,
       },
       state.version
     );
@@ -689,6 +686,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
         {
           goalId: goal.goal.id,
           sourceAccountId: credit.account.id,
+          destinationAccountId: saver.account.id,
           amountPence: 50_00,
           payer: 'Marius',
           date: '2026-09-04',
@@ -705,14 +703,14 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(snapshot.goalCurrent);
   });
 
-  it('14. Savings goals cannot be linked to Current or Credit accounts', () => {
+  it('14. Household savings goals are target-only and do not require an account allocation', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
 
     const current = createLocalAccount(
       {
-        name: 'Not A Savings Account',
+        name: 'Ordinary Current',
         type: 'current',
         startingBalancePence: 100_00,
         ownerPerson: 'Marius',
@@ -721,21 +719,30 @@ describe('Forensic Financial Audit Regression Suite', () => {
     );
     state = loadLocalHousehold();
 
-    expect(() =>
-      createLocalSavingsGoal(
-        {
-          name: 'Invalid Goal',
-          targetPence: 500_00,
-          currentPence: 0,
-          accountId: current.account.id,
-        },
-        state.version
-      )
-    ).toThrow('Savings goals must be linked to an active Savings or Cash account.');
+    const created = createLocalSavingsGoal(
+      {
+        name: 'Household Emergency Goal',
+        targetPence: 500_00,
+        currentPence: 999_00,
+        accountId: current.account.id,
+        monthlyPlanPence: 75_00,
+      },
+      state.version
+    );
 
-    const after = loadLocalHousehold();
-    expect(after.version).toBe(state.version);
-    expect(after.savingsGoals).toHaveLength(0);
+    state = loadLocalHousehold();
+    const stored = state.savingsGoals.find((goal) => goal.id === created.goal.id);
+
+    expect(stored).toEqual(
+      expect.objectContaining({
+        name: 'Household Emergency Goal',
+        targetPence: 500_00,
+        currentPence: 0,
+        monthlyPlanPence: 75_00,
+      })
+    );
+    expect(stored?.accountId).toBeUndefined();
+    expect(state.accounts.find((account) => account.id === current.account.id)?.currentBalancePence).toBe(100_00);
   });
 
   it('15. Editing a linked paid-bill transaction keeps the bill and savings surplus reconciled', () => {
@@ -894,8 +901,6 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         name: 'Protected Pot',
         targetPence: 500_00,
-        currentPence: 50_00,
-        accountId: saver.account.id,
       },
       state.version
     );
@@ -905,6 +910,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         goalId: goal.goal.id,
         sourceAccountId: source.account.id,
+        destinationAccountId: saver.account.id,
         amountPence: 25_00,
         payer: 'Marius',
         date: '2026-09-04',
@@ -974,8 +980,6 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         name: 'Anchored Pot',
         targetPence: 1000_00,
-        currentPence: 100_00,
-        accountId: saver.account.id,
       },
       state.version
     );
@@ -985,6 +989,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
       {
         goalId: goal.goal.id,
         sourceAccountId: current.account.id,
+        destinationAccountId: saver.account.id,
         amountPence: 75_00,
         payer: 'Marius',
         date: '2026-09-04',
@@ -996,7 +1001,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     expect(state.accounts.find((a) => a.id === current.account.id)?.currentBalancePence).toBe(425_00);
     expect(state.accounts.find((a) => a.id === saver.account.id)?.currentBalancePence).toBe(175_00);
-    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(175_00);
+    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(0);
   });
 
   it('19. Savings position uses true account balances and excludes goal allocations', () => {
@@ -1024,14 +1029,14 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(position.savingsAccounts[0].id).toBe('savings-1');
   });
 
-  it('20. Savings pot creation cannot allocate more than the linked account actually holds', () => {
+  it('20. Household savings goal targets do not reserve or consume a single savings account', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
 
     const saver = createLocalAccount(
       {
-        name: 'Allocation Guard Saver',
+        name: 'Household Saver',
         type: 'savings',
         startingBalancePence: 500_00,
         ownerPerson: 'Marius',
@@ -1040,31 +1045,29 @@ describe('Forensic Financial Audit Regression Suite', () => {
     );
     state = loadLocalHousehold();
 
-    expect(() =>
-      createLocalSavingsGoal(
-        {
-          name: 'Impossible Pot',
-          targetPence: 1000_00,
-          currentPence: 600_00,
-          accountId: saver.account.id,
-        },
-        state.version
-      )
-    ).toThrow('Savings pot allocations cannot exceed the linked account balance.');
+    const created = createLocalSavingsGoal(
+      {
+        name: '£1,000 Household Goal',
+        targetPence: 1000_00,
+      },
+      state.version
+    );
 
     const after = loadLocalHousehold();
-    expect(after.version).toBe(state.version);
-    expect(after.savingsGoals.some((goal) => goal.name === 'Impossible Pot')).toBe(false);
+    expect(after.savingsGoals.some((goal) => goal.id === created.goal.id)).toBe(true);
+    expect(after.savingsGoals.find((goal) => goal.id === created.goal.id)?.accountId).toBeUndefined();
+    expect(after.savingsGoals.find((goal) => goal.id === created.goal.id)?.currentPence).toBe(0);
+    expect(after.accounts.find((account) => account.id === saver.account.id)?.currentBalancePence).toBe(500_00);
   });
 
-  it('21. Multiple savings pots cannot collectively over-allocate one linked account', () => {
+  it('21. Multiple household savings goals can coexist without double-allocating bank balances', () => {
     let state = loadLocalHousehold();
     resetLocalHousehold(state.version);
     state = loadLocalHousehold();
 
     const saver = createLocalAccount(
       {
-        name: 'Shared Saver',
+        name: 'Shared Household Savings',
         type: 'savings',
         startingBalancePence: 1000_00,
         ownerPerson: 'Marius',
@@ -1075,30 +1078,27 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     createLocalSavingsGoal(
       {
-        name: 'Pot A',
-        targetPence: 1000_00,
-        currentPence: 700_00,
-        accountId: saver.account.id,
+        name: 'Emergency Fund',
+        targetPence: 2000_00,
       },
       state.version
     );
     state = loadLocalHousehold();
 
-    expect(() =>
-      createLocalSavingsGoal(
-        {
-          name: 'Pot B',
-          targetPence: 1000_00,
-          currentPence: 400_00,
-          accountId: saver.account.id,
-        },
-        state.version
-      )
-    ).toThrow('Savings pot allocations cannot exceed the linked account balance.');
+    createLocalSavingsGoal(
+      {
+        name: 'Family Holiday',
+        targetPence: 3000_00,
+        monthlyPlanPence: 250_00,
+      },
+      state.version
+    );
 
     const after = loadLocalHousehold();
-    expect(after.version).toBe(state.version);
-    expect(after.savingsGoals.filter((goal) => goal.accountId === saver.account.id)).toHaveLength(1);
+    expect(after.savingsGoals).toHaveLength(2);
+    expect(after.savingsGoals.every((goal) => goal.accountId === undefined)).toBe(true);
+    expect(after.savingsGoals.every((goal) => goal.currentPence === 0)).toBe(true);
+    expect(after.accounts.find((account) => account.id === saver.account.id)?.currentBalancePence).toBe(1000_00);
   });
 
   it('22. Transfer Plan rejects a stale duplicate funding submission after the requirement is already satisfied', () => {
