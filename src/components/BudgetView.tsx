@@ -119,19 +119,19 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
   return (
     <div className="space-y-6 pb-12">
       {/* Month Period Selector Header */}
-      <div className="bg-white dark:bg-neutral-800 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-colors">
+      <div className="mv-surface bg-white dark:bg-neutral-800 p-4 rounded-2xl border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-colors">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
             <Calendar className="w-4 h-4" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold mv-text-muted text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
               Period
             </span>
             <select
               value={activeMonth}
               onChange={(e) => handleMonthChange(e.target.value)}
-              className="font-black text-sm bg-neutral-100 dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 px-2.5 py-1 rounded-lg border border-neutral-300 dark:border-neutral-600 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              className="font-black text-sm bg-neutral-100 dark:bg-neutral-700 mv-text text-neutral-900 dark:text-neutral-100 px-2.5 py-1 rounded-lg border mv-border border-neutral-300 dark:border-neutral-600 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
               {availableMonths.map((m) => (
                 <option key={m} value={m}>
@@ -152,17 +152,17 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
       {/* Top Banner KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Planned vs Actual Income */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs">
+        <div className="p-5 rounded-2xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold mv-text-muted text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
               Income ({activeMonth})
             </span>
             <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-neutral-900 dark:text-neutral-100 mt-2">
+          <div className="text-2xl font-black mv-text text-neutral-900 dark:text-neutral-100 mt-2">
             {formatPence(actualIncomePence)}
           </div>
-          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+          <div className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1">
             {totalExpectedIncomePence > 0
               ? `Expected: ${formatPence(totalExpectedIncomePence)}`
               : 'Actual income received'}
@@ -170,25 +170,25 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
         </div>
 
         {/* Total Budgeted Envelopes */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs">
+        <div className="p-5 rounded-2xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold mv-text-muted text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
               Budget
             </span>
             <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
-          <div className="text-2xl font-black text-neutral-900 dark:text-neutral-100 mt-2">
+          <div className="text-2xl font-black mv-text text-neutral-900 dark:text-neutral-100 mt-2">
             {formatPence(totalBudgetedPence)}
           </div>
-          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+          <div className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1">
             {categories.filter((c) => c.group !== 'Income').length} categories
           </div>
         </div>
 
         {/* Total Actual Living Spend */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xs">
+        <div className="p-5 rounded-2xl mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+            <span className="text-xs font-semibold mv-text-muted text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
               Living Spend
             </span>
             <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -202,7 +202,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
           >
             {formatPence(totalActualLivingPence)}
           </div>
-          <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+          <div className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1">
             {totalBudgetedPence >= totalActualLivingPence
               ? `${formatPence(totalBudgetedPence - totalActualLivingPence)} under envelope`
               : `Over by ${formatPence(totalActualLivingPence - totalBudgetedPence)}`}
@@ -212,10 +212,10 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
 
       {/* Planned Income Envelopes Section */}
       {monthPlannedIncomes.length > 0 && (
-        <div className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
+        <div className="mv-surface bg-white dark:bg-neutral-800 p-5 rounded-2xl border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">
+              <h2 className="text-sm font-bold mv-text text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">
                 Planned Income
               </h2>
             </div>
@@ -228,17 +228,17 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             {monthPlannedIncomes.map((inc) => (
               <div
                 key={inc.id}
-                className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-750 border border-neutral-200 dark:border-neutral-700"
+                className="p-3.5 rounded-xl mv-surface-muted bg-neutral-50 dark:bg-neutral-750 border mv-border border-neutral-200 dark:border-neutral-700"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                  <span className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
                     {inc.name}
                   </span>
                   <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400">
                     {formatPence(inc.expectedAmountPence)}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+                <div className="flex items-center gap-2 mt-2 text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400">
                   <span className="px-1.5 py-0.2 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-medium">
                     {inc.sourcePerson}
                   </span>
@@ -255,7 +255,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
         {Object.entries(groupedCategories).map(([groupName, cats]) => (
           <div
             key={groupName}
-            className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs"
+            className="mv-surface bg-white dark:bg-neutral-800 p-5 rounded-2xl border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs"
           >
             <h2 className="text-sm font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-wider mb-4">
               {groupName}
@@ -271,10 +271,10 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                 return (
                   <div
                     key={cat.id}
-                    className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-750 border border-neutral-100 dark:border-neutral-700"
+                    className="p-3.5 rounded-xl mv-surface-muted bg-neutral-50 dark:bg-neutral-750 border border-neutral-100 dark:border-neutral-700"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                      <span className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
                         {cat.name}
                       </span>
                       <div className="text-xs">
@@ -282,12 +282,12 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                           className={`font-bold ${
                             isOver
                               ? 'text-rose-600 dark:text-rose-400'
-                              : 'text-neutral-900 dark:text-neutral-100'
+                              : 'mv-text text-neutral-900 dark:text-neutral-100'
                           }`}
                         >
                           {formatPence(spent)}
                         </span>
-                        <span className="text-neutral-500 dark:text-neutral-400">
+                        <span className="mv-text-muted text-neutral-500 dark:text-neutral-400">
                           {' '}
                           / {formatPence(budget)}
                         </span>
@@ -303,7 +303,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                       />
                     </div>
 
-                    <div className="flex justify-between items-center text-[10px] text-neutral-500 dark:text-neutral-400 mt-1.5">
+                    <div className="flex justify-between items-center text-[10px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1.5">
                       <span>{percent}% used</span>
                       {isOver ? (
                         <span className="text-rose-600 dark:text-rose-400 font-bold">

@@ -124,20 +124,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="space-y-5 pb-12">
       {/* Active Period + Primary Month Actions */}
-      <section className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-3.5 sm:p-4 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
+      <section className="rounded-2xl border mv-border border-slate-200 dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-3.5 sm:p-4 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+            <div className="mv-primary-soft w-10 h-10 shrink-0 rounded-xl flex items-center justify-center">
               <Calendar className="w-[18px] h-[18px]" />
             </div>
             <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <span className="text-sm font-medium text-slate-600 dark:text-neutral-300 whitespace-nowrap">
+              <span className="text-sm font-medium mv-text-muted text-slate-600 dark:text-neutral-300 whitespace-nowrap">
                 Active Period
               </span>
               <select
                 value={selectedMonth}
                 onChange={(e) => onSelectMonth(e.target.value)}
-                className="h-10 min-w-[118px] px-3 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-sm font-semibold text-slate-950 dark:text-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 focus:outline-none"
+                className="h-10 min-w-[118px] px-3 rounded-xl border mv-border border-slate-200 dark:border-neutral-700 mv-surface-muted bg-slate-50 dark:bg-neutral-800 text-sm font-semibold mv-text text-slate-950 dark:text-white focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 focus:outline-none"
               >
                 {availableMonths.map((m) => (
                   <option key={m} value={m}>
@@ -152,14 +152,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2 w-full lg:w-auto">
               <button
                 onClick={onOpenMonthImport}
-                className="h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-200 text-[13px] font-semibold whitespace-nowrap hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
+                className="h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border mv-border border-slate-200 dark:border-neutral-700 mv-surface bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-200 text-[13px] font-semibold whitespace-nowrap hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
               >
-                <Layers className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
+                <Layers className="w-3.5 h-3.5 mv-text-muted text-slate-500 dark:text-neutral-400" />
                 Copy Bills
               </button>
               <button
                 onClick={onOpenPlannedPaymentModal}
-                className="h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border border-emerald-700 bg-emerald-700 text-white text-[13px] font-semibold whitespace-nowrap hover:bg-emerald-800 transition"
+                className="mv-primary-button h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl text-[13px] font-semibold whitespace-nowrap transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Bill
@@ -170,15 +170,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* Available Household Surplus Hero */}
-      <section className="rounded-2xl bg-gradient-to-br from-emerald-800 to-teal-900 dark:from-emerald-950 dark:to-teal-950 p-6 sm:p-7 text-white shadow-[0_10px_26px_-16px_rgba(6,78,59,0.65)]">
+      <section className="mv-primary-bg rounded-2xl p-6 sm:p-7 shadow-[0_10px_26px_-16px_var(--primary)]">
         <div>
-          <div className="text-xs sm:text-sm font-semibold tracking-wide text-emerald-100/90">
+          <div className="text-xs sm:text-sm font-semibold tracking-wide mv-on-primary-muted">
             Available Household Surplus ({selectedMonth})
           </div>
           <h1 className="mt-2 text-4xl sm:text-5xl font-black tracking-[-0.03em] leading-none">
             {formatPence(surplusCalculation.availableSurplusPence)}
           </h1>
-          <p className="mt-3 text-[13px] leading-5 text-emerald-100/80">
+          <p className="mt-3 text-[13px] leading-5 mv-on-primary-muted">
             Liquid funds: {formatPence(totalLiquidBalancePence)}
           </p>
         </div>
@@ -189,18 +189,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <button
           id="dashboard-open-transfer-plan-btn"
           onClick={() => onNavigateToTab('transfer_plan')}
-          className="min-h-[52px] inline-flex items-center justify-center gap-2 px-3.5 py-3.5 rounded-xl bg-white dark:bg-neutral-900 text-slate-900 dark:text-white font-semibold text-sm border border-[#e2e8f0] dark:border-neutral-700 shadow-[0_2px_6px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
+          className="min-h-[52px] inline-flex items-center justify-center gap-2 px-3.5 py-3.5 rounded-xl mv-surface bg-white dark:bg-neutral-900 mv-text text-slate-900 dark:text-white font-semibold text-sm border border-[#e2e8f0] dark:border-neutral-700 shadow-[0_2px_6px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
         >
-          <ArrowLeftRight className="w-4 h-4 text-slate-600 dark:text-neutral-300" />
+          <ArrowLeftRight className="w-4 h-4 mv-text-muted text-slate-600 dark:text-neutral-300" />
           Transfer Plan
         </button>
         {canEdit && (
           <button
             id="dashboard-add-tx-btn"
             onClick={onOpenAddTransaction}
-            className="min-h-[52px] inline-flex items-center justify-center gap-2 px-3.5 py-3.5 rounded-xl bg-white dark:bg-neutral-900 text-slate-900 dark:text-white font-semibold text-sm border border-[#e2e8f0] dark:border-neutral-700 shadow-[0_2px_6px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
+            className="min-h-[52px] inline-flex items-center justify-center gap-2 px-3.5 py-3.5 rounded-xl mv-surface bg-white dark:bg-neutral-900 mv-text text-slate-900 dark:text-white font-semibold text-sm border border-[#e2e8f0] dark:border-neutral-700 shadow-[0_2px_6px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
           >
-            <Plus className="w-4 h-4 text-slate-600 dark:text-neutral-300" />
+            <Plus className="w-4 h-4 mv-text-muted text-slate-600 dark:text-neutral-300" />
             Add Transaction
           </button>
         )}
@@ -208,17 +208,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Financial Flow Sub-Metrics */}
       <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
-          <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+          <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full mv-surface bg-white/10 flex items-center justify-center">
             <TrendingUp className="w-4 h-4 text-emerald-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Actual Inflow
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(surplusCalculation.actualIncomeReceivedPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70 min-h-4">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted min-h-4">
             {surplusCalculation.expectedIncomePence > 0
               ? `Expected: ${formatPence(surplusCalculation.expectedIncomePence)}`
               : surplusCalculation.refundsPence > 0
@@ -227,49 +227,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </article>
 
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-rose-300/15 flex items-center justify-center">
             <TrendingDown className="w-4 h-4 text-rose-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Gross Living Spend
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(surplusCalculation.grossOtherSpendingPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted">
             Excludes transfers
           </div>
         </article>
 
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-amber-300/15 flex items-center justify-center">
             <Clock className="w-4 h-4 text-amber-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Fixed Bills
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(surplusCalculation.fixedBillsUnpaidPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70 min-h-4">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted min-h-4">
             {surplusCalculation.fixedBillsTotalPence > 0
               ? `${formatPence(surplusCalculation.fixedBillsTotalPence)} total`
               : 'None remaining'}
           </div>
         </article>
 
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-cyan-300/15 flex items-center justify-center">
             <PiggyBank className="w-4 h-4 text-cyan-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Saved
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(monthSummary.savingsTransfersPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted">
             Non-spending transfer
           </div>
         </article>
@@ -301,10 +301,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Grid: Spending Attribution & Accounts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Payer Attribution Card */}
-        <section className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
+        <section className="mv-surface bg-white dark:bg-neutral-900 p-5 rounded-2xl border mv-border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
           <div className="flex items-start justify-between gap-3 mb-2">
             <div>
-              <h2 className="text-sm font-bold text-slate-950 dark:text-white">
+              <h2 className="text-sm font-bold mv-text text-slate-950 dark:text-white">
                 {selectedMonth} Spending Attribution
               </h2>
             </div>
@@ -315,28 +315,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           <div className="mt-2">
             <div className="flex items-center justify-between gap-4 py-3.5">
-              <span className="text-sm font-medium text-slate-600 dark:text-neutral-300">
+              <span className="text-sm font-medium mv-text-muted text-slate-600 dark:text-neutral-300">
                 Joint Spend
               </span>
-              <span className="text-sm font-bold text-slate-950 dark:text-white whitespace-nowrap">
+              <span className="text-sm font-bold mv-text text-slate-950 dark:text-white whitespace-nowrap">
                 {formatPence(jointSpendPence)}
               </span>
             </div>
 
             <div className="flex items-center justify-between gap-4 py-3.5">
-              <span className="text-sm font-medium text-slate-600 dark:text-neutral-300">
+              <span className="text-sm font-medium mv-text-muted text-slate-600 dark:text-neutral-300">
                 Marius Individual
               </span>
-              <span className="text-sm font-bold text-slate-950 dark:text-white whitespace-nowrap">
+              <span className="text-sm font-bold mv-text text-slate-950 dark:text-white whitespace-nowrap">
                 {formatPence(mariusSpendPence)}
               </span>
             </div>
 
             <div className="flex items-center justify-between gap-4 py-3.5">
-              <span className="text-sm font-medium text-slate-600 dark:text-neutral-300">
+              <span className="text-sm font-medium mv-text-muted text-slate-600 dark:text-neutral-300">
                 Vesta Individual
               </span>
-              <span className="text-sm font-bold text-slate-950 dark:text-white whitespace-nowrap">
+              <span className="text-sm font-bold mv-text text-slate-950 dark:text-white whitespace-nowrap">
                 {formatPence(vestaSpendPence)}
               </span>
             </div>
@@ -344,9 +344,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </section>
 
         {/* Account Balances Preview */}
-        <div className="md:col-span-2 bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
+        <div className="md:col-span-2 mv-surface bg-white dark:bg-neutral-900 p-5 rounded-2xl border mv-border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-sm font-bold mv-text text-neutral-900 dark:text-neutral-100">
               Authoritative Accounts
             </h2>
             <button
@@ -374,11 +374,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       {acc.ownerPerson || acc.type}
                     </span>
                   </div>
-                  <div className="text-lg sm:text-xl font-black text-neutral-900 dark:text-neutral-100 mt-2">
+                  <div className="text-lg sm:text-xl font-black mv-text text-neutral-900 dark:text-neutral-100 mt-2">
                     {formatPence(acc.currentBalancePence)}
                   </div>
                   {acc.notes && (
-                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-1">
+                    <p className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-1">
                       {acc.notes}
                     </p>
                   )}
@@ -389,10 +389,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Planned Commitments for this Month */}
-      <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
+      <div className="mv-surface bg-white dark:bg-neutral-900 p-5 rounded-2xl border mv-border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-sm font-bold mv-text text-neutral-900 dark:text-neutral-100">
               {selectedMonth} Bills ({monthPlannedPayments.length})
             </h2>
           </div>
@@ -405,7 +405,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {monthPlannedPayments.length === 0 ? (
-          <div className="p-6 text-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-850 rounded-xl">
+          <div className="p-6 text-center text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mv-surface-muted bg-neutral-50 dark:bg-neutral-850 rounded-xl">
             No bills for {selectedMonth}.
           </div>
         ) : (
@@ -413,18 +413,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {monthPlannedPayments.slice(0, 6).map((payment) => (
               <div
                 key={payment.id}
-                className="p-3 bg-neutral-50 dark:bg-neutral-850 rounded-xl border border-neutral-200 dark:border-neutral-750 flex items-center justify-between"
+                className="p-3 mv-surface-muted bg-neutral-50 dark:bg-neutral-850 rounded-xl border mv-border border-neutral-200 dark:border-neutral-750 flex items-center justify-between"
               >
                 <div>
-                  <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                  <div className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
                     {payment.name}
                   </div>
-                  <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                  <div className="text-[10px] mv-text-muted text-neutral-500 dark:text-neutral-400">
                     Due: {payment.dueDate || 'Day 1'} • {payment.responsiblePerson}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-black text-neutral-900 dark:text-neutral-100">
+                  <div className="text-xs font-black mv-text text-neutral-900 dark:text-neutral-100">
                     {formatPence(payment.amountPence)}
                   </div>
                   <span
@@ -444,9 +444,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Recent Transactions Preview */}
-      <div className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
+      <div className="mv-surface bg-white dark:bg-neutral-900 p-5 rounded-2xl border mv-border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-sm font-bold mv-text text-neutral-900 dark:text-neutral-100">
             {selectedMonth} Recent Activity
           </h2>
           <button
@@ -458,7 +458,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {monthTransactions.length === 0 ? (
-          <div className="p-6 text-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-850 rounded-xl">
+          <div className="p-6 text-center text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mv-surface-muted bg-neutral-50 dark:bg-neutral-850 rounded-xl">
             No transactions for {selectedMonth}.
           </div>
         ) : (
@@ -486,10 +486,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       )}
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                      <div className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
                         {tx.description}
                       </div>
-                      <div className="flex items-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      <div className="flex items-center gap-2 text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-0.5">
                         <span>{tx.date}</span>
                         <span>•</span>
                         <span className="font-medium text-neutral-700 dark:text-neutral-300">{tx.payer}</span>
@@ -505,7 +505,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div
                     className={`text-sm font-bold ${
                       isNegative
-                        ? 'text-neutral-900 dark:text-neutral-100'
+                        ? 'mv-text text-neutral-900 dark:text-neutral-100'
                         : 'text-emerald-700 dark:text-emerald-400'
                     }`}
                   >

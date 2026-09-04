@@ -1,206 +1,383 @@
 @import "tailwindcss";
 
-/* Use the .dark class so the in-app Light / Dark / System picker controls Tailwind dark: utilities. */
+/* Legacy dark: utilities remain compatible; semantic data-theme tokens are the source of truth. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  :root,
+  [data-theme="light"] {
+    color-scheme: light;
+    --background: #f8fafc;
+    --background-text: #0f172a;
+    --surface: #ffffff;
+    --surface-text: #0f172a;
+    --surface-muted: #f1f5f9;
+    --surface-muted-text: #475569;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --overlay: rgba(15, 23, 42, 0.58);
+    --shadow: rgba(15, 23, 42, 0.08);
+
+    --success-bg: #ecfdf5;
+    --success-text: #065f46;
+    --success-border: #a7f3d0;
+    --warning-bg: #fffbeb;
+    --warning-text: #92400e;
+    --warning-border: #fde68a;
+    --danger-bg: #fef2f2;
+    --danger-text: #991b1b;
+    --danger-border: #fecaca;
+  }
+
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --background: #0f172a;
+    --background-text: #f8fafc;
+    --surface: #1e293b;
+    --surface-text: #f8fafc;
+    --surface-muted: #111827;
+    --surface-muted-text: #cbd5e1;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --overlay: rgba(2, 6, 23, 0.72);
+    --shadow: rgba(2, 6, 23, 0.36);
+
+    --success-bg: rgba(6, 95, 70, 0.24);
+    --success-text: #6ee7b7;
+    --success-border: #065f46;
+    --warning-bg: rgba(146, 64, 14, 0.24);
+    --warning-text: #fcd34d;
+    --warning-border: #92400e;
+    --danger-bg: rgba(153, 27, 27, 0.24);
+    --danger-text: #fca5a5;
+    --danger-border: #991b1b;
+  }
+
+  [data-theme="slate"] {
+    color-scheme: dark;
+    --background: #1e293b;
+    --background-text: #f1f5f9;
+    --surface: #334155;
+    --surface-text: #f1f5f9;
+    --surface-muted: #293548;
+    --surface-muted-text: #cbd5e1;
+    --text: #f1f5f9;
+    --text-muted: #cbd5e1;
+    --border: #475569;
+    --overlay: rgba(15, 23, 42, 0.64);
+    --shadow: rgba(15, 23, 42, 0.28);
+
+    --success-bg: rgba(6, 95, 70, 0.22);
+    --success-text: #a7f3d0;
+    --success-border: #047857;
+    --warning-bg: rgba(146, 64, 14, 0.2);
+    --warning-text: #fde68a;
+    --warning-border: #b45309;
+    --danger-bg: rgba(153, 27, 27, 0.2);
+    --danger-text: #fecaca;
+    --danger-border: #b91c1c;
+  }
+
+  :root,
+  [data-accent="emerald"] {
+    --primary: #059669;
+    --primary-light: rgba(5, 150, 105, 0.1);
+    --primary-light-text: #059669;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="sapphire"] {
+    --primary: #2563eb;
+    --primary-light: rgba(37, 99, 235, 0.1);
+    --primary-light-text: #2563eb;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="amethyst"] {
+    --primary: #8b5cf6;
+    --primary-light: rgba(139, 92, 246, 0.1);
+    --primary-light-text: #8b5cf6;
+    --text-on-primary: #ffffff;
+  }
+
   :root {
-    --mv-bg: #f8fafc;
-    --mv-surface: #ffffff;
-    --mv-surface-hover: #f1f5f9;
-    --mv-border: #e2e8f0;
-    --mv-border-subtle: #f1f5f9;
-    --mv-text-primary: #0f172a;
-    --mv-text-secondary: #475569;
-    --mv-text-muted: #94a3b8;
-
-    /* Semantic Financial Indicators */
-    --mv-success-bg: #ecfdf5;
-    --mv-success-border: #a7f3d0;
-    --mv-success-text: #065f46;
-
-    --mv-warning-bg: #fffbeb;
-    --mv-warning-border: #fde68a;
-    --mv-warning-text: #92400e;
-
-    --mv-danger-bg: #fef2f2;
-    --mv-danger-border: #fecaca;
-    --mv-danger-text: #991b1b;
-
-    /* Accent Defaults (Emerald) */
-    --mv-accent-50: #ecfdf5;
-    --mv-accent-100: #d1fae5;
-    --mv-accent-500: #10b981;
-    --mv-accent-600: #059669;
-    --mv-accent-700: #047857;
-    --mv-accent-text: #ffffff;
-  }
-
-  /* Dark Theme Tokens */
-  .dark {
-    --mv-bg: #090d16;
-    --mv-surface: #111827;
-    --mv-surface-hover: #1f2937;
-    --mv-border: #243042;
-    --mv-border-subtle: #192231;
-    --mv-text-primary: #f8fafc;
-    --mv-text-secondary: #cbd5e1;
-    --mv-text-muted: #64748b;
-
-    --mv-success-bg: rgba(6, 78, 59, 0.25);
-    --mv-success-border: #065f46;
-    --mv-success-text: #6ee7b7;
-
-    --mv-warning-bg: rgba(146, 64, 14, 0.25);
-    --mv-warning-border: #92400e;
-    --mv-warning-text: #fcd34d;
-
-    --mv-danger-bg: rgba(153, 27, 27, 0.25);
-    --mv-danger-border: #991b1b;
-    --mv-danger-text: #fca5a5;
-  }
-
-  /* Accent Color Variants */
-  /* Blue Accent */
-  [data-accent="blue"] {
-    --mv-accent-50: #eff6ff;
-    --mv-accent-100: #dbeafe;
-    --mv-accent-500: #3b82f6;
-    --mv-accent-600: #2563eb;
-    --mv-accent-700: #1d4ed8;
-  }
-  .dark[data-accent="blue"] {
-    --mv-accent-50: rgba(30, 58, 138, 0.25);
-    --mv-accent-100: rgba(30, 58, 138, 0.4);
-    --mv-accent-500: #60a5fa;
-    --mv-accent-600: #3b82f6;
-    --mv-accent-700: #2563eb;
-  }
-
-  /* Lilac / Purple Accent */
-  [data-accent="lilac"] {
-    --mv-accent-50: #faf5ff;
-    --mv-accent-100: #f3e8ff;
-    --mv-accent-500: #a855f7;
-    --mv-accent-600: #9333ea;
-    --mv-accent-700: #7e22ce;
-  }
-  .dark[data-accent="lilac"] {
-    --mv-accent-50: rgba(88, 28, 135, 0.25);
-    --mv-accent-100: rgba(88, 28, 135, 0.4);
-    --mv-accent-500: #c084fc;
-    --mv-accent-600: #a855f7;
-    --mv-accent-700: #9333ea;
-  }
-
-  /* Yellow / Amber Accent */
-  [data-accent="yellow"] {
-    --mv-accent-50: #fefce8;
-    --mv-accent-100: #fef9c3;
-    --mv-accent-500: #eab308;
-    --mv-accent-600: #ca8a04;
-    --mv-accent-700: #a16207;
-  }
-  .dark[data-accent="yellow"] {
-    --mv-accent-50: rgba(113, 63, 18, 0.25);
-    --mv-accent-100: rgba(113, 63, 18, 0.4);
-    --mv-accent-500: #facc15;
-    --mv-accent-600: #eab308;
-    --mv-accent-700: #ca8a04;
-  }
-
-  /* Red Accent */
-  [data-accent="red"] {
-    --mv-accent-50: #fef2f2;
-    --mv-accent-100: #fee2e2;
-    --mv-accent-500: #ef4444;
-    --mv-accent-600: #dc2626;
-    --mv-accent-700: #b91c1c;
-  }
-  .dark[data-accent="red"] {
-    --mv-accent-50: rgba(127, 29, 29, 0.25);
-    --mv-accent-100: rgba(127, 29, 29, 0.4);
-    --mv-accent-500: #f87171;
-    --mv-accent-600: #ef4444;
-    --mv-accent-700: #dc2626;
-  }
-
-  /* Green Accent */
-  [data-accent="green"] {
-    --mv-accent-50: #f0fdf4;
-    --mv-accent-100: #dcfce7;
-    --mv-accent-500: #22c55e;
-    --mv-accent-600: #16a34a;
-    --mv-accent-700: #15803d;
-  }
-  .dark[data-accent="green"] {
-    --mv-accent-50: rgba(20, 83, 45, 0.25);
-    --mv-accent-100: rgba(20, 83, 45, 0.4);
-    --mv-accent-500: #4ade80;
-    --mv-accent-600: #22c55e;
-    --mv-accent-700: #16a34a;
-  }
-
-  /* Teal Accent */
-  [data-accent="teal"] {
-    --mv-accent-50: #f0fdfa;
-    --mv-accent-100: #ccfbf1;
-    --mv-accent-500: #14b8a6;
-    --mv-accent-600: #0d9488;
-    --mv-accent-700: #0f766e;
-  }
-  .dark[data-accent="teal"] {
-    --mv-accent-50: rgba(19, 78, 74, 0.25);
-    --mv-accent-100: rgba(19, 78, 74, 0.4);
-    --mv-accent-500: #2dd4bf;
-    --mv-accent-600: #14b8a6;
-    --mv-accent-700: #0d9488;
-  }
-
-  /* Orange Accent */
-  [data-accent="orange"] {
-    --mv-accent-50: #fff7ed;
-    --mv-accent-100: #ffedd5;
-    --mv-accent-500: #f97316;
-    --mv-accent-600: #ea580c;
-    --mv-accent-700: #c2410c;
-  }
-  .dark[data-accent="orange"] {
-    --mv-accent-50: rgba(124, 45, 18, 0.25);
-    --mv-accent-100: rgba(124, 45, 18, 0.4);
-    --mv-accent-500: #fb923c;
-    --mv-accent-600: #f97316;
-    --mv-accent-700: #ea580c;
-  }
-
-  /* Rose / Pink Accent */
-  [data-accent="rose"] {
-    --mv-accent-50: #fff1f2;
-    --mv-accent-100: #ffe4e6;
-    --mv-accent-500: #f43f5e;
-    --mv-accent-600: #e11d48;
-    --mv-accent-700: #be123c;
-  }
-  .dark[data-accent="rose"] {
-    --mv-accent-50: rgba(136, 19, 55, 0.25);
-    --mv-accent-100: rgba(136, 19, 55, 0.4);
-    --mv-accent-500: #fb7185;
-    --mv-accent-600: #f43f5e;
-    --mv-accent-700: #e11d48;
+    /* Backward-compatible aliases while components migrate to semantic names. */
+    --mv-bg: var(--background);
+    --mv-surface: var(--surface);
+    --mv-surface-hover: var(--surface-muted);
+    --mv-border: var(--border);
+    --mv-border-subtle: var(--border);
+    --mv-text-primary: var(--text);
+    --mv-text-secondary: var(--text-muted);
+    --mv-text-muted: var(--text-muted);
+    --mv-accent-50: var(--primary-light);
+    --mv-accent-100: var(--primary-light);
+    --mv-accent-500: var(--primary);
+    --mv-accent-600: var(--primary);
+    --mv-accent-700: var(--primary);
+    --mv-accent-text: var(--text-on-primary);
+    --mv-success-bg: var(--success-bg);
+    --mv-success-border: var(--success-border);
+    --mv-success-text: var(--success-text);
+    --mv-warning-bg: var(--warning-bg);
+    --mv-warning-border: var(--warning-border);
+    --mv-warning-text: var(--warning-text);
+    --mv-danger-bg: var(--danger-bg);
+    --mv-danger-border: var(--danger-border);
+    --mv-danger-text: var(--danger-text);
   }
 
   html {
     -webkit-tap-highlight-color: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--mv-bg);
-    color: var(--mv-text-primary);
+    background: var(--background);
+    color: var(--text);
   }
 
-  body {
-    background-color: var(--mv-bg);
-    color: var(--mv-text-primary);
+  body,
+  #root {
+    background: var(--background);
+    color: var(--text);
     min-height: 100vh;
   }
+}
+
+
+/* Semantic token utilities. These deliberately override legacy utility colors. */
+.mv-app {
+  background: var(--background) !important;
+  color: var(--text) !important;
+}
+
+.mv-surface,
+.mv-card {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.mv-card {
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px -8px var(--shadow);
+}
+
+.mv-surface-muted {
+  background: var(--surface-muted) !important;
+  color: var(--surface-muted-text) !important;
+  border-color: var(--border) !important;
+}
+
+.mv-text {
+  color: var(--text) !important;
+}
+
+.mv-text-muted {
+  color: var(--text-muted) !important;
+}
+
+.mv-border {
+  border-color: var(--border) !important;
+}
+
+.mv-primary-bg {
+  background: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+.mv-primary-text {
+  color: var(--primary) !important;
+}
+
+.mv-on-primary {
+  color: var(--text-on-primary) !important;
+}
+
+.mv-on-primary-muted {
+  color: var(--text-on-primary) !important;
+  opacity: 0.74;
+}
+
+.mv-primary-soft {
+  background: var(--primary-light) !important;
+  color: var(--primary-light-text) !important;
+  border-color: color-mix(in srgb, var(--primary) 24%, transparent) !important;
+}
+
+.mv-primary-border {
+  border-color: var(--primary) !important;
+}
+
+.mv-primary-button {
+  background: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+  border: 1px solid var(--primary) !important;
+  box-shadow: 0 6px 14px -8px var(--primary);
+}
+
+.mv-primary-button:hover {
+  filter: brightness(0.94);
+}
+
+.mv-secondary-button {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.mv-secondary-button:hover {
+  background: var(--surface-muted) !important;
+}
+
+.mv-input {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.mv-input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.mv-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-light) !important;
+}
+
+.mv-table {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.mv-table thead,
+.mv-table th {
+  background: var(--surface-muted) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border) !important;
+}
+
+.mv-table td,
+.mv-table tr {
+  border-color: var(--border) !important;
+}
+
+.mv-theme-choice {
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: 12px;
+  padding: 10px 8px;
+  transition: 160ms ease;
+}
+
+.mv-theme-choice.is-active {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.mv-accent-picker {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.mv-accent-swatch {
+  --swatch: var(--primary);
+  width: 44px;
+  height: 44px;
+  padding: 8px;
+  border-radius: 9999px;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 160ms ease;
+}
+
+.mv-accent-swatch-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--swatch);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
+  transition: 160ms ease;
+}
+
+.mv-accent-swatch.is-active .mv-accent-swatch-dot {
+  box-shadow:
+    0 0 0 4px var(--surface),
+    0 0 0 7px var(--swatch),
+    0 8px 18px -9px var(--swatch);
+}
+
+.mv-accent-label {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.mv-overlay {
+  background: var(--overlay) !important;
+}
+
+
+/* Native form controls inherit the active token pair by default. */
+html[data-theme] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme] select,
+html[data-theme] textarea {
+  background-color: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+html[data-theme] input:not([type="checkbox"]):not([type="radio"])::placeholder,
+html[data-theme] textarea::placeholder {
+  color: var(--text-muted);
+}
+
+html[data-theme] input:not([type="checkbox"]):not([type="radio"]):focus,
+html[data-theme] select:focus,
+html[data-theme] textarea:focus {
+  border-color: var(--primary);
+  outline-color: var(--primary);
+}
+
+/* Legacy emerald primary buttons now resolve through the active accent token. */
+html[data-accent] button.bg-emerald-700,
+html[data-accent] button.bg-emerald-600 {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+html[data-accent] button.bg-emerald-700:hover,
+html[data-accent] button.bg-emerald-600:hover {
+  filter: brightness(0.94);
+}
+
+
+html[data-accent] button.bg-neutral-900 {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+html[data-theme] button.bg-neutral-100,
+html[data-theme] button.bg-white {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+html[data-theme] button.bg-neutral-100:hover,
+html[data-theme] button.bg-white:hover {
+  background-color: var(--surface-muted) !important;
 }
 
 /* Custom subtle scrollbar */
@@ -261,17 +438,18 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: 6px;
-  border: 1px solid var(--mv-border-subtle);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: #f1f5f9;
+  background: var(--surface-muted);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-.dark .mv-segmented {
-  background: #1f2937;
-  border-color: var(--mv-border);
+[data-theme="dark"] .mv-segmented,
+[data-theme="slate"] .mv-segmented {
+  background: var(--surface-muted);
+  border-color: var(--border);
 }
 
 .mv-segmented::-webkit-scrollbar {

@@ -57,34 +57,7 @@ import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { MV_SINGLE_USER_MODE } from './accessPolicy';
-
-function readInitialPreferences(): UserPreferences {
-  try {
-    const saved = localStorage.getItem('mv_local_preferences_v1');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const theme =
-        parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system'
-          ? parsed.theme
-          : 'system';
-      return {
-        theme,
-        accent: parsed.accent || 'default',
-      };
-    }
-
-    const legacyTheme = localStorage.getItem('mv-theme-mode');
-    return {
-      theme:
-        legacyTheme === 'light' || legacyTheme === 'dark' || legacyTheme === 'system'
-          ? legacyTheme
-          : 'system',
-      accent: 'default',
-    };
-  } catch {
-    return { theme: 'system', accent: 'default' };
-  }
-}
+import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -107,7 +80,7 @@ export default function App() {
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(readInitialPreferences);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(readStoredUserPreferences);
 
   // Build a complete month list instead of limiting the picker to months that already contain data.
   // Always include the current calendar year and next year, plus any years already present in household data.
@@ -147,35 +120,10 @@ export default function App() {
       );
   }, [household, selectedMonth]);
 
-  // Apply appearance immediately when the picker changes.
+  // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const applyTheme = () => {
-      const isDark =
-        userPreferences.theme === 'dark' ||
-        (userPreferences.theme === 'system' && media.matches);
-
-      document.documentElement.classList.toggle('dark', isDark);
-      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-    };
-
-    applyTheme();
-
-    if (userPreferences.theme === 'system') {
-      media.addEventListener?.('change', applyTheme);
-      return () => media.removeEventListener?.('change', applyTheme);
-    }
-  }, [userPreferences.theme]);
-
-  useEffect(() => {
-    const accent = userPreferences.accent;
-    if (!accent || accent === 'default' || accent === 'emerald') {
-      document.documentElement.removeAttribute('data-accent');
-    } else {
-      document.documentElement.setAttribute('data-accent', accent);
-    }
-  }, [userPreferences.accent]);
+    applyThemePreferences(userPreferences);
+  }, [userPreferences]);
 
   // Load Session & Household Data
   const loadData = useCallback(async () => {
@@ -550,7 +498,7 @@ export default function App() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 flex flex-col font-sans text-neutral-900 dark:text-neutral-100 transition-colors">
+    <div className="mv-app min-h-screen flex flex-col font-sans transition-colors">
       {/* Top Header */}
       <Header
         session={session}
@@ -593,8 +541,8 @@ export default function App() {
         {/* Loading State */}
         {isLoading && !household && (
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+            <Loader2 className="mv-primary-text w-8 h-8 animate-spin" />
+            <span className="mv-text-muted text-xs font-medium">
               Loading...
             </span>
           </div>

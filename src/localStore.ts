@@ -9,6 +9,7 @@ import type {
   Transaction,
   UserPreferences,
 } from './types';
+import { normalizeUserPreferences } from './themeEngine';
 
 const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
@@ -1064,23 +1065,25 @@ export function importLocalMonth(
 
 export function getLocalPreferences(): UserPreferences {
   const storage = getStorage();
-  if (!storage) return { theme: 'system', accent: 'default' };
+  if (!storage) return { theme: 'light', accent: 'emerald' };
   try {
     const parsed = JSON.parse(storage.getItem(PREFS_KEY) || '{}');
-    return {
-      theme: parsed.theme || 'system',
-      accent: parsed.accent || 'default',
-    };
+    const normalized = normalizeUserPreferences(parsed);
+    if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
+      storage.setItem(PREFS_KEY, JSON.stringify(normalized));
+    }
+    return normalized;
   } catch {
-    return { theme: 'system', accent: 'default' };
+    return { theme: 'light', accent: 'emerald' };
   }
 }
 
 export function saveLocalPreferences(preferences: UserPreferences): UserPreferences {
   const storage = getStorage();
   if (!storage) throw new Error('Browser storage is unavailable.');
-  storage.setItem(PREFS_KEY, JSON.stringify(preferences));
-  return preferences;
+  const normalized = normalizeUserPreferences(preferences);
+  storage.setItem(PREFS_KEY, JSON.stringify(normalized));
+  return normalized;
 }
 
 export function createLocalBackupPackage(): any {

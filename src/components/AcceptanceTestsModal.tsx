@@ -49,20 +49,20 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-neutral-200 dark:border-neutral-800 max-h-[85vh] flex flex-col">
+      <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border mv-border border-neutral-200 dark:border-neutral-800 max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
           <div className="flex items-center gap-2">
             <FileCheck2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
             <div>
-              <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+              <h2 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
                 Automated Acceptance Criteria Verification
               </h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+            className="p-1.5 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -107,7 +107,7 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
             {results.map((test) => (
               <div
                 key={test.id}
-                className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-850 hover:bg-white dark:hover:bg-neutral-800 transition"
+                className="p-3 rounded-xl border mv-border border-neutral-200 dark:border-neutral-800 mv-surface-muted bg-neutral-50/60 dark:bg-neutral-850 hover:bg-white dark:hover:bg-neutral-800 transition"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2.5">
@@ -117,11 +117,11 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
                       <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                     )}
                     <div>
-                      <div className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                      <div className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
                         {test.id}. {test.name}
                       </div>
                       <p className="text-[11px] text-neutral-600 dark:text-neutral-300 mt-0.5">{test.description}</p>
-                      <p className="text-[10px] text-neutral-400 dark:text-neutral-500 font-mono mt-1">{test.details}</p>
+                      <p className="text-[10px] mv-text-muted text-neutral-400 dark:text-neutral-500 font-mono mt-1">{test.details}</p>
                     </div>
                   </div>
                   <span

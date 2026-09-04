@@ -187,7 +187,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     <div className="space-y-6 pb-12">
       {/* Header */}
       <div>
-        <h1 className="w-full whitespace-nowrap text-xl font-bold text-neutral-900 dark:text-neutral-100">
+        <h1 className="w-full whitespace-nowrap text-xl font-bold mv-text text-neutral-900 dark:text-neutral-100">
           Savings
         </h1>
 
@@ -211,13 +211,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       </div>
 
       {/* Savings Summary, Goals & Movements */}
-      <section className="mv-edge-safe rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/50 p-3 sm:p-4 space-y-5">
+      <section className="mv-edge-safe rounded-2xl border mv-border border-slate-200/80 dark:border-neutral-800 mv-surface bg-white/70 dark:bg-neutral-900/50 p-3 sm:p-4 space-y-5">
         <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
-          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
             <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
               Total Savings
             </h2>
-            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-slate-950 dark:text-white whitespace-nowrap">
+            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight mv-text text-slate-950 dark:text-white whitespace-nowrap">
               {formatPence(totalSavedPence)}
             </div>
             <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
@@ -225,7 +225,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             </span>
           </article>
 
-          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
             <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
               {selectedMonth} Contributions
             </h2>
@@ -261,7 +261,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 return (
                   <article
                     key={goal.id}
-                    className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] flex flex-col justify-between"
+                    className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex min-w-0 items-start justify-between gap-3">
@@ -293,13 +293,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       <div className="grid grid-cols-2 gap-3 mt-3 text-[12px]">
                         <div className="min-w-0">
                           <span className="block text-[#64748b] dark:text-neutral-400">saved</span>
-                          <span className="block mt-0.5 font-semibold text-slate-950 dark:text-white whitespace-nowrap">
+                          <span className="block mt-0.5 font-semibold mv-text text-slate-950 dark:text-white whitespace-nowrap">
                             {formatPence(goal.currentPence)}
                           </span>
                         </div>
                         <div className="min-w-0 text-right">
                           <span className="block text-[#64748b] dark:text-neutral-400">target</span>
-                          <span className="block mt-0.5 font-semibold text-slate-950 dark:text-white whitespace-nowrap">
+                          <span className="block mt-0.5 font-semibold mv-text text-slate-950 dark:text-white whitespace-nowrap">
                             {formatPence(goal.targetPence)}
                           </span>
                         </div>
@@ -325,7 +325,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       {canEdit && (
                         <button
                           onClick={() => openEditGoal(goal)}
-                          className="shrink-0 whitespace-nowrap rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3 py-1.5 text-[13px] font-medium text-slate-600 dark:text-neutral-300"
+                          className="shrink-0 whitespace-nowrap rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3 py-1.5 text-[13px] font-medium mv-text-muted text-slate-600 dark:text-neutral-300"
                         >
                           Edit
                         </button>
@@ -359,7 +359,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               {monthSavingsTxs.map((tx) => (
                 <div
                   key={tx.id}
-                  className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 flex items-center justify-between gap-3 text-xs"
+                  className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 px-4 py-3 flex items-center justify-between gap-3 text-xs"
                 >
                   <div className="min-w-0">
                     <span className="block text-[13px] font-semibold text-[#0f172a] dark:text-white break-words">
@@ -382,14 +382,14 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       {/* MODAL: Transfer into Savings */}
       {showTransferModal && selectedGoal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-neutral-200 dark:border-neutral-800 p-6">
+          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
                 Transfer to {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowTransferModal(false)}
-                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -409,7 +409,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 <select
                   value={sourceAccountId}
                   onChange={(e) => setSourceAccountId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 >
                   {accounts
                     .filter((a) => a.isActive !== false && a.id !== selectedGoal.accountId)
@@ -431,7 +431,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     value={transferAmountStr}
                     onChange={(e) => setTransferAmountStr(e.target.value)}
                     placeholder="e.g. 250.00"
-                    className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -443,7 +443,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   <select
                     value={transferPayer}
                     onChange={(e) => setTransferPayer(e.target.value as Payer)}
-                    className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   >
                     <option value="Joint">Joint</option>
                     <option value="Marius">Marius</option>
@@ -476,14 +476,14 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       {/* MODAL: Edit Goal */}
       {showEditGoalModal && selectedGoal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-neutral-200 dark:border-neutral-800 p-6">
+          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
                 Edit {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowEditGoalModal(false)}
-                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -498,7 +498,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   required
                 />
               </div>
@@ -512,7 +512,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     type="text"
                     value={goalCurrentStr}
                     onChange={(e) => setGoalCurrentStr(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -523,7 +523,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     type="text"
                     value={goalTargetStr}
                     onChange={(e) => setGoalTargetStr(e.target.value)}
-                    className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -537,7 +537,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   type="date"
                   value={goalDate}
                   onChange={(e) => setGoalDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 

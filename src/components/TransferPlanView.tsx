@@ -183,11 +183,11 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* View Header with Month Filter & Quick Context */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-200 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b mv-border border-slate-200 pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Plan</h1>
-            <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-neutral-100 text-neutral-800 border border-neutral-200">
+            <h1 className="text-xl font-bold mv-text text-neutral-900 tracking-tight">Plan</h1>
+            <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-neutral-100 text-neutral-800 border mv-border border-neutral-200">
               {formatMonthLabel(selectedMonth)}
             </span>
           </div>
@@ -195,8 +195,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
         <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:min-w-[360px]">
           {/* Month Selector */}
-          <div className="col-span-2 flex min-w-0 items-center gap-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl p-1 shadow-2xs">
-            <Calendar className="w-4 h-4 shrink-0 text-neutral-400 ml-2" />
+          <div className="col-span-2 flex min-w-0 items-center gap-1.5 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl p-1 shadow-2xs">
+            <Calendar className="w-4 h-4 shrink-0 mv-text-muted text-neutral-400 ml-2" />
             <select
               id="transfer-plan-month-select"
               value={selectedMonth}
@@ -214,10 +214,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           {onOpenMonthImport && !isViewOnly && (
             <button
               onClick={onOpenMonthImport}
-              className="min-w-0 px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
+              className="min-w-0 px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
               title="Copy bills"
             >
-              <Layers className="w-3.5 h-3.5 shrink-0 text-neutral-500" />
+              <Layers className="w-3.5 h-3.5 shrink-0 mv-text-muted text-neutral-500" />
               <span>Copy Bills</span>
             </button>
           )}
@@ -239,7 +239,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
         <article
           id="stat-transfer-required"
-          className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
+          className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
@@ -255,7 +255,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             className={`mt-2 text-2xl font-bold tracking-tight ${
               plan.totalTransferRequiredPence > 0
                 ? 'text-amber-950 dark:text-amber-200'
-                : 'text-slate-950 dark:text-white'
+                : 'mv-text text-slate-950 dark:text-white'
             }`}
           >
             {formatPence(plan.totalTransferRequiredPence)}
@@ -269,14 +269,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </p>
         </article>
 
-        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
               Payments in Plan
             </span>
             <Layers className="w-4 h-4 shrink-0 text-slate-400" />
           </div>
-          <div className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+          <div className="mt-2 text-2xl font-bold tracking-tight mv-text text-slate-950 dark:text-white">
             {formatPence(plan.totalSelectedPaymentsPence)}
           </div>
           <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-neutral-400">
@@ -285,7 +285,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </p>
         </article>
 
-        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
               Accounts
@@ -296,7 +296,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               }`}
             />
           </div>
-          <div className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+          <div className="mt-2 text-2xl font-bold tracking-tight mv-text text-slate-950 dark:text-white">
             {plan.accountsNeedingFunding.length}
           </div>
           <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-neutral-400">
@@ -310,7 +310,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-neutral-900">
+            <h2 className="text-base font-bold mv-text text-neutral-900">
               Account Funding
             </h2>
           </div>
@@ -328,19 +328,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <div
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
                 {/* Account Card Header */}
-                <div className="p-4 sm:p-5 bg-white dark:bg-neutral-900 border-b border-[#f1f5f9] dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="p-4 sm:p-5 mv-surface bg-white dark:bg-neutral-900 border-b border-[#f1f5f9] dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-bold text-neutral-900">{req.account.name}</h3>
+                      <h3 className="text-base font-bold mv-text text-neutral-900">{req.account.name}</h3>
                       {req.account.ownerPerson && (
                         <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
                           {req.account.ownerPerson}
                         </span>
                       )}
-                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-neutral-800 dark:text-neutral-300 capitalize">
+                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 mv-text-muted text-slate-600 dark:bg-neutral-800 dark:text-neutral-300 capitalize">
                         {req.account.type}
                       </span>
                     </div>
@@ -373,24 +373,24 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 </div>
 
                 {/* 4-Column Exact Financial Breakdown per Handoff Specification */}
-                <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-neutral-200 bg-white border-b border-neutral-100 text-xs">
+                <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-neutral-200 mv-surface bg-white border-b border-neutral-100 text-xs">
                   <div className="p-4">
-                    <span className="text-neutral-500 font-medium block">Balance</span>
-                    <span className="text-sm font-bold text-neutral-900 mt-1 block">
+                    <span className="mv-text-muted text-neutral-500 font-medium block">Balance</span>
+                    <span className="text-sm font-bold mv-text text-neutral-900 mt-1 block">
                       {formatPence(req.currentBalancePence)}
                     </span>
                   </div>
 
                   <div className="p-4">
-                    <span className="text-neutral-500 font-medium block">Selected Bills</span>
-                    <span className="text-sm font-bold text-neutral-900 mt-1 block">
+                    <span className="mv-text-muted text-neutral-500 font-medium block">Selected Bills</span>
+                    <span className="text-sm font-bold mv-text text-neutral-900 mt-1 block">
                       {formatPence(req.totalSelectedPaymentsPence)}
                     </span>
                   </div>
 
                   <div className="p-4">
-                    <span className="text-neutral-500 font-medium block">Available</span>
-                    <span className="text-sm font-bold text-neutral-900 mt-1 block">
+                    <span className="mv-text-muted text-neutral-500 font-medium block">Available</span>
+                    <span className="text-sm font-bold mv-text text-neutral-900 mt-1 block">
                       {formatPence(req.amountAvailablePence)}
                     </span>
                   </div>
@@ -404,14 +404,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 </div>
 
                 {/* Selected upcoming payments that create this requirement */}
-                <div className="p-4 bg-slate-50/70 dark:bg-neutral-950/40">
+                <div className="p-4 mv-surface-muted bg-slate-50/70 dark:bg-neutral-950/40">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-neutral-700">
                       Selected payments
                     </span>
                     <button
                       onClick={() => toggleAccountExpand(req.account.id)}
-                      className="text-xs text-neutral-500 hover:text-neutral-800 flex items-center gap-1 transition-colors"
+                      className="text-xs mv-text-muted text-neutral-500 hover:text-neutral-800 flex items-center gap-1 transition-colors"
                     >
                       {expandedAccountIds[req.account.id] ? (
                         <>
@@ -432,7 +432,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       {req.selectedPayments.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between px-3 py-2 bg-white rounded-lg border border-neutral-200 text-xs hover:border-neutral-300 transition-colors"
+                          className="flex items-center justify-between px-3 py-2 mv-surface bg-white rounded-lg border mv-border border-neutral-200 text-xs hover:border-neutral-300 transition-colors"
                         >
                           <div className="flex items-center gap-2.5">
                             <input
@@ -441,11 +441,11 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                               onChange={() => handleTogglePaymentInPlan(p)}
                               disabled={isViewOnly}
                               title="In plan"
-                              className="w-4 h-4 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                              className="w-4 h-4 mv-text text-neutral-900 rounded mv-border border-neutral-300 focus:ring-neutral-900 cursor-pointer"
                             />
                             <div>
-                              <span className="font-semibold text-neutral-900">{p.name}</span>
-                              <span className="text-neutral-500 ml-2">
+                              <span className="font-semibold mv-text text-neutral-900">{p.name}</span>
+                              <span className="mv-text-muted text-neutral-500 ml-2">
                                 Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
                               </span>
                             </div>
@@ -466,7 +466,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                 Needs funds
                               </span>
                             )}
-                            <span className={`font-bold ${p.status === 'paid' ? 'text-neutral-400 line-through' : 'text-neutral-900'}`}>
+                            <span className={`font-bold ${p.status === 'paid' ? 'mv-text-muted text-neutral-400 line-through' : 'mv-text text-neutral-900'}`}>
                               {formatPence(p.amountPence)}
                             </span>
                           </div>
@@ -492,13 +492,13 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <article
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white">
+                        <h3 className="text-base font-bold tracking-tight mv-text text-slate-950 dark:text-white">
                           {req.account.name}
                         </h3>
                         {req.account.ownerPerson && (
@@ -506,7 +506,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             {req.account.ownerPerson}
                           </span>
                         )}
-                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600 dark:bg-neutral-800 dark:text-neutral-300 capitalize">
+                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 mv-text-muted text-slate-600 dark:bg-neutral-800 dark:text-neutral-300 capitalize">
                           {req.account.type}
                         </span>
                       </div>
@@ -520,10 +520,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                   </div>
 
                   <div className="mt-6">
-                    <div className="text-xs font-medium text-slate-500 dark:text-neutral-400">
+                    <div className="text-xs font-medium mv-text-muted text-slate-500 dark:text-neutral-400">
                       Current balance
                     </div>
-                    <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+                    <div className="mt-1 text-2xl font-extrabold tracking-tight mv-text text-slate-950 dark:text-white">
                       {formatPence(req.currentBalancePence)}
                     </div>
 
@@ -536,7 +536,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                   <div className="mt-5">
                     {req.selectedPayments.length > 0 ? (
-                      <div className="rounded-xl border border-slate-200 dark:border-neutral-800 bg-slate-50/70 dark:bg-neutral-950/40 px-4 py-2">
+                      <div className="rounded-xl border mv-border border-slate-200 dark:border-neutral-800 mv-surface-muted bg-slate-50/70 dark:bg-neutral-950/40 px-4 py-2">
                         <div className="divide-y divide-slate-200/80 dark:divide-neutral-800">
                           {req.selectedPayments.map((p) => (
                             <div key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
@@ -546,13 +546,13 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                   checked={p.includeInTransferPlan}
                                   onChange={() => handleTogglePaymentInPlan(p)}
                                   disabled={isViewOnly}
-                                  className="w-3.5 h-3.5 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                                  className="w-3.5 h-3.5 mv-text text-neutral-900 rounded mv-border border-neutral-300 focus:ring-neutral-900 cursor-pointer"
                                 />
                                 <span className="font-semibold text-slate-800 dark:text-neutral-200 truncate">
                                   {p.name}
                                 </span>
                               </div>
-                              <span className="font-bold text-slate-950 dark:text-white shrink-0">
+                              <span className="font-bold mv-text text-slate-950 dark:text-white shrink-0">
                                 {formatPence(p.amountPence)}
                               </span>
                             </div>
@@ -575,10 +575,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       </div>
 
       {/* SECTION 2: Upcoming Scheduled Payments Roster & Inclusion Controls */}
-      <div className="space-y-3 pt-5 border-t border-slate-200">
+      <div className="space-y-3 pt-5 border-t mv-border border-slate-200">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+            <h2 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
               Bills · {formatMonthLabel(selectedMonth)}
             </h2>
           </div>
@@ -608,7 +608,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         </div>
 
         {/* Payments */}
-        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
           {/* Mobile / tablet cards: everything visible without horizontal scrolling */}
           <div className="lg:hidden divide-y divide-slate-100 dark:divide-neutral-800">
             {monthPayments.length === 0 ? (
@@ -621,7 +621,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 return (
                   <article
                     key={payment.id}
-                    className={`p-4 ${payment.includeInTransferPlan ? 'bg-white dark:bg-neutral-900' : 'bg-slate-50/60 dark:bg-neutral-950/30'}`}
+                    className={`p-4 ${payment.includeInTransferPlan ? 'mv-surface bg-white dark:bg-neutral-900' : 'mv-surface-muted bg-slate-50/60 dark:bg-neutral-950/30'}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -632,10 +632,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             onChange={() => handleTogglePaymentInPlan(payment)}
                             disabled={isViewOnly}
                             title="In plan"
-                            className="mt-0.5 w-4 h-4 shrink-0 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                            className="mt-0.5 w-4 h-4 shrink-0 mv-text text-neutral-900 rounded mv-border border-neutral-300 focus:ring-neutral-900 cursor-pointer"
                           />
                           <div className="min-w-0">
-                            <h3 className="text-[13px] font-semibold leading-5 text-slate-950 dark:text-white break-words">
+                            <h3 className="text-[13px] font-semibold leading-5 mv-text text-slate-950 dark:text-white break-words">
                               {payment.name}
                             </h3>
                             <div className="mt-1 text-[11px] leading-4 text-[#64748b] dark:text-neutral-400 break-words">
@@ -646,7 +646,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       </div>
 
                       <div className="shrink-0 text-right">
-                        <div className="text-[13px] font-bold text-slate-950 dark:text-white whitespace-nowrap">
+                        <div className="text-[13px] font-bold mv-text text-slate-950 dark:text-white whitespace-nowrap">
                           {formatPence(payment.amountPence)}
                         </div>
                       </div>
@@ -681,7 +681,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       <div className="mt-3 grid grid-cols-2 gap-2">
                         <button
                           onClick={() => setEditingPayment(payment)}
-                          className="rounded-xl bg-[#f8fafc] dark:bg-neutral-800 px-3 py-2 text-[12px] font-medium text-slate-600 dark:text-neutral-300"
+                          className="rounded-xl bg-[#f8fafc] dark:bg-neutral-800 px-3 py-2 text-[12px] font-medium mv-text-muted text-slate-600 dark:text-neutral-300"
                         >
                           Edit
                         </button>
@@ -701,9 +701,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
           {/* Desktop table */}
           <div className="hidden lg:block">
-<table className="w-full text-left border-collapse text-xs">
+<table className="mv-table w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-neutral-800 bg-slate-50/70 dark:bg-neutral-950/40 text-[12px] font-normal text-[#64748b] dark:text-neutral-400">
+                <tr className="border-b border-slate-100 dark:border-neutral-800 mv-surface-muted bg-slate-50/70 dark:bg-neutral-950/40 text-[12px] font-normal text-[#64748b] dark:text-neutral-400">
                   <th className="pt-3 pb-4 px-4 w-12 text-center whitespace-nowrap">In Plan?</th>
                   <th className="pt-3 pb-4 px-4 whitespace-nowrap">Payment / Bill</th>
                   <th className="pt-3 pb-4 px-4 whitespace-nowrap">Payment Account</th>
@@ -717,7 +717,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <tbody className="divide-y divide-neutral-100">
                 {monthPayments.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-neutral-400 italic">
+                    <td colSpan={8} className="py-8 text-center mv-text-muted text-neutral-400 italic">
                       No scheduled payments recorded for {formatMonthLabel(selectedMonth)}.
                     </td>
                   </tr>
@@ -728,7 +728,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       <tr
                         key={payment.id}
                         className={`hover:bg-neutral-50/70 transition-colors ${
-                          payment.includeInTransferPlan ? 'bg-white' : 'bg-neutral-50/40 opacity-70'
+                          payment.includeInTransferPlan ? 'mv-surface bg-white' : 'mv-surface-muted bg-neutral-50/40 opacity-70'
                         }`}
                       >
                         {/* Checkbox for Plan Inclusion */}
@@ -739,15 +739,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             onChange={() => handleTogglePaymentInPlan(payment)}
                             disabled={isViewOnly}
                             title="In plan"
-                            className="w-4 h-4 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                            className="w-4 h-4 mv-text text-neutral-900 rounded mv-border border-neutral-300 focus:ring-neutral-900 cursor-pointer"
                           />
                         </td>
 
                         {/* Name & Notes */}
                         <td className="py-2.5 px-4">
-                          <div className="font-semibold text-neutral-900">{payment.name}</div>
+                          <div className="font-semibold mv-text text-neutral-900">{payment.name}</div>
                           {payment.notes && (
-                            <div className="text-2xs text-neutral-400 mt-0.5 truncate max-w-xs">
+                            <div className="text-2xs mv-text-muted text-neutral-400 mt-0.5 truncate max-w-xs">
                               {payment.notes}
                             </div>
                           )}
@@ -773,7 +773,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         </td>
 
                         {/* Amount in Exact Pence */}
-                        <td className="py-2.5 px-4 text-right font-bold text-neutral-900">
+                        <td className="py-2.5 px-4 text-right font-bold mv-text text-neutral-900">
                           {formatPence(payment.amountPence)}
                         </td>
 
@@ -799,14 +799,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => setEditingPayment(payment)}
-                                className="p-1 rounded text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+                                className="p-1 rounded mv-text-muted text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                                 title="Edit"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => onDeletePlannedPayment(payment.id)}
-                                className="p-1 rounded text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                className="p-1 rounded mv-text-muted text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                                 title="Delete"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />

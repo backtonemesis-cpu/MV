@@ -95,16 +95,16 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-neutral-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50">
+      <div className="mv-surface bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border mv-border border-neutral-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 mv-surface-muted bg-neutral-50">
           <div>
-            <h3 className="text-base font-semibold text-neutral-900">
+            <h3 className="text-base font-semibold mv-text text-neutral-900">
               {isEditing ? 'Edit Bill' : 'Add Bill'}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -128,7 +128,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               placeholder="Bill name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              className="w-full px-3 py-2 text-sm border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               required
             />
           </div>
@@ -140,7 +140,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 Amount *
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-sm text-neutral-400 font-medium">£</span>
+                <span className="absolute left-3 top-2 text-sm mv-text-muted text-neutral-400 font-medium">£</span>
                 <input
                   type="number"
                   step="0.01"
@@ -148,7 +148,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                   placeholder="349.79"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
                   required
                 />
               </div>
@@ -165,7 +165,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 onChange={(e) => setMonth(e.target.value)}
                 pattern="^\d{4}-\d{2}$"
                 title="Format: YYYY-MM (e.g. 2026-09)"
-                className="w-full px-3 py-1.5 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-sm border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
                 required
               />
             </div>
@@ -180,7 +180,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <select
                 value={accountId}
                 onChange={(e) => handleAccountChange(e.target.value)}
-                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
                 required
               >
                 {accounts.map((acc) => (
@@ -198,7 +198,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <select
                 value={responsiblePerson}
                 onChange={(e) => setResponsiblePerson(e.target.value as Payer)}
-                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               >
                 <option value="Marius">Marius</option>
                 <option value="Vesta">Vesta</option>
@@ -217,7 +217,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-xs border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               />
             </div>
 
@@ -226,7 +226,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full text-xs font-medium border border-neutral-300 rounded-md p-2 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -238,7 +238,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Status & Plan Inclusion (Separate Concepts) */}
-          <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 space-y-3">
+          <div className="p-3 mv-surface-muted bg-neutral-50 rounded-lg border mv-border border-neutral-200 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs font-medium text-neutral-800">Include in Transfer Plan</span>
@@ -248,18 +248,18 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 id="modal-include-plan-toggle"
                 checked={includeInTransferPlan}
                 onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
-                className="w-4 h-4 text-neutral-900 rounded border-neutral-300 focus:ring-neutral-900 cursor-pointer"
+                className="w-4 h-4 mv-text text-neutral-900 rounded mv-border border-neutral-300 focus:ring-neutral-900 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-neutral-200">
+            <div className="flex items-center justify-between pt-2 border-t mv-border border-neutral-200">
               <div>
                 <span className="text-xs font-medium text-neutral-800">Payment Status</span>
               </div>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
-                className="text-xs font-medium border border-neutral-300 rounded-md px-2.5 py-1 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="text-xs font-medium border mv-border border-neutral-300 rounded-md px-2.5 py-1 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
               >
                 <option value="unpaid">Unpaid</option>
                 <option value="paid">Paid</option>
@@ -275,7 +275,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+              className="w-full px-3 py-1.5 text-xs border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
             />
           </div>
 
