@@ -96,15 +96,15 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-neutral-200">
+      <div className="mv-surface bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border mv-border border-neutral-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-700" />
-            <h2 className="text-base font-bold text-neutral-900">Backup & Restore</h2>
+            <h2 className="text-base font-bold mv-text text-neutral-900">Backup & Restore</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition"
+            className="p-1.5 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -119,7 +119,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           )}
 
           {/* Export Section */}
-          <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
+          <div className="mv-surface-muted bg-neutral-50 p-4 rounded-xl border mv-border border-neutral-200">
             <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
               Backup
             </h3>
@@ -134,11 +134,11 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           </div>
 
           {/* Restore Section (Owner Only) */}
-          <div className="border-t border-neutral-200 pt-5">
+          <div className="border-t mv-border border-neutral-200 pt-5">
             <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
               Restore
             </h3>
-            <p className="text-xs text-neutral-500 mb-3">Restoring replaces local data.</p>
+            <p className="text-xs mv-text-muted text-neutral-500 mb-3">Restoring replaces local data.</p>
 
             {!isOwner ? (
               <div className="p-3 bg-neutral-100 rounded-xl text-xs text-neutral-600">
@@ -157,14 +157,14 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-neutral-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  className="block w-full text-xs mv-text-muted text-neutral-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                 />
 
                 <textarea
                   placeholder="Paste backup JSON"
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
-                  className="w-full h-24 p-2 text-[11px] font-mono rounded-xl border border-neutral-300"
+                  className="w-full h-24 p-2 text-[11px] font-mono rounded-xl border mv-border border-neutral-300"
                 />
 
                 <button
