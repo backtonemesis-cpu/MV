@@ -230,7 +230,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* Accounts Section */}
       <div>
         <div className="mb-4">
-          <h1 className="w-full whitespace-nowrap text-xl font-bold mv-text text-neutral-900 dark:text-neutral-100">
+          <h1 className="w-full whitespace-nowrap text-xl font-bold text-main">
             Accounts
           </h1>
 
@@ -242,19 +242,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     setError(null);
                     setShowAccModal(true);
                   }}
-                  className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-emerald-800 transition"
+                  className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-accent px-3.5 text-[13px] font-semibold text-on-accent shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-success-soft transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add Account
                 </button>
               )}
 
-              <label className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium mv-text-muted text-slate-600 dark:text-neutral-300 cursor-pointer">
+              <label className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-surface-muted px-3.5 text-[13px] font-medium text-muted cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showArchived}
                   onChange={(e) => setShowArchived(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 dark:border-neutral-600"
+                  className="w-3.5 h-3.5 rounded text-success focus:ring-accent border-muted"
                 />
                 Show Archived
               </label>
@@ -263,7 +263,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
 
         {displayedAccounts.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
+          <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-10 text-center text-[13px] font-medium text-subtle">
             No accounts
           </div>
         ) : (
@@ -273,49 +273,49 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             return (
               <div
                 key={acc.id}
-                className={`mv-surface bg-white dark:bg-neutral-800 p-5 rounded-2xl border transition-all flex flex-col justify-between ${
+                className={`bg-surface p-5 rounded-2xl border transition-all flex flex-col justify-between ${
                   isArchived
-                    ? 'mv-border border-neutral-200 dark:border-neutral-750 opacity-70 mv-surface-muted bg-neutral-50/50 dark:bg-neutral-850'
-                    : 'mv-border border-neutral-200 dark:border-neutral-700 shadow-xs hover:border-neutral-300 dark:hover:border-neutral-600'
+                    ? 'border-muted opacity-70 bg-surface-muted'
+                    : 'border-muted shadow-xs hover:border-muted'
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-200">
+                    <div className="w-10 h-10 rounded-xl bg-surface-muted flex items-center justify-center text-muted">
                       {acc.type === 'credit' ? (
-                        <CreditCard className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                        <CreditCard className="w-5 h-5 text-danger" />
                       ) : acc.type === 'savings' ? (
-                        <PiggyBank className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        <PiggyBank className="w-5 h-5 text-success" />
                       ) : (
-                        <Landmark className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <Landmark className="w-5 h-5 text-accent" />
                       )}
                     </div>
                     <div className="mv-hscroll max-w-[70%] items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 border mv-border border-neutral-200 dark:border-neutral-600">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-surface-muted text-muted border border-muted">
                         {acc.type}
                       </span>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-success-soft text-success border border-success">
                         {acc.ownerPerson || 'Joint'}
                       </span>
                       {isArchived && (
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-warning-soft text-warning border border-warning">
                           Archived
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100 mt-3">
+                  <h3 className="text-base font-bold text-main mt-3">
                     {acc.name}
                   </h3>
                   {acc.notes && (
-                    <p className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-2">
+                    <p className="text-xs text-muted text-main0 mt-1 line-clamp-2">
                       {acc.notes}
                     </p>
                   )}
 
                   {acc.reconciledAt && (
-                    <div className="flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 mt-2 font-medium">
+                    <div className="flex items-center gap-1 text-[11px] text-success mt-2 font-medium">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>
                         Reconciled {new Date(acc.reconciledAt).toLocaleDateString('en-GB')}
@@ -325,19 +325,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   )}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-700">
+                <div className="mt-6 pt-4 border-t border-muted">
                   <div className="flex items-baseline justify-between">
                     <div>
-                      <span className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 font-medium">
+                      <span className="text-[11px] text-muted text-main0 font-medium">
                         {acc.type === 'credit' ? 'Owed' : 'Balance'}
                       </span>
                       <div
                         className={`text-2xl font-black mt-0.5 ${
                           acc.type === 'credit'
-                            ? 'text-rose-700 dark:text-rose-400'
+                            ? 'text-danger'
                             : acc.currentBalancePence < 0
-                            ? 'text-rose-600 dark:text-rose-400'
-                            : 'mv-text text-neutral-900 dark:text-neutral-100'
+                            ? 'text-danger'
+                            : 'text-main'
                         }`}
                       >
                         {acc.type === 'credit'
@@ -345,7 +345,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                           : formatPence(acc.currentBalancePence)}
                       </div>
                       {acc.creditLimitPence !== undefined && acc.creditLimitPence > 0 && (
-                        <div className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1">
+                        <div className="text-[11px] text-muted text-main0 mt-1">
                           Limit: {formatPence(acc.creditLimitPence)} · Available:{' '}
                           {formatPence(
                             Math.max(
@@ -360,10 +360,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-700/60">
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-muted">
                     <button
                       onClick={() => openActivityModal(acc)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-main transition"
                     >
                       <History className="w-3.5 h-3.5" />
                       Activity
@@ -374,21 +374,21 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                         <button
                           onClick={() => openReconcileModal(acc)}
                           title="Reconcile"
-                          className="p-1.5 rounded-lg mv-text-muted text-neutral-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition"
+                          className="p-1.5 rounded-lg text-muted text-main0 hover:text-success hover:bg-surface-muted transition"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => openEditModal(acc)}
                           title="Edit"
-                          className="p-1.5 rounded-lg mv-text-muted text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition"
+                          className="p-1.5 rounded-lg text-muted text-main0 hover:text-main hover:bg-surface-muted transition"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeactivate(acc)}
                           title={isArchived ? 'Delete' : 'Archive'}
-                          className="p-1.5 rounded-lg mv-text-muted text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+                          className="p-1.5 rounded-lg text-muted text-subtle hover:text-danger hover:bg-danger-soft transition"
                         >
                           <Archive className="w-3.5 h-3.5" />
                         </button>
@@ -406,7 +406,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* Savings Pots Section */}
       <div>
         <div className="mb-4">
-          <h2 className="w-full whitespace-nowrap text-lg font-bold mv-text text-neutral-900 dark:text-neutral-100">
+          <h2 className="w-full whitespace-nowrap text-lg font-bold text-main">
             Savings Pots
           </h2>
 
@@ -414,9 +414,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <div className="mv-hscroll mv-edge-safe mt-3">
               <button
                 onClick={() => setShowGoalModal(true)}
-                className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-semibold text-slate-700 dark:text-neutral-200 shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-slate-100 dark:hover:bg-neutral-700 transition"
+                className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-surface-muted px-3.5 text-[13px] font-semibold text-muted shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-surface-muted transition"
               >
-                <Plus className="w-3.5 h-3.5 mv-text-muted text-slate-500 dark:text-neutral-400" />
+                <Plus className="w-3.5 h-3.5 text-muted text-main0" />
                 Add Pot
               </button>
             </div>
@@ -424,7 +424,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
 
         {savingsGoals.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
+          <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-10 text-center text-[13px] font-medium text-subtle">
             No savings pots
           </div>
         ) : (
@@ -438,35 +438,35 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             return (
               <div
                 key={goal.id}
-                className="mv-surface bg-white dark:bg-neutral-800 p-5 rounded-2xl border mv-border border-neutral-200 dark:border-neutral-700 shadow-xs"
+                className="bg-surface p-5 rounded-2xl border border-muted shadow-xs"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+                    <h3 className="text-base font-bold text-main">
                       {goal.name}
                     </h3>
-                    <span className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400">
+                    <span className="text-xs text-muted text-main0">
                       Stored in {linkedAccount?.name || 'Account'}
                     </span>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-black mv-text text-neutral-900 dark:text-neutral-100">
+                    <div className="text-lg font-black text-main">
                       {formatPence(goal.currentPence)}
                     </div>
-                    <span className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400">
+                    <span className="text-[11px] text-muted text-main0">
                       Target: {formatPence(goal.targetPence)}
                     </span>
                   </div>
                 </div>
 
-                <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 mt-4">
+                <div className="w-full bg-surface-muted rounded-full h-2 mt-4">
                   <div
-                    className="bg-emerald-600 dark:bg-emerald-500 h-2 rounded-full transition-all"
+                    className="bg-accent h-2 rounded-full transition-all"
                     style={{ width: `${percent}%` }}
                   />
                 </div>
 
-                <div className="flex justify-between items-center text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-2">
+                <div className="flex justify-between items-center text-[11px] text-muted text-main0 mt-2">
                   <span>{percent}% funded</span>
                   {goal.targetDate && <span>Target: {goal.targetDate}</span>}
                 </div>
@@ -479,15 +479,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Add Account */}
       {showAccModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">
                 Add Account
               </h3>
               <button
                 onClick={() => setShowAccModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -495,13 +495,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleAccountSubmit} className="mt-4 space-y-4">
               {error && (
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Account Name
                 </label>
                 <input
@@ -509,20 +509,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
                   placeholder="Account name"
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Owner
                   </label>
                   <select
                     value={accOwner}
                     onChange={(e) => setAccOwner(e.target.value as Payer)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
                     <option value="Joint">Joint</option>
                     <option value="Marius">Marius</option>
@@ -531,13 +531,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Type
                   </label>
                   <select
                     value={accType}
                     onChange={(e) => setAccType(e.target.value as AccountType)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
                     <option value="current">Current Account</option>
                     <option value="savings">Savings Account</option>
@@ -547,7 +547,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Starting Balance
                 </label>
                 <input
@@ -555,13 +555,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   value={accBalanceStr}
                   onChange={(e) => setAccBalanceStr(e.target.value)}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Notes
                 </label>
                 <textarea
@@ -569,22 +569,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   onChange={(e) => setAccNotes(e.target.value)}
                   placeholder="Notes"
                   rows={2}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowAccModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Account'}
                 </button>
@@ -596,15 +596,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Edit Account */}
       {showEditModal && selectedAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">
                 Edit {selectedAccount.name}
               </h3>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -612,33 +612,33 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleEditSubmit} className="mt-4 space-y-4">
               {error && (
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Account Name
                 </label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Owner
                   </label>
                   <select
                     value={editOwner}
                     onChange={(e) => setEditOwner(e.target.value as Payer)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
                     <option value="Joint">Joint</option>
                     <option value="Marius">Marius</option>
@@ -647,13 +647,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Type
                   </label>
                   <select
                     value={editType}
                     onChange={(e) => setEditType(e.target.value as AccountType)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
                     <option value="current">Current Account</option>
                     <option value="savings">Savings Account</option>
@@ -663,44 +663,44 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Status
                 </label>
-                <label className="flex items-center gap-2 text-xs text-neutral-800 dark:text-neutral-200 mt-1 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-main mt-1 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={editIsActive}
                     onChange={(e) => setEditIsActive(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 mv-border border-neutral-300 dark:border-neutral-700"
+                    className="w-4 h-4 rounded text-success focus:ring-accent border-muted"
                   />
                   <span>Active</span>
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Notes
                 </label>
                 <textarea
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Update Account'}
                 </button>
@@ -712,15 +712,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Reconcile Balance */}
       {showReconcileModal && selectedAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">
                 Reconcile
               </h3>
               <button
                 onClick={() => setShowReconcileModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -728,26 +728,26 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleReconcileSubmit} className="mt-4 space-y-4">
               {error && (
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Statement Date
                   </label>
                   <input
                     type="date"
                     value={reconcileDate}
                     onChange={(e) => setReconcileDate(e.target.value)}
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Statement Balance
                   </label>
                   <input
@@ -755,7 +755,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     value={reconcileBalanceStr}
                     onChange={(e) => setReconcileBalanceStr(e.target.value)}
                     placeholder="e.g. 2450.00"
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-sm font-bold mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-sm font-bold text-main focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
                 </div>
@@ -766,28 +766,28 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 const targetPence = parseToPence(reconcileBalanceStr);
                 const diffPence = targetPence - selectedAccount.currentBalancePence;
                 return (
-                  <div className="p-3 mv-surface-muted bg-neutral-50 dark:bg-neutral-800/80 rounded-xl border mv-border border-neutral-200 dark:border-neutral-700 text-xs space-y-1.5">
-                    <div className="flex justify-between mv-text-muted text-neutral-500 dark:text-neutral-400">
+                  <div className="p-3 bg-surface-muted rounded-xl border border-muted text-xs space-y-1.5">
+                    <div className="flex justify-between text-muted text-main0">
                       <span>Current</span>
-                      <span className="font-semibold mv-text text-neutral-900 dark:text-neutral-100">
+                      <span className="font-semibold text-main">
                         {formatPence(selectedAccount.currentBalancePence)}
                       </span>
                     </div>
-                    <div className="flex justify-between mv-text-muted text-neutral-500 dark:text-neutral-400">
+                    <div className="flex justify-between text-muted text-main0">
                       <span>Statement</span>
-                      <span className="font-semibold mv-text text-neutral-900 dark:text-neutral-100">
+                      <span className="font-semibold text-main">
                         {formatPence(targetPence)}
                       </span>
                     </div>
-                    <div className="flex justify-between pt-1 border-t mv-border border-neutral-200 dark:border-neutral-700 font-bold">
+                    <div className="flex justify-between pt-1 border-t border-muted font-bold">
                       <span>Discrepancy:</span>
                       <span
                         className={
                           diffPence === 0
-                            ? 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-success'
                             : diffPence > 0
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-amber-600 dark:text-amber-400'
+                            ? 'text-accent'
+                            : 'text-warning'
                         }
                       >
                         {diffPence === 0
@@ -799,18 +799,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 );
               })()}
 
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowReconcileModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Reconcile'}
                 </button>
@@ -822,20 +822,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Account Activity Ledger */}
       {showActivityModal && selectedAccount && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6 flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-muted p-6 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
               <div>
-                <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+                <h3 className="text-base font-bold text-main">
                   {selectedAccount.name} Activity
                 </h3>
-                <p className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400">
+                <p className="text-xs text-muted text-main0">
                   {formatPence(selectedAccount.currentBalancePence)}
                 </p>
               </div>
               <button
                 onClick={() => setShowActivityModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -843,7 +843,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <div className="flex-1 overflow-y-auto mt-4 space-y-2 pr-1">
               {accountActivityTxs.length === 0 ? (
-                <div className="p-6 text-center text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mv-surface-muted bg-neutral-50 dark:bg-neutral-800 rounded-xl">
+                <div className="p-6 text-center text-xs text-muted text-main0 bg-surface-muted rounded-xl">
                   No recorded transactions for this account yet.
                 </div>
               ) : (
@@ -856,21 +856,21 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   return (
                     <div
                       key={tx.id}
-                      className="p-3 mv-surface-muted bg-neutral-50 dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700/60 rounded-xl flex items-center justify-between"
+                      className="p-3 bg-surface-muted border border-muted rounded-xl flex items-center justify-between"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
+                          <span className="text-xs font-bold text-main">
                             {tx.description}
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-muted text-muted font-medium">
                             {tx.type}
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-medium">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-success-soft text-success font-medium">
                             {tx.payer}
                           </span>
                         </div>
-                        <div className="text-[11px] mv-text-muted text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        <div className="text-[11px] text-muted text-main0 mt-0.5">
                           {tx.date}
                         </div>
                       </div>
@@ -878,8 +878,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                       <div
                         className={`text-xs font-black ${
                           isIncoming
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : 'mv-text text-neutral-900 dark:text-neutral-100'
+                            ? 'text-success'
+                            : 'text-main'
                         }`}
                       >
                         {isIncoming ? '+' : '-'}
@@ -891,10 +891,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               )}
             </div>
 
-            <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex justify-end">
+            <div className="pt-3 border-t border-muted flex justify-end">
               <button
                 onClick={() => setShowActivityModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
               >
                 Close
               </button>
@@ -905,15 +905,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       {/* MODAL: Add Savings Pot */}
       {showGoalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-          <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border mv-border border-neutral-200 dark:border-neutral-800 p-6">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">
                 Create Savings Pot / Goal
               </h3>
               <button
                 onClick={() => setShowGoalModal(false)}
-                className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -921,7 +921,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleGoalSubmit} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Goal Name
                 </label>
                 <input
@@ -929,19 +929,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
                   placeholder="e.g. House Deposit / Emergency Fund"
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Linked Account
                 </label>
                 <select
                   value={goalAccountId}
                   onChange={(e) => setGoalAccountId(e.target.value)}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 >
                   {accounts
                     .filter((a) => a.isActive !== false)
@@ -955,7 +955,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Current (£)
                   </label>
                   <input
@@ -963,11 +963,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     value={goalCurrentStr}
                     onChange={(e) => setGoalCurrentStr(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  <label className="block text-xs font-semibold text-muted mb-1">
                     Target (£)
                   </label>
                   <input
@@ -975,36 +975,36 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     value={goalTargetStr}
                     onChange={(e) => setGoalTargetStr(e.target.value)}
                     placeholder="10000.00"
-                    className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                <label className="block text-xs font-semibold text-muted mb-1">
                   Target Date (Optional)
                 </label>
                 <input
                   type="date"
                   value={goalDate}
                   onChange={(e) => setGoalDate(e.target.value)}
-                  className="w-full px-3 py-2 mv-surface bg-white dark:bg-neutral-800 border mv-border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs mv-text text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowGoalModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Savings Pot'}
                 </button>
