@@ -59,7 +59,7 @@ describe('production authentication hardening', () => {
     }
   );
 
-  it('creates a verified new Firebase user as Pending from the SSE auth cookie', async () => {
+  it('rejects every verified non-Marius Firebase identity in single-user production mode', async () => {
     verifyFirebaseIdentityMock.mockResolvedValue({
       uid: 'firebase-guest-uid',
       email: 'guest@example.com',
@@ -76,11 +76,9 @@ describe('production authentication hardening', () => {
     await authenticateRequest(req, {} as any, next);
 
     expect(verifyFirebaseIdentityMock).toHaveBeenCalledWith('firebase-id-token');
-    expect(req.user).toMatchObject({
-      email: 'guest@example.com',
-      name: 'Guest User',
-      role: 'pending',
-    });
+    expect(req.user).toBeUndefined();
+    const row = getDb().prepare('SELECT count(*) as count FROM users').get() as { count: number };
+    expect(row.count).toBe(0);
     expect(next).toHaveBeenCalledOnce();
   });
 
