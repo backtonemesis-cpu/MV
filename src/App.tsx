@@ -122,6 +122,13 @@ export default function App() {
           if (Number.isFinite(year)) years.add(year);
         }
       });
+
+      (household.plannedIncomes || []).forEach((income) => {
+        if (income.month && income.month.length >= 7) {
+          const year = Number.parseInt(income.month.slice(0, 4), 10);
+          if (Number.isFinite(year)) years.add(year);
+        }
+      });
     }
 
     return Array.from(years)
@@ -428,6 +435,7 @@ export default function App() {
     sourceMonth: string;
     targetMonth: string;
     paymentIds: string[];
+    incomeIds: string[];
   }) => {
     if (!household) return;
     try {
@@ -1006,6 +1014,7 @@ export default function App() {
           activeMonth={selectedMonth}
           availableMonths={availableMonths}
           plannedPayments={household.plannedPayments || []}
+          plannedIncomes={household.plannedIncomes || []}
           accounts={household.accounts}
           categories={household.categories}
           onImport={handleImportMonth}
