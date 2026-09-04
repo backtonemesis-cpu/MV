@@ -560,17 +560,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <p className="text-xs font-semibold text-rose-800 dark:text-rose-300">
                     This deletes all financial data. Export a backup first if needed.
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="mv-hscroll items-center">
                     <button
                       onClick={handleResetExecute}
                       disabled={isResetting}
-                      className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
+                      className="shrink-0 whitespace-nowrap px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
                     >
                       {isResetting ? 'Resetting...' : 'Delete All Data'}
                     </button>
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-semibold hover:bg-neutral-300 transition"
+                      className="shrink-0 whitespace-nowrap px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-semibold hover:bg-neutral-300 transition"
                     >
                       Cancel
                     </button>
