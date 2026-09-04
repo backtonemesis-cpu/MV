@@ -27,7 +27,7 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
           <h2 className="text-base font-bold text-main">
             Data Changed
           </h2>
-          <p className="text-xs text-muted text-main0 mt-1.5">Reload before saving again.</p>
+          <p className="text-xs text-muted text-subtle mt-1.5">Reload before saving again.</p>
         </div>
 
         <div className="flex gap-2 pt-2">
