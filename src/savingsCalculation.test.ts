@@ -6,7 +6,6 @@ import {
   calculateNetSavingsMovementPence,
   calculateSavingsPosition,
   calculateLiquidFundsPence,
-  calculateSavingsGoalAllocationIntegrity,
 } from './utils/currency';
 
 function savingsTransfer(): Transaction {
@@ -62,36 +61,59 @@ describe('liquid funds and savings integrity', () => {
     expect(calculateLiquidFundsPence(accounts)).toBe(600_00);
   });
 
-  it('flags goal allocations that exceed the real linked account balance', () => {
+  it('uses every active Savings and Cash balance as the household savings basis', () => {
     const accounts: Account[] = [
       {
         id: 'savings-1',
-        name: 'Savings',
+        name: 'Chase',
         type: 'savings',
         currency: 'GBP',
-        startingBalancePence: 1000_00,
+        startingBalancePence: 800_00,
         currentBalancePence: 800_00,
+      },
+      {
+        id: 'savings-2',
+        name: 'Santander',
+        type: 'savings',
+        currency: 'GBP',
+        startingBalancePence: 300_00,
+        currentBalancePence: 300_00,
+      },
+      {
+        id: 'cash-1',
+        name: 'Cash',
+        type: 'cash',
+        currency: 'GBP',
+        startingBalancePence: 50_00,
+        currentBalancePence: 50_00,
+      },
+      {
+        id: 'current-1',
+        name: 'Current',
+        type: 'current',
+        currency: 'GBP',
+        startingBalancePence: 500_00,
+        currentBalancePence: 500_00,
+      },
+      {
+        id: 'credit-1',
+        name: 'Credit',
+        type: 'credit',
+        currency: 'GBP',
+        startingBalancePence: 0,
+        currentBalancePence: 100_00,
       },
     ];
 
-    const rows = calculateSavingsGoalAllocationIntegrity(accounts, [
-      {
-        id: 'goal-1',
-        name: 'Emergency',
-        targetPence: 2000_00,
-        currentPence: 900_00,
-        accountId: 'savings-1',
-      },
-    ]);
+    const position = calculateSavingsPosition(accounts, [], [], '2026-09');
 
-    expect(rows[0]).toEqual(
-      expect.objectContaining({
-        accountBalancePence: 800_00,
-        accountAllocatedPence: 900_00,
-        overallocatedPence: 100_00,
-        isOverallocated: true,
-      })
-    );
+    expect(position.currentSavingsPence).toBe(1150_00);
+    expect(position.savingsAccounts.map((account) => account.id)).toEqual([
+      'savings-1',
+      'savings-2',
+      'cash-1',
+    ]);
+    expect(position.projectedEndSavingsPence).toBe(1150_00);
   });
 });
 
