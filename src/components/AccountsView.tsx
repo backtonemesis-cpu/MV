@@ -911,13 +911,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                       </span>
                     </div>
                     <div className="flex justify-between pt-1 border-t border-muted font-bold">
-                      <span>Discrepancy:</span>
+                      <span>{diffPence === 0 ? 'Match:' : 'Adjustment on confirm:'}</span>
                       <span
                         className={
                           diffPence === 0
                             ? 'text-success'
-                            : diffPence > 0
-                            ? 'text-accent'
                             : 'text-warning'
                         }
                       >
@@ -926,6 +924,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                           : `${diffPence > 0 ? '+' : ''}${formatPence(diffPence)}`}
                       </span>
                     </div>
+                    {diffPence !== 0 && (
+                      <div className="pt-1 text-[11px] text-subtle">
+                        This is not an error. Confirming will set the account balance to{' '}
+                        <span className="font-semibold text-main">{formatPence(targetPence)}</span>.
+                      </div>
+                    )}
                   </div>
                 );
               })()}
