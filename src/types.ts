@@ -250,6 +250,7 @@ export interface MonthImportParams {
   sourceMonth: string;
   targetMonth: string;
   paymentIds?: string[];
+  incomeIds?: string[];
 }
 
 export type NavTab =
