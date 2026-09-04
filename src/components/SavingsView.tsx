@@ -695,7 +695,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           <div className="mv-modal-card">
             <div className="mv-modal-header">
               <div>
-                <h3 className="text-base font-bold text-main">Add Savings Pot</h3>
+                <h3 className="text-base font-bold text-main">Add Savings Goal</h3>
               </div>
               <button
                 type="button"
@@ -769,10 +769,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting || savingsAccounts.length === 0}
+                  disabled={isSubmitting}
                   className="h-10 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Adding...' : 'Add Pot'}
+                  {isSubmitting ? 'Adding...' : 'Add Goal'}
                 </button>
               </div>
             </form>
@@ -786,7 +786,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           <div className="mv-modal-card">
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
-                Transfer to {selectedGoal.name}
+                Add to Savings · {selectedGoal.name}
               </h3>
               <button
                 onClick={() => setShowTransferModal(false)}
