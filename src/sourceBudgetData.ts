@@ -373,6 +373,7 @@ function sourcePlannedIncomes(): PlannedIncome[] {
     month: SOURCE_BUDGET_MONTH,
     sourcePerson: income.payer,
     accountId: income.accountId,
+    categoryId: income.categoryId,
     expectedDate: income.date,
     actualDate: income.date,
     actualTransactionId: incomeTransactionId(income.row),
