@@ -12,7 +12,10 @@ import type {
 } from '../types';
 import {
   LOCAL_OWNER,
+  approveLocalHouseholdMember,
   bulkToggleLocalPlannedPayments,
+  changeLocalHouseholdMemberRole,
+  createLocalHouseholdMember,
   createLocalAccount,
   createLocalBackupPackage,
   createLocalPlannedIncome,
@@ -32,11 +35,13 @@ import {
   markLocalPaymentPaid,
   preflightLocalRestore,
   reconcileLocalAccount,
+  removeLocalHouseholdMember,
   resetLocalHousehold,
   restoreLocalBackup,
   saveLocalPreferences,
   subscribeToLocalChanges,
   updateLocalAccount,
+  updateLocalHouseholdMember,
   updateLocalPlannedIncome,
   updateLocalPlannedPayment,
   updateLocalSavingsGoal,
@@ -299,27 +304,42 @@ export async function switchSession(email: string): Promise<void> {
   }
 }
 
+export async function createHouseholdMember(
+  data: { name: string; email: string; role?: 'editor' | 'view_only' | 'pending' },
+  expectedVersion: number
+) {
+  return createLocalHouseholdMember(data, expectedVersion);
+}
+
+export async function updateHouseholdMember(
+  memberId: string,
+  data: { name?: string; email?: string },
+  expectedVersion: number
+) {
+  return updateLocalHouseholdMember(memberId, data, expectedVersion);
+}
+
 export async function approveMember(
-  _memberId: string,
-  _role: 'editor' | 'view_only',
-  _expectedVersion: number
-): Promise<never> {
-  throw new Error('Household sharing is disabled in local-only MV.');
+  memberId: string,
+  role: 'editor' | 'view_only',
+  expectedVersion: number
+) {
+  return approveLocalHouseholdMember(memberId, role, expectedVersion);
 }
 
 export async function changeMemberRole(
-  _memberId: string,
-  _newRole: UserRole,
-  _expectedVersion: number
-): Promise<never> {
-  throw new Error('Household sharing is disabled in local-only MV.');
+  memberId: string,
+  newRole: UserRole,
+  expectedVersion: number
+) {
+  return changeLocalHouseholdMemberRole(memberId, newRole, expectedVersion);
 }
 
 export async function removeMember(
-  _memberId: string,
-  _expectedVersion: number
-): Promise<never> {
-  throw new Error('Household sharing is disabled in local-only MV.');
+  memberId: string,
+  expectedVersion: number
+) {
+  return removeLocalHouseholdMember(memberId, expectedVersion);
 }
 
 export async function fetchBackup(): Promise<any> {
@@ -355,13 +375,16 @@ export async function runAcceptanceTests(): Promise<{
     },
     {
       id: 2,
-      name: 'Marius-only identity',
-      description: 'Only the local Marius owner record is active.',
+      name: 'Household owner integrity',
+      description: 'Marius remains the single local household owner while member records may exist.',
       passed:
-        household.members.length === 1 &&
-        household.members[0]?.email === OWNER_EMAIL &&
-        household.members[0]?.role === 'owner',
-      details: household.members.map((member) => member.email).join(', '),
+        household.members.filter((member) => member.role === 'owner').length === 1 &&
+        household.members.some(
+          (member) => member.email === OWNER_EMAIL && member.role === 'owner'
+        ),
+      details: household.members
+        .map((member) => `${member.email}:${member.role}`)
+        .join(', '),
     },
     {
       id: 3,

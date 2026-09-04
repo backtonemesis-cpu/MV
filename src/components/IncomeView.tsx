@@ -1,0 +1,709 @@
+import React, { useMemo, useState } from 'react';
+import {
+  Banknote,
+  CalendarDays,
+  CheckCircle2,
+  Edit2,
+  Plus,
+  Trash2,
+  WalletCards,
+  X,
+} from 'lucide-react';
+import type {
+  Account,
+  Category,
+  PlannedIncome,
+  Payer,
+  Transaction,
+  UserRole,
+} from '../types';
+import { formatPence, parseToPence } from '../utils/currency';
+
+interface IncomeViewProps {
+  incomes: PlannedIncome[];
+  accounts: Account[];
+  categories: Category[];
+  transactions: Transaction[];
+  selectedMonth: string;
+  availableMonths: string[];
+  userRole: UserRole;
+  onSelectMonth: (month: string) => void;
+  onCreateIncome: (data: Partial<PlannedIncome>) => Promise<void>;
+  onUpdateIncome: (id: string, data: Partial<PlannedIncome>) => Promise<void>;
+  onDeleteIncome: (id: string) => Promise<void>;
+  onMarkIncomeReceived: (
+    id: string,
+    payload: { actualAmountPence?: number; actualDate?: string; accountId?: string }
+  ) => Promise<void>;
+}
+
+export const IncomeView: React.FC<IncomeViewProps> = ({
+  incomes,
+  accounts,
+  categories,
+  transactions,
+  selectedMonth,
+  availableMonths,
+  userRole,
+  onSelectMonth,
+  onCreateIncome,
+  onUpdateIncome,
+  onDeleteIncome,
+  onMarkIncomeReceived,
+}) => {
+  const canEdit = userRole === 'owner' || userRole === 'editor';
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [selectedIncome, setSelectedIncome] = useState<PlannedIncome | null>(null);
+
+  const [name, setName] = useState('');
+  const [expectedAmount, setExpectedAmount] = useState('');
+  const [sourcePerson, setSourcePerson] = useState<Payer>('Marius');
+  const [accountId, setAccountId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [expectedDate, setExpectedDate] = useState('');
+  const [actualAmount, setActualAmount] = useState('');
+  const [actualDate, setActualDate] = useState('');
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const incomeCategories = useMemo(
+    () => categories.filter((category) => category.group === 'Income'),
+    [categories]
+  );
+
+  const monthIncomes = useMemo(
+    () =>
+      incomes
+        .filter((income) => income.month === selectedMonth)
+        .sort((a, b) => (a.expectedDate || '').localeCompare(b.expectedDate || '')),
+    [incomes, selectedMonth]
+  );
+
+  const monthExpectedPence = useMemo(
+    () => monthIncomes.reduce((sum, income) => sum + income.expectedAmountPence, 0),
+    [monthIncomes]
+  );
+
+  const monthReceivedPence = useMemo(
+    () =>
+      monthIncomes.reduce(
+        (sum, income) => sum + (income.actualAmountPence ?? 0),
+        0
+      ),
+    [monthIncomes]
+  );
+
+  const monthOutstandingPence = Math.max(0, monthExpectedPence - monthReceivedPence);
+
+  const linkedTransactionFor = (income: PlannedIncome) => {
+    const linkedId = income.actualTransactionId || income.linkedTransactionId;
+    return linkedId ? transactions.find((tx) => tx.id === linkedId) : undefined;
+  };
+
+  const resetForm = () => {
+    setSelectedIncome(null);
+    setName('');
+    setExpectedAmount('');
+    setSourcePerson('Marius');
+    setAccountId(accounts.find((account) => account.isActive !== false)?.id || '');
+    setCategoryId(incomeCategories[0]?.id || '');
+    setExpectedDate(`${selectedMonth}-01`);
+    setActualAmount('');
+    setActualDate('');
+    setNotes('');
+    setError(null);
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setShowEditModal(true);
+  };
+
+  const openEdit = (income: PlannedIncome) => {
+    const linkedTx = linkedTransactionFor(income);
+    setSelectedIncome(income);
+    setName(income.name);
+    setExpectedAmount((income.expectedAmountPence / 100).toFixed(2));
+    setSourcePerson(income.sourcePerson);
+    setAccountId(income.accountId);
+    setCategoryId(income.categoryId || linkedTx?.categoryId || incomeCategories[0]?.id || '');
+    setExpectedDate(income.expectedDate || `${income.month}-01`);
+    setActualAmount(
+      income.actualAmountPence !== undefined
+        ? (income.actualAmountPence / 100).toFixed(2)
+        : linkedTx
+        ? (linkedTx.amountPence / 100).toFixed(2)
+        : ''
+    );
+    setActualDate(income.actualDate || income.receivedDate || linkedTx?.date || '');
+    setNotes(income.notes || '');
+    setError(null);
+    setShowEditModal(true);
+  };
+
+  const openReceive = (income: PlannedIncome) => {
+    setSelectedIncome(income);
+    setActualAmount((income.expectedAmountPence / 100).toFixed(2));
+    setActualDate(income.expectedDate || new Date().toISOString().slice(0, 10));
+    setAccountId(income.accountId);
+    setError(null);
+    setShowReceiveModal(true);
+  };
+
+  const saveIncome = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const expectedAmountPence = parseToPence(expectedAmount);
+    if (!name.trim()) {
+      setError('Income name is required.');
+      return;
+    }
+    if (expectedAmountPence < 0) {
+      setError('Expected income must not be negative.');
+      return;
+    }
+    if (!accountId) {
+      setError('Receiving account is required.');
+      return;
+    }
+
+    const payload: Partial<PlannedIncome> = {
+      name: name.trim(),
+      expectedAmountPence,
+      month: selectedIncome?.month || selectedMonth,
+      sourcePerson,
+      accountId,
+      categoryId: categoryId || undefined,
+      expectedDate: expectedDate || undefined,
+      notes: notes.trim() || undefined,
+    };
+
+    if (selectedIncome?.actualTransactionId || selectedIncome?.linkedTransactionId) {
+      payload.actualAmountPence = parseToPence(actualAmount);
+      payload.actualDate = actualDate || undefined;
+      payload.receivedDate = actualDate || undefined;
+      payload.status =
+        payload.actualAmountPence < expectedAmountPence ? 'partial' : 'received';
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      if (selectedIncome) {
+        await onUpdateIncome(selectedIncome.id, payload);
+      } else {
+        await onCreateIncome(payload);
+      }
+      setShowEditModal(false);
+      resetForm();
+    } catch (err: any) {
+      setError(err.message || 'Failed to save income.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const markReceived = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedIncome) return;
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await onMarkIncomeReceived(selectedIncome.id, {
+        actualAmountPence: parseToPence(actualAmount),
+        actualDate: actualDate || undefined,
+        accountId,
+      });
+      setShowReceiveModal(false);
+      setSelectedIncome(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to record received income.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const removeIncome = async (income: PlannedIncome) => {
+    if (income.actualTransactionId || income.linkedTransactionId) return;
+    if (!window.confirm(`Delete expected income "${income.name}"?`)) return;
+
+    try {
+      setError(null);
+      await onDeleteIncome(income.id);
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete income.');
+    }
+  };
+
+  const inputClassName =
+    'w-full h-11 rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft transition-all';
+
+  return (
+    <div className="space-y-6 bg-app pb-16 text-main">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-main">Income & Wages</h1>
+          <p className="mt-0.5 text-xs text-muted">
+            Expected and received household income for the active month.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedMonth}
+            onChange={(event) => onSelectMonth(event.target.value)}
+            className="h-10 rounded-xl border border-muted bg-surface-muted px-3 text-sm font-semibold text-main"
+          >
+            {availableMonths.map((month) => (
+              <option key={month} value={month}>
+                {month}
+              </option>
+            ))}
+          </select>
+
+          {canEdit && (
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" />
+              Add Income
+            </button>
+          )}
+        </div>
+      </div>
+
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <article className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            Expected
+          </span>
+          <div className="mt-2 font-mono text-2xl font-bold tracking-tight tabular-nums text-main">
+            {formatPence(monthExpectedPence)}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            Received
+          </span>
+          <div className="mt-2 font-mono text-2xl font-bold tracking-tight tabular-nums text-success">
+            {formatPence(monthReceivedPence)}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            Outstanding
+          </span>
+          <div className="mt-2 font-mono text-2xl font-bold tracking-tight tabular-nums text-main">
+            {formatPence(monthOutstandingPence)}
+          </div>
+        </article>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-muted bg-table shadow-sm">
+        <header className="flex items-center justify-between gap-3 border-b border-muted bg-table-header px-5 py-4">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+              Income Schedule
+            </div>
+            <h2 className="mt-0.5 text-base font-semibold text-main">
+              {selectedMonth} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
+            </h2>
+          </div>
+
+          <WalletCards className="h-5 w-5 text-accent" />
+        </header>
+
+        {monthIncomes.length === 0 ? (
+          <div className="bg-table p-5">
+            <div className="flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed border-muted bg-surface-muted p-8 text-center">
+              <Banknote className="h-5 w-5 text-subtle" />
+              <p className="mt-2 text-sm font-medium text-muted">No income sources for {selectedMonth}</p>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={openCreate}
+                  className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition-all hover:bg-surface-muted active:scale-[0.98]"
+                >
+                  <Plus className="h-3.5 w-3.5 text-accent" />
+                  Add income
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="divide-y divide-muted bg-table">
+            {monthIncomes.map((income) => {
+              const linkedTx = linkedTransactionFor(income);
+              const received =
+                Boolean(income.actualTransactionId || income.linkedTransactionId) ||
+                income.status === 'received' ||
+                income.status === 'partial';
+              const categoryName =
+                categories.find(
+                  (category) => category.id === (income.categoryId || linkedTx?.categoryId)
+                )?.name || 'Income';
+              const accountName =
+                accounts.find((account) => account.id === income.accountId)?.name || 'Account';
+
+              return (
+                <article
+                  key={income.id}
+                  className="flex flex-col gap-3 px-5 py-4 transition-all hover:bg-surface-muted/30 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h3 className="truncate text-sm font-semibold text-main">{income.name}</h3>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                          income.status === 'received'
+                            ? 'bg-success-soft text-success'
+                            : income.status === 'partial'
+                            ? 'bg-warning-soft text-warning'
+                            : 'bg-surface-muted text-muted'
+                        }`}
+                      >
+                        {income.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                        {income.sourcePerson}
+                      </span>
+                      <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                        {categoryName}
+                      </span>
+                      <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                        {accountName}
+                      </span>
+                      {income.expectedDate && (
+                        <span className="rounded border border-muted/40 bg-surface-muted px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                          Due {income.expectedDate}
+                        </span>
+                      )}
+                    </div>
+
+                    {income.notes && (
+                      <span className="mt-1 block max-w-[650px] truncate text-[10px] font-normal italic tracking-wide text-subtle opacity-50">
+                        {income.notes}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 items-center justify-between gap-3 sm:justify-end">
+                    <div className="text-right">
+                      <div className="font-mono text-base font-semibold tracking-tight tabular-nums text-main">
+                        {formatPence(income.actualAmountPence ?? income.expectedAmountPence)}
+                      </div>
+                      <div className="mt-0.5 text-[10px] text-subtle">
+                        {received
+                          ? `Expected ${formatPence(income.expectedAmountPence)}`
+                          : 'Expected'}
+                      </div>
+                    </div>
+
+                    {canEdit && (
+                      <div className="flex items-center gap-1">
+                        {!received && (
+                          <button
+                            type="button"
+                            onClick={() => openReceive(income)}
+                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-muted bg-surface px-2.5 text-[11px] font-semibold text-success transition-all hover:bg-surface-muted active:scale-[0.97]"
+                            title="Mark received"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Receive
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => openEdit(income)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-muted bg-surface text-muted transition-all hover:bg-surface-muted hover:text-main active:scale-[0.97]"
+                          title="Edit income"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        {!received && (
+                          <button
+                            type="button"
+                            onClick={() => removeIncome(income)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-danger bg-danger-soft text-danger transition-all hover:opacity-80 active:scale-[0.97]"
+                            title="Delete expected income"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-xs">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-muted bg-surface shadow-2xl">
+            <header className="flex items-center justify-between border-b border-muted px-6 py-4">
+              <h2 className="text-base font-bold text-main">
+                {selectedIncome ? 'Edit Income' : 'Add Income'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="rounded-lg p-1.5 text-muted transition hover:bg-surface-muted hover:text-main"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </header>
+
+            <form onSubmit={saveIncome} className="space-y-4 p-6">
+              {error && (
+                <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">Income source</label>
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="e.g. Marius salary"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Expected amount (£)</label>
+                  <input
+                    value={expectedAmount}
+                    onChange={(event) => setExpectedAmount(event.target.value)}
+                    className={inputClassName}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Expected date</label>
+                  <input
+                    type="date"
+                    value={expectedDate}
+                    onChange={(event) => setExpectedDate(event.target.value)}
+                    className={inputClassName}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Received by</label>
+                  <select
+                    value={sourcePerson}
+                    onChange={(event) => setSourcePerson(event.target.value as Payer)}
+                    className={inputClassName}
+                  >
+                    <option value="Marius">Marius</option>
+                    <option value="Vesta">Vesta</option>
+                    <option value="Joint">Joint</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Account</label>
+                  <select
+                    value={accountId}
+                    onChange={(event) => setAccountId(event.target.value)}
+                    className={inputClassName}
+                    required
+                  >
+                    {accounts
+                      .filter((account) => account.isActive !== false)
+                      .map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Category</label>
+                  <select
+                    value={categoryId}
+                    onChange={(event) => setCategoryId(event.target.value)}
+                    className={inputClassName}
+                  >
+                    {incomeCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {selectedIncome &&
+                (selectedIncome.actualTransactionId || selectedIncome.linkedTransactionId) && (
+                  <div className="rounded-xl border border-muted bg-surface-muted p-4">
+                    <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+                      Received amount
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
+                        <input
+                          value={actualAmount}
+                          onChange={(event) => setActualAmount(event.target.value)}
+                          className={inputClassName}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-muted">Actual date</label>
+                        <input
+                          type="date"
+                          value={actualDate}
+                          onChange={(event) => setActualDate(event.target.value)}
+                          className={inputClassName}
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-2 text-[11px] text-subtle">
+                      Saving changes also updates the linked Activity income transaction so the records stay reconciled.
+                    </p>
+                  </div>
+                )}
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">Notes</label>
+                <input
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                  className={inputClassName}
+                  placeholder="Optional"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-muted pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="h-10 rounded-xl px-4 text-xs font-semibold text-muted transition hover:bg-surface-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-10 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : selectedIncome ? 'Save Changes' : 'Add Income'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showReceiveModal && selectedIncome && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-muted bg-surface p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-muted pb-3">
+              <div>
+                <h2 className="text-base font-bold text-main">Record Income Received</h2>
+                <p className="mt-0.5 text-xs text-muted">{selectedIncome.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReceiveModal(false)}
+                className="rounded-lg p-1.5 text-muted transition hover:bg-surface-muted hover:text-main"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={markReceived} className="mt-4 space-y-4">
+              {error && (
+                <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
+                <input
+                  value={actualAmount}
+                  onChange={(event) => setActualAmount(event.target.value)}
+                  className={inputClassName}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">Received date</label>
+                <div className="relative">
+                  <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+                  <input
+                    type="date"
+                    value={actualDate}
+                    onChange={(event) => setActualDate(event.target.value)}
+                    className={`${inputClassName} pl-10`}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">Receiving account</label>
+                <select
+                  value={accountId}
+                  onChange={(event) => setAccountId(event.target.value)}
+                  className={inputClassName}
+                >
+                  {accounts
+                    .filter((account) => account.isActive !== false)
+                    .map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-muted pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowReceiveModal(false)}
+                  className="h-10 rounded-xl px-4 text-xs font-semibold text-muted transition hover:bg-surface-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {isSubmitting ? 'Recording...' : 'Record Received'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

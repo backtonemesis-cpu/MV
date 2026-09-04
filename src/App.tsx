@@ -15,8 +15,14 @@ import {
   createPlannedPayment,
   updatePlannedPayment,
   deletePlannedPayment,
+  createPlannedIncome,
+  updatePlannedIncome,
+  deletePlannedIncome,
+  markIncomeReceived,
   bulkTogglePlannedPayments,
   executeTransferPlanTransfer,
+  createHouseholdMember,
+  updateHouseholdMember,
   approveMember,
   changeMemberRole,
   removeMember,
@@ -35,6 +41,7 @@ import {
   Account,
   SavingsGoal,
   PlannedPayment,
+  PlannedIncome,
   UserRole,
   NavTab,
   Payer,
@@ -50,6 +57,7 @@ import { PlannedPaymentModal } from './components/PlannedPaymentModal';
 import { MonthImportModal } from './components/MonthImportModal';
 import { AccountsView } from './components/AccountsView';
 import { SavingsView } from './components/SavingsView';
+import { IncomeView } from './components/IncomeView';
 import { SettingsView } from './components/SettingsView';
 import { BudgetView } from './components/BudgetView';
 import { AuditLogView } from './components/AuditLogView';
@@ -57,7 +65,6 @@ import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { MV_SINGLE_USER_MODE } from './accessPolicy';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 export default function App() {
@@ -477,7 +484,109 @@ export default function App() {
     }
   };
 
+  // Planned Income / Wages Handlers
+  const handleCreatePlannedIncome = async (data: Partial<PlannedIncome>) => {
+    if (!household) return;
+    try {
+      setIsSubmitting(true);
+      await createPlannedIncome(data, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to create income');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdatePlannedIncome = async (id: string, data: Partial<PlannedIncome>) => {
+    if (!household) return;
+    try {
+      setIsSubmitting(true);
+      await updatePlannedIncome(id, data, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to update income');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePlannedIncome = async (id: string) => {
+    if (!household) return;
+    try {
+      await deletePlannedIncome(id, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to delete income');
+      }
+      throw err;
+    }
+  };
+
+  const handleMarkIncomeReceived = async (
+    id: string,
+    payload: { actualAmountPence?: number; actualDate?: string; accountId?: string }
+  ) => {
+    if (!household) return;
+    try {
+      setIsSubmitting(true);
+      await markIncomeReceived(id, { ...payload, expectedVersion: household.version });
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to record received income');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Member Management Handlers
+  const handleCreateHouseholdMember = async (data: {
+    name: string;
+    email: string;
+    role?: 'editor' | 'view_only' | 'pending';
+  }) => {
+    try {
+      if (!household) return;
+      await createHouseholdMember(data, household.version);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to add household member');
+      throw err;
+    }
+  };
+
+  const handleUpdateHouseholdMember = async (
+    memberId: string,
+    data: { name?: string; email?: string }
+  ) => {
+    try {
+      if (!household) return;
+      await updateHouseholdMember(memberId, data, household.version);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update household member');
+      throw err;
+    }
+  };
+
   const handleApproveMember = async (memberId: string, role: 'editor' | 'view_only') => {
     try {
       if (!household) return;
@@ -508,9 +617,7 @@ export default function App() {
     }
   };
 
-  const pendingMembersCount = MV_SINGLE_USER_MODE
-    ? 0
-    : household
+  const pendingMembersCount = household
     ? household.members.filter((m) => m.role === 'pending').length
     : 0;
 
@@ -640,6 +747,23 @@ export default function App() {
               />
             )}
 
+            {activeTab === 'income' && (
+              <IncomeView
+                incomes={household.plannedIncomes || []}
+                accounts={household.accounts}
+                categories={household.categories}
+                transactions={household.transactions}
+                selectedMonth={selectedMonth}
+                availableMonths={availableMonths}
+                userRole={session.role}
+                onSelectMonth={setSelectedMonth}
+                onCreateIncome={handleCreatePlannedIncome}
+                onUpdateIncome={handleUpdatePlannedIncome}
+                onDeleteIncome={handleDeletePlannedIncome}
+                onMarkIncomeReceived={handleMarkIncomeReceived}
+              />
+            )}
+
             {activeTab === 'savings' && (
               <SavingsView
                 savingsGoals={household.savingsGoals}
@@ -670,6 +794,8 @@ export default function App() {
                   setUserPreferences(saved);
                   localStorage.setItem('mv-theme-mode', saved.theme);
                 }}
+                onCreateMember={handleCreateHouseholdMember}
+                onUpdateMember={handleUpdateHouseholdMember}
                 onApproveMember={handleApproveMember}
                 onChangeRole={handleChangeRole}
                 onRemoveMember={handleRemoveMember}

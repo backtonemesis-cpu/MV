@@ -90,6 +90,7 @@ export interface PlannedIncome {
   month: string;
   sourcePerson: Payer;
   accountId: string;
+  categoryId?: string;
   expectedDate?: string;
   actualDate?: string;
   actualTransactionId?: string;
@@ -246,6 +247,7 @@ export type NavTab =
   | 'dashboard'
   | 'activity'
   | 'accounts'
+  | 'income'
   | 'savings'
   | 'transfer_plan'
   | 'settings'

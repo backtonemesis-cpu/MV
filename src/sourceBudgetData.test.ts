@@ -57,19 +57,23 @@ describe('September source budget snapshot', () => {
     );
 
     expect(savingsPosition.currentSavingsPence).toBe(
-      SOURCE_BUDGET_EXPECTED.currentSavingsPence
+      SOURCE_BUDGET_EXPECTED.savingsAccountBalancesPence
     );
     expect(savingsPosition.savedThisMonthPence).toBe(
       SOURCE_BUDGET_EXPECTED.savedThisMonthPence
     );
     expect(savingsPosition.projectedEndSavingsPence).toBe(
-      SOURCE_BUDGET_EXPECTED.projectedEndSavingsPence
+      SOURCE_BUDGET_EXPECTED.savingsAccountProjectedPence
     );
     expect(savingsPosition.savingsAccounts.map((account) => account.name)).toEqual([
       'Chase',
-      'Santander',
       'Cash',
     ]);
+    expect(
+      savingsPosition.savingsAccounts.every(
+        (account) => account.type === 'savings' || account.type === 'cash'
+      )
+    ).toBe(true);
 
     expect(state.transactions).toHaveLength(19);
     expect(state.plannedPayments).toHaveLength(13);
