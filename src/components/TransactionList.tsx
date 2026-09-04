@@ -119,15 +119,14 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     transactions,
   ]);
 
-  const filterInputClassName =
-    'h-10 w-full rounded-md border border-[rgba(255,255,255,0.06)] bg-[#1F2937] px-3 text-[12px] font-medium text-[#F9FAFB] outline-none transition-colors placeholder:text-[#6B7280] focus:border-[#2E374A] focus:bg-[#374151]';
+  const filterInputClassName = 'finance-filter-control';
 
   return (
-    <div className="space-y-5 bg-[#0B0F19] pb-16 text-white">
+    <div className="finance-workspace space-y-5 pb-16">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-white">Activity</h1>
-          <p className="mt-0.5 text-[12px] font-normal text-[#9CA3AF]">
+          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Activity</h1>
+          <p className="mt-0.5 text-[12px] font-normal text-muted">
             {filteredTransactions.length} of {transactions.length} transactions
           </p>
         </div>
@@ -146,13 +145,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </header>
 
       <section
-        className="rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#111827] p-3 sm:p-4"
+        className="finance-panel p-3 sm:p-4"
         aria-label="Activity filters"
       >
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           <label className="relative block min-w-0">
             <span className="sr-only">Search transactions</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
             <input
               type="search"
               placeholder="Search transactions"
@@ -164,7 +163,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
           <label className="relative block min-w-0">
             <span className="sr-only">Date filter</span>
-            <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
             <select
               value={filterBySelectedMonth && selectedMonth ? 'selected-month' : 'all'}
               onChange={(event) => setFilterBySelectedMonth(event.target.value === 'selected-month')}
@@ -174,7 +173,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               {selectedMonth && <option value="selected-month">{selectedMonth}</option>}
               <option value="all">All dates</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           </label>
 
           <label className="relative block min-w-0">
@@ -191,7 +190,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           </label>
 
           <label className="relative block min-w-0">
@@ -209,7 +208,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <option value="refund">Refunds</option>
               <option value="savings">Savings</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           </label>
 
           <label className="relative block min-w-0">
@@ -226,30 +225,30 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           </label>
         </div>
       </section>
 
       <section
-        className="overflow-hidden rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#111827]"
+        className="finance-panel overflow-hidden"
         aria-label="Activity transactions"
       >
-        <div className="hidden items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-4 py-2.5 sm:flex">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
+        <div className="hidden items-center justify-between border-b border-muted px-4 py-2.5 sm:flex">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">
             Transaction
           </span>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B7280]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">
             Amount
           </span>
         </div>
 
         {filteredTransactions.length === 0 ? (
           <div className="p-4">
-            <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-[rgba(255,255,255,0.06)] bg-[#1F2937] p-8 text-center">
-              <Search className="h-5 w-5 text-[#6B7280]" />
-              <p className="mt-2 text-sm font-medium text-[#9CA3AF]">No matching transactions</p>
-              <p className="mt-1 text-[11px] font-normal text-[#6B7280]">
+            <div className="flex min-h-[150px] flex-col items-center justify-center rounded-lg border border-dashed border-muted bg-surface-muted p-8 text-center">
+              <Search className="h-5 w-5 text-subtle" />
+              <p className="mt-2 text-sm font-medium text-muted">No matching transactions</p>
+              <p className="mt-1 text-[11px] font-normal text-subtle">
                 Adjust the filters or add a new transaction.
               </p>
 
@@ -257,7 +256,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 <button
                   type="button"
                   onClick={onAddTransaction}
-                  className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[#1F2937] px-3 text-xs font-semibold text-[#F9FAFB] transition-colors hover:bg-[#374151]"
+                  className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-md border border-muted bg-surface-muted px-3 text-xs font-semibold text-main transition-colors hover:bg-surface-muted"
                 >
                   <Plus className="h-3.5 w-3.5 text-accent" />
                   Add transaction
@@ -266,7 +265,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             </div>
           </div>
         ) : (
-          <div className="space-y-px bg-[#111827] p-1.5">
+          <div className="space-y-px bg-surface p-1.5">
             {filteredTransactions.map((tx) => {
               const isNegative = tx.type === 'expense' || tx.type === 'repayment';
               const isPositive = tx.type === 'income' || tx.isRefund || tx.type === 'refund';
@@ -289,19 +288,19 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 : 'Expense';
 
               const statusClassName = isPositive
-                ? 'border-[rgba(34,197,94,0.20)] bg-[rgba(34,197,94,0.10)] text-[#4ADE80]'
+                ? 'finance-status-positive'
                 : isNegative
-                ? 'border-[rgba(239,68,68,0.20)] bg-[rgba(239,68,68,0.10)] text-[#F87171]'
-                : 'border-[rgba(255,255,255,0.06)] bg-[#111827] text-[#9CA3AF]';
+                ? 'finance-status-negative'
+                : 'finance-status-neutral';
 
               return (
                 <article
                   key={tx.id}
-                  className="group flex items-center justify-between gap-3 rounded-lg border border-transparent bg-[#1F2937] px-3 py-3 transition-colors hover:border-[#2E374A] hover:bg-[#374151] sm:px-4"
+                  className="finance-row group flex items-center justify-between gap-3 px-3 py-3 sm:px-4"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[rgba(255,255,255,0.06)] bg-[#111827] text-[#9CA3AF]"
+                      className="finance-leading-icon"
                       aria-hidden="true"
                     >
                       {tx.isSavings ? (
@@ -317,37 +316,37 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <h2 className="truncate text-[14px] font-semibold leading-5 text-[#F9FAFB] sm:text-[15px]">
+                        <h2 className="truncate text-[14px] font-semibold leading-5 text-main sm:text-[15px]">
                           {tx.description}
                         </h2>
                         <span
-                          className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.04em] ${statusClassName}`}
+                          className={statusClassName}
                         >
                           {classification}
                         </span>
                       </div>
 
-                      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-normal text-[#9CA3AF]">
+                      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-normal text-muted">
                         <span>{tx.date}</span>
-                        <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                        <span className="text-subtle" aria-hidden="true">·</span>
                         <span>{categoryName}</span>
-                        <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                        <span className="text-subtle" aria-hidden="true">·</span>
                         <span>
                           {accountName}
                           {targetName ? ` → ${targetName}` : ''}
                         </span>
-                        <span className="text-[#6B7280]" aria-hidden="true">·</span>
+                        <span className="text-subtle" aria-hidden="true">·</span>
                         <span>{tx.payer}</span>
                       </div>
 
                       {tx.notes && (
-                        <p className="mt-0.5 max-w-[650px] truncate text-[11px] font-normal text-[#6B7280]">
+                        <p className="mt-0.5 max-w-[650px] truncate text-[11px] font-normal text-subtle">
                           {tx.notes}
                         </p>
                       )}
 
                       {tx.splits && tx.splits.length > 0 && (
-                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#6B7280]">
+                        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-subtle">
                           {tx.splits.map((split) => (
                             <span key={split.id}>
                               {categoriesMap.get(split.categoryId) || 'Category'} ·{' '}
@@ -360,17 +359,17 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
-                    <div className="min-w-[96px] text-right font-mono text-[16px] font-semibold leading-5 tabular-nums text-white sm:text-[18px]">
+                    <div className="min-w-[96px] text-right font-mono text-[16px] font-semibold leading-5 tabular-nums text-main sm:text-[18px]">
                       {isNegative ? '-' : '+'}
                       {formatPence(tx.amountPence)}
                     </div>
 
                     {canEdit && (
-                      <div className="flex items-center gap-1 opacity-70 transition-opacity sm:opacity-40 sm:group-hover:opacity-100">
+                      <div className="finance-row-actions flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => onEditTransaction(tx)}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2E374A] text-[#9CA3AF] transition-colors hover:text-white active:scale-[0.96]"
+                          className="finance-action-button"
                           title="Edit transaction"
                           aria-label={`Edit ${tx.description}`}
                         >
@@ -384,7 +383,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                               onDeleteTransaction(tx.id);
                             }
                           }}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2E374A] text-[#9CA3AF] transition-colors hover:text-[#F87171] active:scale-[0.96]"
+                          className="finance-action-button is-danger"
                           title="Delete transaction"
                           aria-label={`Delete ${tx.description}`}
                         >
