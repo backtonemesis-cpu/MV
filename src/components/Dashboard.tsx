@@ -127,7 +127,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <section className="rounded-2xl border mv-border border-slate-200 dark:border-neutral-800 mv-surface bg-white dark:bg-neutral-900 p-3.5 sm:p-4 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+            <div className="mv-primary-soft w-10 h-10 shrink-0 rounded-xl flex items-center justify-center">
               <Calendar className="w-[18px] h-[18px]" />
             </div>
             <div className="flex flex-wrap items-center gap-2 min-w-0">
@@ -159,7 +159,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </button>
               <button
                 onClick={onOpenPlannedPaymentModal}
-                className="h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border border-emerald-700 bg-emerald-700 text-white text-[13px] font-semibold whitespace-nowrap hover:bg-emerald-800 transition"
+                className="mv-primary-button h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl text-[13px] font-semibold whitespace-nowrap transition"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Bill
@@ -170,15 +170,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* Available Household Surplus Hero */}
-      <section className="rounded-2xl bg-gradient-to-br from-emerald-800 to-teal-900 dark:from-emerald-950 dark:to-teal-950 p-6 sm:p-7 text-white shadow-[0_10px_26px_-16px_rgba(6,78,59,0.65)]">
+      <section className="mv-primary-bg rounded-2xl p-6 sm:p-7 shadow-[0_10px_26px_-16px_var(--primary)]">
         <div>
-          <div className="text-xs sm:text-sm font-semibold tracking-wide text-emerald-100/90">
+          <div className="text-xs sm:text-sm font-semibold tracking-wide mv-on-primary-muted">
             Available Household Surplus ({selectedMonth})
           </div>
           <h1 className="mt-2 text-4xl sm:text-5xl font-black tracking-[-0.03em] leading-none">
             {formatPence(surplusCalculation.availableSurplusPence)}
           </h1>
-          <p className="mt-3 text-[13px] leading-5 text-emerald-100/80">
+          <p className="mt-3 text-[13px] leading-5 mv-on-primary-muted">
             Liquid funds: {formatPence(totalLiquidBalancePence)}
           </p>
         </div>
@@ -208,17 +208,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Financial Flow Sub-Metrics */}
       <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full mv-surface bg-white/10 flex items-center justify-center">
             <TrendingUp className="w-4 h-4 text-emerald-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Actual Inflow
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(surplusCalculation.actualIncomeReceivedPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70 min-h-4">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted min-h-4">
             {surplusCalculation.expectedIncomePence > 0
               ? `Expected: ${formatPence(surplusCalculation.expectedIncomePence)}`
               : surplusCalculation.refundsPence > 0
@@ -227,49 +227,49 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </article>
 
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-rose-300/15 flex items-center justify-center">
             <TrendingDown className="w-4 h-4 text-rose-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Gross Living Spend
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(surplusCalculation.grossOtherSpendingPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted">
             Excludes transfers
           </div>
         </article>
 
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-amber-300/15 flex items-center justify-center">
             <Clock className="w-4 h-4 text-amber-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Fixed Bills
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(surplusCalculation.fixedBillsUnpaidPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70 min-h-4">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted min-h-4">
             {surplusCalculation.fixedBillsTotalPence > 0
               ? `${formatPence(surplusCalculation.fixedBillsTotalPence)} total`
               : 'None remaining'}
           </div>
         </article>
 
-        <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
+        <article className="relative min-w-0 overflow-hidden rounded-2xl mv-primary-bg p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-cyan-300/15 flex items-center justify-center">
             <PiggyBank className="w-4 h-4 text-cyan-200" />
           </div>
-          <div className="pr-10 text-[13px] font-medium leading-5 text-emerald-100 whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="pr-10 text-[13px] font-medium leading-5 mv-on-primary whitespace-nowrap overflow-hidden text-ellipsis">
             Saved
           </div>
           <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight whitespace-nowrap">
             {formatPence(monthSummary.savingsTransfersPence)}
           </div>
-          <div className="mt-1 text-[11px] leading-4 text-emerald-100/70">
+          <div className="mt-1 text-[11px] leading-4 mv-on-primary-muted">
             Non-spending transfer
           </div>
         </article>
