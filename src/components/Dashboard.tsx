@@ -23,6 +23,7 @@ import {
   calculateMonthlySurplus,
   calculateSavingsPosition,
   calculateLiquidFundsPence,
+  isPlannedPaymentEffectivelyPaid,
 } from '../utils/currency';
 
 interface DashboardProps {
@@ -126,7 +127,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const grouped = new Map<string, number>();
 
     monthPlannedPayments
-      .filter((p) => p.includeInTransferPlan && p.status !== 'paid')
+      .filter(
+        (p) =>
+          p.includeInTransferPlan &&
+          !isPlannedPaymentEffectivelyPaid(p, household.transactions)
+      )
       .forEach((p) => {
         grouped.set(p.accountId, (grouped.get(p.accountId) || 0) + p.amountPence);
       });
