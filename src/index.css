@@ -224,3 +224,81 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+
+/* Mobile-safe horizontal control rails */
+.mv-hscroll {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+}
+
+.mv-hscroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.mv-hscroll > * {
+  flex-shrink: 0;
+}
+
+.mv-segmented {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px;
+  border: 1px solid var(--mv-border-subtle);
+  border-radius: 12px;
+  background: #f1f5f9;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dark .mv-segmented {
+  background: #1f2937;
+  border-color: var(--mv-border);
+}
+
+.mv-segmented::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.mv-segmented > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.mv-segmented-item {
+  padding: 6px 14px;
+  border-radius: 9px;
+}
+
+.mv-fluid-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .mv-edge-safe {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
