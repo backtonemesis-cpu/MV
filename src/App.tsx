@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   fetchSession,
   switchSession,
@@ -92,51 +92,6 @@ export default function App() {
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(readStoredUserPreferences);
-
-  // Build a complete month list instead of limiting the picker to months that already contain data.
-  // Always include the current calendar year and next year, plus any years already present in household data.
-  const availableMonths = useMemo(() => {
-    const years = new Set<number>();
-    const now = new Date();
-    const currentYear = now.getFullYear();
-
-    years.add(currentYear);
-    years.add(currentYear + 1);
-
-    const selectedYear = Number.parseInt(selectedMonth.slice(0, 4), 10);
-    if (Number.isFinite(selectedYear)) {
-      years.add(selectedYear);
-    }
-
-    if (household) {
-      household.transactions.forEach((tx) => {
-        if (tx.date && tx.date.length >= 7) {
-          const year = Number.parseInt(tx.date.slice(0, 4), 10);
-          if (Number.isFinite(year)) years.add(year);
-        }
-      });
-
-      (household.plannedPayments || []).forEach((p) => {
-        if (p.month && p.month.length >= 7) {
-          const year = Number.parseInt(p.month.slice(0, 4), 10);
-          if (Number.isFinite(year)) years.add(year);
-        }
-      });
-
-      (household.plannedIncomes || []).forEach((income) => {
-        if (income.month && income.month.length >= 7) {
-          const year = Number.parseInt(income.month.slice(0, 4), 10);
-          if (Number.isFinite(year)) years.add(year);
-        }
-      });
-    }
-
-    return Array.from(years)
-      .sort((a, b) => a - b)
-      .flatMap((year) =>
-        Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, '0')}`)
-      );
-  }, [household, selectedMonth]);
 
   // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
@@ -796,7 +751,6 @@ export default function App() {
                 household={household}
                 userRole={session.role}
                 selectedMonth={selectedMonth}
-                availableMonths={availableMonths}
                 onSelectMonth={setSelectedMonth}
                 onOpenMonthImport={() => setShowMonthImportModal(true)}
                 onOpenAddTransaction={() => {
