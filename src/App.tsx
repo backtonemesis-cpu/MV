@@ -22,6 +22,7 @@ import {
   bulkTogglePlannedPayments,
   executeTransferPlanTransfer,
   executeTransferPlanAllocations,
+  undoTransferPlanFunding,
   createHouseholdMember,
   updateHouseholdMember,
   approveMember,
@@ -516,6 +517,24 @@ export default function App() {
     }
   };
 
+  const handleUndoTransferPlanFunding = async (destinationAccountId: string) => {
+    if (!household) return;
+    try {
+      setIsSubmitting(true);
+      await undoTransferPlanFunding(destinationAccountId, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to undo Transfer Plan funding');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Planned Income / Wages Handlers
   const handleCreatePlannedIncome = async (data: Partial<PlannedIncome>) => {
     if (!household) return;
@@ -732,6 +751,7 @@ export default function App() {
                 accounts={household.accounts}
                 categories={household.categories}
                 plannedPayments={household.plannedPayments || []}
+                transactions={household.transactions}
                 members={household.members}
                 userRole={session.role}
                 currentVersion={household.version}
@@ -743,6 +763,7 @@ export default function App() {
                 onDeletePlannedPayment={handleDeletePlannedPayment}
                 onBulkTogglePlannedPayments={handleBulkTogglePlannedPayments}
                 onExecuteTransfer={handleExecuteTransferAllocations}
+                onUndoFunding={handleUndoTransferPlanFunding}
               />
             )}
 
