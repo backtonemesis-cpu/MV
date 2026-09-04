@@ -12,7 +12,7 @@ import {
   updateLocalAccount,
   updateLocalHouseholdMember,
 } from './localStore';
-import { resolveCompatibleAccount } from './sourceBudgetData';
+import { resolveCompatibleAccount, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();
@@ -42,6 +42,28 @@ class MemoryStorage implements Storage {
   }
 }
 
+function markSourceBudgetHandledForTest(state: ReturnType<typeof createBlankLocalHousehold>): void {
+  state.schemaStatus = state.schemaStatus || {
+    currentSchemaVersion: 1,
+    minSupportedClientVersion: 1,
+    latestAppliedVersion: 1,
+    appliedMigrations: [],
+    isUpToDate: true,
+  };
+  state.schemaStatus.appliedMigrations = [
+    ...state.schemaStatus.appliedMigrations.filter(
+      (migration) => migration.name !== SOURCE_BUDGET_IMPORT_ID
+    ),
+    {
+      version: 1,
+      name: SOURCE_BUDGET_IMPORT_ID,
+      appliedAt: '2026-09-04T00:00:00.000Z',
+      executionTimeMs: 0,
+      checksum: 'test-account-ownership',
+    },
+  ];
+}
+
 describe('Stable account ownership', () => {
   let storage: MemoryStorage;
 
@@ -52,11 +74,14 @@ describe('Stable account ownership', () => {
       configurable: true,
       writable: true,
     });
-    saveLocalHousehold(createBlankLocalHousehold());
+    const blank = createBlankLocalHousehold();
+    markSourceBudgetHandledForTest(blank);
+    saveLocalHousehold(blank);
   });
 
   it('migrates a legacy ownerPerson to the matching household member ID without changing the account ID', () => {
     const legacy = createBlankLocalHousehold();
+    markSourceBudgetHandledForTest(legacy);
     const vesta: HouseholdMember = {
       id: 'member-vesta-stable',
       email: 'vesta@local.invalid',
