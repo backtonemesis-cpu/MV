@@ -13,6 +13,7 @@ import {
   updateLocalPlannedPayment,
   updateLocalTransaction,
   deleteLocalTransaction,
+  markLocalPaymentPaid,
   markLocalIncomeReceived,
   LOCAL_STORAGE_KEY,
 } from './localStore';
