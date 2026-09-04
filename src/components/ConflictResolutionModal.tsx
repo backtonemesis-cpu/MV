@@ -18,16 +18,16 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white dark:bg-neutral-850 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-neutral-200 dark:border-neutral-750 text-center space-y-4">
+      <div className="mv-surface bg-white dark:bg-neutral-850 rounded-2xl max-w-md w-full p-6 shadow-2xl border mv-border border-neutral-200 dark:border-neutral-750 text-center space-y-4">
         <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 flex items-center justify-center mx-auto">
           <AlertTriangle className="w-6 h-6" />
         </div>
 
         <div>
-          <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
+          <h2 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
             Data Changed
           </h2>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5">Reload before saving again.</p>
+          <p className="text-xs mv-text-muted text-neutral-500 dark:text-neutral-400 mt-1.5">Reload before saving again.</p>
         </div>
 
         <div className="flex gap-2 pt-2">
