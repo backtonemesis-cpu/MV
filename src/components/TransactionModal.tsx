@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, Plus, Trash2, Split } from 'lucide-react';
-import { Transaction, Account, Category, Payer, TransactionType, TransactionSplit } from '../types';
+import { Transaction, Account, Category, Payer, TransactionType, TransactionSplit, HouseholdMember } from '../types';
+import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
 
 interface TransactionModalProps {
@@ -10,6 +11,7 @@ interface TransactionModalProps {
   initialTransaction?: Transaction | null;
   accounts: Account[];
   categories: Category[];
+  members: HouseholdMember[];
   isSubmitting: boolean;
 }
 
@@ -20,6 +22,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   initialTransaction,
   accounts,
   categories,
+  members,
   isSubmitting,
 }) => {
   const [description, setDescription] = useState('');
@@ -89,6 +92,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
     setError(null);
   }, [initialTransaction, isOpen, accounts, categories]);
+
+  const personOptions = householdPersonOptions(members, [payer, initialTransaction?.payer]);
 
   if (!isOpen) return null;
 
@@ -327,24 +332,24 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             />
           </div>
 
-          {/* Paid by (Marius, Vesta, Joint) */}
+          {/* Paid by household member */}
           <div>
             <label className="block text-xs font-semibold text-muted mb-1.5">
               Paid by
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['Joint', 'Marius', 'Vesta'] as const).map((p) => (
+            <div className="flex flex-wrap gap-2">
+              {personOptions.map((person) => (
                 <button
                   type="button"
-                  key={p}
-                  onClick={() => setPayer(p)}
+                  key={person}
+                  onClick={() => setPayer(person)}
                   className={`py-2 px-3 text-xs font-semibold rounded-xl border transition ${
-                    payer === p
+                    payer === person
                       ? 'border-success bg-success-soft text-success'
                       : 'border-muted hover:border-muted text-muted bg-surface'
                   }`}
                 >
-                  {p}
+                  {person}
                 </button>
               ))}
             </div>
