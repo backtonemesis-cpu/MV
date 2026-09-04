@@ -911,12 +911,13 @@ export function updateLocalTransaction(
       }
 
       if (next.plannedIncomeId) {
-        const incomeIndex = (state.plannedIncomes || []).findIndex(
+        const incomes = state.plannedIncomes || [];
+        const incomeIndex = incomes.findIndex(
           (income) => income.id === next.plannedIncomeId
         );
         if (incomeIndex >= 0) {
-          const linkedIncome = state.plannedIncomes[incomeIndex];
-          state.plannedIncomes[incomeIndex] = {
+          const linkedIncome = incomes[incomeIndex];
+          incomes[incomeIndex] = {
             ...linkedIncome,
             actualAmountPence: next.amountPence,
             actualDate: next.date,
@@ -931,6 +932,7 @@ export function updateLocalTransaction(
             updatedAt: nowIso(),
             updatedBy: OWNER_EMAIL,
           };
+          state.plannedIncomes = incomes;
         }
       }
 
@@ -976,12 +978,13 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
       }
 
       if (existing.plannedIncomeId) {
-        const incomeIndex = (state.plannedIncomes || []).findIndex(
+        const incomes = state.plannedIncomes || [];
+        const incomeIndex = incomes.findIndex(
           (income) => income.id === existing.plannedIncomeId
         );
         if (incomeIndex >= 0) {
-          state.plannedIncomes[incomeIndex] = {
-            ...state.plannedIncomes[incomeIndex],
+          incomes[incomeIndex] = {
+            ...incomes[incomeIndex],
             status: 'expected',
             actualAmountPence: undefined,
             actualDate: undefined,
@@ -991,6 +994,7 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
             updatedAt: nowIso(),
             updatedBy: OWNER_EMAIL,
           };
+          state.plannedIncomes = incomes;
         }
       }
     }
