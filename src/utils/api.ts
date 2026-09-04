@@ -41,6 +41,7 @@ import {
   saveLocalPreferences,
   subscribeToLocalChanges,
   updateLocalAccount,
+  updateLocalHouseholdMember,
   updateLocalPlannedIncome,
   updateLocalPlannedPayment,
   updateLocalSavingsGoal,
@@ -308,6 +309,14 @@ export async function createHouseholdMember(
   expectedVersion: number
 ) {
   return createLocalHouseholdMember(data, expectedVersion);
+}
+
+export async function updateHouseholdMember(
+  memberId: string,
+  data: { name?: string; email?: string },
+  expectedVersion: number
+) {
+  return updateLocalHouseholdMember(memberId, data, expectedVersion);
 }
 
 export async function approveMember(
