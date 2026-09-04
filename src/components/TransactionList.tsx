@@ -108,7 +108,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Household Activity & Ledger
+            Activity
           </h1>
         </div>
 
@@ -119,7 +119,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 active:scale-95 transition shadow-xs"
           >
             <Plus className="w-4 h-4" />
-            Add Transaction
+            Add
           </button>
         )}
       </div>
