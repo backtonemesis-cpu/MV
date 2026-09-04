@@ -68,6 +68,7 @@ import { AuditLogView } from './components/AuditLogView';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
+import { CommandPalette } from './components/CommandPalette';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
@@ -94,6 +95,8 @@ export default function App() {
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(readStoredUserPreferences);
   const [isMobilePreview, setIsMobilePreview] = useState(false);
+  const [isPrivacyMasked, setIsPrivacyMasked] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
 
   // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
@@ -101,10 +104,24 @@ export default function App() {
   }, [userPreferences]);
 
   useEffect(() => {
+    const handleCommandShortcut = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') return;
+      event.preventDefault();
+      setShowCommandPalette((current) => !current);
+    };
+
+    document.addEventListener('keydown', handleCommandShortcut);
+    return () => document.removeEventListener('keydown', handleCommandShortcut);
+  }, []);
+
+
+  useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
 
-      if (conflictServerVersion !== null) {
+      if (showCommandPalette) {
+        setShowCommandPalette(false);
+      } else if (conflictServerVersion !== null) {
         setConflictServerVersion(null);
       } else if (showTestsModal) {
         setShowTestsModal(false);
@@ -126,6 +143,7 @@ export default function App() {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [
+    showCommandPalette,
     conflictServerVersion,
     showTestsModal,
     showBackupModal,
@@ -689,7 +707,7 @@ export default function App() {
     <div
       className={`mv-density-root min-h-screen bg-app text-main flex flex-col font-sans transition-colors ${
         isMobilePreview ? 'mv-device-simulator' : ''
-      }`}
+      } ${isPrivacyMasked ? 'mv-privacy-mask' : ''}`}
     >
       <div className="mv-device-frame">
       {/* Top Header */}
@@ -704,6 +722,8 @@ export default function App() {
         availableIdentities={availableIdentities}
         isMobilePreview={isMobilePreview}
         onToggleMobilePreview={() => setIsMobilePreview((current) => !current)}
+        isPrivacyMasked={isPrivacyMasked}
+        onTogglePrivacyMask={() => setIsPrivacyMasked((current) => !current)}
       />
 
       {/* Navigation (Sticky Desktop bar + Mobile bottom dock) */}
@@ -991,6 +1011,15 @@ export default function App() {
       )}
 
       {/* Optimistic Concurrency Conflict Modal */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onNavigate={(tab) => setActiveTab(tab)}
+        onSetDensity={(cardDensity) =>
+          setUserPreferences((current) => ({ ...current, cardDensity }))
+        }
+      />
+
       <ConflictResolutionModal
         isOpen={conflictServerVersion !== null}
         serverVersion={conflictServerVersion || undefined}
