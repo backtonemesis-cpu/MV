@@ -8,12 +8,14 @@ import {
   Payer,
   PlannedPayment,
   PlannedIncome,
+  HouseholdMember,
 } from '../types';
 import {
   calculateSavingsPosition,
   formatPence,
   parseToPence,
 } from '../utils/currency';
+import { householdPersonOptions } from '../utils/householdPeople';
 
 interface SavingsViewProps {
   savingsGoals: SavingsGoal[];
@@ -21,6 +23,7 @@ interface SavingsViewProps {
   transactions: Transaction[];
   plannedPayments: PlannedPayment[];
   plannedIncomes: PlannedIncome[];
+  members: HouseholdMember[];
   selectedMonth: string;
   userRole: UserRole;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
@@ -42,6 +45,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   transactions,
   plannedPayments,
   plannedIncomes,
+  members,
   selectedMonth,
   userRole,
   onCreateSavingsGoal,
@@ -72,6 +76,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
+  const personOptions = useMemo(
+    () => householdPersonOptions(members, [transferPayer]),
+    [members, transferPayer]
+  );
 
   const savingsAccounts = useMemo(
     () =>
@@ -700,9 +708,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     onChange={(e) => setTransferPayer(e.target.value as Payer)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   >
-                    <option value="Joint">Joint</option>
-                    <option value="Marius">Marius</option>
-                    <option value="Vesta">Vesta</option>
+                    {personOptions.map((person) => (
+                      <option key={person} value={person}>
+                        {person}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

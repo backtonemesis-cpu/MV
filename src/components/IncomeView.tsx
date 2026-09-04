@@ -14,16 +14,19 @@ import type {
   Category,
   PlannedIncome,
   Payer,
+  HouseholdMember,
   Transaction,
   UserRole,
 } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
+import { householdPersonOptions } from '../utils/householdPeople';
 
 interface IncomeViewProps {
   incomes: PlannedIncome[];
   accounts: Account[];
   categories: Category[];
   transactions: Transaction[];
+  members: HouseholdMember[];
   selectedMonth: string;
   availableMonths: string[];
   userRole: UserRole;
@@ -42,6 +45,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   accounts,
   categories,
   transactions,
+  members,
   selectedMonth,
   availableMonths,
   userRole,
@@ -59,7 +63,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
   const [name, setName] = useState('');
   const [expectedAmount, setExpectedAmount] = useState('');
-  const [sourcePerson, setSourcePerson] = useState<Payer>('Marius');
+  const [sourcePerson, setSourcePerson] = useState<Payer>('Joint');
   const [accountId, setAccountId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [expectedDate, setExpectedDate] = useState('');
@@ -68,6 +72,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const personOptions = useMemo(
+    () => householdPersonOptions(members, [sourcePerson]),
+    [members, sourcePerson]
+  );
 
   const incomeCategories = useMemo(
     () => categories.filter((category) => category.group === 'Income'),
@@ -107,7 +116,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
     setSelectedIncome(null);
     setName('');
     setExpectedAmount('');
-    setSourcePerson('Marius');
+    setSourcePerson(personOptions.find((person) => person !== 'Joint') || 'Joint');
     setAccountId(accounts.find((account) => account.isActive !== false)?.id || '');
     setCategoryId(incomeCategories[0]?.id || '');
     setExpectedDate(`${selectedMonth}-01`);
@@ -516,9 +525,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     onChange={(event) => setSourcePerson(event.target.value as Payer)}
                     className={inputClassName}
                   >
-                    <option value="Marius">Marius</option>
-                    <option value="Vesta">Vesta</option>
-                    <option value="Joint">Joint</option>
+                    {personOptions.map((person) => (
+                      <option key={person} value={person}>
+                        {person}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

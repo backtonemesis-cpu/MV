@@ -1,6 +1,6 @@
 export type UserRole = 'owner' | 'editor' | 'view_only' | 'pending' | 'removed';
 
-export type Payer = 'Marius' | 'Vesta' | 'Joint';
+export type Payer = string;
 
 export type AccountType = 'current' | 'joint' | 'savings' | 'credit' | 'cash';
 

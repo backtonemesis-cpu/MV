@@ -11,13 +11,15 @@ import {
   Search,
   Trash2,
 } from 'lucide-react';
-import { Account, Category, Transaction, UserRole } from '../types';
+import { Account, Category, Transaction, UserRole, HouseholdMember } from '../types';
+import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence } from '../utils/currency';
 
 interface TransactionListProps {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
+  members: HouseholdMember[];
   userRole: UserRole;
   selectedMonth?: string;
   onAddTransaction: () => void;
@@ -29,6 +31,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   transactions,
   accounts,
   categories,
+  members,
   userRole,
   selectedMonth,
   onAddTransaction,
@@ -51,6 +54,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const categoriesMap = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
     [categories]
+  );
+
+  const payerOptions = useMemo(
+    () => householdPersonOptions(members, transactions.map((transaction) => transaction.payer)),
+    [members, transactions]
   );
 
   const filteredTransactions = useMemo(() => {
@@ -174,9 +182,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               className={`${filterInputClassName} appearance-none pr-9`}
             >
               <option value="all">All payers</option>
-              <option value="Joint">Joint</option>
-              <option value="Marius">Marius</option>
-              <option value="Vesta">Vesta</option>
+              {payerOptions.map((person) => (
+                <option key={person} value={person}>
+                  {person}
+                </option>
+              ))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           </label>

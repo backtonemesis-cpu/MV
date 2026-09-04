@@ -20,7 +20,6 @@ import {
 import {
   HouseholdMember,
   AuditLogEntry,
-  UserRole,
   UserSession,
   ThemePreference,
   AccentColor,
@@ -46,14 +45,8 @@ interface SettingsViewProps {
   userPreferences: UserPreferences;
   onUpdatePreferences: (prefs: Partial<UserPreferences>) => void;
   onSaveAppearance?: () => Promise<void>;
-  onCreateMember: (data: {
-    name: string;
-    email: string;
-    role?: 'editor' | 'view_only' | 'pending';
-  }) => Promise<void>;
-  onUpdateMember: (memberId: string, data: { name?: string; email?: string }) => Promise<void>;
-  onApproveMember: (memberId: string, role: 'editor' | 'view_only') => Promise<void>;
-  onChangeRole: (memberId: string, newRole: UserRole) => Promise<void>;
+  onCreateMember: (data: { name: string }) => Promise<void>;
+  onUpdateMember: (memberId: string, data: { name?: string }) => Promise<void>;
   onRemoveMember: (memberId: string) => Promise<void>;
   onDownloadBackup: () => Promise<void>;
   onRestoreBackup: (payload: any) => Promise<void>;
@@ -71,8 +64,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onSaveAppearance,
   onCreateMember,
   onUpdateMember,
-  onApproveMember,
-  onChangeRole,
   onRemoveMember,
   onDownloadBackup,
   onRestoreBackup,
@@ -94,13 +85,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [sampleMessage, setSampleMessage] = useState<string | null>(null);
   const [memberName, setMemberName] = useState('');
-  const [memberEmail, setMemberEmail] = useState('');
-  const [memberRole, setMemberRole] = useState<'editor' | 'view_only'>('editor');
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [memberMessage, setMemberMessage] = useState<string | null>(null);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editMemberName, setEditMemberName] = useState('');
-  const [editMemberEmail, setEditMemberEmail] = useState('');
   const [isUpdatingMember, setIsUpdatingMember] = useState(false);
 
   const activeAccentName =
@@ -174,12 +162,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setMemberMessage(null);
       await onCreateMember({
         name: memberName.trim(),
-        email: memberEmail.trim(),
-        role: memberRole,
       });
       setMemberName('');
-      setMemberEmail('');
-      setMemberRole('editor');
       setMemberMessage('Household member added.');
     } catch (err: any) {
       setMemberMessage(err.message || 'Failed to add household member.');
@@ -191,7 +175,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const beginEditMember = (member: HouseholdMember) => {
     setEditingMemberId(member.id);
     setEditMemberName(member.name);
-    setEditMemberEmail(member.email);
     setMemberMessage(null);
   };
 
@@ -201,7 +184,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setMemberMessage(null);
       await onUpdateMember(memberId, {
         name: editMemberName.trim(),
-        email: editMemberEmail.trim(),
       });
       setEditingMemberId(null);
       setMemberMessage('Household member updated.');
@@ -393,7 +375,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       )}
 
-      {/* TAB 2: Members & Access */}
+      {/* TAB 2: Household people */}
       {activeTab === 'members' && (
         <div className="space-y-4 max-w-3xl">
           <div className="rounded-2xl border border-muted bg-surface p-5 shadow-sm">
@@ -402,8 +384,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div>
                 <h2 className="text-sm font-bold text-main">Household Members</h2>
                 <p className="mt-1 text-xs leading-5 text-muted">
-                  Manage household member records and intended roles in this local MV dataset.
-                  This static build does not authenticate another device or grant remote access.
+                  Manage the people whose finances are tracked in MV. Active names are used in
+                  account owner, received by, paid by, bill responsibility and savings selectors.
+                </p>
+                <p className="mt-1 text-[11px] leading-4 text-subtle">
+                  Removing a person only removes them from future selections. Historical records
+                  keep the original name for the audit trail.
                 </p>
               </div>
             </div>
@@ -417,12 +403,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="mb-4">
                 <h3 className="text-sm font-bold text-main">Add Household Member</h3>
                 <p className="mt-0.5 text-xs text-muted">
-                  Add a person to the household record and assign their intended access role.
+                  Add another person whose accounts, income or spending you want to track.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex-1">
                   <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
                   <input
                     value={memberName}
@@ -432,61 +418,39 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     required
                   />
                 </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Email</label>
-                  <input
-                    type="email"
-                    value={memberEmail}
-                    onChange={(event) => setMemberEmail(event.target.value)}
-                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                    placeholder="name@example.com"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Role</label>
-                  <select
-                    value={memberRole}
-                    onChange={(event) =>
-                      setMemberRole(event.target.value as 'editor' | 'view_only')
-                    }
-                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                  >
-                    <option value="editor">Household Editor</option>
-                    <option value="view_only">View Only</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between gap-3 border-t border-muted pt-4">
-                <span className="text-xs text-muted">{memberMessage || ''}</span>
                 <button
                   type="submit"
-                  disabled={isAddingMember}
-                  className="h-10 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                  disabled={isAddingMember || !memberName.trim()}
+                  className="h-11 rounded-xl bg-accent px-5 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   {isAddingMember ? 'Adding...' : 'Add Member'}
                 </button>
               </div>
+
+              {memberMessage && (
+                <div className="mt-3 text-xs font-medium text-muted">{memberMessage}</div>
+              )}
             </form>
           )}
 
           <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs">
-            <h2 className="text-sm font-bold text-main mb-4">
-              Members
-            </h2>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-sm font-bold text-main">Active Members</h2>
+              <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-medium text-muted">
+                {members.filter((member) => member.role !== 'removed').length}
+              </span>
+            </div>
 
             <div className="space-y-3">
-              {members.map((m) => (
-                <div
-                  key={m.id}
-                  className="rounded-xl border border-muted bg-surface-muted p-4"
-                >
-                  {editingMemberId === m.id ? (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {members
+                .filter((member) => member.role !== 'removed')
+                .map((member) => (
+                  <div
+                    key={member.id}
+                    className="rounded-xl border border-muted bg-surface-muted p-4"
+                  >
+                    {editingMemberId === member.id ? (
+                      <div className="space-y-3">
                         <div>
                           <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
                           <input
@@ -495,116 +459,103 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             className="h-10 w-full rounded-xl border border-muted bg-surface px-3 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                           />
                         </div>
-                        <div>
-                          <label className="mb-1 block text-xs font-semibold text-muted">Email</label>
-                          <input
-                            type="email"
-                            value={editMemberEmail}
-                            onChange={(event) => setEditMemberEmail(event.target.value)}
-                            className="h-10 w-full rounded-xl border border-muted bg-surface px-3 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                          />
-                        </div>
-                      </div>
 
-                      <div className="flex justify-end gap-2 border-t border-muted pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setEditingMemberId(null)}
-                          className="h-9 rounded-xl px-3 text-xs font-semibold text-muted transition hover:bg-surface"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isUpdatingMember}
-                          onClick={() => saveEditedMember(m.id)}
-                          className="h-9 rounded-xl bg-accent px-3 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
-                        >
-                          {isUpdatingMember ? 'Saving...' : 'Save Member'}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-main">{m.name}</span>
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                              m.role === 'owner'
-                                ? 'bg-accent-soft text-accent'
-                                : m.role === 'editor'
-                                ? 'bg-success-soft text-success'
-                                : m.role === 'view_only'
-                                ? 'bg-accent-soft text-accent'
-                                : m.role === 'removed'
-                                ? 'bg-danger-soft text-danger'
-                                : 'bg-warning-soft text-warning'
-                            }`}
+                        <div className="flex justify-end gap-2 border-t border-muted pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setEditingMemberId(null)}
+                            className="h-9 rounded-xl px-3 text-xs font-semibold text-muted transition hover:bg-surface"
                           >
-                            {m.role.replace('_', ' ')}
-                          </span>
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isUpdatingMember || !editMemberName.trim()}
+                            onClick={() => saveEditedMember(member.id)}
+                            className="h-9 rounded-xl bg-accent px-3 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                          >
+                            {isUpdatingMember ? 'Saving...' : 'Save Member'}
+                          </button>
                         </div>
-                        <span className="mt-0.5 block text-xs text-subtle">{m.email}</span>
                       </div>
-
-                      {isOwner && m.role !== 'owner' && m.role !== 'removed' && (
-                        <div className="flex flex-wrap items-center gap-2">
-                          {m.role === 'pending' ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => onApproveMember(m.id, 'editor')}
-                                className="h-9 rounded-xl bg-accent px-3 text-xs font-semibold text-on-accent"
-                              >
-                                Approve Editor
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => onApproveMember(m.id, 'view_only')}
-                                className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main"
-                              >
-                                Approve View Only
-                              </button>
-                            </>
-                          ) : (
-                            <select
-                              value={m.role}
-                              onChange={(e) => onChangeRole(m.id, e.target.value as UserRole)}
-                              className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-medium text-main"
-                            >
-                              <option value="editor">Household Editor</option>
-                              <option value="view_only">View Only</option>
-                            </select>
+                    ) : (
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <span className="text-sm font-semibold text-main">{member.name}</span>
+                          {member.role === 'owner' && (
+                            <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-accent">
+                              Primary
+                            </span>
                           )}
-
-                          <button
-                            type="button"
-                            onClick={() => beginEditMember(m)}
-                            className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition hover:bg-surface-muted"
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (window.confirm(`Remove ${m.name} from the household record?`)) {
-                                onRemoveMember(m.id);
-                              }
-                            }}
-                            className="h-9 rounded-xl border border-danger bg-danger-soft px-3 text-xs font-semibold text-danger transition hover:opacity-80"
-                          >
-                            Remove
-                          </button>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+
+                        {isOwner && member.role !== 'owner' && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => beginEditMember(member)}
+                              className="h-9 rounded-xl border border-muted bg-surface px-3 text-xs font-semibold text-main transition hover:bg-surface-muted"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (
+                                  window.confirm(
+                                    `Remove ${member.name} from future household selections? Historical records will be kept.`
+                                  )
+                                ) {
+                                  onRemoveMember(member.id);
+                                }
+                              }}
+                              className="h-9 rounded-xl border border-danger bg-danger-soft px-3 text-xs font-semibold text-danger transition hover:opacity-80"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
+
+          {members.some((member) => member.role === 'removed') && (
+            <div className="bg-surface p-5 rounded-2xl border border-muted shadow-xs">
+              <h3 className="text-xs font-bold text-muted mb-3">Removed from future selections</h3>
+              <div className="space-y-2">
+                {members
+                  .filter((member) => member.role === 'removed')
+                  .map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-muted bg-surface-muted px-3 py-2.5"
+                    >
+                      <span className="text-xs font-medium text-muted">{member.name}</span>
+                      {isOwner && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              setMemberMessage(null);
+                              await onCreateMember({ name: member.name });
+                              setMemberMessage(`${member.name} restored to household selections.`);
+                            } catch (err: any) {
+                              setMemberMessage(err.message || 'Failed to restore household member.');
+                            }
+                          }}
+                          className="h-8 rounded-lg border border-muted bg-surface px-3 text-[11px] font-semibold text-main transition hover:bg-surface-muted"
+                        >
+                          Restore
+                        </button>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
