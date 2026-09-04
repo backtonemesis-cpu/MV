@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Use the .dark class so the in-app Light / Dark / System picker controls Tailwind dark: utilities. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --mv-bg: #f8fafc;

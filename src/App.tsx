@@ -38,7 +38,6 @@ import {
   NavTab,
   Payer,
   UserPreferences,
-  ThemePreference,
 } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -58,6 +57,34 @@ import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { MV_SINGLE_USER_MODE } from './accessPolicy';
+
+function readInitialPreferences(): UserPreferences {
+  try {
+    const saved = localStorage.getItem('mv_local_preferences_v1');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const theme =
+        parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system'
+          ? parsed.theme
+          : 'system';
+      return {
+        theme,
+        accent: parsed.accent || 'default',
+      };
+    }
+
+    const legacyTheme = localStorage.getItem('mv-theme-mode');
+    return {
+      theme:
+        legacyTheme === 'light' || legacyTheme === 'dark' || legacyTheme === 'system'
+          ? legacyTheme
+          : 'system',
+      accent: 'default',
+    };
+  } catch {
+    return { theme: 'system', accent: 'default' };
+  }
+}
 
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -80,10 +107,7 @@ export default function App() {
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>({
-    theme: (localStorage.getItem('mv-theme-mode') as ThemePreference) || 'system',
-    accent: 'emerald',
-  });
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(readInitialPreferences);
 
   // Compute available months across both transactions and planned payments
   const availableMonths = useMemo(() => {
@@ -103,23 +127,35 @@ export default function App() {
     return Array.from(set).sort();
   }, [household]);
 
-  // Sync theme with document element based on user preferences
-  const updateTheme = useCallback((theme?: 'system' | 'light' | 'dark') => {
-    const pref = theme || localStorage.getItem('mv-theme-mode') || 'system';
-    const isDark =
-      pref === 'dark' ||
-      (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  // Apply appearance immediately when the picker changes.
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
 
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const applyTheme = () => {
+      const isDark =
+        userPreferences.theme === 'dark' ||
+        (userPreferences.theme === 'system' && media.matches);
+
+      document.documentElement.classList.toggle('dark', isDark);
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    };
+
+    applyTheme();
+
+    if (userPreferences.theme === 'system') {
+      media.addEventListener?.('change', applyTheme);
+      return () => media.removeEventListener?.('change', applyTheme);
     }
-  }, []);
+  }, [userPreferences.theme]);
 
   useEffect(() => {
-    updateTheme();
-  }, [updateTheme]);
+    const accent = userPreferences.accent;
+    if (!accent || accent === 'default' || accent === 'emerald') {
+      document.documentElement.removeAttribute('data-accent');
+    } else {
+      document.documentElement.setAttribute('data-accent', accent);
+    }
+  }, [userPreferences.accent]);
 
   // Load Session & Household Data
   const loadData = useCallback(async () => {
@@ -637,17 +673,12 @@ export default function App() {
                 auditLogs={household.auditLogs}
                 userPreferences={userPreferences}
                 onUpdatePreferences={(prefs) => {
-                  setUserPreferences((prev) => {
-                    const next = { ...prev, ...prefs };
-                    if (prefs.theme) {
-                      localStorage.setItem('mv-theme-mode', prefs.theme);
-                      updateTheme(prefs.theme);
-                    }
-                    return next;
-                  });
+                  setUserPreferences((prev) => ({ ...prev, ...prefs }));
                 }}
                 onSaveAppearance={async () => {
-                  await saveUserPreferences(userPreferences);
+                  const saved = await saveUserPreferences(userPreferences);
+                  setUserPreferences(saved);
+                  localStorage.setItem('mv-theme-mode', saved.theme);
                 }}
                 onApproveMember={handleApproveMember}
                 onChangeRole={handleChangeRole}
