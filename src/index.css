@@ -1849,6 +1849,15 @@ html[data-theme] button.bg-white:hover {
   font-weight: 600 !important;
 }
 
+.mv-settings-panel label,
+.mv-income-modal label,
+.mv-backup-modal label {
+  color: #94A3B8 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
 .mv-settings-panel p,
 .mv-settings-panel .text-muted,
 .mv-settings-panel .text-subtle {
@@ -2043,6 +2052,14 @@ html[data-theme] button.bg-white:hover {
 .mv-settings .mv-accent-swatch.is-active {
   border-color: #F8FAFC;
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35);
+}
+
+.mv-settings-panel > :not(:last-child) {
+  margin-bottom: 0;
+}
+
+.mv-settings-panel .leading-relaxed {
+  line-height: 1.35 !important;
 }
 
 .mv-settings-log-row {
