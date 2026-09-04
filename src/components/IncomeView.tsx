@@ -352,7 +352,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">
             Received
           </span>
-          <div className="mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums text-main">
+          <div className="finance-semantic-positive mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums">
             {formatPence(monthReceivedPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
@@ -364,7 +364,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">
             Outstanding
           </span>
-          <div className="mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums text-main">
+          <div className="finance-semantic-negative mt-2 font-mono text-[18px] font-semibold leading-6 tabular-nums">
             {formatPence(monthOutstandingPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
