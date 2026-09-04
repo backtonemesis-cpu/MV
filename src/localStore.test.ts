@@ -5,15 +5,19 @@ import {
   createLocalBackupPackage,
   createLocalHouseholdMember,
   createLocalPlannedIncome,
+  createLocalPlannedPayment,
   createLocalTransaction,
+  bulkToggleLocalPlannedPayments,
   executeLocalTransfer,
   loadLocalHousehold,
   markLocalIncomeReceived,
   preflightLocalRestore,
   resetLocalHousehold,
   restoreLocalBackup,
+  updateLocalAccount,
   updateLocalHouseholdMember,
   updateLocalPlannedIncome,
+  updateLocalPlannedPayment,
   changeLocalHouseholdMemberRole,
   removeLocalHouseholdMember,
 } from './localStore';
@@ -242,6 +246,122 @@ describe('Penny-style local MV storage', () => {
     expect(state.members.find((member) => member.id === created.member.id)?.role).toBe('removed');
     expect(state.accounts.find((item) => item.id === account.account.id)?.ownerPerson).toBe('Alex M');
     expect(state.members.filter((member) => member.role === 'owner')).toHaveLength(1);
+  });
+
+  it('repairs imported same-name account routing by unique household owner without mixing account IDs', () => {
+    let state = loadLocalHousehold();
+    const originalLloyds = state.accounts.find((account) => account.name === 'Lloyds');
+    expect(originalLloyds).toBeTruthy();
+
+    updateLocalAccount(
+      originalLloyds!.id,
+      { ownerPerson: 'Marius' },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const vestaLloyds = createLocalAccount(
+      {
+        name: 'Lloyds',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+
+    const vestaImportedBills = state.plannedPayments.filter(
+      (payment) =>
+        payment.responsiblePerson === 'Vesta' &&
+        payment.metadata?.sourceImportId === 'source-budget-2026-09-v1' &&
+        ['Council tax', 'Internet - Vodafone', 'Phone', 'Lloyds'].includes(payment.name)
+    );
+    expect(vestaImportedBills).toHaveLength(4);
+    expect(vestaImportedBills.every((payment) => payment.accountId === vestaLloyds.account.id)).toBe(true);
+
+    const mariusImportedLloydsBills = state.plannedPayments.filter(
+      (payment) =>
+        payment.responsiblePerson === 'Marius' &&
+        payment.metadata?.sourceImportId === 'source-budget-2026-09-v1' &&
+        ['Child Maintenance', 'National Trust'].includes(payment.name)
+    );
+    expect(mariusImportedLloydsBills).toHaveLength(2);
+    expect(
+      mariusImportedLloydsBills.every((payment) => payment.accountId === originalLloyds!.id)
+    ).toBe(true);
+
+    const vestaLloydsIncome = state.plannedIncomes?.find(
+      (income) =>
+        income.name === 'Paycheck' &&
+        income.sourcePerson === 'Vesta' &&
+        income.metadata?.sourceImportId === 'source-budget-2026-09-v1'
+    );
+    expect(vestaLloydsIncome?.accountId).toBe(vestaLloyds.account.id);
+
+    const mariusLloydsIncome = state.plannedIncomes?.find(
+      (income) =>
+        income.name === 'Paycheck' &&
+        income.sourcePerson === 'Marius' &&
+        income.metadata?.sourceImportId === 'source-budget-2026-09-v1'
+    );
+    expect(mariusLloydsIncome?.accountId).toBe(originalLloyds!.id);
+  });
+
+  it('selects paid and unpaid bills independently and treats linked actual transactions as paid', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((item) => item.name === 'Lloyds');
+    expect(account).toBeTruthy();
+
+    const unpaid = createLocalPlannedPayment(
+      {
+        name: 'October unpaid',
+        amountPence: 1000,
+        month: '2026-10',
+        responsiblePerson: 'Marius',
+        accountId: account!.id,
+        status: 'unpaid',
+        includeInTransferPlan: false,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const paid = createLocalPlannedPayment(
+      {
+        name: 'October paid',
+        amountPence: 2000,
+        month: '2026-10',
+        responsiblePerson: 'Marius',
+        accountId: account!.id,
+        status: 'paid',
+        includeInTransferPlan: false,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    bulkToggleLocalPlannedPayments(
+      { month: '2026-10', include: true, status: 'unpaid' },
+      state.version
+    );
+    state = loadLocalHousehold();
+    expect(state.plannedPayments.find((item) => item.id === unpaid.payment.id)?.includeInTransferPlan).toBe(true);
+    expect(state.plannedPayments.find((item) => item.id === paid.payment.id)?.includeInTransferPlan).toBe(false);
+
+    bulkToggleLocalPlannedPayments(
+      { month: '2026-10', include: true, status: 'paid' },
+      state.version
+    );
+    state = loadLocalHousehold();
+    expect(state.plannedPayments.find((item) => item.id === paid.payment.id)?.includeInTransferPlan).toBe(true);
+
+    const importedPaid = state.plannedPayments.find((payment) => Boolean(payment.actualTransactionId));
+    expect(importedPaid).toBeTruthy();
+    updateLocalPlannedPayment(importedPaid!.id, { status: 'unpaid' }, state.version);
+    state = loadLocalHousehold();
+    expect(state.plannedPayments.find((item) => item.id === importedPaid!.id)?.status).toBe('paid');
   });
 
   it('keeps received income and its linked Activity transaction reconciled when edited', () => {
