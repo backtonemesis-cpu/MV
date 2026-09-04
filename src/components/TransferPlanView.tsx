@@ -181,9 +181,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* View Header with Month Filter & Quick Context */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-neutral-200 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Monthly Transfer Plan</h1>
@@ -239,101 +239,90 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         </div>
       </div>
 
-      {/* Summary KPI Cards: Mathematical & High-Contrast */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Transfer Required */}
-        <div
+      {/* Compact Summary Metrics */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <article
           id="stat-transfer-required"
-          className={`p-4 rounded-xl border transition-all ${
-            plan.totalTransferRequiredPence > 0
-              ? 'bg-amber-50/70 border-amber-200'
-              : 'bg-emerald-50/70 border-emerald-200'
-          }`}
+          className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
         >
-          <div className="flex items-center justify-between">
-            <span
-              className={`text-xs font-semibold uppercase tracking-wider ${
-                plan.totalTransferRequiredPence > 0 ? 'text-amber-800' : 'text-emerald-800'
-              }`}
-            >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
               Total Transfer Required
             </span>
             <ArrowLeftRight
-              className={`w-4 h-4 ${
-                plan.totalTransferRequiredPence > 0 ? 'text-amber-600' : 'text-emerald-600'
+              className={`w-4 h-4 shrink-0 ${
+                plan.totalTransferRequiredPence > 0 ? 'text-amber-500' : 'text-emerald-600'
               }`}
             />
           </div>
           <div
-            className={`text-2xl font-bold mt-2 tracking-tight ${
-              plan.totalTransferRequiredPence > 0 ? 'text-amber-950' : 'text-emerald-950'
+            className={`mt-2 text-2xl font-bold tracking-tight ${
+              plan.totalTransferRequiredPence > 0
+                ? 'text-amber-950 dark:text-amber-200'
+                : 'text-slate-950 dark:text-white'
             }`}
           >
             {formatPence(plan.totalTransferRequiredPence)}
           </div>
-          <p className="text-xs text-neutral-600 mt-1">
+          <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-neutral-400">
             {plan.accountsNeedingFunding.length > 0
-              ? `Required across ${plan.accountsNeedingFunding.length} account${
-                  plan.accountsNeedingFunding.length > 1 ? 's' : ''
-                }`
-              : 'All accounts already have sufficient funds'}
+              ? `${plan.accountsNeedingFunding.length} account${
+                  plan.accountsNeedingFunding.length !== 1 ? 's' : ''
+                } need funding`
+              : 'All accounts sufficiently funded'}
           </p>
-        </div>
+        </article>
 
-        {/* Selected Payments to Fund */}
-        <div className="p-4 rounded-xl border border-neutral-200 bg-white shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
               Payments in Plan
             </span>
-            <Layers className="w-4 h-4 text-neutral-400" />
+            <Layers className="w-4 h-4 shrink-0 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold text-neutral-900 mt-2 tracking-tight">
+          <div className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
             {formatPence(plan.totalSelectedPaymentsPence)}
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-neutral-400">
             {plan.totalSelectedPaymentsCount} payment
-            {plan.totalSelectedPaymentsCount !== 1 ? 's' : ''} selected across all accounts
+            {plan.totalSelectedPaymentsCount !== 1 ? 's' : ''} selected
           </p>
-        </div>
+        </article>
 
-        {/* Accounts Needing Funding */}
-        <div className="p-4 rounded-xl border border-neutral-200 bg-white shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium leading-5 text-[#64748b] dark:text-neutral-400">
               Accounts Requiring Funds
             </span>
             <AlertCircle
-              className={`w-4 h-4 ${
-                plan.accountsNeedingFunding.length > 0 ? 'text-amber-500' : 'text-neutral-400'
+              className={`w-4 h-4 shrink-0 ${
+                plan.accountsNeedingFunding.length > 0 ? 'text-amber-500' : 'text-slate-400'
               }`}
             />
           </div>
-          <div className="text-2xl font-bold text-neutral-900 mt-2 tracking-tight">
+          <div className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
             {plan.accountsNeedingFunding.length}
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
-            {plan.accountsFullyFunded.length} account
-            {plan.accountsFullyFunded.length !== 1 ? 's' : ''} already fully funded
+          <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-neutral-400">
+            {plan.accountsFullyFunded.length} fully funded
           </p>
-        </div>
+        </article>
 
-        {/* Transfer Integrity Rule */}
-        <div className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/70 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-600 uppercase tracking-wider">
-              Integrity Rule
+        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-blue-50/70 dark:bg-blue-950/20 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm font-medium leading-5 text-blue-800 dark:text-blue-200">
+              Transfer Safety Rule
             </span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-300" />
           </div>
-          <div className="text-sm font-semibold text-neutral-900 mt-2">
-            Non-Spending Internal Transfers
+          <div className="mt-2 text-sm font-semibold leading-5 text-blue-950 dark:text-blue-100">
+            Internal transfers are not spending
           </div>
-          <p className="text-xs text-neutral-500 mt-1">
-            Funding movements between accounts do not alter gross household spending or income.
+          <p className="mt-1 text-sm leading-5 text-blue-800/80 dark:text-blue-200/80">
+            Funding moves do not change household income or gross spending.
           </p>
-        </div>
-      </div>
+        </article>
+      </section>
 
       {/* SECTION 1: Account Funding Requirements (The Primary Purpose) */}
       <div className="space-y-4">
@@ -351,7 +340,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         {/* Accounts Needing Funding First */}
         {plan.accountsNeedingFunding.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-800 uppercase tracking-wider px-1">
+            <div className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300 px-1">
               <AlertCircle className="w-4 h-4 text-amber-600" />
               <span>Accounts Requiring Transfer ({plan.accountsNeedingFunding.length})</span>
             </div>
@@ -360,15 +349,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <div
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-white dark:bg-neutral-900 rounded-2xl border border-amber-200 dark:border-amber-900/70 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
                 {/* Account Card Header */}
-                <div className="p-6 bg-white dark:bg-neutral-900 border-b border-amber-100 dark:border-amber-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div className="p-4 sm:p-5 bg-white dark:bg-neutral-900 border-b border-[#f1f5f9] dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-base font-bold text-neutral-900">{req.account.name}</h3>
                       {req.account.ownerPerson && (
-                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#eef2ff] text-[#3730a3] dark:bg-indigo-950/60 dark:text-indigo-200">
+                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
                           {req.account.ownerPerson}
                         </span>
                       )}
@@ -437,7 +426,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 </div>
 
                 {/* Selected upcoming payments that create this requirement */}
-                <div className="p-6 bg-slate-50/70 dark:bg-neutral-950/40">
+                <div className="p-4 bg-slate-50/70 dark:bg-neutral-950/40">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-neutral-700">
                       Selected upcoming payments creating this funding requirement:
@@ -515,7 +504,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
         {/* Fully Funded Accounts (Transfer Required = £0.00) */}
         <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 uppercase tracking-wider px-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300 px-1">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>Accounts Fully Funded — No Transfer Required ({plan.accountsFullyFunded.length})</span>
           </div>
@@ -525,9 +514,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <article
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
-                <div className="p-6">
+                <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -535,7 +524,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                           {req.account.name}
                         </h3>
                         {req.account.ownerPerson && (
-                          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[#eef2ff] text-[#3730a3] dark:bg-indigo-950/60 dark:text-indigo-200">
+                          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
                             {req.account.ownerPerson}
                           </span>
                         )}
@@ -556,7 +545,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                   </div>
 
                   <div className="mt-6">
-                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-neutral-400">
+                    <div className="text-xs font-medium text-slate-500 dark:text-neutral-400">
                       Current balance
                     </div>
                     <div className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white">
@@ -611,56 +600,57 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       </div>
 
       {/* SECTION 2: Upcoming Scheduled Payments Roster & Inclusion Controls */}
-      <div className="space-y-4 pt-6 border-t border-neutral-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="space-y-3 pt-5 border-t border-slate-200">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold text-neutral-900">
+            <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
               2. Household Scheduled Payments for {formatMonthLabel(selectedMonth)}
             </h2>
-            <p className="text-xs text-neutral-500">
-              Check or uncheck individual items to include or exclude them from the Transfer Plan calculation.
-              Paid/Unpaid and Transfer Plan inclusion are separate controls.
+            <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-neutral-400">
+              Select which payments feed the transfer calculation. Paid status and plan inclusion remain separate.
             </p>
           </div>
 
           {!isViewOnly && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleBulkIncludeUnpaid}
-                className="px-2.5 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 rounded-md transition-colors"
-              >
-                Include All Unpaid
-              </button>
-              <button
-                onClick={handleBulkSelectAll}
-                className="px-2.5 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 rounded-md transition-colors"
-              >
-                Select All
-              </button>
-              <button
-                onClick={handleBulkDeselectAll}
-                className="px-2.5 py-1.5 text-xs font-medium text-neutral-700 bg-white border border-neutral-300 hover:bg-neutral-50 rounded-md transition-colors"
-              >
-                Deselect All
-              </button>
+            <div className="max-w-full overflow-x-auto">
+              <div className="inline-flex min-w-max items-center gap-1 rounded-full border border-[#f1f5f9] dark:border-neutral-800 bg-[#f8fafc] dark:bg-neutral-900 p-1">
+                <button
+                  onClick={handleBulkIncludeUnpaid}
+                  className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+                >
+                  Include All Unpaid
+                </button>
+                <button
+                  onClick={handleBulkSelectAll}
+                  className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={handleBulkDeselectAll}
+                  className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+                >
+                  Deselect All
+                </button>
+              </div>
             </div>
           )}
         </div>
 
         {/* Payments Table */}
-        <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50 text-neutral-600 font-semibold uppercase tracking-wider text-2xs">
-                  <th className="py-3 px-4 w-12 text-center">In Plan?</th>
-                  <th className="py-3 px-4">Payment / Bill</th>
-                  <th className="py-3 px-4">Payment Account</th>
-                  <th className="py-3 px-4">Responsible</th>
-                  <th className="py-3 px-4">Due Date</th>
-                  <th className="py-3 px-4 text-right">Amount</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  {!isViewOnly && <th className="py-3 px-4 text-right">Actions</th>}
+                <tr className="border-b border-slate-100 dark:border-neutral-800 bg-slate-50/70 dark:bg-neutral-950/40 text-[12px] font-normal text-[#64748b] dark:text-neutral-400">
+                  <th className="pt-3 pb-4 px-4 w-12 text-center whitespace-nowrap">In Plan?</th>
+                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Payment / Bill</th>
+                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Payment Account</th>
+                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Responsible</th>
+                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Due Date</th>
+                  <th className="pt-3 pb-4 px-4 text-right whitespace-nowrap">Amount</th>
+                  <th className="pt-3 pb-4 px-4 text-center whitespace-nowrap">Status</th>
+                  {!isViewOnly && <th className="pt-3 pb-4 px-4 text-right whitespace-nowrap">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -681,7 +671,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         }`}
                       >
                         {/* Checkbox for Plan Inclusion */}
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-2.5 px-4 text-center">
                           <input
                             type="checkbox"
                             checked={payment.includeInTransferPlan}
@@ -693,7 +683,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         </td>
 
                         {/* Name & Notes */}
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-4">
                           <div className="font-semibold text-neutral-900">{payment.name}</div>
                           {payment.notes && (
                             <div className="text-2xs text-neutral-400 mt-0.5 truncate max-w-xs">
@@ -703,39 +693,39 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         </td>
 
                         {/* Payment Account */}
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-4">
                           <span className="font-medium text-neutral-800">
                             {acc ? acc.name : payment.accountId}
                           </span>
                         </td>
 
                         {/* Responsible Person */}
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 text-2xs font-semibold rounded-md bg-neutral-100 text-neutral-700 border border-neutral-200">
+                        <td className="py-2.5 px-4">
+                          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
                             {payment.responsiblePerson}
                           </span>
                         </td>
 
                         {/* Due Date */}
-                        <td className="py-3 px-4 text-neutral-600">
+                        <td className="py-2.5 px-4 text-neutral-600">
                           {payment.dueDate || 'Flexible'}
                         </td>
 
                         {/* Amount in Exact Pence */}
-                        <td className="py-3 px-4 text-right font-bold text-neutral-900">
+                        <td className="py-2.5 px-4 text-right font-bold text-neutral-900">
                           {formatPence(payment.amountPence)}
                         </td>
 
                         {/* Paid / Unpaid Status Toggle */}
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-2.5 px-4 text-center">
                           <button
                             onClick={() => handleTogglePaymentStatus(payment)}
                             disabled={isViewOnly}
                             title="Click to toggle Paid/Unpaid"
-                            className={`px-2 py-0.5 rounded-full text-2xs font-semibold uppercase tracking-wider transition-colors ${
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                               payment.status === 'paid'
-                                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                                : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                                ? 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-200'
+                                : 'bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-950/50 dark:text-amber-200'
                             }`}
                           >
                             {payment.status}
@@ -744,7 +734,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                         {/* Edit / Delete Actions */}
                         {!isViewOnly && (
-                          <td className="py-3 px-4 text-right">
+                          <td className="py-2.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => setEditingPayment(payment)}
