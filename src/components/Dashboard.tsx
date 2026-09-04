@@ -271,7 +271,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               className="group flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-muted bg-surface px-4 text-sm font-semibold text-main shadow-sm transition-all hover:bg-surface-muted active:scale-[0.98]"
             >
               <Layers className="h-4 w-4 text-accent transition-transform group-hover:scale-110" />
-              Copy Bills
+              Prepare Next Month
             </button>
           </>
         )}
