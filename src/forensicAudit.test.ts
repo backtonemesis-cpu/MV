@@ -1100,4 +1100,87 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(after.version).toBe(state.version);
     expect(after.savingsGoals.filter((goal) => goal.accountId === saver.account.id)).toHaveLength(1);
   });
+
+  it('22. Transfer Plan rejects a stale duplicate funding submission after the requirement is already satisfied', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Duplicate Guard Savings',
+        type: 'savings',
+        startingBalancePence: 500_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Duplicate Guard Current',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalPlannedPayment(
+      {
+        name: 'Single Funding Bill',
+        amountPence: 100_00,
+        month: '2026-10',
+        responsiblePerson: 'Marius',
+        accountId: destination.account.id,
+        categoryId: 'cat-housing',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 100_00,
+        allocations: [{ sourceAccountId: source.account.id, amountPence: 100_00 }],
+        date: '2026-09-04',
+        month: '2026-10',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const versionAfterFirstFunding = state.version;
+    const transferCountAfterFirstFunding = state.transactions.filter(
+      (tx) => tx.targetAccountId === destination.account.id && tx.isTransfer
+    ).length;
+
+    expect(() =>
+      executeLocalTransferAllocations(
+        {
+          destinationAccountId: destination.account.id,
+          expectedTotalPence: 100_00,
+          allocations: [{ sourceAccountId: source.account.id, amountPence: 100_00 }],
+          date: '2026-09-04',
+          month: '2026-10',
+        },
+        state.version
+      )
+    ).toThrow('Transfer Plan funding changed before submission.');
+
+    const after = loadLocalHousehold();
+    expect(after.version).toBe(versionAfterFirstFunding);
+    expect(
+      after.transactions.filter(
+        (tx) => tx.targetAccountId === destination.account.id && tx.isTransfer
+      )
+    ).toHaveLength(transferCountAfterFirstFunding);
+    expect(after.accounts.find((a) => a.id === source.account.id)?.currentBalancePence).toBe(400_00);
+    expect(after.accounts.find((a) => a.id === destination.account.id)?.currentBalancePence).toBe(100_00);
+  });
+
 });
