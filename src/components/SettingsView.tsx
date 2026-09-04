@@ -135,99 +135,101 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-7 pb-12 px-1 sm:px-0">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
+      <div className="px-1 sm:px-0">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-neutral-900 dark:text-neutral-100">
           Household Settings & Controls
         </h1>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        <p className="mt-1 text-xs sm:text-sm leading-5 text-neutral-500 dark:text-neutral-400">
           Private single-user settings, audit trail, and backups
         </p>
       </div>
 
       {/* Settings Tabs */}
-      <div className="flex border-b border-neutral-200 dark:border-neutral-700 gap-1 sm:gap-2">
-        <button
-          onClick={() => setActiveTab('appearance')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'appearance'
-              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400'
-              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
-          }`}
-        >
-          <Palette className="w-4 h-4" />
-          Appearance & Themes
-        </button>
-
-        {!MV_SINGLE_USER_MODE && (
+      <div className="rounded-xl bg-[#f1f5f9] dark:bg-neutral-800/90 p-1.5 shadow-inner shadow-slate-200/40 dark:shadow-none overflow-x-auto">
+        <div className="flex min-w-max items-center gap-1">
           <button
-            onClick={() => setActiveTab('members')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
-              activeTab === 'members'
-                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400'
-                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
+            onClick={() => setActiveTab('appearance')}
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeTab === 'appearance'
+                ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
+                : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
             }`}
           >
-            <Users className="w-4 h-4" />
-            Members & Access
-            {members.some((m) => m.role === 'pending') && (
-              <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-            )}
+            <Palette className="w-4 h-4" />
+            Appearance & Themes
           </button>
-        )}
 
-        <button
-          onClick={() => setActiveTab('audit')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'audit'
-              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400'
-              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
-          }`}
-        >
-          <Clock className="w-4 h-4" />
-          Audit Trail
-        </button>
+          {!MV_SINGLE_USER_MODE && (
+            <button
+              onClick={() => setActiveTab('members')}
+              className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                activeTab === 'members'
+                  ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
+                  : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              Members & Access
+              {members.some((m) => m.role === 'pending') && (
+                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+              )}
+            </button>
+          )}
 
-        <button
-          onClick={() => setActiveTab('backup')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-colors flex items-center gap-1.5 ${
-            activeTab === 'backup'
-              ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 dark:border-emerald-400'
-              : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
-          }`}
-        >
-          <Download className="w-4 h-4" />
-          Backup & Testing
-        </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeTab === 'audit'
+                ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
+                : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            Audit Trail
+          </button>
+
+          <button
+            onClick={() => setActiveTab('backup')}
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeTab === 'backup'
+                ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
+                : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
+            }`}
+          >
+            <Download className="w-4 h-4" />
+            Backup & Testing
+          </button>
+        </div>
       </div>
 
       {/* TAB 1: Appearance & Themes */}
       {activeTab === 'appearance' && (
-        <div className="space-y-6 max-w-2xl">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-6">
+        <div className="space-y-6 max-w-3xl">
+          <div className="bg-white dark:bg-neutral-900 p-5 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.14),0_2px_8px_-4px_rgba(15,23,42,0.08)] space-y-7">
             <div>
-              <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+              <h2 className="text-base font-bold tracking-tight text-slate-950 dark:text-white">
                 User Appearance Preferences
               </h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+              <p className="text-xs sm:text-sm leading-5 text-slate-500 dark:text-neutral-400 mt-1">
                 Saved independently for <strong>{currentSession.email}</strong> in browser local storage. Changes do not alter shared household data.
               </p>
             </div>
 
             {/* Mode Selection */}
             <div>
-              <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
                 Interface Theme Mode
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => onUpdatePreferences({ theme: 'light' })}
-                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2.5 transition-all ${
                     userPreferences.theme === 'light'
-                      ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20'
-                      : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      ? 'border-emerald-200/80 bg-emerald-50/80 dark:border-emerald-800/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 font-semibold ring-1 ring-emerald-200/70 dark:ring-emerald-800/60 shadow-sm'
+                      : 'border-slate-200/80 dark:border-neutral-700 bg-white dark:bg-neutral-850 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
                   }`}
                 >
                   <Sun className="w-5 h-5" />
@@ -237,10 +239,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onUpdatePreferences({ theme: 'dark' })}
-                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2.5 transition-all ${
                     userPreferences.theme === 'dark'
-                      ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20'
-                      : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      ? 'border-emerald-200/80 bg-emerald-50/80 dark:border-emerald-800/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 font-semibold ring-1 ring-emerald-200/70 dark:ring-emerald-800/60 shadow-sm'
+                      : 'border-slate-200/80 dark:border-neutral-700 bg-white dark:bg-neutral-850 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
                   }`}
                 >
                   <Moon className="w-5 h-5" />
@@ -250,10 +252,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => onUpdatePreferences({ theme: 'system' })}
-                  className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition ${
+                  className={`p-4 rounded-xl border flex flex-col items-center gap-2.5 transition-all ${
                     userPreferences.theme === 'system'
-                      ? 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20'
-                      : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-850 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                      ? 'border-emerald-200/80 bg-emerald-50/80 dark:border-emerald-800/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 font-semibold ring-1 ring-emerald-200/70 dark:ring-emerald-800/60 shadow-sm'
+                      : 'border-slate-200/80 dark:border-neutral-700 bg-white dark:bg-neutral-850 text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
                   }`}
                 >
                   <Monitor className="w-5 h-5" />
@@ -264,20 +266,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
             {/* Accent Color Selection */}
             <div>
-              <label className="block text-xs font-bold text-neutral-800 dark:text-neutral-200 mb-2">
+              <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
                 Accent Brand Tone
               </label>
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
-                  { id: 'default', name: 'Emerald (Default)', color: 'bg-emerald-600' },
-                  { id: 'blue', name: 'Ocean Blue', color: 'bg-blue-600' },
-                  { id: 'lilac', name: 'Lilac / Purple', color: 'bg-purple-600' },
-                  { id: 'yellow', name: 'Warm Yellow', color: 'bg-amber-500' },
-                  { id: 'red', name: 'Crimson Red', color: 'bg-rose-600' },
-                  { id: 'green', name: 'Meadow Green', color: 'bg-green-600' },
-                  { id: 'teal', name: 'Teal Mineral', color: 'bg-teal-600' },
-                  { id: 'orange', name: 'Sunset Orange', color: 'bg-orange-600' },
-                  { id: 'rose', name: 'Rose Petal', color: 'bg-pink-600' },
+                  { id: 'default', name: 'Emerald (Default)', color: 'bg-emerald-600', glow: 'shadow-[0_0_0_3px_rgba(5,150,105,0.16),0_8px_18px_-10px_rgba(5,150,105,0.45)]' },
+                  { id: 'blue', name: 'Ocean Blue', color: 'bg-blue-600', glow: 'shadow-[0_0_0_3px_rgba(37,99,235,0.16),0_8px_18px_-10px_rgba(37,99,235,0.45)]' },
+                  { id: 'lilac', name: 'Lilac / Purple', color: 'bg-purple-600', glow: 'shadow-[0_0_0_3px_rgba(147,51,234,0.16),0_8px_18px_-10px_rgba(147,51,234,0.45)]' },
+                  { id: 'yellow', name: 'Warm Yellow', color: 'bg-amber-500', glow: 'shadow-[0_0_0_3px_rgba(245,158,11,0.18),0_8px_18px_-10px_rgba(245,158,11,0.45)]' },
+                  { id: 'red', name: 'Crimson Red', color: 'bg-rose-600', glow: 'shadow-[0_0_0_3px_rgba(225,29,72,0.16),0_8px_18px_-10px_rgba(225,29,72,0.45)]' },
+                  { id: 'green', name: 'Meadow Green', color: 'bg-green-600', glow: 'shadow-[0_0_0_3px_rgba(22,163,74,0.16),0_8px_18px_-10px_rgba(22,163,74,0.45)]' },
+                  { id: 'teal', name: 'Teal Mineral', color: 'bg-teal-600', glow: 'shadow-[0_0_0_3px_rgba(13,148,136,0.16),0_8px_18px_-10px_rgba(13,148,136,0.45)]' },
+                  { id: 'orange', name: 'Sunset Orange', color: 'bg-orange-600', glow: 'shadow-[0_0_0_3px_rgba(234,88,12,0.16),0_8px_18px_-10px_rgba(234,88,12,0.45)]' },
+                  { id: 'rose', name: 'Rose Petal', color: 'bg-pink-600', glow: 'shadow-[0_0_0_3px_rgba(219,39,119,0.16),0_8px_18px_-10px_rgba(219,39,119,0.45)]' },
                 ].map((item) => {
                   const isSelected =
                     userPreferences.accent === item.id ||
@@ -287,16 +289,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => onUpdatePreferences({ accent: item.id as AccentColor })}
-                      className={`p-3 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
+                      className={`p-3.5 rounded-xl border text-center transition-all flex flex-col items-center gap-2 bg-white dark:bg-neutral-850 border-slate-200 dark:border-neutral-700 hover:-translate-y-0.5 hover:bg-slate-50 dark:hover:bg-neutral-800 ${
                         isSelected
-                          ? 'border-neutral-900 dark:border-neutral-100 bg-neutral-50 dark:bg-neutral-850 font-bold shadow-xs'
-                          : 'border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                          ? `${item.glow} border-slate-200 dark:border-neutral-600`
+                          : 'shadow-[0_1px_2px_rgba(15,23,42,0.03)]'
                       }`}
                     >
-                      <span className={`w-5 h-5 rounded-full ${item.color} flex items-center justify-center text-white`}>
-                        {isSelected && <Check className="w-3 h-3" />}
+                      <span className={`w-6 h-6 rounded-full ${item.color} flex items-center justify-center text-white shadow-sm`}>
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
                       </span>
-                      <span className="text-[11px] text-neutral-800 dark:text-neutral-200">{item.name}</span>
+                      <span className="text-[11px] leading-4 font-medium text-slate-700 dark:text-neutral-200">{item.name}</span>
                     </button>
                   );
                 })}
@@ -304,7 +306,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             {/* Explicit Save Appearance Button & Confirmation */}
-            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-750 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="pt-5 border-t border-slate-100 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <button
                 type="button"
                 id="save-appearance-button"
@@ -324,7 +326,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     setIsSavingAppearance(false);
                   }
                 }}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-7 py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-700 active:translate-y-px text-white text-sm font-semibold shadow-[0_8px_18px_-8px_rgba(5,150,105,0.65),0_2px_6px_-2px_rgba(15,23,42,0.12)] transition-all flex items-center gap-2.5 cursor-pointer disabled:opacity-50 disabled:shadow-none"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 {isSavingAppearance ? 'Saving Appearance...' : 'Save Appearance'}
