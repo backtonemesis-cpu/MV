@@ -58,9 +58,6 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
               <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
                 Automated Acceptance Criteria Verification
               </h2>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                Automated verification of production requirements from GOOGLE_HANDOFF.md
-              </p>
             </div>
           </div>
           <button

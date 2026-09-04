@@ -3,7 +3,6 @@ import {
   Shield,
   RefreshCw,
   DownloadCloud,
-  HardDrive,
 } from 'lucide-react';
 import { UserSession } from '../types';
 
@@ -42,10 +41,6 @@ export const Header: React.FC<HeaderProps> = ({
                   v{datasetVersion}
                 </span>
               </div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 hidden sm:flex items-center gap-1.5">
-                <HardDrive className="w-3 h-3" />
-                Local browser data • £0
-              </p>
             </div>
           </div>
 
@@ -54,10 +49,10 @@ export const Header: React.FC<HeaderProps> = ({
               id="header-backup-btn"
               onClick={onOpenBackupModal}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
-              title="Backup & Restore Local Data"
+              title="Backup"
             >
               <DownloadCloud className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-              <span className="hidden sm:inline">Backup & Restore</span>
+              <span className="hidden sm:inline">Backup</span>
             </button>
 
             <button
@@ -65,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onRefresh}
               disabled={isLoading}
               className="p-2 rounded-lg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
-              title="Reload local state"
+              title="Refresh"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-emerald-600' : ''}`} />
             </button>
@@ -78,22 +73,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="font-semibold text-neutral-800 dark:text-neutral-200">
                   {session?.name || 'Marius'}
                 </div>
-                <div className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                  Local only
-                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="sm:hidden py-1.5 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
-          <span className="text-neutral-500 dark:text-neutral-400">
-            {session?.name || 'Marius'}
-          </span>
-          <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
-            <HardDrive className="w-3 h-3" />
-            Local only
-          </span>
         </div>
       </div>
     </header>

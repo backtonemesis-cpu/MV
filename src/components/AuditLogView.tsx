@@ -28,14 +28,11 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
     <div className="space-y-4 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-neutral-900">Tamper-Resistant Audit Trail</h1>
-          <p className="text-xs text-neutral-500">
-            Append-only history of membership, permissions, and financial transactions
-          </p>
+          <h1 className="text-xl font-bold text-neutral-900">Audit Trail</h1>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold px-2.5 py-1 bg-neutral-100 text-neutral-700 rounded-lg border border-neutral-200">
-            {auditLogs.length} Records Logged
+            {auditLogs.length} records
           </span>
         </div>
       </div>
@@ -46,7 +43,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
           <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search by actor, action, or summary..."
+            placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-neutral-200 focus:ring-2 focus:ring-emerald-500"
@@ -58,11 +55,11 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
           onChange={(e) => setFilterType(e.target.value)}
           className="px-3 py-1.5 text-xs rounded-xl border border-neutral-200 text-neutral-700 bg-white"
         >
-          <option value="all">All Entity Types</option>
-          <option value="transaction">Financial Transactions</option>
-          <option value="member">Membership & Access</option>
+          <option value="all">All Types</option>
+          <option value="transaction">Transactions</option>
+          <option value="member">Members</option>
           <option value="account">Accounts</option>
-          <option value="backup">Backups & Restores</option>
+          <option value="backup">Backups</option>
           <option value="system">System Events</option>
         </select>
       </div>
@@ -71,7 +68,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
       <div className="bg-white rounded-2xl border border-neutral-200 shadow-xs overflow-hidden">
         {filteredLogs.length === 0 ? (
           <div className="py-12 text-center text-xs text-neutral-400">
-            No audit logs match current filters.
+            No matching records.
           </div>
         ) : (
           <div className="divide-y divide-neutral-100">
@@ -94,10 +91,10 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
                 <p className="text-xs text-neutral-800 font-medium">{entry.summary}</p>
 
                 <div className="flex items-center gap-2 mt-2 text-[11px] text-neutral-500">
-                  <span>Actor:</span>
+                  <span>By:</span>
                   <span className="font-semibold text-neutral-700">{entry.actorEmail}</span>
                   <span>•</span>
-                  <span>Target: {entry.entityId}</span>
+                  <span>{entry.entityId}</span>
                 </div>
 
                 {entry.details && Object.keys(entry.details).length > 0 && (

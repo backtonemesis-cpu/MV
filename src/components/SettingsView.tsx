@@ -139,11 +139,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Header */}
       <div className="px-1 sm:px-0">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-neutral-900 dark:text-neutral-100">
-          Household Settings & Controls
+          Settings
         </h1>
-        <p className="mt-1 text-xs sm:text-sm leading-5 text-neutral-500 dark:text-neutral-400">
-          Private single-user settings, audit trail, and backups
-        </p>
       </div>
 
       {/* Settings Tabs */}
@@ -158,7 +155,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }`}
           >
             <Palette className="w-4 h-4" />
-            Appearance & Themes
+            Appearance
           </button>
 
           {!MV_SINGLE_USER_MODE && (
@@ -171,7 +168,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }`}
             >
               <Users className="w-4 h-4" />
-              Members & Access
+              Access
               {members.some((m) => m.role === 'pending') && (
                 <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
               )}
@@ -187,7 +184,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }`}
           >
             <Clock className="w-4 h-4" />
-            Audit Trail
+            Audit
           </button>
 
           <button
@@ -199,7 +196,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }`}
           >
             <Download className="w-4 h-4" />
-            Backup & Testing
+            Backup
           </button>
         </div>
       </div>
@@ -210,17 +207,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="bg-white dark:bg-neutral-900 p-5 sm:p-7 rounded-2xl border border-slate-200/80 dark:border-neutral-800 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.14),0_2px_8px_-4px_rgba(15,23,42,0.08)] space-y-7">
             <div>
               <h2 className="text-base font-bold tracking-tight text-slate-950 dark:text-white">
-                User Appearance Preferences
+                Appearance
               </h2>
-              <p className="text-xs sm:text-sm leading-5 text-slate-500 dark:text-neutral-400 mt-1">
-                Saved independently for <strong>{currentSession.email}</strong> in browser local storage. Changes do not alter shared household data.
-              </p>
             </div>
 
             {/* Mode Selection */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
-                Interface Theme Mode
+                Theme
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <button
@@ -267,7 +261,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {/* Accent Color Selection */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
-                Accent Brand Tone
+                Accent
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
@@ -305,7 +299,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            {/* Explicit Save Appearance Button & Confirmation */}
+            {/* Explicit Save Button & Confirmation */}
             <div className="pt-5 border-t border-slate-100 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <button
                 type="button"
@@ -318,7 +312,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     if (onSaveAppearance) {
                       await onSaveAppearance();
                     }
-                    setAppearanceSavedMessage(`Appearance preferences saved successfully for ${currentSession.email}!`);
+                    setAppearanceSavedMessage('Saved');
                     setTimeout(() => setAppearanceSavedMessage(null), 4000);
                   } catch (err: any) {
                     setAppearanceSavedMessage('Failed to persist preferences: ' + (err.message || 'Unknown error'));
@@ -348,7 +342,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="space-y-4 max-w-3xl">
           <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
             <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-              Household Roster & Roles
+              Members
             </h2>
 
             <div className="space-y-3">
@@ -389,13 +383,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             onClick={() => onApproveMember(m.id, 'editor')}
                             className="px-2.5 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-semibold hover:bg-emerald-800 transition"
                           >
-                            Approve as Editor
+                            Editor
                           </button>
                           <button
                             onClick={() => onApproveMember(m.id, 'view_only')}
                             className="px-2.5 py-1.5 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-300 transition"
                           >
-                            Approve View-Only
+                            View Only
                           </button>
                         </>
                       ) : (
@@ -406,7 +400,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         >
                           <option value="editor">Editor</option>
                           <option value="view_only">View-Only</option>
-                          <option value="removed">Revoke Access</option>
+                          <option value="removed">Remove</option>
                         </select>
                       )}
                       <button
@@ -428,7 +422,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {activeTab === 'audit' && (
         <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs max-w-4xl">
           <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-            Immutable Audit Trail ({auditLogs.length} Events)
+            Audit Trail ({auditLogs.length} Events)
           </h2>
 
           <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
@@ -466,18 +460,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                  Development Verification
+                  Diagnostics
                 </h2>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Local diagnostic UI only. Production verification is provided by CI and Firestore Emulator evidence.
-                </p>
               </div>
               <button
                 onClick={onOpenAcceptanceTests}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 shadow-xs transition"
               >
                 <Play className="w-3.5 h-3.5" />
-                Run Local Diagnostics
+                Run Diagnostics
               </button>
             </div>
           )}
@@ -486,18 +477,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
             <div>
               <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                Export Verified Backup
+                Backup
               </h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Download a validated JSON snapshot of the complete financial/configuration dataset and audit evidence.
-              </p>
             </div>
             <button
               onClick={onDownloadBackup}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-semibold rounded-xl hover:bg-neutral-800 dark:hover:bg-neutral-200 transition"
             >
               <Download className="w-3.5 h-3.5" />
-              Download Verified Snapshot
+              Download Backup
             </button>
           </div>
 
@@ -507,11 +495,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
               <div>
                 <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                  Idempotent Restore
+                  Restore
                 </h2>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Restore from a verified backup file. System validates row counts and financial totals prior to write confirmation.
-                </p>
               </div>
 
               {restoreError && (
@@ -535,7 +520,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <textarea
                   value={restoreJson}
                   onChange={(e) => setRestoreJson(e.target.value)}
-                  placeholder="Or paste backup JSON content here..."
+                  placeholder="Paste backup JSON"
                   rows={4}
                   className="w-full px-3 py-2 bg-white dark:bg-neutral-850 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs font-mono text-neutral-800 dark:text-neutral-200"
                 />
@@ -544,7 +529,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   disabled={!restoreJson.trim() || isRestoring}
                   className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
                 >
-                  {isRestoring ? 'Restoring...' : 'Restore from Backup'}
+                  {isRestoring ? 'Restoring...' : 'Restore'}
                 </button>
               </form>
             </div>
@@ -553,11 +538,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
               <div>
                 <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                  Clean Production Setup — Reset to Zero
+                  Reset Data
                 </h2>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Clear all sample accounts, transactions, and scheduled bills so you can start from a completely clean slate with zero test data. User logins and permissions are preserved.
-                </p>
               </div>
 
               {resetMessage && (
@@ -571,12 +553,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   onClick={() => setShowResetConfirm(true)}
                   className="px-4 py-2 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-xs font-semibold transition"
                 >
-                  Reset Household Data to Zero...
+                  Reset Data
                 </button>
               ) : (
                 <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 space-y-3">
                   <p className="text-xs font-semibold text-rose-800 dark:text-rose-300">
-                    Are you sure? This will remove all transactions, accounts, and planned payments. This cannot be undone unless you export a backup first.
+                    This deletes all financial data. Export a backup first if needed.
                   </p>
                   <div className="flex items-center gap-2">
                     <button
@@ -584,7 +566,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       disabled={isResetting}
                       className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
                     >
-                      {isResetting ? 'Resetting...' : 'Yes, Permanently Clear All Financial Data'}
+                      {isResetting ? 'Resetting...' : 'Delete All Data'}
                     </button>
                     <button
                       onClick={() => setShowResetConfirm(false)}
@@ -603,11 +585,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
                 <div>
                 <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                Development Mode — Load Sample Fixture Data
+                Sample Data
                 </h2>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Populate realistic household demonstration accounts, split transactions, and transfer plan bills from sample fixtures for development testing.
-                </p>
                 </div>
                 
                 {sampleMessage && (
@@ -621,7 +600,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 disabled={isLoadingSample}
                 className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-200 dark:hover:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-semibold shadow-xs transition"
                 >
-                {isLoadingSample ? 'Loading Fixtures...' : 'Load Sample Demonstration Data'}
+                {isLoadingSample ? 'Loading Fixtures...' : 'Load Sample Data'}
                 </button>
                 </div>
               </>

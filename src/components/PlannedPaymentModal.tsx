@@ -99,11 +99,8 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50">
           <div>
             <h3 className="text-base font-semibold text-neutral-900">
-              {isEditing ? 'Edit Planned Payment' : 'Add Upcoming Payment / Bill'}
+              {isEditing ? 'Edit Bill' : 'Add Bill'}
             </h3>
-            <p className="text-xs text-neutral-500">
-              Attach to a payment account so it can be funded via the Transfer Plan
-            </p>
           </div>
           <button
             onClick={onClose}
@@ -124,11 +121,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Payment Name */}
           <div>
             <label className="block text-xs font-medium text-neutral-700 mb-1">
-              Payment / Bill Name *
+              Name *
             </label>
             <input
               type="text"
-              placeholder="e.g. Child Maintenance, Council Tax, Vodafone, Rent"
+              placeholder="Bill name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
@@ -140,7 +137,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">
-                Amount (£) *
+                Amount *
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-2 text-sm text-neutral-400 font-medium">£</span>
@@ -159,7 +156,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">
-                Billing Month (YYYY-MM) *
+                Month *
               </label>
               <input
                 type="text"
@@ -174,7 +171,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Payment Account & Responsible Person */}
+          {/* Payment Account & Responsible */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">
@@ -214,7 +211,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-neutral-700 mb-1">
-                Due Date (Optional)
+                Due Date
               </label>
               <input
                 type="date"
@@ -245,9 +242,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs font-medium text-neutral-800">Include in Transfer Plan</span>
-                <p className="text-xs text-neutral-500">
-                  Should this payment create a funding requirement for this account?
-                </p>
               </div>
               <input
                 type="checkbox"
@@ -261,9 +255,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             <div className="flex items-center justify-between pt-2 border-t border-neutral-200">
               <div>
                 <span className="text-xs font-medium text-neutral-800">Payment Status</span>
-                <p className="text-xs text-neutral-500">
-                  Has this payment already cleared or been executed?
-                </p>
               </div>
               <select
                 value={status}
@@ -278,10 +269,10 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-neutral-700 mb-1">Notes (Optional)</label>
+            <label className="block text-xs font-medium text-neutral-700 mb-1">Notes</label>
             <textarea
               rows={2}
-              placeholder="e.g. Direct debit reference, contract notice..."
+              placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
@@ -302,7 +293,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md shadow-xs disabled:opacity-50 transition-colors"
             >
-              {isSubmitting ? 'Saving...' : isEditing ? 'Update Payment' : 'Add Payment'}
+              {isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Add'}
             </button>
           </div>
         </form>
