@@ -92,6 +92,7 @@ export default function App() {
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(readStoredUserPreferences);
+  const [isMobilePreview, setIsMobilePreview] = useState(false);
 
   // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
@@ -116,6 +117,8 @@ export default function App() {
       } else if (showTxModal) {
         setShowTxModal(false);
         setEditingTx(null);
+      } else if (isMobilePreview) {
+        setIsMobilePreview(false);
       }
     };
 
@@ -128,6 +131,7 @@ export default function App() {
     showMonthImportModal,
     showPlannedPaymentModal,
     showTxModal,
+    isMobilePreview,
   ]);
 
   // Load Session & Household Data
@@ -693,7 +697,12 @@ export default function App() {
     : 0;
 
   return (
-    <div className="mv-density-root min-h-screen bg-app text-main flex flex-col font-sans transition-colors">
+    <div
+      className={`mv-density-root min-h-screen bg-app text-main flex flex-col font-sans transition-colors ${
+        isMobilePreview ? 'mv-device-simulator' : ''
+      }`}
+    >
+      <div className="mv-device-frame">
       {/* Top Header */}
       <Header
         session={session}
@@ -704,6 +713,8 @@ export default function App() {
         onOpenTestsModal={() => setShowTestsModal(true)}
         isLoading={isLoading}
         availableIdentities={availableIdentities}
+        isMobilePreview={isMobilePreview}
+        onToggleMobilePreview={() => setIsMobilePreview((current) => !current)}
       />
 
       {/* Navigation (Sticky Desktop bar + Mobile bottom dock) */}
@@ -716,7 +727,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 w-full max-w-[1440px] mx-auto px-4 py-4 pb-20 sm:pb-5">
+      <main className="mv-workspace flex-1 min-w-0 w-full max-w-[1200px] mx-auto px-4 py-3 pb-20 sm:pb-4">
         {/* Error notification banner if any */}
         {error && (
           <div className="mb-6 p-4 rounded-2xl bg-danger-soft border border-danger text-danger text-xs flex items-center justify-between">
@@ -1000,6 +1011,7 @@ export default function App() {
           loadData();
         }}
       />
+      </div>
     </div>
   );
 }
