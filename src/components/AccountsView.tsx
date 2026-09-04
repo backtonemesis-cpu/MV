@@ -308,7 +308,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     const isArchived = acc.isActive === false;
     const isCredit = acc.type === 'credit';
     const balancePence = isCredit
-      ? acc.balanceOwedPence ?? Math.max(0, -acc.currentBalancePence)
+      ? acc.currentBalancePence !== 0
+        ? Math.max(0, -acc.currentBalancePence)
+        : (acc.balanceOwedPence ?? 0)
       : acc.currentBalancePence;
 
     return (

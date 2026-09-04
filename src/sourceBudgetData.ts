@@ -393,17 +393,67 @@ function sourcePlannedIncomes(): PlannedIncome[] {
   }));
 }
 
-function preserveCompatibleSavingsGoals(existing?: HouseholdData): SavingsGoal[] {
+export function resolveCompatibleAccount(
+  oldAccount: Pick<Account, 'id' | 'name' | 'type' | 'ownerPerson'>,
+  candidateAccounts: Pick<Account, 'id' | 'name' | 'type' | 'ownerPerson'>[]
+): Account | undefined {
+  // 1. Exact account ID exists in candidate accounts -> preserve it
+  const exactMatch = candidateAccounts.find((candidate) => candidate.id === oldAccount.id);
+  if (exactMatch) {
+    return exactMatch as Account;
+  }
+
+  const normalized = (v?: string) => v?.trim().toLowerCase() || '';
+
+  // 2. Find candidates with the same normalized name + account type
+  const nameTypeCandidates = candidateAccounts.filter(
+    (candidate) =>
+      normalized(candidate.name) === normalized(oldAccount.name) &&
+      candidate.type === oldAccount.type
+  );
+
+  // 3. If exactly one candidate exists, use that candidate even when owner metadata is absent
+  if (nameTypeCandidates.length === 1) {
+    return nameTypeCandidates[0] as Account;
+  }
+
+  // 4. If multiple candidates exist, use ownerPerson to disambiguate and require exactly one owner match
+  if (nameTypeCandidates.length > 1) {
+    const oldOwner = normalized(oldAccount.ownerPerson);
+    if (!oldOwner) {
+      // Cannot disambiguate without owner information
+      return undefined;
+    }
+    const ownerMatches = nameTypeCandidates.filter(
+      (candidate) => normalized(candidate.ownerPerson) === oldOwner
+    );
+    if (ownerMatches.length === 1) {
+      return ownerMatches[0] as Account;
+    }
+    // 5. Never map arbitrarily between multiple same-name accounts
+    return undefined;
+  }
+
+  return undefined;
+}
+
+export function preserveCompatibleSavingsGoals(existing?: HouseholdData): SavingsGoal[] {
   if (!existing?.savingsGoals?.length) return [];
 
-  const oldAccountNames = new Map(existing.accounts.map((account) => [account.id, account.name.trim().toLowerCase()]));
-  const newAccountIds = new Map(SOURCE_ACCOUNTS.map((account) => [account.name.trim().toLowerCase(), account.id]));
+  const sourceAccountIds = new Set(SOURCE_ACCOUNTS.map((account) => account.id));
 
   return existing.savingsGoals.flatMap((goal) => {
-    const oldAccountName = oldAccountNames.get(goal.accountId);
-    const mappedAccountId = oldAccountName ? newAccountIds.get(oldAccountName) : undefined;
-    if (!mappedAccountId) return [];
-    return [{ ...goal, accountId: mappedAccountId }];
+    // 1. Exact account ID exists in SOURCE_ACCOUNTS -> preserve it
+    if (sourceAccountIds.has(goal.accountId)) {
+      return [goal];
+    }
+    const oldAccount = existing.accounts.find((account) => account.id === goal.accountId);
+    if (!oldAccount) return [];
+
+    const resolved = resolveCompatibleAccount(oldAccount, SOURCE_ACCOUNTS);
+    if (!resolved) return [];
+
+    return [{ ...goal, accountId: resolved.id }];
   });
 }
 
