@@ -48,8 +48,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* Desktop Navigation Bar */}
-      <nav className="hidden sm:block border-b border-muted bg-surface transition-colors">
-        <div className="mx-auto w-full max-w-[1440px] px-4">
+      <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors">
+        <div className="mv-shell-boundary mx-auto w-full max-w-[1200px] px-4">
           <div className="flex gap-0.5">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -80,8 +80,8 @@ export const Navigation: React.FC<NavigationProps> = ({
       </nav>
 
       {/* Mobile Bottom Navigation Bar (iPhone-first with 44px+ touch ergonomics) */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors">
-        <div className="grid grid-cols-7 h-14">
+      <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors">
+        <div className="mv-mobile-nav-grid grid grid-cols-7 h-14">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
