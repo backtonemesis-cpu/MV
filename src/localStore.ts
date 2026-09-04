@@ -1215,6 +1215,47 @@ export function createLocalHouseholdMember(
   return { member: result.value, version: result.state.version };
 }
 
+export function updateLocalHouseholdMember(
+  memberId: string,
+  data: { name?: string; email?: string },
+  expectedVersion: number
+): { member: HouseholdMember; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'member_updated',
+      entityType: 'member',
+      entityId: memberId,
+      summary: 'Household member details updated',
+    },
+    (state) => {
+      const index = state.members.findIndex((member) => member.id === memberId);
+      if (index < 0) throw new Error('Household member not found.');
+      if (state.members[index].role === 'owner') {
+        throw new Error('The household owner identity cannot be edited here.');
+      }
+
+      const name = data.name?.trim() || state.members[index].name;
+      const email = (data.email?.trim().toLowerCase() || state.members[index].email).trim();
+      if (!name) throw new Error('Household member name is required.');
+      if (!email || !email.includes('@')) throw new Error('A valid household member email is required.');
+
+      const duplicate = state.members.some(
+        (member, candidateIndex) =>
+          candidateIndex !== index &&
+          member.role !== 'removed' &&
+          member.email.trim().toLowerCase() === email
+      );
+      if (duplicate) throw new Error('Another household member already uses this email.');
+
+      const next: HouseholdMember = { ...state.members[index], name, email };
+      state.members[index] = next;
+      return next;
+    }
+  );
+  return { member: result.value, version: result.state.version };
+}
+
 export function approveLocalHouseholdMember(
   memberId: string,
   role: 'editor' | 'view_only',
