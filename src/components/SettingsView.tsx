@@ -367,7 +367,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         {m.role}
                       </span>
                     </div>
-                    <span className="text-xs text-main0 block mt-0.5">
+                    <span className="text-xs text-subtle block mt-0.5">
                       {m.email}
                     </span>
                   </div>
@@ -433,7 +433,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <span className="font-bold text-main">
                       {log.action}
                     </span>
-                    <span className="text-main0 ml-2">
+                    <span className="text-subtle ml-2">
                       by {log.actorEmail}
                     </span>
                     <p className="text-muted mt-1 leading-relaxed">
@@ -512,7 +512,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-main0 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-surface-muted file:text-muted hover:file:bg-surface-muted"
+                  className="block w-full text-xs text-subtle file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-surface-muted file:text-muted hover:file:bg-surface-muted"
                 />
                 <textarea
                   value={restoreJson}
