@@ -4,6 +4,8 @@ import {
   RefreshCw,
   DownloadCloud,
   Smartphone,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { UserSession } from '../types';
 import { APP_VERSION } from '../appVersion';
@@ -19,6 +21,8 @@ interface HeaderProps {
   availableIdentities: { email: string; name: string; role: any }[];
   isMobilePreview: boolean;
   onToggleMobilePreview: () => void;
+  isPrivacyMasked: boolean;
+  onTogglePrivacyMask: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,6 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   isLoading,
   isMobilePreview,
   onToggleMobilePreview,
+  isPrivacyMasked,
+  onTogglePrivacyMask,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-surface backdrop-blur border-b border-muted transition-colors">
@@ -90,6 +96,28 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
             </div>
+
+            <button
+              type="button"
+              id="header-privacy-mask-btn"
+              onClick={onTogglePrivacyMask}
+              aria-pressed={isPrivacyMasked}
+              className={`mv-privacy-toggle inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[11px] font-semibold transition-colors ${
+                isPrivacyMasked
+                  ? 'border-accent bg-accent text-on-accent'
+                  : 'border-muted bg-surface text-main hover:bg-surface-muted'
+              }`}
+              title={isPrivacyMasked ? 'Show balances' : 'Mask balances'}
+            >
+              {isPrivacyMasked ? (
+                <EyeOff className="h-4 w-4 shrink-0" />
+              ) : (
+                <Eye className="h-4 w-4 shrink-0" />
+              )}
+              <span className="mv-privacy-label">
+                {isPrivacyMasked ? 'Show Balances' : 'Mask Balances'}
+              </span>
+            </button>
 
             <button
               type="button"
