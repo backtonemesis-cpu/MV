@@ -10,6 +10,7 @@ import {
   bulkToggleLocalPlannedPayments,
   executeLocalTransfer,
   executeLocalTransferAllocations,
+  undoLatestLocalTransferPlanFunding,
   loadLocalHousehold,
   markLocalIncomeReceived,
   preflightLocalRestore,
@@ -254,6 +255,83 @@ describe('Penny-style local MV storage', () => {
         [sourceB.account.id, 'Vesta'],
       ])
     );
+  });
+
+  it('undoes the latest Transfer Plan funding batch and restores source and destination balances', () => {
+    let state = loadLocalHousehold();
+
+    const sourceA = createLocalAccount(
+      {
+        name: 'Undo Source A',
+        type: 'savings',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const sourceB = createLocalAccount(
+      {
+        name: 'Undo Source B',
+        type: 'current',
+        startingBalancePence: 80_00,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Undo Destination',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 90_00,
+        allocations: [
+          { sourceAccountId: sourceA.account.id, amountPence: 50_00 },
+          { sourceAccountId: sourceB.account.id, amountPence: 40_00 },
+        ],
+        description: 'Transfer Plan: Fund Undo Destination',
+        date: '2026-09-04',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((item) => item.id === sourceA.account.id)?.currentBalancePence).toBe(50_00);
+    expect(state.accounts.find((item) => item.id === sourceB.account.id)?.currentBalancePence).toBe(40_00);
+    expect(state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence).toBe(90_00);
+
+    const beforeUndoVersion = state.version;
+    const undone = undoLatestLocalTransferPlanFunding(
+      destination.account.id,
+      beforeUndoVersion
+    );
+
+    expect(undone.version).toBe(beforeUndoVersion + 1);
+    expect(undone.undoneTransactions).toHaveLength(2);
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((item) => item.id === sourceA.account.id)?.currentBalancePence).toBe(100_00);
+    expect(state.accounts.find((item) => item.id === sourceB.account.id)?.currentBalancePence).toBe(80_00);
+    expect(state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence).toBe(0);
+    expect(
+      state.transactions.some(
+        (transaction) =>
+          transaction.targetAccountId === destination.account.id &&
+          transaction.description === 'Transfer Plan: Fund Undo Destination'
+      )
+    ).toBe(false);
   });
 
   it('completed Transfer Plan funding clears the requirement even with future reconciliation anchors', () => {
