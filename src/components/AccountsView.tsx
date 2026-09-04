@@ -322,7 +322,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <div className="flex items-baseline justify-between">
                     <div>
                       <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                        {acc.type === 'credit' ? 'Balance Owed' : 'Current Balance'}
+                        {acc.type === 'credit' ? 'Owed' : 'Balance'}
                       </span>
                       <div
                         className={`text-2xl font-black mt-0.5 ${
@@ -409,7 +409,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-750 transition"
             >
               <Plus className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
-              New Savings Pot
+              Add Pot
             </button>
           )}
         </div>
@@ -585,7 +585,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-neutral-200 dark:border-neutral-800 p-6">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                Edit Account: {selectedAccount.name}
+                Edit {selectedAccount.name}
               </h3>
               <button
                 onClick={() => setShowEditModal(false)}
@@ -618,7 +618,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Owner / Attribution
+                    Owner
                   </label>
                   <select
                     value={editOwner}
@@ -633,7 +633,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Account Type
+                    Type
                   </label>
                   <select
                     value={editType}
@@ -701,7 +701,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-neutral-200 dark:border-neutral-800 p-6">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                Reconcile Account Balance
+                Reconcile
               </h3>
               <button
                 onClick={() => setShowReconcileModal(false)}
