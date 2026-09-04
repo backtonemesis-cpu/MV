@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { X, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
-import { Account, AccountFundingRequirement } from '../types';
+import { Account, AccountFundingRequirement, HouseholdMember } from '../types';
+import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
 
 interface ExecuteTransferModalProps {
   fundingRequirement: AccountFundingRequirement;
   availableSourceAccounts: Account[];
+  members: HouseholdMember[];
   onClose: () => void;
   onExecute: (payload: {
     sourceAccountId: string;
@@ -20,6 +22,7 @@ interface ExecuteTransferModalProps {
 export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   fundingRequirement,
   availableSourceAccounts,
+  members,
   onClose,
   onExecute,
 }) => {
@@ -37,6 +40,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   const [payer, setPayer] = useState<string>(targetAccount.ownerPerson || 'Joint');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const personOptions = householdPersonOptions(members, [payer, targetAccount.ownerPerson]);
 
   const selectedSourceAccount = availableSourceAccounts.find((a) => a.id === sourceAccountId);
   const enteredPence = parseToPence(amountStr);
@@ -212,9 +216,11 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                 onChange={(e) => setPayer(e.target.value)}
                 className="w-full px-2 py-1.5 text-xs border border-muted rounded-md bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
-                <option value="Marius">Marius</option>
-                <option value="Vesta">Vesta</option>
-                <option value="Joint">Joint</option>
+                {personOptions.map((person) => (
+                  <option key={person} value={person}>
+                    {person}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
