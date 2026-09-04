@@ -22,6 +22,7 @@ import {
   formatPence,
   calculateFinancialSummary,
   calculateMonthlySurplus,
+  calculateSavingsPosition,
 } from '../utils/currency';
 
 interface DashboardProps {
@@ -78,6 +79,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
       household.plannedIncomes || []
     );
   }, [household.transactions, household.plannedPayments, household.plannedIncomes, selectedMonth]);
+
+  const savingsPosition = useMemo(() => {
+    return calculateSavingsPosition(
+      household.accounts,
+      household.transactions,
+      household.plannedPayments || [],
+      selectedMonth,
+      household.plannedIncomes || []
+    );
+  }, [
+    household.accounts,
+    household.transactions,
+    household.plannedPayments,
+    household.plannedIncomes,
+    selectedMonth,
+  ]);
+
 
   const { mariusSpendPence, vestaSpendPence, jointSpendPence } = useMemo(() => {
     let m = 0;
@@ -173,7 +191,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     },
     {
       label: 'Moved To Savings',
-      value: monthSummary.savingsTransfersPence,
+      value: savingsPosition.savingsTransfersPence,
       note: 'Net savings transfer movement',
       icon: PiggyBank,
     },
