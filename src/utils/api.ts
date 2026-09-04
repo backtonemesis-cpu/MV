@@ -21,6 +21,7 @@ import {
   createLocalPlannedIncome,
   createLocalPlannedPayment,
   createLocalSavingsGoal,
+  contributeLocalSavingsGoal,
   createLocalTransaction,
   deleteLocalAccount,
   deleteLocalPlannedIncome,
@@ -263,6 +264,20 @@ export async function createSavingsGoal(
 ) {
   return createLocalSavingsGoal(data, expectedVersion);
 }
+
+export async function contributeSavingsGoal(
+  payload: {
+    goalId: string;
+    sourceAccountId: string;
+    amountPence: number;
+    payer?: string;
+    date?: string;
+  },
+  expectedVersion: number
+) {
+  return contributeLocalSavingsGoal(payload, expectedVersion);
+}
+
 
 export async function updateSavingsGoal(
   id: string,
