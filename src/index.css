@@ -13,6 +13,7 @@
     --surface: #ffffff;
     --surface-text: #0f172a;
     --surface-muted: #f1f5f9;
+    --surface-hover: #e2e8f0;
     --surface-muted-text: #475569;
     --text: #0f172a;
     --text-muted: #64748b;
@@ -42,6 +43,7 @@
     --surface: #111827;
     --surface-text: #F9FAFB;
     --surface-muted: #1F2937;
+    --surface-hover: #374151;
     --surface-muted-text: #D1D5DB;
     --text: #FFFFFF;
     --text-muted: #9CA3AF;
@@ -71,6 +73,7 @@
     --surface: #334155;
     --surface-text: #f1f5f9;
     --surface-muted: #293548;
+    --surface-hover: #475569;
     --surface-muted-text: #cbd5e1;
     --text: #f1f5f9;
     --text-muted: #cbd5e1;
@@ -218,6 +221,172 @@
   }
 }
 
+
+
+/* Premium dense finance views: Income & Activity.
+   Exact dark-mode ramp lives in semantic theme tokens above so JSX stays palette-free. */
+.finance-workspace {
+  background: var(--background);
+  color: var(--text);
+}
+
+.finance-panel {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.finance-summary-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.finance-filter-control {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: var(--surface-muted);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.finance-filter-control::placeholder {
+  color: var(--text-subtle);
+}
+
+.finance-filter-control:focus {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+}
+
+.finance-row {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.finance-row:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+}
+
+.finance-leading-icon {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.finance-status-positive,
+.finance-status-negative,
+.finance-status-neutral {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.finance-status-positive {
+  border: 1px solid var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.finance-status-negative {
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.finance-status-neutral {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+.finance-action-button {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--border-strong);
+  color: var(--text-muted);
+  transition: color 150ms ease, opacity 150ms ease, transform 100ms ease;
+}
+
+.finance-action-button:hover {
+  color: var(--text);
+}
+
+.finance-action-button.is-danger:hover {
+  color: var(--danger-text);
+}
+
+.finance-action-button:active {
+  transform: scale(0.96);
+}
+
+.finance-row-actions {
+  opacity: 0.7;
+  transition: opacity 150ms ease;
+}
+
+.finance-row:hover .finance-row-actions,
+.finance-row:focus-within .finance-row-actions {
+  opacity: 1;
+}
+
+.finance-receive-button {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--success-border);
+  border-radius: 9999px;
+  padding: 0 10px;
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition: filter 150ms ease, transform 100ms ease;
+}
+
+.finance-receive-button:hover {
+  filter: brightness(1.1);
+}
+
+.finance-receive-button:active {
+  transform: scale(0.97);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .finance-row-actions {
+    opacity: 0.4;
+  }
+}
 
 /* Semantic token utilities. These deliberately override legacy utility colors. */
 .mv-app {
