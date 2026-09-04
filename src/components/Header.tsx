@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 hidden sm:flex items-center gap-1.5">
                 <HardDrive className="w-3 h-3" />
-                Local browser data • £0 cloud cost
+                Local browser data • £0
               </p>
             </div>
           </div>
