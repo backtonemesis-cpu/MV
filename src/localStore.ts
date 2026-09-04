@@ -9,6 +9,7 @@ import type {
   Transaction,
   UserPreferences,
 } from './types';
+import { normalizeUserPreferences } from './themeEngine';
 
 const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
@@ -17,32 +18,6 @@ const LOCAL_EVENT = 'mv-local-state-updated';
 const OWNER_EMAIL = 'marius@local.invalid';
 const OWNER_NAME = 'Marius';
 const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
-
-function normalizeThemePreference(value: unknown): UserPreferences['theme'] {
-  if (value === 'light' || value === 'dark' || value === 'slate') return value;
-  if (value === 'system') {
-    try {
-      return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    } catch {
-      return 'light';
-    }
-  }
-  return 'light';
-}
-
-function normalizeAccentPreference(value: unknown): UserPreferences['accent'] {
-  if (value === 'emerald' || value === 'sapphire' || value === 'amethyst') return value;
-  if (value === 'blue' || value === 'indigo') return 'sapphire';
-  if (value === 'lilac' || value === 'purple') return 'amethyst';
-  return 'emerald';
-}
-
-function normalizePreferences(value: Partial<UserPreferences> | Record<string, unknown> | null | undefined): UserPreferences {
-  return {
-    theme: normalizeThemePreference(value?.theme),
-    accent: normalizeAccentPreference(value?.accent),
-  };
-}
 
 const STANDARD_CATEGORIES = [
   { id: 'cat-housing', name: 'Rent / Mortgage', group: 'Housing', monthlyBudgetPence: 0 },
@@ -1093,7 +1068,7 @@ export function getLocalPreferences(): UserPreferences {
   if (!storage) return { theme: 'light', accent: 'emerald' };
   try {
     const parsed = JSON.parse(storage.getItem(PREFS_KEY) || '{}');
-    const normalized = normalizePreferences(parsed);
+    const normalized = normalizeUserPreferences(parsed);
     if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
       storage.setItem(PREFS_KEY, JSON.stringify(normalized));
     }
@@ -1106,7 +1081,7 @@ export function getLocalPreferences(): UserPreferences {
 export function saveLocalPreferences(preferences: UserPreferences): UserPreferences {
   const storage = getStorage();
   if (!storage) throw new Error('Browser storage is unavailable.');
-  const normalized = normalizePreferences(preferences);
+  const normalized = normalizeUserPreferences(preferences);
   storage.setItem(PREFS_KEY, JSON.stringify(normalized));
   return normalized;
 }
