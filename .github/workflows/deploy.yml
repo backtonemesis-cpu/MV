@@ -64,6 +64,15 @@ jobs:
           test -f dist/index.html
           grep --fixed-strings '/MV/assets/' dist/index.html
 
+      - name: Upload verified static MV bundle
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mv-static-build-${{ github.sha }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 30
+
   deploy:
     if: github.event_name != 'pull_request'
     needs: test-build
@@ -86,13 +95,28 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm run build
 
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      - id: pages
+        name: Check GitHub Pages availability
+        continue-on-error: true
+        uses: actions/configure-pages@v5
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Explain unavailable Pages without failing MV verification
+        if: steps.pages.outcome != 'success'
+        run: |
+          {
+            echo "## MV static build is verified, but Pages is not enabled"
+            echo
+            echo "The app build remains available as the mv-static-build artifact."
+            echo "No paid hosting or cloud backend was enabled."
+            echo "If GitHub Pages becomes available for this repository, enable Pages with GitHub Actions as the source and rerun this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Pages artifact
+        if: steps.pages.outcome == 'success'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
       - id: deployment
+        if: steps.pages.outcome == 'success'
         uses: actions/deploy-pages@v4
