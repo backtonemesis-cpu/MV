@@ -573,22 +573,22 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       </section>
 
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-xs">
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-muted bg-surface shadow-2xl">
-            <header className="flex items-center justify-between border-b border-muted px-6 py-4">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <header className="mv-modal-header">
               <h2 className="text-base font-bold text-main">
                 {selectedIncome ? 'Edit Income' : 'Add Income'}
               </h2>
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="rounded-lg p-1.5 text-muted transition hover:bg-surface-muted hover:text-main"
+                className="mv-modal-close"
               >
                 <X className="h-5 w-5" />
               </button>
             </header>
 
-            <form onSubmit={saveIncome} className="space-y-4 p-6">
+            <form onSubmit={saveIncome} className="mv-modal-form">
               {error && (
                 <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
                   {error}
@@ -607,7 +607,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="mv-modal-grid-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted">Expected amount (£)</label>
                   <input
@@ -686,7 +686,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
                       Received amount
                     </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="mv-modal-grid-2">
                       <div>
                         <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
                         <input
@@ -705,9 +705,6 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                         />
                       </div>
                     </div>
-                    <p className="mt-2 text-[11px] text-subtle">
-                      Saving changes also updates the linked Activity income transaction so the records stay reconciled.
-                    </p>
                   </div>
                 )}
 
@@ -721,7 +718,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 />
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-muted pt-4">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
@@ -743,9 +740,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       )}
 
       {showReceiveModal && selectedIncome && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl border border-muted bg-surface p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-muted pb-3">
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
               <div>
                 <h2 className="text-base font-bold text-main">Record Income Received</h2>
                 <p className="mt-0.5 text-xs text-muted">{selectedIncome.name}</p>
@@ -759,7 +756,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               </button>
             </div>
 
-            <form onSubmit={markReceived} className="mt-4 space-y-4">
+            <form onSubmit={markReceived} className="mv-modal-form">
               {error && (
                 <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
                   {error}
@@ -808,7 +805,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 border-t border-muted pt-4">
+              <div className="mv-modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowReceiveModal(false)}
