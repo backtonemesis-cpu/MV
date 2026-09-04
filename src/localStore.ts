@@ -230,6 +230,87 @@ function markSourceBudgetHandled(state: HouseholdData): void {
   state.schemaStatus = current;
 }
 
+
+function financeMemberKey(name: string): string {
+  const normalized = name.trim().toLowerCase();
+  const slug = normalized
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'person';
+
+  let hash = 0;
+  for (const char of normalized) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  return `${slug}-${hash.toString(36)}`;
+}
+
+function financeMemberEmail(name: string): string {
+  return `finance-${financeMemberKey(name)}@local.invalid`;
+}
+
+function financeMemberId(name: string): string {
+  return `local-person-${financeMemberKey(name)}`;
+}
+
+function referencedFinancialPeople(state: HouseholdData): string[] {
+  const names = new Set<string>();
+
+  const add = (value?: string) => {
+    const name = value?.trim();
+    if (!name || name.toLowerCase() === 'joint') return;
+    names.add(name);
+  };
+
+  state.accounts.forEach((account) => add(account.ownerPerson));
+  state.transactions.forEach((transaction) => {
+    add(transaction.payer);
+    transaction.splits?.forEach((split) => add(split.payer));
+  });
+  state.plannedPayments.forEach((payment) => add(payment.responsiblePerson));
+  (state.plannedIncomes || []).forEach((income) => add(income.sourcePerson));
+
+  return Array.from(names);
+}
+
+function renameFinancialPersonReferences(
+  state: HouseholdData,
+  previousName: string,
+  nextName: string
+): void {
+  const previous = previousName.trim().toLowerCase();
+  if (!previous || previous === nextName.trim().toLowerCase()) return;
+
+  const rename = (value?: string): string | undefined =>
+    value?.trim().toLowerCase() === previous ? nextName : value;
+
+  state.accounts = state.accounts.map((account) => ({
+    ...account,
+    ownerPerson: rename(account.ownerPerson),
+  }));
+
+  state.transactions = state.transactions.map((transaction) => ({
+    ...transaction,
+    payer: rename(transaction.payer) || transaction.payer,
+    splits: transaction.splits?.map((split) => ({
+      ...split,
+      payer: rename(split.payer),
+    })),
+  }));
+
+  state.plannedPayments = state.plannedPayments.map((payment) => ({
+    ...payment,
+    responsiblePerson: rename(payment.responsiblePerson) || payment.responsiblePerson,
+  }));
+
+  state.plannedIncomes = (state.plannedIncomes || []).map((income) => ({
+    ...income,
+    sourcePerson: rename(income.sourcePerson) || income.sourcePerson,
+  }));
+}
+
 function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
@@ -254,7 +335,28 @@ function normalizeHousehold(input: HouseholdData): HouseholdData {
       member.id !== 'local-marius' &&
       member.email.trim().toLowerCase() !== OWNER_EMAIL.toLowerCase()
   );
-  state.members = [owner, ...otherMembers];
+
+  // Household members are the people whose finances are tracked. Infer any
+  // referenced people from existing finance records exactly once unless that
+  // person already has an active or removed household record.
+  const knownNames = new Set(
+    [owner, ...otherMembers].map((member) => member.name.trim().toLowerCase())
+  );
+  knownNames.add(OWNER_NAME.toLowerCase());
+
+  const inferredMembers: HouseholdMember[] = referencedFinancialPeople(state)
+    .filter((name) => !knownNames.has(name.trim().toLowerCase()))
+    .map((name) => ({
+      id: financeMemberId(name),
+      email: financeMemberEmail(name),
+      name,
+      role: 'editor' as const,
+      joinedAt: '2026-09-04T00:00:00.000Z',
+      approvedAt: '2026-09-04T00:00:00.000Z',
+      approvedBy: OWNER_EMAIL,
+    }));
+
+  state.members = [owner, ...otherMembers, ...inferredMembers];
 
   state.plannedIncomes = state.plannedIncomes || [];
   state.accounts = state.accounts.map((account) => ({
@@ -1165,7 +1267,10 @@ export function importLocalMonth(
 }
 
 export function createLocalHouseholdMember(
-  data: Pick<HouseholdMember, 'name' | 'email'> & { role?: 'editor' | 'view_only' | 'pending' },
+  data: Pick<HouseholdMember, 'name'> & {
+    email?: string;
+    role?: 'editor' | 'view_only' | 'pending';
+  },
   expectedVersion: number
 ): { member: HouseholdMember; version: number } {
   const result = mutateLocalHousehold(
@@ -1178,32 +1283,39 @@ export function createLocalHouseholdMember(
     },
     (state) => {
       const name = data.name?.trim();
-      const email = data.email?.trim().toLowerCase();
       if (!name) throw new Error('Household member name is required.');
-      if (!email || !email.includes('@')) throw new Error('A valid household member email is required.');
-      if (email === OWNER_EMAIL.toLowerCase()) throw new Error('Marius is already the household owner.');
+
+      const normalizedName = name.toLowerCase();
       if (
         state.members.some(
-          (member) => member.email.trim().toLowerCase() === email && member.role !== 'removed'
+          (member) => member.name.trim().toLowerCase() === normalizedName && member.role !== 'removed'
         )
       ) {
-        throw new Error('A household member with this email already exists.');
+        throw new Error('A household member with this name already exists.');
       }
 
+      const providedEmail = data.email?.trim().toLowerCase();
+      if (providedEmail && !providedEmail.includes('@')) {
+        throw new Error('Household member email is invalid.');
+      }
+      const email = providedEmail || financeMemberEmail(name);
+
       const existingRemoved = state.members.find(
-        (member) => member.email.trim().toLowerCase() === email && member.role === 'removed'
+        (member) =>
+          member.name.trim().toLowerCase() === normalizedName && member.role === 'removed'
       );
       const member: HouseholdMember = existingRemoved
         ? {
             ...existingRemoved,
             name,
+            email: providedEmail || existingRemoved.email || email,
             role: data.role || 'editor',
             approvedAt: nowIso(),
             approvedBy: OWNER_EMAIL,
             lastActiveAt: undefined,
           }
         : {
-            id: createId('member'),
+            id: financeMemberId(name),
             email,
             name,
             role: data.role || 'editor',
@@ -1241,21 +1353,24 @@ export function updateLocalHouseholdMember(
         throw new Error('The household owner identity cannot be edited here.');
       }
 
-      const name = data.name?.trim() || state.members[index].name;
+      const previousName = state.members[index].name;
+      const name = data.name?.trim() || previousName;
       const email = (data.email?.trim().toLowerCase() || state.members[index].email).trim();
       if (!name) throw new Error('Household member name is required.');
-      if (!email || !email.includes('@')) throw new Error('A valid household member email is required.');
+      if (!email || !email.includes('@')) throw new Error('Household member email is invalid.');
 
+      const normalizedName = name.toLowerCase();
       const duplicate = state.members.some(
         (member, candidateIndex) =>
           candidateIndex !== index &&
           member.role !== 'removed' &&
-          member.email.trim().toLowerCase() === email
+          member.name.trim().toLowerCase() === normalizedName
       );
-      if (duplicate) throw new Error('Another household member already uses this email.');
+      if (duplicate) throw new Error('Another household member already uses this name.');
 
       const next: HouseholdMember = { ...state.members[index], name, email };
       state.members[index] = next;
+      renameFinancialPersonReferences(state, previousName, name);
       return next;
     }
   );
