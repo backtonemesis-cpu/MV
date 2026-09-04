@@ -14,6 +14,7 @@ import {
 import { Account, Category, Transaction, UserRole, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence } from '../utils/currency';
+import { formatMonthLabel } from '../utils/transferPlan';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -170,7 +171,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               className={`${filterInputClassName} appearance-none pl-9 pr-9`}
               disabled={!selectedMonth}
             >
-              {selectedMonth && <option value="selected-month">{selectedMonth}</option>}
+              {selectedMonth && (
+                <option value="selected-month">{formatMonthLabel(selectedMonth)}</option>
+              )}
               <option value="all">All dates</option>
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
