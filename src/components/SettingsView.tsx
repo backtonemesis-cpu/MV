@@ -139,7 +139,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Header */}
       <div className="px-1 sm:px-0">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-neutral-900 dark:text-neutral-100">
-          Household Settings & Controls
+          Settings
         </h1>
       </div>
 
@@ -155,7 +155,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }`}
           >
             <Palette className="w-4 h-4" />
-            Appearance & Themes
+            Appearance
           </button>
 
           {!MV_SINGLE_USER_MODE && (
@@ -168,7 +168,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }`}
             >
               <Users className="w-4 h-4" />
-              Members & Access
+              Access
               {members.some((m) => m.role === 'pending') && (
                 <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
               )}
@@ -184,7 +184,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }`}
           >
             <Clock className="w-4 h-4" />
-            Audit Trail
+            Audit
           </button>
 
           <button
@@ -196,7 +196,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             }`}
           >
             <Download className="w-4 h-4" />
-            Backup & Testing
+            Backup
           </button>
         </div>
       </div>
@@ -299,7 +299,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            {/* Explicit Save Appearance Button & Confirmation */}
+            {/* Explicit Save Button & Confirmation */}
             <div className="pt-5 border-t border-slate-100 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <button
                 type="button"
@@ -342,7 +342,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="space-y-4 max-w-3xl">
           <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
             <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-4">
-              Household Roster & Roles
+              Members
             </h2>
 
             <div className="space-y-3">
@@ -383,13 +383,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             onClick={() => onApproveMember(m.id, 'editor')}
                             className="px-2.5 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-semibold hover:bg-emerald-800 transition"
                           >
-                            Approve as Editor
+                            Editor
                           </button>
                           <button
                             onClick={() => onApproveMember(m.id, 'view_only')}
                             className="px-2.5 py-1.5 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-300 transition"
                           >
-                            Approve View-Only
+                            View Only
                           </button>
                         </>
                       ) : (
@@ -400,7 +400,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         >
                           <option value="editor">Editor</option>
                           <option value="view_only">View-Only</option>
-                          <option value="removed">Revoke Access</option>
+                          <option value="removed">Remove</option>
                         </select>
                       )}
                       <button
