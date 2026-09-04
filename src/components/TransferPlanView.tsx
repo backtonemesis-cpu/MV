@@ -217,7 +217,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               className="min-w-0 px-3 py-2 text-xs font-medium text-muted bg-surface border border-muted hover:bg-surface-muted rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
               title="Copy bills"
             >
-              <Layers className="w-3.5 h-3.5 shrink-0 text-muted text-main0" />
+              <Layers className="w-3.5 h-3.5 shrink-0 text-muted text-subtle" />
               <span>Copy Bills</span>
             </button>
           )}
@@ -375,21 +375,21 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 {/* 4-Column Exact Financial Breakdown per Handoff Specification */}
                 <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-muted bg-surface border-b border-muted text-xs">
                   <div className="p-4">
-                    <span className="text-muted text-main0 font-medium block">Balance</span>
+                    <span className="text-muted text-subtle font-medium block">Balance</span>
                     <span className="text-sm font-bold text-main mt-1 block">
                       {formatPence(req.currentBalancePence)}
                     </span>
                   </div>
 
                   <div className="p-4">
-                    <span className="text-muted text-main0 font-medium block">Selected Bills</span>
+                    <span className="text-muted text-subtle font-medium block">Selected Bills</span>
                     <span className="text-sm font-bold text-main mt-1 block">
                       {formatPence(req.totalSelectedPaymentsPence)}
                     </span>
                   </div>
 
                   <div className="p-4">
-                    <span className="text-muted text-main0 font-medium block">Available</span>
+                    <span className="text-muted text-subtle font-medium block">Available</span>
                     <span className="text-sm font-bold text-main mt-1 block">
                       {formatPence(req.amountAvailablePence)}
                     </span>
@@ -411,7 +411,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     </span>
                     <button
                       onClick={() => toggleAccountExpand(req.account.id)}
-                      className="text-xs text-muted text-main0 hover:text-main flex items-center gap-1 transition-colors"
+                      className="text-xs text-muted text-subtle hover:text-main flex items-center gap-1 transition-colors"
                     >
                       {expandedAccountIds[req.account.id] ? (
                         <>
@@ -445,7 +445,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             />
                             <div>
                               <span className="font-semibold text-main">{p.name}</span>
-                              <span className="text-muted text-main0 ml-2">
+                              <span className="text-muted text-subtle ml-2">
                                 Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
                               </span>
                             </div>
@@ -513,14 +513,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-[#e6f4ea] text-[#137333]">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-success-soft text-success">
                         Covered
                       </span>
                     </div>
                   </div>
 
                   <div className="mt-6">
-                    <div className="text-xs font-medium text-muted text-main0">
+                    <div className="text-xs font-medium text-muted text-subtle">
                       Current balance
                     </div>
                     <div className="mt-1 text-2xl font-extrabold tracking-tight text-main">
