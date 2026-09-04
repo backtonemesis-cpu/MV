@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Category, Transaction, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
+import { MonthPicker } from './MonthPicker';
 
 interface BudgetViewProps {
   categories: Category[];
@@ -16,7 +17,6 @@ interface BudgetViewProps {
   plannedIncomes?: PlannedIncome[];
   plannedPayments?: PlannedPayment[];
   selectedMonth?: string;
-  availableMonths?: string[];
   onSelectMonth?: (month: string) => void;
 }
 
@@ -26,7 +26,6 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
   plannedIncomes = [],
   plannedPayments = [],
   selectedMonth: propSelectedMonth,
-  availableMonths = ['2026-09', '2026-10'],
   onSelectMonth,
 }) => {
   const [internalSelectedMonth, setInternalSelectedMonth] = useState('2026-09');
@@ -128,17 +127,11 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             <span className="text-xs font-semibold text-muted text-subtle uppercase tracking-wider">
               Period
             </span>
-            <select
+            <MonthPicker
               value={activeMonth}
-              onChange={(e) => handleMonthChange(e.target.value)}
-              className="font-black text-sm bg-surface-muted text-main px-2.5 py-1 rounded-lg border border-muted focus:ring-2 focus:ring-accent focus:outline-none"
-            >
-              {availableMonths.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              onChange={handleMonthChange}
+              ariaLabel="Budget month"
+            />
           </div>
         </div>
 
