@@ -1014,12 +1014,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                           : `${diffPence > 0 ? '+' : ''}${formatPence(diffPence)}`}
                       </span>
                     </div>
-                    {diffPence !== 0 && (
-                      <div className="pt-1 text-[11px] text-subtle">
-                        This is not an error. Confirming will set the account balance to{' '}
-                        <span className="font-semibold text-main">{formatPence(targetPence)}</span>.
-                      </div>
-                    )}
                   </div>
                 );
               })()}
@@ -1066,7 +1060,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto mt-4 space-y-2 pr-1">
+            <div className="mv-modal-body flex-1 overflow-y-auto space-y-1">
               {accountActivityTxs.length === 0 ? (
                 <div className="p-6 text-center text-xs text-muted text-subtle bg-surface-muted rounded-xl">
                   No recorded transactions for this account yet.
@@ -1116,7 +1110,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               )}
             </div>
 
-            <div className="pt-3 border-t border-muted flex justify-end">
+            <div className="mv-modal-actions px-3 pb-3">
               <button
                 onClick={() => setShowActivityModal(false)}
                 className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
@@ -1268,6 +1262,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">Goal Name</label>
                 <input
+                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
