@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
 /* Legacy dark: utilities remain compatible; semantic data-theme tokens are the source of truth. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -15,7 +16,11 @@
     --surface-muted-text: #475569;
     --text: #0f172a;
     --text-muted: #64748b;
+    --text-subtle: #94a3b8;
     --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --bg-table: #ffffff;
+    --bg-table-header: #f1f5f9;
     --overlay: rgba(15, 23, 42, 0.58);
     --shadow: rgba(15, 23, 42, 0.08);
 
@@ -40,7 +45,11 @@
     --surface-muted-text: #cbd5e1;
     --text: #f8fafc;
     --text-muted: #94a3b8;
+    --text-subtle: #64748b;
     --border: #334155;
+    --border-strong: #475569;
+    --bg-table: #182235;
+    --bg-table-header: #29364a;
     --overlay: rgba(2, 6, 23, 0.72);
     --shadow: rgba(2, 6, 23, 0.36);
 
@@ -65,7 +74,11 @@
     --surface-muted-text: #cbd5e1;
     --text: #f1f5f9;
     --text-muted: #cbd5e1;
+    --text-subtle: #94a3b8;
     --border: #475569;
+    --border-strong: #64748b;
+    --bg-table: #2b394c;
+    --bg-table-header: #3d4d62;
     --overlay: rgba(15, 23, 42, 0.64);
     --shadow: rgba(15, 23, 42, 0.28);
 
@@ -145,6 +158,16 @@
   }
 
   :root {
+    /* Native Tailwind semantic utility aliases. */
+    --bg-app: var(--background);
+    --bg-surface: var(--surface);
+    --bg-surface-muted: var(--surface-muted);
+    --text-main: var(--text);
+    --border-muted: var(--border);
+    --color-accent: var(--primary);
+    --color-accent-soft: var(--primary-light);
+    --text-on-accent: var(--text-on-primary);
+
     /* Backward-compatible aliases while components migrate to semantic names. */
     --mv-bg: var(--background);
     --mv-surface: var(--surface);
