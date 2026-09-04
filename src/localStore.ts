@@ -1199,6 +1199,99 @@ export function executeLocalTransferAllocations(
   return { transactions: result.value, version: result.state.version };
 }
 
+export function undoLatestLocalTransferPlanFunding(
+  destinationAccountId: string,
+  expectedVersion: number
+): {
+  undoneTransactions: Transaction[];
+  version: number;
+} {
+  const current = loadLocalHousehold();
+  const candidates = current.transactions
+    .filter(
+      (transaction) =>
+        transaction.targetAccountId === destinationAccountId &&
+        transaction.type === 'transfer' &&
+        transaction.isTransfer &&
+        (Boolean(transaction.metadata?.transferBatchId) ||
+          transaction.description.startsWith('Transfer Plan: Fund '))
+    )
+    .sort((a, b) => {
+      const createdCompare = (b.createdAt || '').localeCompare(a.createdAt || '');
+      if (createdCompare !== 0) return createdCompare;
+      return b.date.localeCompare(a.date);
+    });
+
+  const latest = candidates[0];
+  if (!latest) {
+    throw new Error('No recorded Transfer Plan funding is available to undo for this account.');
+  }
+
+  const latestBatchId = latest.metadata?.transferBatchId as string | undefined;
+  const targetTransactions = latestBatchId
+    ? current.transactions.filter(
+        (transaction) =>
+          transaction.metadata?.transferBatchId === latestBatchId &&
+          transaction.targetAccountId === destinationAccountId &&
+          transaction.type === 'transfer' &&
+          transaction.isTransfer
+      )
+    : [latest];
+
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'transfer_plan_funding_undone',
+      entityType: 'account',
+      entityId: destinationAccountId,
+      summary: `Undid Transfer Plan funding for destination account`,
+    },
+    (state) => {
+      const destination = state.accounts.find(
+        (account) => account.id === destinationAccountId
+      );
+      if (!destination) throw new Error('Destination account is unavailable.');
+
+      const targetIds = new Set(targetTransactions.map((transaction) => transaction.id));
+      const actualTransactions = state.transactions.filter((transaction) =>
+        targetIds.has(transaction.id)
+      );
+
+      if (actualTransactions.length !== targetTransactions.length) {
+        throw new Error('Transfer Plan funding changed before it could be undone. Refresh and try again.');
+      }
+
+      let destinationTotalPence = 0;
+
+      for (const transaction of actualTransactions) {
+        const source = state.accounts.find((account) => account.id === transaction.accountId);
+        if (!source) throw new Error('A funding source account is unavailable.');
+
+        // Reverse the reconciliation-anchor adjustment that was applied when
+        // the funding transfer was created.
+        adjustAnchoredBalanceForNewTransfer(source, transaction.amountPence, transaction.date);
+        destinationTotalPence += transaction.amountPence;
+      }
+
+      if (destinationTotalPence > 0) {
+        adjustAnchoredBalanceForNewTransfer(
+          destination,
+          -destinationTotalPence,
+          actualTransactions[0].date
+        );
+      }
+
+      state.transactions = state.transactions.filter(
+        (transaction) => !targetIds.has(transaction.id)
+      );
+
+      return actualTransactions;
+    }
+  );
+
+  return { undoneTransactions: result.value, version: result.state.version };
+}
+
 function plannedIncomeFromPartial(data: Partial<PlannedIncome>): PlannedIncome {
   if (!data.name?.trim()) throw new Error('Income name is required.');
   if (!data.month || !/^\d{4}-\d{2}$/.test(data.month)) throw new Error('Valid month is required.');
