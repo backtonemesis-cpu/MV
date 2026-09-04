@@ -21,6 +21,7 @@ import {
   PlannedPayment,
   UserRole,
   AccountFundingRequirement,
+  HouseholdMember,
 } from '../types';
 import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
@@ -31,6 +32,7 @@ interface TransferPlanViewProps {
   accounts: Account[];
   categories: Category[];
   plannedPayments: PlannedPayment[];
+  members: HouseholdMember[];
   userRole: UserRole;
   currentVersion: number;
   selectedMonth?: string;
@@ -59,6 +61,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   accounts,
   categories,
   plannedPayments,
+  members,
   userRole,
   currentVersion,
   selectedMonth: propSelectedMonth,
@@ -829,6 +832,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         <ExecuteTransferModal
           fundingRequirement={fundingAccountToTransfer}
           availableSourceAccounts={accounts}
+          members={members}
           onClose={() => setFundingAccountToTransfer(null)}
           onExecute={onExecuteTransfer}
         />
@@ -840,6 +844,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           payment={editingPayment}
           accounts={accounts}
           categories={categories}
+          members={members}
           activeMonth={selectedMonth}
           onClose={() => {
             setIsAddingPayment(false);
