@@ -27,7 +27,6 @@ import {
 } from '../types';
 import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
-import { accountDisplayLabel } from '../utils/accountLabels';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
 
@@ -606,7 +605,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
+                        Bills paid from
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-bold tracking-tight text-main">
                           {req.account.name}
                         </h3>
@@ -640,41 +642,84 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="mt-6">
-                    <div className="text-xs font-medium text-muted text-subtle">
-                      Current balance
+                  <div className="mt-5">
+                    <div className="text-xs font-medium text-subtle">
+                      {latestFundingBatchByDestination.has(req.account.id)
+                        ? 'Balance after funding'
+                        : 'Current balance'}
                     </div>
                     <div className="mt-1 text-2xl font-extrabold tracking-tight text-main">
                       {formatPence(req.currentBalancePence)}
                     </div>
 
-                    <div className="mt-3 rounded-xl bg-surface-muted px-3.5 py-2.5 text-[13px] font-medium text-muted">
-                      Available: {formatPence(req.amountAvailablePence)} <span aria-hidden="true">•</span> Bills:{' '}
-                      {formatPence(req.totalSelectedPaymentsPence)} <span aria-hidden="true">•</span>{' '}
-                      {req.selectedPayments.length} selected
+                    <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
+                        <div className="text-[11px] font-medium text-subtle">Selected bills</div>
+                        <div className="mt-0.5 text-[13px] font-bold text-main">
+                          {formatPence(req.totalSelectedPaymentsPence)}
+                        </div>
+                      </div>
+                      <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
+                        <div className="text-[11px] font-medium text-subtle">Left after bills</div>
+                        <div className="mt-0.5 text-[13px] font-bold text-main">
+                          {formatPence(
+                            Math.max(
+                              0,
+                              req.amountAvailablePence - req.totalSelectedPaymentsPence
+                            )
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1 rounded-xl bg-surface-muted px-3.5 py-2.5">
+                        <div className="text-[11px] font-medium text-subtle">Bills selected</div>
+                        <div className="mt-0.5 text-[13px] font-bold text-main">
+                          {req.selectedPayments.length}
+                        </div>
+                      </div>
                     </div>
 
-                    {latestFundingBatchByDestination.has(req.account.id) && (
-                      <div className="mt-2 rounded-xl border border-muted bg-surface px-3.5 py-2 text-[12px] text-muted">
-                        <span className="font-semibold text-main">Transferred:</span>{' '}
-                        {latestFundingBatchByDestination
-                          .get(req.account.id)!
-                          .allocations.map((allocation, index) => {
-                            const sourceAccount = accounts.find(
-                              (account) => account.id === allocation.sourceAccountId
-                            );
-                            const sourceLabel = sourceAccount
-                              ? accountDisplayLabel(sourceAccount)
-                              : 'Unknown account';
+                    {latestFundingBatchByDestination.has(req.account.id) ? (
+                      <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
+                          Funding received
+                        </div>
+                        <div className="mt-1.5 divide-y divide-muted">
+                          {latestFundingBatchByDestination
+                            .get(req.account.id)!
+                            .allocations.map((allocation, index) => {
+                              const sourceAccount = accounts.find(
+                                (account) => account.id === allocation.sourceAccountId
+                              );
+                              const sourceName = sourceAccount?.name || 'Unknown account';
+                              const sourceOwner = sourceAccount?.ownerPerson || 'Unknown owner';
+                              const sourceType = sourceAccount
+                                ? `${sourceAccount.type.charAt(0).toUpperCase()}${sourceAccount.type.slice(1)} account`
+                                : '';
 
-                            return (
-                              <React.Fragment key={`${allocation.sourceAccountId}-${index}`}>
-                                {index > 0 && <span className="mx-1 text-subtle">+</span>}
-                                <span className="font-medium text-main">{sourceLabel}</span>{' '}
-                                <span>{formatPence(allocation.amountPence)}</span>
-                              </React.Fragment>
-                            );
-                          })}
+                              return (
+                                <div
+                                  key={`${allocation.sourceAccountId}-${index}`}
+                                  className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                                >
+                                  <div className="min-w-0">
+                                    <div className="text-[12px] font-semibold text-main">
+                                      From {sourceName}
+                                    </div>
+                                    <div className="text-[11px] text-subtle">
+                                      {sourceOwner}{sourceType ? ` · ${sourceType}` : ''}
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0 text-[13px] font-bold text-main">
+                                    {formatPence(allocation.amountPence)}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
+                        No transfer needed — the existing account balance already covers the selected bills.
                       </div>
                     )}
                   </div>
