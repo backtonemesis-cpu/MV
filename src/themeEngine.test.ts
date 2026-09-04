@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   normalizeAccentPreference,
+  normalizeAccentRgb,
   normalizeThemePreference,
   normalizeUserPreferences,
   readStoredUserPreferences,
@@ -74,6 +75,32 @@ describe('token theme engine', () => {
     expect(normalizeAccentPreference('orange')).toBe('amber');
     expect(normalizeAccentPreference('green')).toBe('emerald');
     expect(normalizeAccentPreference('default')).toBe('emerald');
+  });
+
+  it('normalizes custom RGB accent channels safely', () => {
+    expect(normalizeAccentRgb({ r: 6, g: 182, b: 212 })).toEqual({
+      r: 6,
+      g: 182,
+      b: 212,
+    });
+    expect(normalizeAccentRgb({ r: -20, g: 300, b: 12.6 })).toEqual({
+      r: 0,
+      g: 255,
+      b: 13,
+    });
+    expect(normalizeAccentRgb({ r: 'bad', g: 100, b: 100 })).toBeUndefined();
+
+    expect(
+      normalizeUserPreferences({
+        theme: 'dark',
+        accent: 'teal',
+        accentRgb: { r: 6, g: 182, b: 212 },
+      })
+    ).toEqual({
+      theme: 'dark',
+      accent: 'teal',
+      accentRgb: { r: 6, g: 182, b: 212 },
+    });
   });
 
   it('normalizes stored legacy preferences safely', () => {
