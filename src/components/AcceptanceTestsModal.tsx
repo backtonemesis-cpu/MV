@@ -48,21 +48,21 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="mv-surface bg-white dark:bg-neutral-900 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border mv-border border-neutral-200 dark:border-neutral-800 max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs animate-in fade-in">
+      <div className="bg-surface rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-muted max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-muted shrink-0">
           <div className="flex items-center gap-2">
-            <FileCheck2 className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
+            <FileCheck2 className="w-5 h-5 text-success" />
             <div>
-              <h2 className="text-base font-bold mv-text text-neutral-900 dark:text-neutral-100">
+              <h2 className="text-base font-bold text-main">
                 Automated Acceptance Criteria Verification
               </h2>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+            className="p-1.5 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -71,19 +71,19 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-4">
           {summary && (
-            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-success-soft border border-success flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
+                <span className="text-xs font-bold text-success">
                   Acceptance Test Suite Status
                 </span>
-                <div className="text-xl font-black text-emerald-800 dark:text-emerald-200 mt-0.5">
+                <div className="text-xl font-black text-success mt-0.5">
                   {summary.passed} / {summary.total} Passed ({summary.total > 0 ? Math.round((summary.passed / summary.total) * 100) : 100}%)
                 </div>
               </div>
               <button
                 onClick={executeSuite}
                 disabled={isRunning}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-semibold hover:bg-emerald-800 transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent text-on-accent rounded-lg text-xs font-semibold hover:bg-success-soft transition disabled:opacity-50"
               >
                 {isRunning ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -96,7 +96,7 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
           )}
 
           {error && (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
@@ -107,28 +107,28 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
             {results.map((test) => (
               <div
                 key={test.id}
-                className="p-3 rounded-xl border mv-border border-neutral-200 dark:border-neutral-800 mv-surface-muted bg-neutral-50/60 dark:bg-neutral-850 hover:bg-white dark:hover:bg-neutral-800 transition"
+                className="p-3 rounded-xl border border-muted bg-surface-muted hover:bg-surface transition"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2.5">
                     {test.passed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                      <XCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
                     )}
                     <div>
-                      <div className="text-xs font-bold mv-text text-neutral-900 dark:text-neutral-100">
+                      <div className="text-xs font-bold text-main">
                         {test.id}. {test.name}
                       </div>
-                      <p className="text-[11px] text-neutral-600 dark:text-neutral-300 mt-0.5">{test.description}</p>
-                      <p className="text-[10px] mv-text-muted text-neutral-400 dark:text-neutral-500 font-mono mt-1">{test.details}</p>
+                      <p className="text-[11px] text-muted mt-0.5">{test.description}</p>
+                      <p className="text-[10px] text-muted text-subtle font-mono mt-1">{test.details}</p>
                     </div>
                   </div>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                       test.passed
-                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                        : 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
+                        ? 'bg-success-soft text-success'
+                        : 'bg-danger-soft text-danger'
                     }`}
                   >
                     {test.passed ? 'PASSED' : 'FAILED'}

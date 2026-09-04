@@ -155,20 +155,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     <div className="space-y-7 pb-12 px-1 sm:px-0">
       {/* Header */}
       <div className="px-1 sm:px-0">
-        <h1 className="mv-text text-xl sm:text-2xl font-bold tracking-tight leading-tight">
+        <h1 className="text-main text-xl sm:text-2xl font-bold tracking-tight leading-tight">
           Settings
         </h1>
       </div>
 
       {/* Settings Tabs */}
-      <div className="mv-surface-muted mv-border rounded-xl border p-1.5 shadow-inner">
+      <div className="bg-surface-muted border-muted rounded-xl border p-1.5 shadow-inner">
         <div className={`grid gap-1.5 ${MV_SINGLE_USER_MODE ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
           <button
             onClick={() => setActiveTab('appearance')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'appearance'
-                ? 'mv-surface mv-text shadow-sm ring-1 ring-[var(--border)]'
-                : 'mv-text-muted hover:mv-text hover:mv-surface'
+                ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
+                : 'text-muted hover:text-main hover:bg-surface'
             }`}
           >
             <Palette className="w-4 h-4 shrink-0" />
@@ -180,14 +180,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onClick={() => setActiveTab('members')}
               className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'members'
-                  ? 'mv-surface mv-text shadow-sm ring-1 ring-[var(--border)]'
-                  : 'mv-text-muted hover:mv-text hover:mv-surface'
+                  ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
+                  : 'text-muted hover:text-main hover:bg-surface'
               }`}
             >
               <Users className="w-4 h-4 shrink-0" />
               <span className="leading-none">Access</span>
               {members.some((m) => m.role === 'pending') && (
-                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                <span className="w-2 h-2 rounded-full bg-warning-soft inline-block" />
               )}
             </button>
           )}
@@ -196,8 +196,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveTab('audit')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'audit'
-                ? 'mv-surface mv-text shadow-sm ring-1 ring-[var(--border)]'
-                : 'mv-text-muted hover:mv-text hover:mv-surface'
+                ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
+                : 'text-muted hover:text-main hover:bg-surface'
             }`}
           >
             <Clock className="w-4 h-4 shrink-0" />
@@ -208,8 +208,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveTab('backup')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'backup'
-                ? 'mv-surface mv-text shadow-sm ring-1 ring-[var(--border)]'
-                : 'mv-text-muted hover:mv-text hover:mv-surface'
+                ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
+                : 'text-muted hover:text-main hover:bg-surface'
             }`}
           >
             <Download className="w-4 h-4 shrink-0" />
@@ -223,17 +223,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="space-y-6 max-w-3xl">
           <div className="mv-card p-5 sm:p-7 rounded-2xl space-y-7">
             <div>
-              <h2 className="mv-text text-base font-bold tracking-tight">
+              <h2 className="text-main text-base font-bold tracking-tight">
                 Appearance
               </h2>
             </div>
 
             {/* Base Theme Modes */}
             <div>
-              <label className="mv-text-muted block text-xs font-semibold uppercase tracking-[0.08em] mb-3">
+              <label className="text-muted block text-xs font-semibold uppercase tracking-[0.08em] mb-3">
                 Base Theme
               </label>
-              <div className="grid grid-cols-3 gap-2 rounded-xl mv-surface-muted p-1.5">
+              <div className="grid grid-cols-3 gap-2 rounded-xl bg-surface-muted p-1.5">
                 {[
                   { id: 'light' as ThemePreference, name: 'Light', icon: Sun },
                   { id: 'dark' as ThemePreference, name: 'Dark', icon: Moon },
@@ -262,7 +262,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {/* Accent Highlights */}
             <div className="pb-2">
               <div className="flex items-center justify-between gap-3">
-                <label className="mv-text-muted text-xs font-semibold uppercase tracking-[0.08em]">
+                <label className="text-muted text-xs font-semibold uppercase tracking-[0.08em]">
                   Accent Highlight
                 </label>
                 <span className="mv-accent-current-label" aria-live="polite">
@@ -297,7 +297,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
             </div>
 
-            <div className="mv-border pt-5 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="border-muted pt-5 border-t flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <button
                 type="button"
                 id="save-appearance-button"
@@ -317,14 +317,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     setIsSavingAppearance(false);
                   }
                 }}
-                className="mv-primary-button px-7 py-3.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2.5 cursor-pointer disabled:opacity-50 disabled:shadow-none"
+                className="bg-accent text-on-accent border border-accent px-7 py-3.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2.5 cursor-pointer disabled:opacity-50 disabled:shadow-none"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 {isSavingAppearance ? 'Saving...' : 'Save Appearance'}
               </button>
 
               {appearanceSavedMessage && (
-                <div className="mv-primary-text text-xs font-semibold flex items-center gap-1.5 animate-fadeIn">
+                <div className="text-accent text-xs font-semibold flex items-center gap-1.5 animate-fadeIn">
                   <Check className="w-3.5 h-3.5" />
                   <span>{appearanceSavedMessage}</span>
                 </div>
@@ -337,8 +337,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* TAB 2: Members & Access */}
       {!MV_SINGLE_USER_MODE && activeTab === 'members' && (
         <div className="space-y-4 max-w-3xl">
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
-            <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+          <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs">
+            <h2 className="text-sm font-bold text-main mb-4">
               Members
             </h2>
 
@@ -346,28 +346,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {members.map((m) => (
                 <div
                   key={m.id}
-                  className="p-4 bg-neutral-50 dark:bg-neutral-850 rounded-xl border border-neutral-200 dark:border-neutral-750 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                  className="p-4 bg-surface-muted rounded-xl border border-muted flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                      <span className="text-xs font-bold text-main">
                         {m.name}
                       </span>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                           m.role === 'owner'
-                            ? 'bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300'
+                            ? 'bg-accent-soft text-accent'
                             : m.role === 'editor'
-                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                            ? 'bg-success-soft text-success'
                             : m.role === 'view_only'
-                            ? 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
-                            : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
+                            ? 'bg-accent-soft text-accent'
+                            : 'bg-warning-soft text-warning'
                         }`}
                       >
                         {m.role}
                       </span>
                     </div>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400 block mt-0.5">
+                    <span className="text-xs text-subtle block mt-0.5">
                       {m.email}
                     </span>
                   </div>
@@ -378,13 +378,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <>
                           <button
                             onClick={() => onApproveMember(m.id, 'editor')}
-                            className="px-2.5 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-semibold hover:bg-emerald-800 transition"
+                            className="px-2.5 py-1.5 bg-accent text-on-accent rounded-lg text-xs font-semibold hover:bg-success-soft transition"
                           >
                             Editor
                           </button>
                           <button
                             onClick={() => onApproveMember(m.id, 'view_only')}
-                            className="px-2.5 py-1.5 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-300 transition"
+                            className="px-2.5 py-1.5 bg-surface-muted text-main rounded-lg text-xs font-semibold hover:bg-surface-muted transition"
                           >
                             View Only
                           </button>
@@ -393,7 +393,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <select
                           value={m.role}
                           onChange={(e) => onChangeRole(m.id, e.target.value as UserRole)}
-                          className="px-2 py-1 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg text-xs font-medium text-neutral-800 dark:text-neutral-200"
+                          className="px-2 py-1 bg-surface border border-muted rounded-lg text-xs font-medium text-main"
                         >
                           <option value="editor">Editor</option>
                           <option value="view_only">View-Only</option>
@@ -402,7 +402,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       )}
                       <button
                         onClick={() => onRemoveMember(m.id)}
-                        className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg text-xs font-semibold"
+                        className="p-1.5 text-danger hover:bg-danger-soft rounded-lg text-xs font-semibold"
                       >
                         Remove
                       </button>
@@ -417,8 +417,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* TAB 3: Audit Trail */}
       {activeTab === 'audit' && (
-        <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs max-w-4xl">
-          <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+        <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs max-w-4xl">
+          <h2 className="text-sm font-bold text-main mb-4">
             Audit Trail ({auditLogs.length} Events)
           </h2>
 
@@ -426,21 +426,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {auditLogs.map((log) => (
               <div
                 key={log.id}
-                className="p-3 bg-neutral-50 dark:bg-neutral-850 rounded-xl border border-neutral-100 dark:border-neutral-750 text-xs"
+                className="p-3 bg-surface-muted rounded-xl border border-muted text-xs"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="font-bold text-neutral-900 dark:text-neutral-100">
+                    <span className="font-bold text-main">
                       {log.action}
                     </span>
-                    <span className="text-neutral-500 dark:text-neutral-400 ml-2">
+                    <span className="text-subtle ml-2">
                       by {log.actorEmail}
                     </span>
-                    <p className="text-neutral-700 dark:text-neutral-300 mt-1 leading-relaxed">
+                    <p className="text-muted mt-1 leading-relaxed">
                       {log.summary}
                     </p>
                   </div>
-                  <span className="text-[10px] text-neutral-400 whitespace-nowrap">
+                  <span className="text-[10px] text-subtle whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleString('en-GB')}
                   </span>
                 </div>
@@ -454,15 +454,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {activeTab === 'backup' && (
         <div className="space-y-6 max-w-3xl">
           {showDevelopmentTools && (
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                <h2 className="text-sm font-bold text-main">
                   Diagnostics
                 </h2>
               </div>
               <button
                 onClick={onOpenAcceptanceTests}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 shadow-xs transition"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-on-accent text-xs font-semibold hover:bg-success-soft shadow-xs transition"
               >
                 <Play className="w-3.5 h-3.5" />
                 Run Diagnostics
@@ -471,15 +471,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* Backup & Export */}
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+          <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
             <div>
-              <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+              <h2 className="text-sm font-bold text-main">
                 Backup
               </h2>
             </div>
             <button
               onClick={onDownloadBackup}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-semibold rounded-xl hover:bg-neutral-800 dark:hover:bg-neutral-200 transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-surface text-on-accent text-xs font-semibold rounded-xl hover:bg-surface-muted transition"
             >
               <Download className="w-3.5 h-3.5" />
               Download Backup
@@ -489,20 +489,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Restore */}
           {isOwner && (
             <>
-              <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+              <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
               <div>
-                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                <h2 className="text-sm font-bold text-main">
                   Restore
                 </h2>
               </div>
 
               {restoreError && (
-                <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-800 dark:text-rose-300 text-xs">
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {restoreError}
                 </div>
               )}
               {restoreSuccess && (
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-300 text-xs">
+                <div className="p-3 bg-success-soft border border-success rounded-xl text-success text-xs">
                   {restoreSuccess}
                 </div>
               )}
@@ -512,19 +512,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   type="file"
                   accept=".json"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200"
+                  className="block w-full text-xs text-subtle file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-surface-muted file:text-muted hover:file:bg-surface-muted"
                 />
                 <textarea
                   value={restoreJson}
                   onChange={(e) => setRestoreJson(e.target.value)}
                   placeholder="Paste backup JSON"
                   rows={4}
-                  className="w-full px-3 py-2 bg-white dark:bg-neutral-850 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs font-mono text-neutral-800 dark:text-neutral-200"
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs font-mono text-main"
                 />
                 <button
                   type="submit"
                   disabled={!restoreJson.trim() || isRestoring}
-                  className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
+                  className="px-4 py-2 bg-danger-soft hover:bg-danger-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
                 >
                   {isRestoring ? 'Restoring...' : 'Restore'}
                 </button>
@@ -532,15 +532,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             {/* Clean Production Reset */}
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+            <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
               <div>
-                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                <h2 className="text-sm font-bold text-main">
                   Reset Data
                 </h2>
               </div>
 
               {resetMessage && (
-                <div className="p-3 bg-neutral-100 dark:bg-neutral-700 rounded-xl text-xs text-neutral-800 dark:text-neutral-200">
+                <div className="p-3 bg-surface-muted rounded-xl text-xs text-main">
                   {resetMessage}
                 </div>
               )}
@@ -548,26 +548,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {!showResetConfirm ? (
                 <button
                   onClick={() => setShowResetConfirm(true)}
-                  className="px-4 py-2 border border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl text-xs font-semibold transition"
+                  className="px-4 py-2 border border-danger text-danger hover:bg-danger-soft rounded-xl text-xs font-semibold transition"
                 >
                   Reset Data
                 </button>
               ) : (
-                <div className="p-4 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 space-y-3">
-                  <p className="text-xs font-semibold text-rose-800 dark:text-rose-300">
+                <div className="p-4 rounded-xl border border-danger bg-danger-soft space-y-3">
+                  <p className="text-xs font-semibold text-danger">
                     This deletes all financial data. Export a backup first if needed.
                   </p>
                   <div className="mv-hscroll items-center">
                     <button
                       onClick={handleResetExecute}
                       disabled={isResetting}
-                      className="shrink-0 whitespace-nowrap px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
+                      className="shrink-0 whitespace-nowrap px-4 py-2 bg-danger-soft hover:bg-danger-soft text-on-accent rounded-xl text-xs font-bold shadow-xs transition"
                     >
                       {isResetting ? 'Resetting...' : 'Delete All Data'}
                     </button>
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="shrink-0 whitespace-nowrap px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-semibold hover:bg-neutral-300 transition"
+                      className="shrink-0 whitespace-nowrap px-3 py-2 bg-surface-muted text-muted rounded-xl text-xs font-semibold hover:bg-surface-muted transition"
                     >
                       Cancel
                     </button>
@@ -579,15 +579,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {showDevelopmentTools && (
               <>
                 {/* Opt-in Sample Fixture Data */}
-                <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+                <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs space-y-4">
                 <div>
-                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                <h2 className="text-sm font-bold text-main">
                 Sample Data
                 </h2>
                 </div>
                 
                 {sampleMessage && (
-                <div className="p-3 bg-neutral-100 dark:bg-neutral-700 rounded-xl text-xs text-neutral-800 dark:text-neutral-200">
+                <div className="p-3 bg-surface-muted rounded-xl text-xs text-main">
                 {sampleMessage}
                 </div>
                 )}
@@ -595,7 +595,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <button
                 onClick={handleLoadSampleExecute}
                 disabled={isLoadingSample}
-                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-200 dark:hover:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-semibold shadow-xs transition"
+                className="px-4 py-2 bg-surface-muted hover:bg-surface text-on-accent rounded-xl text-xs font-semibold shadow-xs transition"
                 >
                 {isLoadingSample ? 'Loading Fixtures...' : 'Load Sample Data'}
                 </button>

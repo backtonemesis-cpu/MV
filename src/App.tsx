@@ -498,7 +498,7 @@ export default function App() {
     : 0;
 
   return (
-    <div className="mv-app min-h-screen flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-app text-main flex flex-col font-sans transition-colors">
       {/* Top Header */}
       <Header
         session={session}
@@ -524,14 +524,14 @@ export default function App() {
       <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 sm:pb-8">
         {/* Error notification banner if any */}
         {error && (
-          <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-xs flex items-center justify-between">
+          <div className="mb-6 p-4 rounded-2xl bg-danger-soft border border-danger text-danger text-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-danger shrink-0" />
               <span>{error}</span>
             </div>
             <button
               onClick={() => setError(null)}
-              className="text-xs font-semibold underline hover:text-rose-950 dark:hover:text-rose-100"
+              className="text-xs font-semibold underline transition-opacity hover:opacity-80"
             >
               Dismiss
             </button>
@@ -541,8 +541,8 @@ export default function App() {
         {/* Loading State */}
         {isLoading && !household && (
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
-            <Loader2 className="mv-primary-text w-8 h-8 animate-spin" />
-            <span className="mv-text-muted text-xs font-medium">
+            <Loader2 className="text-accent w-8 h-8 animate-spin" />
+            <span className="text-muted text-xs font-medium">
               Loading...
             </span>
           </div>

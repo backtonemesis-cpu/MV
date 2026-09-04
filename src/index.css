@@ -167,6 +167,15 @@
     --color-accent: var(--primary);
     --color-accent-soft: var(--primary-light);
     --text-on-accent: var(--text-on-primary);
+    --status-success-bg: var(--success-bg);
+    --status-success-text: var(--success-text);
+    --status-success-border: var(--success-border);
+    --status-warning-bg: var(--warning-bg);
+    --status-warning-text: var(--warning-text);
+    --status-warning-border: var(--warning-border);
+    --status-danger-bg: var(--danger-bg);
+    --status-danger-text: var(--danger-text);
+    --status-danger-border: var(--danger-border);
 
     /* Backward-compatible aliases while components migrate to semantic names. */
     --mv-bg: var(--background);
@@ -473,17 +482,11 @@ html[data-theme] button.bg-white:hover {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--border-strong);
   border-radius: 3px;
 }
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-}
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--text-subtle);
 }
 
 

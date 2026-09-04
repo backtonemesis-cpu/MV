@@ -39,13 +39,13 @@ export const MembersView: React.FC<MembersViewProps> = ({
   return (
     <div className="space-y-6 pb-12">
       {/* Title & Security Principles Banner */}
-      <div className="mv-surface bg-white p-6 rounded-2xl border mv-border border-neutral-200 shadow-xs">
+      <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold mv-text text-neutral-900">Household Access</h1>
+            <h1 className="text-xl font-bold text-main">Household Access</h1>
           </div>
-          <span className="px-3 py-1 bg-neutral-100 border mv-border border-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-neutral-600" />
+          <span className="px-3 py-1 bg-surface-muted border border-muted text-muted text-xs font-semibold rounded-lg flex items-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-muted" />
             Role: <strong className="capitalize">{userRole.replace('_', ' ')}</strong>
           </span>
         </div>
@@ -53,10 +53,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
       {/* Pending Approval Queue */}
       {pendingMembers.length > 0 && (
-        <div className="bg-amber-50/70 border border-amber-200 p-5 rounded-2xl shadow-xs">
+        <div className="bg-warning-soft border border-warning p-5 rounded-2xl shadow-xs">
           <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-amber-700" />
-            <h2 className="text-sm font-bold text-amber-900">
+            <Clock className="w-4 h-4 text-warning" />
+            <h2 className="text-sm font-bold text-warning">
               Pending ({pendingMembers.length})
             </h2>
           </div>
@@ -65,12 +65,12 @@ export const MembersView: React.FC<MembersViewProps> = ({
             {pendingMembers.map((member) => (
               <div
                 key={member.id}
-                className="mv-surface bg-white p-4 rounded-xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="bg-surface p-4 rounded-xl border border-warning flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div>
-                  <div className="text-xs font-bold mv-text text-neutral-900">{member.name || member.email}</div>
-                  <div className="text-[11px] mv-text-muted text-neutral-500">{member.email}</div>
-                  <div className="text-[10px] mv-text-muted text-neutral-400 mt-0.5">
+                  <div className="text-xs font-bold text-main">{member.name || member.email}</div>
+                  <div className="text-[11px] text-muted text-subtle">{member.email}</div>
+                  <div className="text-[10px] text-muted text-subtle mt-0.5">
                     Requested access: {new Date(member.joinedAt).toLocaleString('en-GB')}
                   </div>
                 </div>
@@ -79,28 +79,28 @@ export const MembersView: React.FC<MembersViewProps> = ({
                   <div className="mv-hscroll mv-edge-safe items-center">
                     <button
                       onClick={() => onApproveMember(member.id, 'editor')}
-                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition"
+                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-accent hover:bg-success-soft text-on-accent text-xs font-semibold rounded-lg transition"
                     >
                       <Check className="w-3.5 h-3.5" />
                       Editor
                     </button>
                     <button
                       onClick={() => onApproveMember(member.id, 'view_only')}
-                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-accent-soft hover:bg-accent-soft text-on-accent text-xs font-semibold rounded-lg transition"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       View Only
                     </button>
                     <button
                       onClick={() => onRemoveMember(member.id)}
-                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold rounded-lg transition"
+                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-danger-soft text-danger hover:bg-danger-soft text-xs font-semibold rounded-lg transition"
                     >
                       <X className="w-3.5 h-3.5" />
                       Reject
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs mv-text-muted text-neutral-500 italic">
+                  <span className="text-xs text-muted text-subtle italic">
                     Owner approval required
                   </span>
                 )}
@@ -111,10 +111,10 @@ export const MembersView: React.FC<MembersViewProps> = ({
       )}
 
       {/* Members */}
-      <div className="mv-surface bg-white p-5 rounded-2xl border mv-border border-neutral-200 shadow-xs">
-        <h2 className="text-sm font-bold mv-text text-neutral-900 mb-4">Active Household Members</h2>
+      <div className="bg-surface p-5 rounded-2xl border border-muted shadow-xs">
+        <h2 className="text-sm font-bold text-main mb-4">Active Household Members</h2>
 
-        <div className="divide-y divide-neutral-100">
+        <div className="divide-y divide-muted">
           {activeMembers.map((member) => {
             const isMarius = member.email.toLowerCase() === 'backtonemesis@gmail.com';
             return (
@@ -123,19 +123,19 @@ export const MembersView: React.FC<MembersViewProps> = ({
                 className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-neutral-100 text-neutral-700 flex items-center justify-center font-bold text-sm">
+                  <div className="w-10 h-10 rounded-xl bg-surface-muted text-muted flex items-center justify-center font-bold text-sm">
                     {member.name.substring(0, 1)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold mv-text text-neutral-900">{member.name}</span>
+                      <span className="text-xs font-bold text-main">{member.name}</span>
                       {isMarius && (
-                        <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full border border-amber-300">
+                        <span className="text-[10px] font-bold bg-warning-soft text-warning px-2 py-0.2 rounded-full border border-warning">
                           Owner
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] mv-text-muted text-neutral-500">{member.email}</div>
+                    <div className="text-[11px] text-muted text-subtle">{member.email}</div>
                   </div>
                 </div>
 
@@ -145,7 +145,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       <select
                         value={member.role}
                         onChange={(e) => onChangeRole(member.id, e.target.value as UserRole)}
-                        className="px-2.5 py-1.5 text-xs rounded-lg border mv-border border-neutral-300 mv-surface bg-white font-medium text-neutral-700"
+                        className="px-2.5 py-1.5 text-xs rounded-lg border border-muted bg-surface font-medium text-muted"
                       >
                         <option value="editor">Editor</option>
                         <option value="view_only">View Only</option>
@@ -158,14 +158,14 @@ export const MembersView: React.FC<MembersViewProps> = ({
                             onRemoveMember(member.id);
                           }
                         }}
-                        className="p-1.5 mv-text-muted text-neutral-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                        className="p-1.5 text-muted text-subtle hover:text-danger rounded-lg hover:bg-danger-soft transition"
                         title="Remove member"
                       >
                         <UserX className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-700 capitalize border mv-border border-neutral-200">
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-surface-muted text-muted capitalize border border-muted">
                       {member.role.replace('_', ' ')}
                     </span>
                   )}
@@ -178,16 +178,16 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
       {/* Removed Members (if any) */}
       {removedMembers.length > 0 && (
-        <div className="mv-surface-muted bg-neutral-50 p-5 rounded-2xl border mv-border border-neutral-200 shadow-xs">
-          <h3 className="text-xs font-bold text-neutral-700 mb-2">Removed</h3>
+        <div className="bg-surface-muted p-5 rounded-2xl border border-muted shadow-xs">
+          <h3 className="text-xs font-bold text-muted mb-2">Removed</h3>
           <div className="space-y-2">
             {removedMembers.map((m) => (
-              <div key={m.id} className="text-xs text-neutral-600 flex justify-between items-center mv-surface bg-white p-2.5 rounded-lg border mv-border border-neutral-200">
+              <div key={m.id} className="text-xs text-muted flex justify-between items-center bg-surface p-2.5 rounded-lg border border-muted">
                 <span>{m.email}</span>
                 {isOwner && (
                   <button
                     onClick={() => onChangeRole(m.id, 'editor')}
-                    className="text-[11px] font-semibold text-emerald-700 hover:underline"
+                    className="text-[11px] font-semibold text-success hover:underline"
                   >
                     Restore
                   </button>
