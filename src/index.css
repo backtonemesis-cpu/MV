@@ -750,7 +750,7 @@ html[data-theme] button.bg-white:hover {
   --density-shell-max: 1440px;
   --density-page-pad: 12px;
   --density-row-pad-x: 10px;
-  --density-row-pad-y: 7px;
+  --density-row-pad-y: 8px;
   --density-control-height: 30px;
   --density-radius-card: 8px;
   --density-radius-control: 6px;
@@ -1110,7 +1110,7 @@ html[data-theme] button.bg-white:hover {
   }
 
   .mv-density-root .gap-3 {
-    gap: 8px !important;
+    gap: 12px !important;
   }
 
   .mv-density-root .gap-2 {
