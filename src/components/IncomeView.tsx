@@ -497,7 +497,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
                         <div className="finance-row-side">
                           <div className="finance-amount-block">
-                            <div className="finance-amount">
+                            <div className="finance-amount is-positive">
                               {formatPence(shownAmountPence)}
                             </div>
                             <div
