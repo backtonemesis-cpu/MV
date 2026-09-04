@@ -3,7 +3,6 @@ import {
   Banknote,
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   Edit2,
   Plus,
   Trash2,
@@ -21,6 +20,7 @@ import type {
 } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 import { householdPersonOptions } from '../utils/householdPeople';
+import { MonthPicker } from './MonthPicker';
 
 interface IncomeViewProps {
   incomes: PlannedIncome[];
@@ -29,7 +29,6 @@ interface IncomeViewProps {
   transactions: Transaction[];
   members: HouseholdMember[];
   selectedMonth: string;
-  availableMonths: string[];
   userRole: UserRole;
   onSelectMonth: (month: string) => void;
   onCreateIncome: (data: Partial<PlannedIncome>) => Promise<void>;
@@ -48,7 +47,6 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   transactions,
   members,
   selectedMonth,
-  availableMonths,
   userRole,
   onSelectMonth,
   onCreateIncome,
@@ -315,21 +313,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="relative block">
-            <span className="sr-only">Income month</span>
-            <select
-              value={selectedMonth}
-              onChange={(event) => onSelectMonth(event.target.value)}
-              className="finance-filter-control appearance-none pr-9 font-semibold"
-            >
-              {availableMonths.map((month) => (
-                <option key={month} value={month}>
-                  {month}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-          </label>
+          <MonthPicker
+            value={selectedMonth}
+            onChange={onSelectMonth}
+            ariaLabel="Income month"
+          />
 
           {canEdit && (
             <button
