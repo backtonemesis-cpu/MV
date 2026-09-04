@@ -241,6 +241,41 @@ describe('Stable account ownership', () => {
     ).toThrow(/active household member or Joint/);
   });
 
+  it('allows an existing account to retain a removed owner link during unrelated edits', () => {
+    let state = loadLocalHousehold();
+    const vesta = createLocalHouseholdMember({ name: 'Vesta' }, state.version);
+    state = loadLocalHousehold();
+
+    const account = createLocalAccount(
+      {
+        name: 'Legacy Vesta Account',
+        type: 'current',
+        startingBalancePence: 300_00,
+        ownerMemberId: vesta.member.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    removeLocalHouseholdMember(vesta.member.id, state.version);
+    state = loadLocalHousehold();
+
+    updateLocalAccount(
+      account.account.id,
+      {
+        notes: 'Updated after household member removal',
+        ownerMemberId: vesta.member.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const updated = state.accounts.find((item) => item.id === account.account.id);
+    expect(updated?.ownerMemberId).toBe(vesta.member.id);
+    expect(updated?.ownerPerson).toBe('Vesta');
+    expect(updated?.notes).toBe('Updated after household member removal');
+  });
+
   it('changes an account owner atomically without changing the account ID', () => {
     let state = loadLocalHousehold();
     const vesta = createLocalHouseholdMember({ name: 'Vesta' }, state.version);
