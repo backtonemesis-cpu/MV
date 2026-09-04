@@ -8,13 +8,14 @@ import {
   FileCheck,
   CheckCircle2,
 } from 'lucide-react';
-import { fetchBackup, restoreBackup } from '../utils/api';
+import { fetchBackup, preflightRestore, restoreBackup } from '../utils/api';
 import { formatPence } from '../utils/currency';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
   onClose: () => void;
   isOwner: boolean;
+  expectedVersion: number;
   onSuccess: () => void;
 }
 
@@ -22,6 +23,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   isOpen,
   onClose,
   isOwner,
+  expectedVersion,
   onSuccess,
 }) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -79,7 +81,11 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
       setError(null);
       const parsed = JSON.parse(importJson);
 
-      const res = await restoreBackup(parsed);
+      const preflight = await preflightRestore(parsed);
+      if (!preflight.valid) {
+        throw new Error('Backup preflight did not pass.');
+      }
+      const res = await restoreBackup(parsed, expectedVersion);
       setReconciliation(res.reconciliation);
       onSuccess();
     } catch (err: any) {
@@ -119,7 +125,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
               Export Verified Backup
             </h3>
             <p className="text-xs text-neutral-500 mb-3">
-              Generates a tamper-checked JSON archive of all accounts, transactions, and audit trails.
+              Generates a validated JSON archive of all accounts, categories, transactions, splits, plans, savings, and audit evidence.
             </p>
             <button
               onClick={handleExport}
@@ -137,7 +143,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
               Restore / Migration Import
             </h3>
             <p className="text-xs text-neutral-500 mb-3">
-              Applies strict pre/post-flight reconciliation to prevent duplicate records or balance drifts.
+              Validates relationships, exact pence values, reconciled balances, and the current household version before one atomic restore.
             </p>
 
             {!isOwner ? (

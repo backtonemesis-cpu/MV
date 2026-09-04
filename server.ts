@@ -45,6 +45,7 @@ import { resolveRuntimeDataBackend } from './server/storage/runtimeBackend';
 import { getMvFirestore } from './server/firestoreAdmin';
 import { createFirestoreCoreFinanceRouter } from './server/firestoreCoreFinanceRoutes';
 import { createFirestorePlanningRouter } from './server/firestorePlanningRoutes';
+import { createFirestoreAdminDataRouter } from './server/firestoreAdminDataRoutes';
 
 const PORT = 3000;
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -568,6 +569,23 @@ async function startServer() {
     return res.json({ success: true, message: 'Member removed and access revoked immediately', version });
   });
 
+  // Production never exposes fixture loaders or pseudo acceptance endpoints.
+  // Real verification is CI/emulator evidence, not an in-app pass/fail screen.
+  if (process.env.NODE_ENV === 'production') {
+    app.use('/api/household/load-sample-data', (_req: Request, res: Response) =>
+      res.status(404).json({
+        error: 'Sample household data is not available in production.',
+        code: 'DEVELOPMENT_ONLY_CAPABILITY',
+      })
+    );
+    app.use('/api/tests/run', (_req: Request, res: Response) =>
+      res.status(404).json({
+        error: 'In-app pseudo acceptance tests are not a production capability.',
+        code: 'DEVELOPMENT_ONLY_CAPABILITY',
+      })
+    );
+  }
+
   // -------------------------------------------------------------
   // Authoritative Household Data (Strict Read Isolation)
   // -------------------------------------------------------------
@@ -604,11 +622,18 @@ async function startServer() {
         edge: firestoreEdgeMutations,
       })
     );
+    app.use(
+      '/api',
+      createFirestoreAdminDataRouter({
+        db: firestoreDb,
+        store: firestoreStore,
+      })
+    );
   }
 
-  // Stage 7B2 safety gate. Verified Firestore core-finance and planning routes
-  // above fully terminate their requests. Anything else below remains fail-closed
-  // and cannot fall through into legacy SQLite handlers.
+  // Stage 7B3 safety gate. Verified Firestore core-finance, planning and
+  // admin-data routes above fully terminate their requests. Anything else below
+  // remains fail-closed and cannot fall through into legacy SQLite handlers.
   app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     if (DATA_BACKEND === 'firestore') {
       return res.status(503).json({

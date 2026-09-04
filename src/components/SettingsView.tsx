@@ -74,6 +74,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [sampleMessage, setSampleMessage] = useState<string | null>(null);
 
   const isOwner = currentSession.role === 'owner';
+  const showDevelopmentTools = !import.meta.env.PROD;
 
   const handleResetExecute = async () => {
     if (!onResetHousehold) return;
@@ -456,24 +457,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* TAB 4: Backup & Testing */}
       {activeTab === 'backup' && (
         <div className="space-y-6 max-w-3xl">
-          {/* Acceptance Tests Button */}
-          <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                Automated Acceptance Tests
-              </h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Run the 22 comprehensive automated tests verifying all financial rules, transfer plan, permissions, and concurrency.
-              </p>
+          {showDevelopmentTools && (
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                  Development Verification
+                </h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  Local diagnostic UI only. Production verification is provided by CI and Firestore Emulator evidence.
+                </p>
+              </div>
+              <button
+                onClick={onOpenAcceptanceTests}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 shadow-xs transition"
+              >
+                <Play className="w-3.5 h-3.5" />
+                Run Local Diagnostics
+              </button>
             </div>
-            <button
-              onClick={onOpenAcceptanceTests}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 shadow-xs transition"
-            >
-              <Play className="w-3.5 h-3.5" />
-              Run Test Suite
-            </button>
-          </div>
+          )}
 
           {/* Backup & Export */}
           <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
@@ -482,7 +484,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 Export Verified Backup
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Download a cryptographically verified JSON snapshot of all accounts, transactions, bills, and audit records.
+                Download a validated JSON snapshot of the complete financial/configuration dataset and audit evidence.
               </p>
             </div>
             <button
@@ -590,31 +592,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               )}
             </div>
 
-            {/* Opt-in Sample Fixture Data */}
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
-              <div>
+            {showDevelopmentTools && (
+              <>
+                {/* Opt-in Sample Fixture Data */}
+                <div className="bg-white dark:bg-neutral-800 p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs space-y-4">
+                <div>
                 <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                  Development Mode — Load Sample Fixture Data
+                Development Mode — Load Sample Fixture Data
                 </h2>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  Populate realistic household demonstration accounts, split transactions, and transfer plan bills from sample fixtures for development testing.
+                Populate realistic household demonstration accounts, split transactions, and transfer plan bills from sample fixtures for development testing.
                 </p>
-              </div>
-
-              {sampleMessage && (
-                <div className="p-3 bg-neutral-100 dark:bg-neutral-700 rounded-xl text-xs text-neutral-800 dark:text-neutral-200">
-                  {sampleMessage}
                 </div>
-              )}
-
-              <button
+                
+                {sampleMessage && (
+                <div className="p-3 bg-neutral-100 dark:bg-neutral-700 rounded-xl text-xs text-neutral-800 dark:text-neutral-200">
+                {sampleMessage}
+                </div>
+                )}
+                
+                <button
                 onClick={handleLoadSampleExecute}
                 disabled={isLoadingSample}
                 className="px-4 py-2 bg-neutral-800 hover:bg-neutral-900 dark:bg-neutral-200 dark:hover:bg-white text-white dark:text-neutral-900 rounded-xl text-xs font-semibold shadow-xs transition"
-              >
+                >
                 {isLoadingSample ? 'Loading Fixtures...' : 'Load Sample Demonstration Data'}
-              </button>
-            </div>
+                </button>
+                </div>
+              </>
+            )}
           </>
         )}
         </div>

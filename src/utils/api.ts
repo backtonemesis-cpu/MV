@@ -670,15 +670,24 @@ export async function preflightRestore(backupPayload: any): Promise<{
   return res.json();
 }
 
-export async function restoreBackup(backupPayload: any) {
+export async function restoreBackup(backupPayload: any, expectedVersion: number) {
   const res = await fetch('/api/restore', {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify(backupPayload),
+    body: JSON.stringify({ ...backupPayload, expectedVersion }),
   });
+  if (res.status === 409) {
+    const errData = await res.json().catch(() => ({}));
+    const err: any = new Error(errData.error || 'Restore conflict');
+    err.status = 409;
+    err.serverVersion = errData.serverVersion;
+    throw err;
+  }
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
-    throw new Error(errData.error || 'Failed to restore backup');
+    const err: any = new Error(errData.error || 'Failed to restore backup');
+    err.preflight = errData.preflight;
+    throw err;
   }
   return res.json();
 }
@@ -701,11 +710,19 @@ export async function runAcceptanceTests(): Promise<{
 // -------------------------------------------------------------
 // Safe Household Reset & Sample Data Management
 // -------------------------------------------------------------
-export async function resetHouseholdData(): Promise<{ success: boolean; message: string; version: number }> {
+export async function resetHouseholdData(expectedVersion: number): Promise<{ success: boolean; message: string; version: number }> {
   const res = await fetch('/api/household/reset', {
     method: 'POST',
     headers: getHeaders(),
+    body: JSON.stringify({ expectedVersion }),
   });
+  if (res.status === 409) {
+    const errData = await res.json().catch(() => ({}));
+    const err: any = new Error(errData.error || 'Reset conflict');
+    err.status = 409;
+    err.serverVersion = errData.serverVersion;
+    throw err;
+  }
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     throw new Error(errData.error || 'Failed to reset household data');

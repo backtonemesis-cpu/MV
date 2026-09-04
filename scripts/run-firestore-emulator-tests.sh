@@ -15,3 +15,5 @@ run_suite server/storage/sqliteFirestoreMigration.emulator.test.ts
 run_suite server/storage/runtimeFirestoreFoundation.emulator.test.ts
 run_suite server/firestoreCoreFinanceRoutes.emulator.test.ts
 run_suite server/firestorePlanningRoutes.emulator.test.ts
+run_suite server/storage/firestoreAdminData.emulator.test.ts
+run_suite server/firestoreAdminDataRoutes.emulator.test.ts
