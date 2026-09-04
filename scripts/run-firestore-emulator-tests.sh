@@ -22,6 +22,7 @@ echo "=== Production storage preflight matrix ==="
 timeout 120s node scripts/test-production-preflight.mjs
 
 echo "=== Cloud Run + Firestore production startup smoke ==="
+npm run build
 PORT=3100 \
 K_SERVICE=mv-ci \
 K_REVISION=mv-ci-00001 \
