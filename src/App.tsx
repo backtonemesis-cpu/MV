@@ -560,7 +560,7 @@ export default function App() {
   // Member Management Handlers
   const handleCreateHouseholdMember = async (data: {
     name: string;
-    email: string;
+    email?: string;
     role?: 'editor' | 'view_only' | 'pending';
   }) => {
     try {
