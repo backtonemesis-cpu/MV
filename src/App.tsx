@@ -109,23 +109,43 @@ export default function App() {
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(readInitialPreferences);
 
-  // Compute available months across both transactions and planned payments
+  // Build a complete month list instead of limiting the picker to months that already contain data.
+  // Always include the current calendar year and next year, plus any years already present in household data.
   const availableMonths = useMemo(() => {
-    const set = new Set<string>();
-    set.add('2026-09');
-    set.add('2026-10');
+    const years = new Set<number>();
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    years.add(currentYear);
+    years.add(currentYear + 1);
+
+    const selectedYear = Number.parseInt(selectedMonth.slice(0, 4), 10);
+    if (Number.isFinite(selectedYear)) {
+      years.add(selectedYear);
+    }
+
     if (household) {
       household.transactions.forEach((tx) => {
         if (tx.date && tx.date.length >= 7) {
-          set.add(tx.date.substring(0, 7));
+          const year = Number.parseInt(tx.date.slice(0, 4), 10);
+          if (Number.isFinite(year)) years.add(year);
         }
       });
+
       (household.plannedPayments || []).forEach((p) => {
-        if (p.month) set.add(p.month);
+        if (p.month && p.month.length >= 7) {
+          const year = Number.parseInt(p.month.slice(0, 4), 10);
+          if (Number.isFinite(year)) years.add(year);
+        }
       });
     }
-    return Array.from(set).sort();
-  }, [household]);
+
+    return Array.from(years)
+      .sort((a, b) => a - b)
+      .flatMap((year) =>
+        Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, '0')}`)
+      );
+  }, [household, selectedMonth]);
 
   // Apply appearance immediately when the picker changes.
   useEffect(() => {
