@@ -375,7 +375,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         <article className="min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-muted">
-              Accounts
+              Need Funding
             </span>
             <AlertCircle
               className={`w-4 h-4 shrink-0 ${
@@ -857,10 +857,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         <td className="py-2.5 px-4 text-center">
                           <button
                             onClick={() => handleTogglePaymentStatus(payment)}
-                            disabled={isViewOnly}
-                            title="Status"
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                              payment.status === 'paid'
+                            disabled={isViewOnly || Boolean(payment.actualTransactionId)}
+                            title={
+                              payment.actualTransactionId
+                                ? 'Paid status is locked by a recorded transaction'
+                                : 'Status'
+                            }
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors disabled:cursor-not-allowed ${
+                              isPaymentPaid(payment)
                                 ? 'bg-success-soft text-success hover:bg-success-soft'
                                 : 'bg-warning-soft text-warning hover:bg-warning-soft'
                             }`}
