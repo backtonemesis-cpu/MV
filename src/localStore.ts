@@ -919,16 +919,27 @@ export function updateLocalAccount(
       const index = state.accounts.findIndex((account) => account.id === id);
       if (index < 0) throw new Error('Account not found.');
 
+      const existingAccount = state.accounts[index];
       let ownerFields: Pick<Account, 'ownerMemberId' | 'ownerPerson'> = {
-        ownerMemberId: state.accounts[index].ownerMemberId,
-        ownerPerson: state.accounts[index].ownerPerson,
+        ownerMemberId: existingAccount.ownerMemberId,
+        ownerPerson: existingAccount.ownerPerson,
       };
       if (data.ownerMemberId !== undefined || data.ownerPerson !== undefined) {
-        ownerFields = resolveAccountOwnerForWrite(
-          state,
-          data.ownerMemberId,
-          data.ownerPerson
-        );
+        const isKeepingExistingStableOwner =
+          Boolean(existingAccount.ownerMemberId) &&
+          data.ownerMemberId === existingAccount.ownerMemberId &&
+          data.ownerPerson === undefined;
+
+        ownerFields = isKeepingExistingStableOwner
+          ? {
+              ownerMemberId: existingAccount.ownerMemberId,
+              ownerPerson: existingAccount.ownerPerson,
+            }
+          : resolveAccountOwnerForWrite(
+              state,
+              data.ownerMemberId,
+              data.ownerPerson
+            );
       }
 
       const next = {
