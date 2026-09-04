@@ -15,5 +15,6 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "server.ts", "server/**/*.ts", "server/**/*.d.ts"]
+  "include": ["src"],
+  "exclude": ["src/firebase.ts", "src/components/AuthGate.tsx"]
 }
