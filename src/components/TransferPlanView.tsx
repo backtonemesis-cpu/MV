@@ -4,8 +4,7 @@ import {
   Plus,
   CheckCircle2,
   AlertCircle,
-  Calendar,
-  Layers,
+    Layers,
   ChevronDown,
   ChevronUp,
   CheckSquare,
@@ -29,6 +28,7 @@ import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
+import { MonthPicker } from './MonthPicker';
 
 interface TransferPlanViewProps {
   accounts: Account[];
@@ -83,17 +83,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onUndoFunding,
 }) => {
   const isViewOnly = userRole === 'view_only';
-
-  // Available billing months derived from payments, defaulting to current '2026-09'
-  const availableMonths = useMemo(() => {
-    const monthsSet = new Set<string>();
-    monthsSet.add('2026-09');
-    monthsSet.add('2026-10');
-    for (const p of plannedPayments) {
-      if (p.month) monthsSet.add(p.month);
-    }
-    return Array.from(monthsSet).sort();
-  }, [plannedPayments]);
 
   const [internalSelectedMonth, setInternalSelectedMonth] = useState<string>('2026-09');
   const selectedMonth = propSelectedMonth || internalSelectedMonth;
@@ -303,20 +292,13 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
         <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:min-w-[360px]">
           {/* Month Selector */}
-          <div className="col-span-2 flex min-w-0 items-center gap-1.5 bg-surface border border-muted rounded-xl p-1 shadow-2xs">
-            <Calendar className="w-4 h-4 shrink-0 text-muted text-subtle ml-2" />
-            <select
+          <div className="col-span-2">
+            <MonthPicker
               id="transfer-plan-month-select"
               value={selectedMonth}
-              onChange={(e) => handleSelectMonth(e.target.value)}
-              className="w-full min-w-0 text-xs font-semibold text-main bg-transparent pr-3 py-1 focus:outline-none cursor-pointer"
-            >
-              {availableMonths.map((m) => (
-                <option key={m} value={m}>
-                  {formatMonthLabel(m)}
-                </option>
-              ))}
-            </select>
+              onChange={handleSelectMonth}
+              ariaLabel="Transfer plan month"
+            />
           </div>
 
           {onOpenMonthImport && !isViewOnly && (
