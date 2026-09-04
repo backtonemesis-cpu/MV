@@ -179,9 +179,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {formatPence(surplusCalculation.availableSurplusPence)}
           </h1>
           <p className="mt-3 text-[13px] leading-5 text-emerald-100/80">
-            Total Liquid Funds Across Accounts: {formatPence(totalLiquidBalancePence)}
-            <span className="mx-2 text-emerald-300/60">•</span>
-            Concurrency rev #{household.version}
+            Liquid funds: {formatPence(totalLiquidBalancePence)}
           </p>
         </div>
       </section>
@@ -284,7 +282,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
               <h3 className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                Action Required: {transferPlanSnapshot.length} Account(s) Require Funding
+                Funding required
               </h3>
               <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5">
                 {transferPlanSnapshot.map((d) => `${d.accountName} needs ${formatPence(d.deficitPence)}`).join(' • ')}
@@ -309,9 +307,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <h2 className="text-sm font-bold text-slate-950 dark:text-white">
                 {selectedMonth} Spending Attribution
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-neutral-400">
-                Household spending by responsibility
-              </p>
+              <p className="hidden"></p>
             </div>
             <span className="shrink-0 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 text-xs font-medium text-blue-800 dark:text-blue-200">
               Marius & Vesta
@@ -404,9 +400,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
               {selectedMonth} Planned Bills & Commitments ({monthPlannedPayments.length})
             </h2>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Recurring payments and direct debits tracked for this period
-            </p>
           </div>
           <button
             onClick={() => onNavigateToTab('transfer_plan')}
@@ -418,7 +411,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {monthPlannedPayments.length === 0 ? (
           <div className="p-6 text-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-850 rounded-xl">
-            No bills registered for {selectedMonth} yet. Use "New Month / Copy Bills" to roll forward recurring bills!
+            No bills for {selectedMonth}.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -471,7 +464,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {monthTransactions.length === 0 ? (
           <div className="p-6 text-center text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-50 dark:bg-neutral-850 rounded-xl">
-            No transactions recorded in {selectedMonth} yet.
+            No transactions for {selectedMonth}.
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-neutral-700/60">
