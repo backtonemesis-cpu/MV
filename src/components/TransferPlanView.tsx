@@ -304,20 +304,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </p>
         </article>
 
-        <article className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-blue-50/70 dark:bg-blue-950/20 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium leading-5 text-blue-800 dark:text-blue-200">
-              Transfer Safety Rule
-            </span>
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-300" />
-          </div>
-          <div className="mt-2 text-sm font-semibold leading-5 text-blue-950 dark:text-blue-100">
-            Internal transfers are not spending
-          </div>
-          <p className="mt-1 text-sm leading-5 text-blue-800/80 dark:text-blue-200/80">
-            Funding moves do not change household income or gross spending.
-          </p>
-        </article>
       </section>
 
       {/* SECTION 1: Account Funding Requirements (The Primary Purpose) */}
