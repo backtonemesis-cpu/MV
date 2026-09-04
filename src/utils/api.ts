@@ -269,6 +269,7 @@ export async function contributeSavingsGoal(
   payload: {
     goalId: string;
     sourceAccountId: string;
+    destinationAccountId: string;
     amountPence: number;
     payer?: string;
     date?: string;
