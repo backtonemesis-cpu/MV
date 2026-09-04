@@ -559,9 +559,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             <div className="mv-modal-header">
               <div>
                 <h3 className="text-base font-bold text-main">Add Savings Pot</h3>
-                <p className="mt-0.5 text-xs text-muted">
-                  Link goals only to a Savings or Cash account.
-                </p>
               </div>
               <button
                 type="button"
@@ -762,7 +759,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       {showEditGoalModal && selectedGoal && (
         <div className="mv-modal-backdrop">
           <div className="mv-modal-card">
-            <div className="flex items-center justify-between pb-3 border-b border-muted">
+            <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Edit {selectedGoal.name}
               </h3>
