@@ -123,6 +123,10 @@ try {
   } else {
     console.log('[MV Storage] Firestore preflight passed.');
   }
+
+  // This is a one-shot gate executed before the real server process. Exit
+  // explicitly so Firestore/gRPC resources cannot keep npm start blocked.
+  process.exit(0);
 } catch (error) {
   refuse(
     '[MV Firestore] Refusing startup because default Firestore readiness could not be proven: ' +
