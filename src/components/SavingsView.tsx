@@ -59,6 +59,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   // New Goal form state
   const [goalName, setGoalName] = useState('');
   const [goalTargetStr, setGoalTargetStr] = useState('');
+  const [goalCurrentStr, setGoalCurrentStr] = useState('');
+  const [goalAccountId, setGoalAccountId] = useState(
+    accounts.find((a) => a.isActive !== false && (a.type === 'savings' || a.type === 'cash'))?.id || ''
+  );
   const [goalDate, setGoalDate] = useState('');
   const [goalMonthlyPlanStr, setGoalMonthlyPlanStr] = useState('');
 
@@ -143,24 +147,38 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     });
   }, [transactions, selectedMonth, savingsAccountIds]);
 
+  const transferredFromSavingsPence = useMemo(
+    () =>
+      monthSavingsTxs.reduce((sum, tx) => {
+        const sourceIsSavings = savingsAccountIds.has(tx.accountId);
+        const targetIsSavings = tx.targetAccountId
+          ? savingsAccountIds.has(tx.targetAccountId)
+          : false;
+        return sourceIsSavings && !targetIsSavings ? sum + tx.amountPence : sum;
+      }, 0),
+    [monthSavingsTxs, savingsAccountIds]
+  );
+
   // Handle Create Goal
   const handleGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!goalName.trim()) return;
+    if (!goalName.trim() || !goalAccountId) return;
     try {
       setIsSubmitting(true);
       setError(null);
       const targetPence = parseToPence(goalTargetStr);
+      const currentPence = 0;
       await onCreateSavingsGoal({
         name: goalName.trim(),
         targetPence,
-        currentPence: 0,
-        accountId: savingsAccounts[0]?.id || '',
+        currentPence,
+        accountId: goalAccountId,
         targetDate: goalDate || undefined,
         monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
       setGoalName('');
       setGoalTargetStr('');
+      setGoalCurrentStr('');
       setShowGoalModal(false);
     } catch (err: any) {
       setError(err.message || 'Failed to create savings goal');
@@ -174,8 +192,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     setSelectedGoal(goal);
     setGoalName(goal.name);
     setGoalTargetStr((goal.targetPence / 100).toFixed(2));
-    setGoalMonthlyPlanStr(goal.monthlyPlanPence ? (goal.monthlyPlanPence / 100).toFixed(2) : '');
+    setGoalCurrentStr((goal.currentPence / 100).toFixed(2));
+    setGoalAccountId(goal.accountId);
     setGoalDate(goal.targetDate || '');
+    setGoalMonthlyPlanStr(goal.monthlyPlanPence ? (goal.monthlyPlanPence / 100).toFixed(2) : '');
     setError(null);
     setShowEditGoalModal(true);
   };
@@ -188,9 +208,12 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       setIsSubmitting(true);
       setError(null);
       const targetPence = parseToPence(goalTargetStr);
+      const currentPence = parseToPence(goalCurrentStr);
       await onUpdateSavingsGoal(selectedGoal.id, {
         name: goalName.trim(),
         targetPence,
+        currentPence,
+        accountId: goalAccountId,
         targetDate: goalDate || undefined,
         monthlyPlanPence: parseToPence(goalMonthlyPlanStr) || undefined,
       });
@@ -276,7 +299,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 setError(null);
                 setGoalName('');
                 setGoalTargetStr('');
+                setGoalCurrentStr('');
                 setGoalDate('');
+                setGoalMonthlyPlanStr('');
+                setGoalAccountId(savingsAccounts[0]?.id || '');
                 setShowGoalModal(true);
               }}
               className="inline-flex h-9 items-center gap-1.5 rounded-full bg-accent px-3.5 text-[13px] font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
@@ -337,14 +363,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             </h2>
             <div
               className={`mt-2 font-mono text-xl sm:text-2xl font-semibold tracking-tight tabular-nums whitespace-nowrap ${
-                savingsPosition.savingsTransfersPence > 0
-                  ? 'text-success'
-                  : savingsPosition.savingsTransfersPence < 0
-                  ? 'text-danger'
-                  : 'text-main'
+                'text-main'
               }`}
             >
-              {formatPence(Math.abs(Math.min(0, savingsPosition.savingsTransfersPence)))}
+              {formatPence(transferredFromSavingsPence)}
             </div>
             <span className="mt-1 block text-[11px] leading-4 text-subtle">
               Moved to fund other accounts
@@ -400,7 +422,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               Active Savings Goals
             </h2>
             <p className="text-[11px] text-subtle">
-              Household goals use total Savings + Cash balances
+              Progress uses total Savings + Cash balances
             </p>
           </div>
 
@@ -415,22 +437,30 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               {savingsGoals.map((goal) => {
                 const currentPence = savingsPosition.currentSavingsPence;
                 const projectedPence = savingsPosition.projectedEndSavingsPence;
-                const percent = goal.targetPence > 0
-                  ? Math.min(100, Math.round((currentPence / goal.targetPence) * 100))
-                  : 100;
-                const projectedPercent = goal.targetPence > 0
-                  ? Math.min(100, Math.round((projectedPence / goal.targetPence) * 100))
-                  : 100;
+                const percent =
+                  goal.targetPence > 0
+                    ? Math.min(100, Math.round((currentPence / goal.targetPence) * 100))
+                    : 100;
+                const projectedPercent =
+                  goal.targetPence > 0
+                    ? Math.min(100, Math.round((projectedPence / goal.targetPence) * 100))
+                    : 100;
                 const remainingPence = Math.max(0, goal.targetPence - currentPence);
                 const projectedOverPence = Math.max(0, projectedPence - goal.targetPence);
                 const financeMonthlyPence = Math.max(0, savingsPosition.savedThisMonthPence);
-                const financeMonths = financeMonthlyPence > 0 && remainingPence > 0
-                  ? Math.ceil(remainingPence / financeMonthlyPence)
-                  : remainingPence === 0 ? 0 : null;
+                const financeMonths =
+                  remainingPence === 0
+                    ? 0
+                    : financeMonthlyPence > 0
+                    ? Math.ceil(remainingPence / financeMonthlyPence)
+                    : null;
                 const planMonthlyPence = goal.monthlyPlanPence || 0;
-                const planMonths = planMonthlyPence > 0 && remainingPence > 0
-                  ? Math.ceil(remainingPence / planMonthlyPence)
-                  : remainingPence === 0 ? 0 : null;
+                const planMonths =
+                  remainingPence === 0
+                    ? 0
+                    : planMonthlyPence > 0
+                    ? Math.ceil(remainingPence / planMonthlyPence)
+                    : null;
 
                 return (
                   <article
@@ -470,39 +500,58 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                             <span className="text-muted">Current progress</span>
                             <span className="font-semibold text-main">{percent}%</span>
                           </div>
-                          <div className="mt-1 font-semibold text-main">{formatPence(currentPence)} of {formatPence(goal.targetPence)}</div>
+                          <div className="mt-1 font-semibold text-main">
+                            {formatPence(currentPence)} of {formatPence(goal.targetPence)}
+                          </div>
                           <div className="mt-0.5 text-[11px] text-subtle">
                             {remainingPence > 0 ? `${formatPence(remainingPence)} remaining` : 'Goal achieved'}
                           </div>
                         </div>
+
                         <div className="rounded-xl bg-accent-soft px-3 py-2.5">
                           <div className="flex items-center justify-between gap-3">
                             <span className="text-muted">Projected progress</span>
                             <span className="font-semibold text-main">{projectedPercent}%</span>
                           </div>
-                          <div className="mt-1 font-semibold text-main">{formatPence(projectedPence)} of {formatPence(goal.targetPence)}</div>
+                          <div className="mt-1 font-semibold text-main">
+                            {formatPence(projectedPence)} of {formatPence(goal.targetPence)}
+                          </div>
                           <div className="mt-0.5 text-[11px] text-subtle">
-                            {projectedOverPence > 0 ? `Projected ${formatPence(projectedOverPence)} above goal` : projectedPence >= goal.targetPence ? 'Projected to reach goal' : 'Based on current monthly position'}
+                            {projectedOverPence > 0
+                              ? `Projected ${formatPence(projectedOverPence)} above goal`
+                              : projectedPence >= goal.targetPence
+                              ? 'Projected to reach goal'
+                              : 'Based on current monthly position'}
                           </div>
                         </div>
+
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="rounded-xl border border-muted px-3 py-2.5">
                             <span className="block text-muted">Based on my finances</span>
                             <span className="mt-1 block font-semibold text-main">
-                              {financeMonths === null ? 'No positive saving rate yet' : financeMonths === 0 ? 'Goal achieved' : `${financeMonths} month${financeMonths === 1 ? '' : 's'} at ${formatPence(financeMonthlyPence)}/month`}
+                              {financeMonths === null
+                                ? 'No positive saving rate yet'
+                                : financeMonths === 0
+                                ? 'Goal achieved'
+                                : `${financeMonths} month${financeMonths === 1 ? '' : 's'} at ${formatPence(financeMonthlyPence)}/month`}
                             </span>
                           </div>
                           <div className="rounded-xl border border-muted px-3 py-2.5">
                             <span className="block text-muted">My monthly saving plan</span>
                             <span className="mt-1 block font-semibold text-main">
-                              {planMonths === null ? 'Set a monthly amount in Edit' : planMonths === 0 ? 'Goal achieved' : `${planMonths} month${planMonths === 1 ? '' : 's'} at ${formatPence(planMonthlyPence)}/month`}
+                              {planMonths === null
+                                ? 'Set a monthly amount in Edit'
+                                : planMonths === 0
+                                ? 'Goal achieved'
+                                : `${planMonths} month${planMonths === 1 ? '' : 's'} at ${formatPence(planMonthlyPence)}/month`}
                             </span>
                           </div>
                         </div>
+
                         {goal.targetDate && (
                           <div className="flex items-center gap-1.5 text-[11px] text-muted">
                             <Calendar className="w-3.5 h-3.5 shrink-0" />
-                            <span>{goal.targetDate}</span>
+                            <span className="break-words">{goal.targetDate}</span>
                           </div>
                         )}
                       </div>
@@ -581,11 +630,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     const isIncoming = !sourceIsSavings && targetIsSavings;
                     const isOutgoing = sourceIsSavings && !targetIsSavings;
                     const sign = isIncoming ? '+' : isOutgoing ? '-' : '';
-                    const tone = isIncoming
-                      ? 'text-success'
-                      : isOutgoing
-                      ? 'text-muted'
-                      : 'text-muted';
+                    const tone = isIncoming ? 'text-success' : 'text-muted';
 
                     return (
                       <div className={`shrink-0 font-semibold whitespace-nowrap ${tone}`}>
@@ -638,16 +683,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span></label>
-                <input
-                  value={goalMonthlyPlanStr}
-                  onChange={(event) => setGoalMonthlyPlanStr(event.target.value)}
-                  className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
-                  placeholder="e.g. 500.00"
-                />
-              </div>
-
-              <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Target (£)</label>
                 <input
                   value={goalTargetStr}
@@ -655,6 +690,18 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                   placeholder="20000.00"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-muted">
+                  Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
+                </label>
+                <input
+                  value={goalMonthlyPlanStr}
+                  onChange={(event) => setGoalMonthlyPlanStr(event.target.value)}
+                  className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                  placeholder="e.g. 500.00"
                 />
               </div>
 
@@ -736,7 +783,93 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </select>
               </div>
 
+              <div className="mv-modal-grid-2">
+                <div>
+                  <label className="block text-xs font-semibold text-muted mb-1">
+                    Amount (£)
+                  </label>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={transferAmountStr}
+                    onChange={(e) => setTransferAmountStr(e.target.value)}
+                    placeholder="e.g. 250.00"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-bold focus:ring-2 focus:ring-accent focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted mb-1">
+                    By
+                  </label>
+                  <select
+                    value={transferPayer}
+                    onChange={(e) => setTransferPayer(e.target.value as Payer)}
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  >
+                    {personOptions.map((person) => (
+                      <option key={person} value={person}>
+                        {person}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mv-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowTransferModal(false)}
+                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Transferring...' : 'Transfer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Edit Goal */}
+      {showEditGoalModal && selectedGoal && (
+        <div className="mv-modal-backdrop">
+          <div className="mv-modal-card">
+            <div className="mv-modal-header">
+              <h3 className="text-base font-bold text-main">
+                Edit {selectedGoal.name}
+              </h3>
+              <button
+                onClick={() => setShowEditGoalModal(false)}
+                className="mv-modal-close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditGoalSubmit} className="mv-modal-form">
               <div>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Pot Name
+                </label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={goalName}
+                  onChange={(e) => setGoalName(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+                            <div>
                 <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
                 <input
                   type="text"
@@ -748,7 +881,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span></label>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
+                </label>
                 <input
                   type="text"
                   value={goalMonthlyPlanStr}
