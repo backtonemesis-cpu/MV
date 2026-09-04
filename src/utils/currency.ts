@@ -1,4 +1,4 @@
-import { Transaction, PlannedPayment, PlannedIncome } from '../types';
+import { Account, Transaction, PlannedPayment, PlannedIncome } from '../types';
 
 /**
  * Formats integer pence into standard GBP representation e.g. 15000 -> "£150.00"
@@ -71,16 +71,16 @@ export function calculateFinancialSummary(transactions: Transaction[]) {
   let savingsTransfersPence = 0;
 
   for (const tx of transactions) {
+    if (tx.isSavings) {
+      savingsTransfersPence += tx.amountPence;
+      continue;
+    }
     if (tx.isTransfer || tx.type === 'transfer') {
       internalTransfersPence += tx.amountPence;
       continue;
     }
     if (tx.isRepayment || tx.type === 'repayment') {
       cardRepaymentsPence += tx.amountPence;
-      continue;
-    }
-    if (tx.isSavings) {
-      savingsTransfersPence += tx.amountPence;
       continue;
     }
     if (tx.isRefund || tx.type === 'refund') {
@@ -145,12 +145,12 @@ export function calculateMonthlySurplus(
   let cardRepaymentsPence = 0;
 
   for (const tx of monthTransactions) {
-    if (tx.isTransfer || tx.type === 'transfer') {
+    if (tx.isSavings) {
+      savingsTransfersPence += tx.amountPence;
+    } else if (tx.isTransfer || tx.type === 'transfer') {
       internalTransfersPence += tx.amountPence;
     } else if (tx.isRepayment || tx.type === 'repayment') {
       cardRepaymentsPence += tx.amountPence;
-    } else if (tx.isSavings) {
-      savingsTransfersPence += tx.amountPence;
     } else if (tx.isRefund || tx.type === 'refund') {
       refundsPence += tx.amountPence;
     } else if (tx.type === 'income') {
@@ -208,5 +208,71 @@ export function calculateMonthlySurplus(
     cardRepaymentsPence,
     transactionCount: monthTransactions.length,
     paymentCount: monthPayments.length,
+  };
+}
+
+
+/**
+ * Returns whether an account is part of the household's savings position.
+ *
+ * Rules:
+ * - Active Savings and Cash accounts are savings/liquid assets.
+ * - A source workbook may explicitly mark another account (for example Santander)
+ *   as a savings snapshot via metadata.sourceBalanceKind === 'savings_snapshot'.
+ * - Ordinary current accounts are not assumed to be savings.
+ */
+export function isSavingsPositionAccount(account: Account): boolean {
+  if (account.isActive === false) return false;
+
+  return (
+    account.type === 'savings' ||
+    account.type === 'cash' ||
+    account.metadata?.sourceBalanceKind === 'savings_snapshot'
+  );
+}
+
+/**
+ * Computes the authoritative savings position without using goal progress as money.
+ *
+ * Current Savings = balances of designated savings/liquid accounts.
+ * Saved This Month = Income + Refunds - Fixed Bills - Gross Other Spending.
+ * Projected End Savings = Current Savings + Saved This Month.
+ * Savings Transfers = actual transactions explicitly flagged isSavings.
+ *
+ * Savings goals are deliberately excluded; they are allocation targets, not bank balances.
+ */
+export function calculateSavingsPosition(
+  accounts: Account[],
+  transactions: Transaction[],
+  plannedPayments: PlannedPayment[],
+  month: string,
+  plannedIncomes?: PlannedIncome[]
+) {
+  const savingsAccounts = accounts.filter(isSavingsPositionAccount);
+
+  const currentSavingsPence = savingsAccounts.reduce(
+    (sum, account) => sum + account.currentBalancePence,
+    0
+  );
+
+  const monthly = calculateMonthlySurplus(
+    transactions,
+    plannedPayments,
+    month,
+    plannedIncomes
+  );
+
+  const monthSavingsTransfersPence = transactions
+    .filter((tx) => tx.isSavings && tx.date.startsWith(month))
+    .reduce((sum, tx) => sum + tx.amountPence, 0);
+
+  return {
+    month,
+    savingsAccounts,
+    currentSavingsPence,
+    savedThisMonthPence: monthly.availableSurplusPence,
+    projectedEndSavingsPence: currentSavingsPence + monthly.availableSurplusPence,
+    savingsTransfersPence: monthSavingsTransfersPence,
+    monthly,
   };
 }
