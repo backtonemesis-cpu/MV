@@ -3,6 +3,7 @@ import {
   Shield,
   RefreshCw,
   DownloadCloud,
+  Smartphone,
 } from 'lucide-react';
 import { UserSession } from '../types';
 import { APP_VERSION } from '../appVersion';
@@ -16,6 +17,8 @@ interface HeaderProps {
   onOpenTestsModal: () => void;
   isLoading: boolean;
   availableIdentities: { email: string; name: string; role: any }[];
+  isMobilePreview: boolean;
+  onToggleMobilePreview: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,10 +27,12 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   onOpenBackupModal,
   isLoading,
+  isMobilePreview,
+  onToggleMobilePreview,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-surface backdrop-blur border-b border-muted transition-colors">
-      <div className="mx-auto w-full max-w-[1440px] px-4">
+      <div className="mv-shell-boundary mx-auto w-full max-w-[1200px] px-4">
         <div className="flex h-[44px] items-center justify-between gap-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-[12px] font-bold text-on-accent">
@@ -62,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="Backup"
             >
               <DownloadCloud className="w-4 h-4 text-muted" />
-              <span className="hidden sm:inline">Backup</span>
+              <span className="mv-header-backup-label hidden sm:inline">Backup</span>
             </button>
 
             <button
@@ -75,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-accent' : 'text-muted'}`} />
             </button>
 
-            <div className="hidden h-8 items-center gap-1.5 rounded-md border border-muted bg-surface px-2 sm:flex">
+            <div className="mv-header-user hidden h-8 items-center gap-1.5 rounded-md border border-muted bg-surface px-2 sm:flex">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warning-soft text-warning">
                 <Shield className="w-3.5 h-3.5" />
               </div>
@@ -85,6 +90,22 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
             </div>
+
+            <button
+              type="button"
+              id="header-mobile-preview-btn"
+              onClick={onToggleMobilePreview}
+              aria-pressed={isMobilePreview}
+              className={`mv-mobile-preview-toggle inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[11px] font-semibold transition-colors ${
+                isMobilePreview
+                  ? 'border-accent bg-accent text-on-accent'
+                  : 'border-muted bg-surface text-main hover:bg-surface-muted'
+              }`}
+              title={isMobilePreview ? 'Exit mobile preview' : 'Preview mobile layout'}
+            >
+              <Smartphone className="h-4 w-4 shrink-0" />
+              <span className="mv-mobile-preview-label">Mobile View</span>
+            </button>
           </div>
         </div>
       </div>
