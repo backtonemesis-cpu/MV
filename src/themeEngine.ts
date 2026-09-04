@@ -35,17 +35,27 @@ export function normalizeUserPreferences(
   };
 }
 
-export function readStoredUserPreferences(storage: Storage | null = globalThis.localStorage ?? null): UserPreferences {
-  if (!storage) return { theme: 'light', accent: 'emerald' };
+export function readStoredUserPreferences(storage?: Storage | null): UserPreferences {
+  let resolvedStorage = storage;
 
   try {
-    const saved = storage.getItem(THEME_STORAGE_KEY);
+    if (resolvedStorage === undefined) {
+      resolvedStorage = globalThis.localStorage ?? null;
+    }
+  } catch {
+    resolvedStorage = null;
+  }
+
+  if (!resolvedStorage) return { theme: 'light', accent: 'emerald' };
+
+  try {
+    const saved = resolvedStorage.getItem(THEME_STORAGE_KEY);
     if (saved) {
       return normalizeUserPreferences(JSON.parse(saved));
     }
 
     return {
-      theme: normalizeThemePreference(storage.getItem(LEGACY_THEME_KEY)),
+      theme: normalizeThemePreference(resolvedStorage.getItem(LEGACY_THEME_KEY)),
       accent: 'emerald',
     };
   } catch {
@@ -55,14 +65,19 @@ export function readStoredUserPreferences(storage: Storage | null = globalThis.l
 
 export function applyThemePreferences(
   preferences: UserPreferences,
-  root: HTMLElement = document.documentElement
+  root?: HTMLElement | null
 ): void {
   const normalized = normalizeUserPreferences(preferences);
+  const resolvedRoot =
+    root ??
+    (typeof document !== 'undefined' ? document.documentElement : null);
 
-  root.setAttribute('data-theme', normalized.theme);
-  root.setAttribute('data-accent', normalized.accent);
+  if (!resolvedRoot) return;
+
+  resolvedRoot.setAttribute('data-theme', normalized.theme);
+  resolvedRoot.setAttribute('data-accent', normalized.accent);
 
   // Compatibility only: semantic CSS variables remain the source of truth.
-  root.classList.toggle('dark', normalized.theme !== 'light');
-  root.style.colorScheme = normalized.theme === 'light' ? 'light' : 'dark';
+  resolvedRoot.classList.toggle('dark', normalized.theme !== 'light');
+  resolvedRoot.style.colorScheme = normalized.theme === 'light' ? 'light' : 'dark';
 }
