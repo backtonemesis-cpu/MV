@@ -393,7 +393,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     return (
       <article
         key={acc.id}
-        className={`bg-surface border border-muted rounded-2xl p-5 flex flex-col justify-between min-h-[200px] transition-all hover:border-strong/60 ${
+        className={`mv-card bg-surface border border-muted rounded-2xl p-5 flex flex-col justify-between min-h-[200px] transition-all hover:border-strong/60 ${
           isArchived ? 'opacity-70' : ''
         }`}
       >
@@ -623,7 +623,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               return (
                 <article
                   key={goal.id}
-                  className="rounded-2xl border border-muted bg-surface p-5 shadow-sm"
+                  className="mv-card rounded-2xl border border-muted bg-surface p-5 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
