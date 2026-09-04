@@ -335,6 +335,7 @@ function sourcePlannedPayments(): PlannedPayment[] {
     categoryId: expense.categoryId,
     status: 'paid',
     includeInTransferPlan: true,
+    isRecurring: true,
     createdAt: SOURCE_CREATED_AT,
     createdBy: SOURCE_ACTOR,
     metadata: {
