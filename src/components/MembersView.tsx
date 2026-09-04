@@ -69,7 +69,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
               >
                 <div>
                   <div className="text-xs font-bold text-main">{member.name || member.email}</div>
-                  <div className="text-[11px] text-muted text-main0">{member.email}</div>
+                  <div className="text-[11px] text-muted text-subtle">{member.email}</div>
                   <div className="text-[10px] text-muted text-subtle mt-0.5">
                     Requested access: {new Date(member.joinedAt).toLocaleString('en-GB')}
                   </div>
@@ -100,7 +100,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                     </button>
                   </div>
                 ) : (
-                  <span className="text-xs text-muted text-main0 italic">
+                  <span className="text-xs text-muted text-subtle italic">
                     Owner approval required
                   </span>
                 )}
@@ -135,7 +135,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-muted text-main0">{member.email}</div>
+                    <div className="text-[11px] text-muted text-subtle">{member.email}</div>
                   </div>
                 </div>
 
