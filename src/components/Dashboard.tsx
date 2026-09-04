@@ -172,9 +172,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       icon: Clock,
     },
     {
-      label: 'Saved',
+      label: 'Moved To Savings',
       value: monthSummary.savingsTransfersPence,
-      note: 'Non-spending transfer',
+      note: 'Net savings transfer movement',
       icon: PiggyBank,
     },
   ];
