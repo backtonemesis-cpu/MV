@@ -36,6 +36,7 @@ describe('savings transfer classification', () => {
     expect(summary.internalTransfersPence).toBe(0);
     expect(summary.grossExpensesPence).toBe(0);
     expect(summary.grossIncomePence).toBe(0);
+    expect(summary.netCashflowPence).toBe(0);
   });
 
   it('keeps savings transfers out of monthly income and spending while exposing them separately', () => {
@@ -47,6 +48,30 @@ describe('savings transfer classification', () => {
     expect(monthly.actualIncomeReceivedPence).toBe(0);
     expect(monthly.grossOtherSpendingPence).toBe(0);
     expect(monthly.availableSurplusPence).toBe(0);
+  });
+
+  it('keeps excess refunds in net household cashflow rather than clamping them away', () => {
+    const refund: Transaction = {
+      id: 'refund-1',
+      date: '2026-09-20',
+      description: 'Returned purchase',
+      amountPence: 75_00,
+      type: 'refund',
+      categoryId: 'cat-groceries',
+      accountId: 'current-1',
+      payer: 'Joint',
+      isTransfer: false,
+      isRepayment: false,
+      isSavings: false,
+      isRefund: true,
+      createdAt: '2026-09-20T00:00:00.000Z',
+      createdBy: 'test',
+    };
+
+    const summary = calculateFinancialSummary([refund]);
+    expect(summary.refundsPence).toBe(75_00);
+    expect(summary.netExpensesPence).toBe(0);
+    expect(summary.netCashflowPence).toBe(75_00);
   });
 });
 
