@@ -95,9 +95,11 @@ export function calculateFinancialSummary(transactions: Transaction[]) {
     }
   }
 
-  // Net expenses accounts for refunds offsetting spending
+  // Net expenses is useful as a non-negative spending view, while household
+  // cashflow must keep the full refund value and must never treat savings
+  // transfers as money leaving the household.
   const netExpensesPence = Math.max(0, grossExpensesPence - refundsPence);
-  const netCashflowPence = grossIncomePence - netExpensesPence - savingsTransfersPence;
+  const netCashflowPence = grossIncomePence + refundsPence - grossExpensesPence;
 
   return {
     grossIncomePence,
