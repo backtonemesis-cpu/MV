@@ -193,9 +193,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="mv-hscroll mv-edge-safe items-center md:justify-end">
           {/* Month Selector */}
-          <div className="flex items-center gap-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg p-1 shadow-2xs">
+          <div className="flex shrink-0 whitespace-nowrap items-center gap-1.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl p-1 shadow-2xs">
             <Calendar className="w-4 h-4 text-neutral-400 ml-2" />
             <select
               id="transfer-plan-month-select"
@@ -214,7 +214,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           {onOpenMonthImport && !isViewOnly && (
             <button
               onClick={onOpenMonthImport}
-              className="px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+              className="shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-200 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-750 rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
               title="Copy bills"
             >
               <Layers className="w-3.5 h-3.5 text-neutral-500" />
@@ -226,7 +226,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             <button
               id="add-planned-payment-button"
               onClick={() => setIsAddingPayment(true)}
-              className="px-3 py-2 text-xs font-medium text-white bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+              className="shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-medium text-white bg-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Bill</span>
@@ -319,9 +319,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         {/* Accounts Needing Funding First */}
         {plan.accountsNeedingFunding.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300 px-1">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
-              <span>Needs Funding ({plan.accountsNeedingFunding.length})</span>
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 text-[14px] font-semibold leading-5 text-amber-800 dark:text-amber-300">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span className="whitespace-nowrap">Needs Funding ({plan.accountsNeedingFunding.length})</span>
             </div>
 
             {plan.accountsNeedingFunding.map((req) => (
@@ -482,9 +482,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
         {/* Fully Funded Accounts (Transfer Required = £0.00) */}
         <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300 px-1">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>Fully Funded ({plan.accountsFullyFunded.length})</span>
+          <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 text-[14px] font-semibold leading-5 text-emerald-800 dark:text-emerald-300">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="whitespace-nowrap">Accounts Fully Funded ({plan.accountsFullyFunded.length})</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -584,23 +584,23 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
 
           {!isViewOnly && (
-            <div className="max-w-full overflow-x-auto">
-              <div className="inline-flex min-w-max items-center gap-1 rounded-full border border-[#f1f5f9] dark:border-neutral-800 bg-[#f8fafc] dark:bg-neutral-900 p-1">
+            <div className="mv-hscroll mv-edge-safe max-w-full">
+              <div className="flex min-w-max items-center gap-2 rounded-full border border-[#f1f5f9] dark:border-neutral-800 bg-[#f8fafc] dark:bg-neutral-900 p-1">
                 <button
                   onClick={handleBulkIncludeUnpaid}
-                  className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
                 >
                   Include Unpaid
                 </button>
                 <button
                   onClick={handleBulkSelectAll}
-                  className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
                 >
                   Select All
                 </button>
                 <button
                   onClick={handleBulkDeselectAll}
-                  className="px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
+                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 rounded-full hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm transition-all"
                 >
                   Deselect All
                 </button>
