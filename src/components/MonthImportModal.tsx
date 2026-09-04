@@ -319,6 +319,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                   value={sourceMonth}
                   onChange={setSourceMonth}
                   ariaLabel="Source month"
+                  className="is-fluid"
                 />
               </label>
 
@@ -328,6 +329,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                   value={targetMonth}
                   onChange={setTargetMonth}
                   ariaLabel="Target month"
+                  className="is-fluid"
                 />
               </label>
             </div>
