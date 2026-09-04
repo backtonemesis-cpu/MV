@@ -14,6 +14,7 @@ import {
   Trash2,
   HelpCircle,
   Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import {
   Account,
@@ -22,6 +23,7 @@ import {
   UserRole,
   AccountFundingRequirement,
   HouseholdMember,
+  Transaction,
 } from '../types';
 import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
@@ -32,6 +34,7 @@ interface TransferPlanViewProps {
   accounts: Account[];
   categories: Category[];
   plannedPayments: PlannedPayment[];
+  transactions: Transaction[];
   members: HouseholdMember[];
   userRole: UserRole;
   currentVersion: number;
@@ -58,12 +61,14 @@ interface TransferPlanViewProps {
     description: string;
     date: string;
   }) => Promise<void>;
+  onUndoFunding: (destinationAccountId: string) => Promise<void>;
 }
 
 export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   accounts,
   categories,
   plannedPayments,
+  transactions,
   members,
   userRole,
   currentVersion,
@@ -75,6 +80,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onDeletePlannedPayment,
   onBulkTogglePlannedPayments,
   onExecuteTransfer,
+  onUndoFunding,
 }) => {
   const isViewOnly = userRole === 'view_only';
 
@@ -103,6 +109,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     useState<AccountFundingRequirement | null>(null);
   const [lastFundingSourceAccountId, setLastFundingSourceAccountId] = useState<string>('');
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
+  const [undoingFundingAccountId, setUndoingFundingAccountId] = useState<string | null>(null);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
     'acc-marius-current': true,
@@ -121,6 +128,79 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   }, [plannedPayments, selectedMonth]);
 
   const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
+
+  const latestFundingBatchByDestination = useMemo(() => {
+    const result = new Map<
+      string,
+      {
+        batchKey: string;
+        createdAt: string;
+        totalPence: number;
+        sourceAccountIds: string[];
+      }
+    >();
+
+    const planTransfers = transactions.filter(
+      (transaction) =>
+        transaction.type === 'transfer' &&
+        transaction.isTransfer &&
+        transaction.targetAccountId &&
+        (Boolean(transaction.metadata?.transferBatchId) ||
+          transaction.description.startsWith('Transfer Plan: Fund '))
+    );
+
+    for (const transaction of planTransfers) {
+      const destinationAccountId = transaction.targetAccountId!;
+      const batchKey =
+        (transaction.metadata?.transferBatchId as string | undefined) || transaction.id;
+      const createdAt = transaction.createdAt || transaction.date;
+      const existing = result.get(destinationAccountId);
+
+      if (!existing || createdAt > existing.createdAt) {
+        const sameBatch = planTransfers.filter((candidate) => {
+          const candidateKey =
+            (candidate.metadata?.transferBatchId as string | undefined) || candidate.id;
+          return candidateKey === batchKey && candidate.targetAccountId === destinationAccountId;
+        });
+
+        result.set(destinationAccountId, {
+          batchKey,
+          createdAt,
+          totalPence: sameBatch.reduce((sum, item) => sum + item.amountPence, 0),
+          sourceAccountIds: Array.from(new Set(sameBatch.map((item) => item.accountId))),
+        });
+      }
+    }
+
+    return result;
+  }, [transactions]);
+
+  const handleUndoFunding = async (account: Account) => {
+    if (isViewOnly) return;
+
+    const funding = latestFundingBatchByDestination.get(account.id);
+    if (!funding) return;
+
+    const sourceNames = funding.sourceAccountIds
+      .map((accountId) => accounts.find((candidate) => candidate.id === accountId))
+      .filter((candidate): candidate is Account => Boolean(candidate))
+      .map((candidate) => `${candidate.name} (${candidate.ownerPerson || candidate.type})`)
+      .join(' + ');
+
+    const confirmed = window.confirm(
+      `Undo the latest ${formatPence(funding.totalPence)} Transfer Plan funding for ${account.name}${sourceNames ? ` from ${sourceNames}` : ''}? The money will be returned to the original funding account(s).`
+    );
+    if (!confirmed) return;
+
+    try {
+      setUndoingFundingAccountId(account.id);
+      await onUndoFunding(account.id);
+    } catch (err: any) {
+      window.alert(err.message || 'Failed to undo Transfer Plan funding.');
+    } finally {
+      setUndoingFundingAccountId(null);
+    }
+  };
 
   const toggleAccountExpand = (accountId: string) => {
     setExpandedAccountIds((prev) => ({
@@ -534,10 +614,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="shrink-0 text-right">
+                    <div className="shrink-0 flex items-center gap-2">
                       <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-success-soft text-success">
-                        Covered
+                        {latestFundingBatchByDestination.has(req.account.id) ? 'Funded' : 'Covered'}
                       </span>
+                      {!isViewOnly && latestFundingBatchByDestination.has(req.account.id) && (
+                        <button
+                          type="button"
+                          onClick={() => handleUndoFunding(req.account)}
+                          disabled={undoingFundingAccountId === req.account.id}
+                          title="Undo the latest Transfer Plan funding and return the money to the original source account(s)"
+                          className="inline-flex items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted transition hover:border-strong hover:text-main disabled:opacity-50"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          {undoingFundingAccountId === req.account.id ? 'Undoing...' : 'Undo Funding'}
+                        </button>
+                      )}
                     </div>
                   </div>
 
