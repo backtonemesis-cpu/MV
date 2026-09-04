@@ -485,11 +485,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                             </div>
 
                             <div className="finance-metadata-line">
-                              <span>{income.sourcePerson}</span>
-                              <span className="text-subtle" aria-hidden="true">·</span>
-                              <span>{categoryName}</span>
-                              <span className="text-subtle" aria-hidden="true">·</span>
-                              <span>{accountName}</span>
+                              <span className="finance-metadata-token">{income.sourcePerson}</span>
+                              <span className="finance-metadata-separator text-subtle" aria-hidden="true">·</span>
+                              <span className="finance-metadata-token">{categoryName}</span>
+                              <span className="finance-metadata-separator text-subtle" aria-hidden="true">·</span>
+                              <span className="finance-metadata-token is-account">{accountName}</span>
                             </div>
 
                           </div>
