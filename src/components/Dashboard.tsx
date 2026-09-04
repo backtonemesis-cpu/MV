@@ -173,27 +173,33 @@ export const Dashboard: React.FC<DashboardProps> = ({
           ? `+${formatPence(surplusCalculation.refundsPence)} refunds`
           : 'Received this month',
       icon: TrendingUp,
+      valueClassName: 'text-success',
     },
     {
       label: 'Gross Living Spend',
       value: surplusCalculation.grossOtherSpendingPence,
       note: 'Excludes transfers',
       icon: TrendingDown,
+      valueClassName: 'text-danger',
     },
     {
       label: 'Fixed Bills',
-      value: surplusCalculation.fixedBillsUnpaidPence,
+      value: surplusCalculation.fixedBillsTotalPence,
       note:
         surplusCalculation.fixedBillsTotalPence > 0
-          ? `${formatPence(surplusCalculation.fixedBillsTotalPence)} total`
-          : 'None remaining',
+          ? surplusCalculation.fixedBillsUnpaidPence > 0
+            ? `${formatPence(surplusCalculation.fixedBillsUnpaidPence)} outstanding`
+            : 'All scheduled bills recorded'
+          : 'No scheduled bills',
       icon: Clock,
+      valueClassName: 'text-danger',
     },
     {
       label: 'Net Savings Movement',
       value: savingsPosition.savingsTransfersPence,
       note: 'Transfers crossing Savings/Cash boundary',
       icon: PiggyBank,
+      valueClassName: 'text-main',
     },
   ];
 
@@ -311,7 +317,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </div>
 
-              <div className="mv-dashboard-metric-value mt-3 truncate font-mono text-lg font-semibold tracking-tight text-main tabular-nums sm:text-xl">
+              <div
+                className={`mv-dashboard-metric-value mt-3 truncate font-mono text-lg font-semibold tracking-tight tabular-nums sm:text-xl ${metric.valueClassName}`}
+              >
                 {formatPence(metric.value)}
               </div>
 
