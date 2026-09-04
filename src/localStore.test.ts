@@ -53,7 +53,7 @@ describe('Penny-style local MV storage', () => {
     expect(state.version).toBe(1);
     expect(state.members).toEqual([
       expect.objectContaining({
-        email: 'backtonemesis@gmail.com',
+        email: 'marius@local.invalid',
         role: 'owner',
       }),
     ]);
@@ -205,7 +205,7 @@ describe('Penny-style local MV storage', () => {
     expect(state.accounts).toHaveLength(1);
     expect(state.accounts[0].startingBalancePence).toBe(123_45);
     expect(state.members).toHaveLength(1);
-    expect(state.members[0].email).toBe('backtonemesis@gmail.com');
+    expect(state.members[0].email).toBe('marius@local.invalid');
     expect(state.auditLogs.map((entry) => entry.action)).toContain('database_restored');
   });
 
