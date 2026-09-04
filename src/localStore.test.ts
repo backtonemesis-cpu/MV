@@ -11,6 +11,7 @@ import {
   executeLocalTransfer,
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
+  importLocalMonth,
   loadLocalHousehold,
   markLocalIncomeReceived,
   preflightLocalRestore,
@@ -94,6 +95,80 @@ describe('Penny-style local MV storage', () => {
       )
     ).toBe(true);
     expect(storage.getItem(LOCAL_STORAGE_KEY)).toBeTruthy();
+  });
+
+  it('prepares the next month with bills and expected income while keeping people and accounts persistent', () => {
+    let state = loadLocalHousehold();
+
+    const sourcePayments = state.plannedPayments.filter((payment) => payment.month === '2026-09');
+    const sourceIncomes = (state.plannedIncomes || []).filter((income) => income.month === '2026-09');
+    const accountIdsBefore = state.accounts.map((account) => account.id);
+    const memberIdsBefore = state.members.map((member) => member.id);
+
+    const prepared = importLocalMonth(
+      {
+        sourceMonth: '2026-09',
+        targetMonth: '2026-10',
+        paymentIds: sourcePayments.map((payment) => payment.id),
+        incomeIds: sourceIncomes.map((income) => income.id),
+      },
+      state.version
+    );
+
+    expect(prepared.importedPayments).toBe(sourcePayments.length);
+    expect(prepared.importedIncomes).toBe(sourceIncomes.length);
+    expect(prepared.imported).toBe(sourcePayments.length + sourceIncomes.length);
+
+    state = loadLocalHousehold();
+
+    expect(state.accounts.map((account) => account.id)).toEqual(accountIdsBefore);
+    expect(state.members.map((member) => member.id)).toEqual(memberIdsBefore);
+
+    const targetPayments = state.plannedPayments.filter((payment) => payment.month === '2026-10');
+    const targetIncomes = (state.plannedIncomes || []).filter((income) => income.month === '2026-10');
+
+    expect(targetPayments).toHaveLength(sourcePayments.length);
+    expect(targetIncomes).toHaveLength(sourceIncomes.length);
+
+    targetPayments.forEach((payment) => {
+      const sourceId = String(payment.metadata?.copiedFromId || '');
+      const source = sourcePayments.find((candidate) => candidate.id === sourceId);
+      expect(source).toBeTruthy();
+      expect(payment.status).toBe('unpaid');
+      expect(payment.actualAmountPence).toBeUndefined();
+      expect(payment.actualDate).toBeUndefined();
+      expect(payment.actualTransactionId).toBeUndefined();
+      expect(payment.accountId).toBe(source?.accountId);
+      expect(payment.responsiblePerson).toBe(source?.responsiblePerson);
+      expect(payment.amountPence).toBe(source?.amountPence);
+    });
+
+    targetIncomes.forEach((income) => {
+      const sourceId = String(income.metadata?.copiedFromId || '');
+      const source = sourceIncomes.find((candidate) => candidate.id === sourceId);
+      expect(source).toBeTruthy();
+      expect(income.status).toBe('expected');
+      expect(income.actualAmountPence).toBeUndefined();
+      expect(income.actualDate).toBeUndefined();
+      expect(income.actualTransactionId).toBeUndefined();
+      expect(income.linkedTransactionId).toBeUndefined();
+      expect(income.receivedDate).toBeUndefined();
+      expect(income.accountId).toBe(source?.accountId);
+      expect(income.sourcePerson).toBe(source?.sourcePerson);
+      expect(income.expectedAmountPence).toBe(source?.expectedAmountPence);
+    });
+
+    const duplicateAttempt = importLocalMonth(
+      {
+        sourceMonth: '2026-09',
+        targetMonth: '2026-10',
+        paymentIds: sourcePayments.map((payment) => payment.id),
+        incomeIds: sourceIncomes.map((income) => income.id),
+      },
+      state.version
+    );
+
+    expect(duplicateAttempt.imported).toBe(0);
   });
 
   it('persists exact-pence movements and recalculates local account balances', () => {
