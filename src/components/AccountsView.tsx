@@ -232,11 +232,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
             <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              Authoritative Accounts
+              Accounts
             </h1>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Joint, Marius, and Vesta accounts tracked with exact penny balances & reconciliation
-            </p>
           </div>
           <div className="flex items-center gap-3">
             <label className="inline-flex items-center gap-2 text-xs font-medium text-neutral-600 dark:text-neutral-300 cursor-pointer">
@@ -369,21 +366,21 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => openReconcileModal(acc)}
-                          title="Reconcile with statement"
+                          title="Reconcile"
                           className="p-1.5 rounded-lg text-neutral-500 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => openEditModal(acc)}
-                          title="Edit Account Details"
+                          title="Edit"
                           className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeactivate(acc)}
-                          title={isArchived ? 'Permanently Delete' : 'Archive Account'}
+                          title={isArchived ? 'Delete' : 'Archive'}
                           className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
                         >
                           <Archive className="w-3.5 h-3.5" />
@@ -403,11 +400,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-              Savings Pots & Reserve Goals
+              Savings Pots
             </h2>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Allocated reserves tracked distinctly from living expenditures
-            </p>
           </div>
           {canEdit && (
             <button
@@ -460,7 +454,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                 <div className="flex justify-between items-center text-[11px] text-neutral-500 dark:text-neutral-400 mt-2">
                   <span>{percent}% funded</span>
-                  {goal.targetDate && <span>Target Date: {goal.targetDate}</span>}
+                  {goal.targetDate && <span>Target: {goal.targetDate}</span>}
                 </div>
               </div>
             );
@@ -474,7 +468,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-neutral-200 dark:border-neutral-800 p-6">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                Add Authoritative Account
+                Add Account
               </h3>
               <button
                 onClick={() => setShowAccModal(false)}
@@ -499,7 +493,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   type="text"
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
-                  placeholder="e.g. Marius Chase Current"
+                  placeholder="Account name"
                   className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   required
                 />
@@ -508,7 +502,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Owner / Person
+                    Owner
                   </label>
                   <select
                     value={accOwner}
@@ -523,7 +517,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Account Type
+                    Type
                   </label>
                   <select
                     value={accType}
@@ -539,13 +533,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Starting Balance (£)
+                  Starting Balance
                 </label>
                 <input
                   type="text"
                   value={accBalanceStr}
                   onChange={(e) => setAccBalanceStr(e.target.value)}
-                  placeholder="e.g. 1500.00"
+                  placeholder="0.00"
                   className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   required
                 />
@@ -553,12 +547,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Notes (Optional)
+                  Notes
                 </label>
                 <textarea
                   value={accNotes}
                   onChange={(e) => setAccNotes(e.target.value)}
-                  placeholder="e.g. Used for council tax & utilities"
+                  placeholder="Notes"
                   rows={2}
                   className="w-full px-3 py-2 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-xl text-xs text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
@@ -664,7 +658,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     onChange={(e) => setEditIsActive(e.target.checked)}
                     className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-neutral-300 dark:border-neutral-700"
                   />
-                  <span>Active (uncheck to archive this account)</span>
+                  <span>Active</span>
                 </label>
               </div>
 
@@ -724,15 +718,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
               )}
 
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                Enter the verified balance from your live banking app or statement for{' '}
-                <strong>{selectedAccount.name}</strong>. The system will record the reconciliation timestamp and maintain exact penny integrity.
-              </p>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Statement As-Of Date
+                    Statement Date
                   </label>
                   <input
                     type="date"
@@ -744,7 +733,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Statement Balance (£)
+                    Statement Balance
                   </label>
                   <input
                     type="text"
@@ -764,13 +753,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 return (
                   <div className="p-3 bg-neutral-50 dark:bg-neutral-800/80 rounded-xl border border-neutral-200 dark:border-neutral-700 text-xs space-y-1.5">
                     <div className="flex justify-between text-neutral-500 dark:text-neutral-400">
-                      <span>Current Calculated Balance:</span>
+                      <span>Current</span>
                       <span className="font-semibold text-neutral-900 dark:text-neutral-100">
                         {formatPence(selectedAccount.currentBalancePence)}
                       </span>
                     </div>
                     <div className="flex justify-between text-neutral-500 dark:text-neutral-400">
-                      <span>Statement Balance:</span>
+                      <span>Statement</span>
                       <span className="font-semibold text-neutral-900 dark:text-neutral-100">
                         {formatPence(targetPence)}
                       </span>
@@ -808,7 +797,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Saving...' : 'Confirm Statement Balance'}
+                  {isSubmitting ? 'Saving...' : 'Reconcile'}
                 </button>
               </div>
             </form>
@@ -826,7 +815,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   {selectedAccount.name} Activity
                 </h3>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Current Balance: {formatPence(selectedAccount.currentBalancePence)}
+                  {formatPence(selectedAccount.currentBalancePence)}
                 </p>
               </div>
               <button
