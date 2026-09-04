@@ -155,7 +155,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 className="h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-200 text-[13px] font-semibold whitespace-nowrap hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
               >
                 <Layers className="w-3.5 h-3.5 text-slate-500 dark:text-neutral-400" />
-                New Month / Copy Bills
+                Copy Bills
               </button>
               <button
                 onClick={onOpenPlannedPaymentModal}
@@ -298,7 +298,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       )}
 
-      {/* Grid: Spending Attribution & Authoritative Accounts */}
+      {/* Grid: Spending Attribution & Accounts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Payer Attribution Card */}
         <section className="bg-white dark:bg-neutral-900 p-5 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-[0_4px_12px_-8px_rgba(15,23,42,0.18)]">
@@ -307,7 +307,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <h2 className="text-sm font-bold text-slate-950 dark:text-white">
                 {selectedMonth} Spending Attribution
               </h2>
-              <p className="hidden"></p>
             </div>
             <span className="shrink-0 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/50 text-xs font-medium text-blue-800 dark:text-blue-200">
               Marius & Vesta
@@ -341,10 +340,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 {formatPence(vestaSpendPence)}
               </span>
             </div>
-          </div>
-
-          <div className="mt-4 rounded-lg bg-[#f8fafc] dark:bg-neutral-800/70 px-4 py-3 text-[13px] leading-5 text-[#64748b] dark:text-neutral-400">
-            Internal transfers and credit repayments are strictly excluded from living expenses.
           </div>
         </section>
 
@@ -398,14 +393,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">
-              {selectedMonth} Planned Bills & Commitments ({monthPlannedPayments.length})
+              {selectedMonth} Bills ({monthPlannedPayments.length})
             </h2>
           </div>
           <button
             onClick={() => onNavigateToTab('transfer_plan')}
             className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold hover:underline"
           >
-            Review in Transfer Plan
+            View Plan
           </button>
         </div>
 
@@ -458,7 +453,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             onClick={() => onNavigateToTab('activity')}
             className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold hover:underline"
           >
-            All Activity ({monthTransactions.length})
+            View All ({monthTransactions.length})
           </button>
         </div>
 
