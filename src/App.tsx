@@ -688,11 +688,11 @@ export default function App() {
                   URL.revokeObjectURL(url);
                 }}
                 onRestoreBackup={async (payload) => {
-                  await restoreBackup(payload);
+                  await restoreBackup(payload, household.version);
                   await loadData();
                 }}
                 onResetHousehold={async () => {
-                  await resetHouseholdData();
+                  await resetHouseholdData(household.version);
                   await loadData();
                 }}
                 onLoadSampleData={async () => {
@@ -790,16 +790,19 @@ export default function App() {
         isOpen={showBackupModal}
         onClose={() => setShowBackupModal(false)}
         isOwner={session?.role === 'owner'}
+        expectedVersion={household?.version ?? 0}
         onSuccess={() => {
           loadData();
         }}
       />
 
       {/* Acceptance Tests Modal */}
-      <AcceptanceTestsModal
-        isOpen={showTestsModal}
-        onClose={() => setShowTestsModal(false)}
-      />
+      {!import.meta.env.PROD && (
+        <AcceptanceTestsModal
+          isOpen={showTestsModal}
+          onClose={() => setShowTestsModal(false)}
+        />
+      )}
 
       {/* Optimistic Concurrency Conflict Modal */}
       <ConflictResolutionModal
