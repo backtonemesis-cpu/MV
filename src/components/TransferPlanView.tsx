@@ -24,6 +24,7 @@ import {
   HouseholdMember,
 } from '../types';
 import { formatPence } from '../utils/currency';
+import { accountDisplayLabel, accountDisplayLabelWithBalance } from '../utils/accountLabels';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
@@ -45,6 +46,7 @@ interface TransferPlanViewProps {
     month?: string;
     include: boolean;
     onlyUnpaid?: boolean;
+    status?: 'paid' | 'unpaid';
     paymentIds?: string[];
   }) => Promise<void>;
   onExecuteTransfer: (payload: {
@@ -98,6 +100,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
   const [fundingAccountToTransfer, setFundingAccountToTransfer] =
     useState<AccountFundingRequirement | null>(null);
+  const [fundingSourceAccountId, setFundingSourceAccountId] = useState<string>('');
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
@@ -115,6 +118,24 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const monthPayments = useMemo(() => {
     return plannedPayments.filter((p) => p.month === selectedMonth);
   }, [plannedPayments, selectedMonth]);
+
+  const eligibleFundingSources = useMemo(
+    () =>
+      accounts.filter(
+        (account) =>
+          account.isActive !== false &&
+          account.type !== 'credit' &&
+          account.currentBalancePence > 0
+      ),
+    [accounts]
+  );
+
+  const selectedFundingSource = eligibleFundingSources.find(
+    (account) => account.id === fundingSourceAccountId
+  );
+
+  const isPaymentPaid = (payment: PlannedPayment) =>
+    payment.status === 'paid' || Boolean(payment.actualTransactionId);
 
   const toggleAccountExpand = (accountId: string) => {
     setExpandedAccountIds((prev) => ({
@@ -135,7 +156,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   };
 
   const handleTogglePaymentStatus = async (payment: PlannedPayment) => {
-    if (isViewOnly) return;
+    if (isViewOnly || payment.actualTransactionId) return;
     const newStatus = payment.status === 'unpaid' ? 'paid' : 'unpaid';
     try {
       await onUpdatePlannedPayment(payment.id, {
@@ -152,10 +173,23 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       await onBulkTogglePlannedPayments({
         month: selectedMonth,
         include: true,
-        onlyUnpaid: true,
+        status: 'unpaid',
       });
     } catch (err: any) {
       console.error('Failed to bulk include unpaid', err);
+    }
+  };
+
+  const handleBulkIncludePaid = async () => {
+    if (isViewOnly) return;
+    try {
+      await onBulkTogglePlannedPayments({
+        month: selectedMonth,
+        include: true,
+        status: 'paid',
+      });
+    } catch (err: any) {
+      console.error('Failed to bulk include paid', err);
     }
   };
 
@@ -238,6 +272,52 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         </div>
       </div>
 
+      {/* Funding source: explicit account identity, never inferred by bank name. */}
+      {!isViewOnly && (
+        <section className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="min-w-0 flex-1">
+              <label
+                htmlFor="transfer-plan-funding-source"
+                className="block text-sm font-semibold text-main"
+              >
+                Funding account
+              </label>
+              <p className="mt-1 text-xs text-muted">
+                Choose which account will supply Transfer Plan funding. You can override it for an individual transfer.
+              </p>
+            </div>
+            <div className="w-full md:w-[440px]">
+              <select
+                id="transfer-plan-funding-source"
+                value={fundingSourceAccountId}
+                onChange={(event) => setFundingSourceAccountId(event.target.value)}
+                className="w-full rounded-xl border border-muted bg-surface-muted px-3 py-2.5 text-xs font-semibold text-main focus:outline-none focus:ring-2 focus:ring-accent-soft"
+              >
+                <option value="">Select funding account</option>
+                {eligibleFundingSources.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {accountDisplayLabelWithBalance(account, formatPence)}
+                  </option>
+                ))}
+              </select>
+              {selectedFundingSource && (
+                <p
+                  className={`mt-2 text-xs ${
+                    selectedFundingSource.currentBalancePence >= plan.totalTransferRequiredPence
+                      ? 'text-success'
+                      : 'text-warning'
+                  }`}
+                >
+                  Available {formatPence(selectedFundingSource.currentBalancePence)} · Plan requires{' '}
+                  {formatPence(plan.totalTransferRequiredPence)}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Compact Summary Metrics */}
       <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
         <article
@@ -268,14 +348,16 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               ? `${plan.accountsNeedingFunding.length} account${
                   plan.accountsNeedingFunding.length !== 1 ? 's' : ''
                 } need funding`
-              : 'All accounts sufficiently funded'}
+              : plan.accountsFullyFunded.length > 0
+                ? 'Selected unpaid bills are already covered'
+                : 'No unpaid selected bills require funding'}
           </p>
         </article>
 
         <article className="min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-muted">
-              Payments in Plan
+              Unpaid Bills to Fund
             </span>
             <Layers className="w-4 h-4 shrink-0 text-subtle" />
           </div>
@@ -283,8 +365,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             {formatPence(plan.totalSelectedPaymentsPence)}
           </div>
           <p className="mt-1 text-sm leading-5 text-muted">
-            {plan.totalSelectedPaymentsCount} payment
-            {plan.totalSelectedPaymentsCount !== 1 ? 's' : ''} selected
+            {plan.totalSelectedPaymentsCount} unpaid selected
+            {plan.totalPaidSelectedPaymentsCount > 0
+              ? ` · ${plan.totalPaidSelectedPaymentsCount} paid selected for reference`
+              : ''}
           </p>
         </article>
 
@@ -337,18 +421,12 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <div className="p-4 sm:p-5 bg-surface border-b border-muted flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-bold text-main">{req.account.name}</h3>
-                      {req.account.ownerPerson && (
-                        <span className="px-3 py-1 text-xs font-semibold rounded-full bg-accent-soft text-accent">
-                          {req.account.ownerPerson}
-                        </span>
-                      )}
-                      <span className="px-3 py-1 text-xs font-medium rounded-full bg-surface-muted text-muted capitalize">
-                        {req.account.type}
-                      </span>
+                      <h3 className="text-base font-bold text-main">
+                        {accountDisplayLabel(req.account)}
+                      </h3>
                     </div>
                     <div className="text-xs text-muted mt-1">
-                      {req.selectedPayments.length} selected
+                      {req.unpaidPayments.length} unpaid selected
                     </div>
                   </div>
 
@@ -410,7 +488,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <div className="p-4 bg-surface-muted">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-muted">
-                      Selected payments
+                      Unpaid payments being funded
                     </span>
                     <button
                       onClick={() => toggleAccountExpand(req.account.id)}
@@ -423,7 +501,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         </>
                       ) : (
                         <>
-                          <span>Expand ({req.selectedPayments.length})</span>
+                          <span>Expand ({req.unpaidPayments.length})</span>
                           <ChevronDown className="w-3.5 h-3.5" />
                         </>
                       )}
@@ -432,7 +510,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                   {expandedAccountIds[req.account.id] && (
                     <div className="space-y-1.5 mt-2">
-                      {req.selectedPayments.map((p) => (
+                      {req.unpaidPayments.map((p) => (
                         <div
                           key={p.id}
                           className="flex items-center justify-between px-3 py-2 bg-surface rounded-lg border border-muted text-xs hover:border-muted transition-colors"
@@ -455,12 +533,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {p.status === 'paid' ? (
-                              <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-success-soft text-success flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" />
-                                Paid
-                              </span>
-                            ) : req.fundedPayments?.some((fp) => fp.id === p.id) ? (
+                            {req.fundedPayments?.some((fp) => fp.id === p.id) ? (
                               <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-accent-soft text-accent">
                                 Funded
                               </span>
@@ -469,7 +542,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                 Needs funds
                               </span>
                             )}
-                            <span className={`font-bold ${p.status === 'paid' ? 'text-muted text-subtle line-through' : 'text-main'}`}>
+                            <span className="font-bold text-main">
                               {formatPence(p.amountPence)}
                             </span>
                           </div>
@@ -483,7 +556,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
         )}
 
-        {/* Fully Funded Accounts (Transfer Required = £0.00) */}
+        {/* Accounts with unpaid selected bills already covered by their own balance. */}
+        {plan.accountsFullyFunded.length > 0 && (
         <div className="space-y-4 pt-2">
           <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-success">
             <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
@@ -502,16 +576,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-base font-bold tracking-tight text-main">
-                          {req.account.name}
+                          {accountDisplayLabel(req.account)}
                         </h3>
-                        {req.account.ownerPerson && (
-                          <span className="px-3 py-1 text-xs font-semibold rounded-full bg-accent-soft text-accent">
-                            {req.account.ownerPerson}
-                          </span>
-                        )}
-                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-surface-muted text-muted capitalize">
-                          {req.account.type}
-                        </span>
                       </div>
                     </div>
 
@@ -533,15 +599,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     <div className="mt-3 rounded-xl bg-surface-muted px-3.5 py-2.5 text-[13px] font-medium text-muted">
                       Available: {formatPence(req.amountAvailablePence)} <span aria-hidden="true">•</span> Bills:{' '}
                       {formatPence(req.totalSelectedPaymentsPence)} <span aria-hidden="true">•</span>{' '}
-                      {req.selectedPayments.length} selected
+                      {req.unpaidPayments.length} unpaid selected
                     </div>
                   </div>
 
                   <div className="mt-5">
-                    {req.selectedPayments.length > 0 ? (
+                    {req.unpaidPayments.length > 0 ? (
                       <div className="rounded-xl border border-muted bg-surface-muted px-4 py-2">
                         <div className="divide-y divide-muted">
-                          {req.selectedPayments.map((p) => (
+                          {req.unpaidPayments.map((p) => (
                             <div key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <input
@@ -575,6 +641,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* SECTION 2: Upcoming Scheduled Payments Roster & Inclusion Controls */}
@@ -587,12 +654,18 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
 
           {!isViewOnly && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full lg:w-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
               <button
                 onClick={handleBulkIncludeUnpaid}
                 className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
               >
-                Include Unpaid
+                Select Unpaid
+              </button>
+              <button
+                onClick={handleBulkIncludePaid}
+                className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
+              >
+                Select Paid
               </button>
               <button
                 onClick={handleBulkSelectAll}
@@ -602,7 +675,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               </button>
               <button
                 onClick={handleBulkDeselectAll}
-                className="col-span-2 sm:col-span-1 min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
+                className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
               >
                 Deselect All
               </button>
@@ -642,7 +715,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                               {payment.name}
                             </h3>
                             <div className="mt-1 text-[11px] leading-4 text-muted break-words">
-                              {acc ? acc.name : payment.accountId} · {payment.dueDate || 'Flexible'}
+                              {acc ? accountDisplayLabel(acc) : payment.accountId} · {payment.dueDate || 'Flexible'}
                             </div>
                           </div>
                         </div>
@@ -662,15 +735,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                       <button
                         onClick={() => handleTogglePaymentStatus(payment)}
-                        disabled={isViewOnly}
-                        title="Status"
+                        disabled={isViewOnly || Boolean(payment.actualTransactionId)}
+                        title={payment.actualTransactionId ? 'Paid status is locked by a recorded transaction' : 'Status'}
                         className={`min-w-0 rounded-xl px-2.5 py-2 text-[12px] font-medium transition-colors capitalize ${
-                          payment.status === 'paid'
+                          isPaymentPaid(payment)
                             ? 'bg-success-soft text-success hover:bg-success-soft'
                             : 'bg-warning-soft text-warning hover:bg-warning-soft'
                         }`}
                       >
-                        {payment.status}
+                        {isPaymentPaid(payment) ? 'paid' : 'unpaid'}
                       </button>
                     </div>
 
@@ -759,7 +832,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         {/* Payment Account */}
                         <td className="py-2.5 px-4">
                           <span className="font-medium text-main">
-                            {acc ? acc.name : payment.accountId}
+                            {acc ? accountDisplayLabel(acc) : payment.accountId}
                           </span>
                         </td>
 
@@ -792,7 +865,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                 : 'bg-warning-soft text-warning hover:bg-warning-soft'
                             }`}
                           >
-                            {payment.status}
+                            {isPaymentPaid(payment) ? 'paid' : 'unpaid'}
                           </button>
                         </td>
 
@@ -831,8 +904,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       {fundingAccountToTransfer && (
         <ExecuteTransferModal
           fundingRequirement={fundingAccountToTransfer}
-          availableSourceAccounts={accounts}
+          availableSourceAccounts={eligibleFundingSources}
           members={members}
+          defaultSourceAccountId={fundingSourceAccountId}
           onClose={() => setFundingAccountToTransfer(null)}
           onExecute={onExecuteTransfer}
         />
