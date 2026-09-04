@@ -3134,3 +3134,27 @@ html[data-theme] button.bg-white:hover {
     min-height: 40px !important;
   }
 }
+
+
+/* Prepare Next Month previously hid the browser month indicator for its old custom icon.
+   The shared picker restores the native calendar/month control consistently. */
+.mv-rollover-controls .mv-month-picker .mv-month-picker-input {
+  min-height: 30px !important;
+  height: 30px !important;
+  border: 0 !important;
+  padding: 5px 8px 5px 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.mv-rollover-controls .mv-month-picker-input::-webkit-calendar-picker-indicator {
+  position: static !important;
+  right: auto !important;
+  width: auto !important;
+  height: auto !important;
+  opacity: 0.72 !important;
+}
+
+.mv-rollover-controls .mv-month-picker-input:hover::-webkit-calendar-picker-indicator {
+  opacity: 1 !important;
+}
