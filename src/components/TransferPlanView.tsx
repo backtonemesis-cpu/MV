@@ -298,6 +298,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               value={selectedMonth}
               onChange={handleSelectMonth}
               ariaLabel="Transfer plan month"
+              className="is-fluid"
             />
           </div>
 
