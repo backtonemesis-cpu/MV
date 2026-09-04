@@ -91,6 +91,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     return accounts.filter((a) => (showArchived ? true : a.isActive !== false));
   }, [accounts, showArchived]);
 
+  // Group accounts by financial role. Joint current accounts belong with current accounts,
+  // while cash is treated as a liquid savings asset.
+  const currentAccounts = useMemo(
+    () => displayedAccounts.filter((account) => account.type === 'current' || account.type === 'joint'),
+    [displayedAccounts]
+  );
+
+  const savingsAccounts = useMemo(
+    () => displayedAccounts.filter((account) => account.type === 'savings' || account.type === 'cash'),
+    [displayedAccounts]
+  );
+
+  const creditAccounts = useMemo(
+    () => displayedAccounts.filter((account) => account.type === 'credit'),
+    [displayedAccounts]
+  );
+
   // Account creation
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,278 +298,305 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     );
   }, [transactions, selectedAccount]);
 
-  return (
-    <div className="space-y-6 pb-12">
-      {/* Accounts Section */}
-      <div>
-        <div className="mb-4">
-          <h1 className="w-full whitespace-nowrap text-xl font-bold text-main">
-            Accounts
-          </h1>
+  const renderAccountCard = (acc: Account) => {
+    const isArchived = acc.isActive === false;
+    const isCredit = acc.type === 'credit';
+    const balancePence = isCredit
+      ? acc.balanceOwedPence ?? Math.max(0, -acc.currentBalancePence)
+      : acc.currentBalancePence;
 
-          <div className="mv-hscroll mv-edge-safe mt-3">
-            <div className="flex min-w-max items-center gap-2">
-              {canEdit && (
-                <button
-                  onClick={() => {
-                    setError(null);
-                    setShowAccModal(true);
-                  }}
-                  className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-accent px-3.5 text-[13px] font-semibold text-on-accent shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-success-soft transition"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add Account
-                </button>
+    return (
+      <article
+        key={acc.id}
+        className={`bg-surface border border-muted rounded-2xl p-5 flex flex-col justify-between min-h-[200px] transition-all hover:border-strong/60 ${
+          isArchived ? 'opacity-70' : ''
+        }`}
+      >
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-accent">
+              {isCredit ? (
+                <CreditCard className="h-5 w-5" />
+              ) : acc.type === 'savings' || acc.type === 'cash' ? (
+                <PiggyBank className="h-5 w-5" />
+              ) : (
+                <Landmark className="h-5 w-5" />
               )}
+            </div>
 
-              <label className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-surface-muted px-3.5 text-[13px] font-medium text-muted cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showArchived}
-                  onChange={(e) => setShowArchived(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded text-success focus:ring-accent border-muted"
-                />
-                Show Archived
-              </label>
+            <div className="flex min-w-0 flex-wrap justify-end gap-1.5">
+              <span className="rounded-full border border-muted bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted">
+                {acc.type}
+              </span>
+              <span className="rounded-full border border-muted bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted">
+                {acc.ownerPerson || 'Joint'}
+              </span>
+              {isArchived && (
+                <span className="rounded-full border border-warning bg-warning-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning">
+                  Archived
+                </span>
+              )}
             </div>
           </div>
-        </div>
 
-        {displayedAccounts.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-10 text-center text-[13px] font-medium text-subtle">
-            No accounts
-          </div>
-        ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayedAccounts.map((acc) => {
-            const isArchived = acc.isActive === false;
-            return (
-              <div
-                key={acc.id}
-                className={`bg-surface p-5 rounded-2xl border transition-all flex flex-col justify-between ${
-                  isArchived
-                    ? 'border-muted opacity-70 bg-surface-muted'
-                    : 'border-muted shadow-xs hover:border-muted'
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-surface-muted flex items-center justify-center text-muted">
-                      {acc.type === 'credit' ? (
-                        <CreditCard className="w-5 h-5 text-danger" />
-                      ) : acc.type === 'savings' ? (
-                        <PiggyBank className="w-5 h-5 text-success" />
-                      ) : (
-                        <Landmark className="w-5 h-5 text-accent" />
-                      )}
-                    </div>
-                    <div className="mv-hscroll max-w-[70%] items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-surface-muted text-muted border border-muted">
-                        {acc.type}
-                      </span>
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-success-soft text-success border border-success">
-                        {acc.ownerPerson || 'Joint'}
-                      </span>
-                      {isArchived && (
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-warning-soft text-warning border border-warning">
-                          Archived
-                        </span>
-                      )}
-                    </div>
-                  </div>
+          <h3 className="mt-3 text-base font-bold text-main">{acc.name}</h3>
 
-                  <h3 className="text-base font-bold text-main mt-3">
-                    {acc.name}
-                  </h3>
-                  {acc.notes && (
-                    <p className="text-xs text-muted text-subtle mt-1 line-clamp-2">
-                      {acc.notes}
-                    </p>
-                  )}
+          {acc.notes && (
+            <p className="text-xs text-subtle font-normal tracking-wide line-clamp-2 mt-1 mb-4 opacity-60">
+              {acc.notes}
+            </p>
+          )}
 
-                  {acc.reconciledAt && (
-                    <div className="flex items-center gap-1 text-[11px] text-success mt-2 font-medium">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>
-                        Reconciled {new Date(acc.reconciledAt).toLocaleDateString('en-GB')}
-                        {acc.reconciliationDate && ` (As of ${acc.reconciliationDate})`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-muted">
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <span className="text-[11px] text-muted text-subtle font-medium">
-                        {acc.type === 'credit' ? 'Owed' : 'Balance'}
-                      </span>
-                      <div
-                        className={`text-2xl font-black mt-0.5 ${
-                          acc.type === 'credit'
-                            ? 'text-danger'
-                            : acc.currentBalancePence < 0
-                            ? 'text-danger'
-                            : 'text-main'
-                        }`}
-                      >
-                        {acc.type === 'credit'
-                          ? formatPence(acc.balanceOwedPence ?? Math.max(0, -acc.currentBalancePence))
-                          : formatPence(acc.currentBalancePence)}
-                      </div>
-                      {acc.creditLimitPence !== undefined && acc.creditLimitPence > 0 && (
-                        <div className="text-[11px] text-muted text-subtle mt-1">
-                          Limit: {formatPence(acc.creditLimitPence)} · Available:{' '}
-                          {formatPence(
-                            Math.max(
-                              0,
-                              acc.creditLimitPence -
-                                (acc.balanceOwedPence ?? Math.max(0, -acc.currentBalancePence))
-                            )
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-muted">
-                    <button
-                      onClick={() => openActivityModal(acc)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-muted hover:text-main transition"
-                    >
-                      <History className="w-3.5 h-3.5" />
-                      Activity
-                    </button>
-
-                    {canEdit && (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => openReconcileModal(acc)}
-                          title="Reconcile"
-                          className="p-1.5 rounded-lg text-muted text-subtle hover:text-success hover:bg-surface-muted transition"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(acc)}
-                          title="Edit"
-                          className="p-1.5 rounded-lg text-muted text-subtle hover:text-main hover:bg-surface-muted transition"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeactivate(acc)}
-                          title={isArchived ? 'Delete' : 'Archive'}
-                          className="p-1.5 rounded-lg text-muted text-subtle hover:text-danger hover:bg-danger-soft transition"
-                        >
-                          <Archive className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        )}
-      </div>
-
-      {/* Savings Pots Section */}
-      <div>
-        <div className="mb-4">
-          <h2 className="w-full whitespace-nowrap text-lg font-bold text-main">
-            Savings Pots
-          </h2>
-
-          {canEdit && (
-            <div className="mv-hscroll mv-edge-safe mt-3">
-              <button
-                onClick={() => setShowGoalModal(true)}
-                className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-surface-muted px-3.5 text-[13px] font-semibold text-muted shadow-[0_2px_5px_-3px_rgba(15,23,42,0.18)] hover:bg-surface-muted transition"
-              >
-                <Plus className="w-3.5 h-3.5 text-muted text-subtle" />
-                Add Pot
-              </button>
+          {acc.reconciledAt && (
+            <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-success">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>
+                Reconciled {new Date(acc.reconciledAt).toLocaleDateString('en-GB')}
+                {acc.reconciliationDate && ` · ${acc.reconciliationDate}`}
+              </span>
             </div>
           )}
         </div>
 
-        {savingsGoals.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-muted bg-surface-muted px-4 py-10 text-center text-[13px] font-medium text-subtle">
-            No savings pots
+        <div className="mt-5 border-t border-muted pt-4">
+          <span className="text-[11px] font-medium text-muted">
+            {isCredit ? 'Owed' : 'Balance'}
+          </span>
+
+          <div className="text-2xl font-extrabold text-main font-mono tracking-tight tabular-nums mt-0.5">
+            {formatPence(balancePence)}
           </div>
-        ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {savingsGoals.map((goal) => {
-            const percent =
-              goal.targetPence > 0
-                ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
-                : 100;
-            const linkedAccount = accounts.find((a) => a.id === goal.accountId);
-            return (
-              <div
-                key={goal.id}
-                className="bg-surface p-5 rounded-2xl border border-muted shadow-xs"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-main">
-                      {goal.name}
-                    </h3>
-                    <span className="text-xs text-muted text-subtle">
-                      Stored in {linkedAccount?.name || 'Account'}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-black text-main">
-                      {formatPence(goal.currentPence)}
-                    </div>
-                    <span className="text-[11px] text-muted text-subtle">
-                      Target: {formatPence(goal.targetPence)}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="w-full bg-surface-muted rounded-full h-2 mt-4">
-                  <div
-                    className="bg-accent h-2 rounded-full transition-all"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
+          {isCredit && acc.creditLimitPence !== undefined && acc.creditLimitPence > 0 && (
+            <div className="mt-1 text-[11px] text-subtle">
+              Limit {formatPence(acc.creditLimitPence)} · Available{' '}
+              {formatPence(Math.max(0, acc.creditLimitPence - balancePence))}
+            </div>
+          )}
 
-                <div className="flex justify-between items-center text-[11px] text-muted text-subtle mt-2">
-                  <span>{percent}% funded</span>
-                  {goal.targetDate && <span>Target: {goal.targetDate}</span>}
-                </div>
+          <div className="mt-4 flex items-center justify-between border-t border-muted pt-3">
+            <button
+              type="button"
+              onClick={() => openActivityModal(acc)}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-muted transition hover:text-main"
+            >
+              <History className="h-3.5 w-3.5" />
+              Activity
+            </button>
 
-                {canEdit && (
-                  <div className="mt-4 flex items-center justify-end gap-2 border-t border-muted pt-3">
-                    <button
-                      type="button"
-                      onClick={() => openEditGoal(goal)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-muted bg-surface-muted px-3 py-2 text-xs font-semibold text-main transition-all hover:bg-surface active:scale-[0.98]"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-accent" />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteGoal(goal)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </button>
-                  </div>
-                )}
+            {canEdit && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => openReconcileModal(acc)}
+                  title="Reconcile"
+                  className="rounded-lg p-1.5 text-subtle transition hover:bg-surface-muted hover:text-accent"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openEditModal(acc)}
+                  title="Edit"
+                  className="rounded-lg p-1.5 text-subtle transition hover:bg-surface-muted hover:text-main"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeactivate(acc)}
+                  title={isArchived ? 'Delete' : 'Archive'}
+                  className="rounded-lg p-1.5 text-subtle transition hover:bg-danger-soft hover:text-danger"
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                </button>
               </div>
-            );
-          })}
+            )}
+          </div>
         </div>
+      </article>
+    );
+  };
+
+  const renderAccountSection = (
+    title: string,
+    groupedAccounts: Account[],
+    emptyLabel: string
+  ) => (
+    <section>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-base font-bold tracking-tight text-main">{title}</h2>
+        <span className="rounded-full border border-muted bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted">
+          {groupedAccounts.length}
+        </span>
+      </div>
+
+      {groupedAccounts.length === 0 ? (
+        <div className="mb-8 rounded-2xl border border-dashed border-muted bg-surface-muted px-5 py-8 text-center text-sm text-subtle">
+          {emptyLabel}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {groupedAccounts.map((account) => renderAccountCard(account))}
+        </div>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Accounts Workspace */}
+      <div>
+        <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+          <h1 className="text-xl font-bold tracking-tight text-main">Accounts</h1>
+
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setShowAccModal(true);
+                }}
+                className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
+                Add Account
+              </button>
+            )}
+
+            <label className="inline-flex h-10 items-center gap-2 rounded-xl border border-muted bg-surface-muted px-3.5 text-sm font-medium text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-muted text-accent focus:ring-accent"
+              />
+              Show Archived
+            </label>
+          </div>
+        </div>
+
+        {renderAccountSection(
+          '💳 Current Accounts',
+          currentAccounts,
+          'No current accounts to display.'
+        )}
+
+        {renderAccountSection(
+          '💰 Savings & Liquid Assets',
+          savingsAccounts,
+          'No savings or cash accounts to display.'
+        )}
+
+        {renderAccountSection(
+          '🚨 Credit Cards & Liabilities',
+          creditAccounts,
+          'No credit accounts to display.'
         )}
       </div>
+
+      {/* Savings Pots Section */}
+      <section className="pt-1">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold tracking-tight text-main">Savings Pots</h2>
+            <p className="mt-0.5 text-xs text-muted">
+              Goals linked to your savings and liquid accounts.
+            </p>
+          </div>
+
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setShowGoalModal(true)}
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-muted bg-surface px-3.5 text-sm font-semibold text-main transition-all hover:bg-surface-muted active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4 text-accent" />
+              Add Pot
+            </button>
+          )}
+        </div>
+
+        {savingsGoals.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-muted bg-surface-muted px-6 py-12 text-center">
+            <PiggyBank className="mx-auto h-5 w-5 text-subtle" />
+            <p className="mt-2 text-sm font-medium text-muted">No savings pots</p>
+            <p className="mt-1 text-xs text-subtle">
+              Add a goal when you want to track money toward a specific target.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {savingsGoals.map((goal) => {
+              const percent =
+                goal.targetPence > 0
+                  ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
+                  : 100;
+              const linkedAccount = accounts.find((account) => account.id === goal.accountId);
+
+              return (
+                <article
+                  key={goal.id}
+                  className="rounded-2xl border border-muted bg-surface p-5 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-bold text-main">{goal.name}</h3>
+                      <span className="text-xs text-subtle">
+                        Stored in {linkedAccount?.name || 'Account'}
+                      </span>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <div className="font-mono text-lg font-extrabold tracking-tight tabular-nums text-main">
+                        {formatPence(goal.currentPence)}
+                      </div>
+                      <span className="text-[11px] text-subtle">
+                        Target {formatPence(goal.targetPence)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                    <div
+                      className="h-2 rounded-full bg-accent transition-all"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-[11px] text-muted">
+                    <span>{percent}% funded</span>
+                    {goal.targetDate && <span>{goal.targetDate}</span>}
+                  </div>
+
+                  {canEdit && (
+                    <div className="mt-4 flex items-center justify-end gap-2 border-t border-muted pt-3">
+                      <button
+                        type="button"
+                        onClick={() => openEditGoal(goal)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-muted bg-surface-muted px-3 py-2 text-xs font-semibold text-main transition-all hover:bg-surface active:scale-[0.98]"
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-accent" />
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteGoal(goal)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* MODAL: Add Account */}
       {showAccModal && (
