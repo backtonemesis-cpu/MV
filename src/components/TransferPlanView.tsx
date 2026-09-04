@@ -323,10 +323,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             <button
               onClick={onOpenMonthImport}
               className="min-w-0 px-3 py-2 text-xs font-medium text-muted bg-surface border border-muted hover:bg-surface-muted rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
-              title="Copy bills"
+              title="Prepare next month"
             >
               <Layers className="w-3.5 h-3.5 shrink-0 text-muted text-subtle" />
-              <span>Copy Bills</span>
+              <span>Prepare Next Month</span>
             </button>
           )}
 
