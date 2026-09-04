@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Palette,
   Users,
@@ -71,6 +71,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onResetHousehold,
   onLoadSampleData,
 }) => {
+  const isOwner = currentSession.role === 'owner';
   const [activeTab, setActiveTab] = useState<'appearance' | 'members' | 'audit' | 'backup'>('appearance');
   const [restoreJson, setRestoreJson] = useState('');
   const [restoreError, setRestoreError] = useState<string | null>(null);
@@ -90,12 +91,57 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editMemberName, setEditMemberName] = useState('');
   const [isUpdatingMember, setIsUpdatingMember] = useState(false);
+  const memberNameInputRef = useRef<HTMLInputElement>(null);
+
+  const settingsTabOrder = ['appearance', 'members', 'audit', 'backup'] as const;
+
+  const handleSettingsTabKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    currentTab: (typeof settingsTabOrder)[number]
+  ) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+
+    event.preventDefault();
+    const currentIndex = settingsTabOrder.indexOf(currentTab);
+    const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
+    const nextIndex =
+      (currentIndex + direction + settingsTabOrder.length) % settingsTabOrder.length;
+    const nextTab = settingsTabOrder[nextIndex];
+    setActiveTab(nextTab);
+    requestAnimationFrame(() => {
+      document.getElementById(`settings-tab-${nextTab}`)?.focus();
+    });
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'members' || !isOwner) return;
+    const frame = requestAnimationFrame(() => memberNameInputRef.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab, isOwner]);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      if (editingMemberId) {
+        setEditingMemberId(null);
+        setEditMemberName('');
+        return;
+      }
+
+      if (showResetConfirm) {
+        setShowResetConfirm(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [editingMemberId, showResetConfirm]);
 
   const activeAccentName =
     ACCENT_OPTIONS.find((item) => item.id === (hoveredAccent ?? userPreferences.accent))?.name ??
     'Emerald Green';
 
-  const isOwner = currentSession.role === 'owner';
   const showDevelopmentTools = !import.meta.env.PROD;
 
   const handleResetExecute = async () => {
@@ -195,7 +241,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="space-y-7 pb-12 px-1 sm:px-0">
+    <div className="mv-settings space-y-7 pb-12 px-1 sm:px-0">
       {/* Header */}
       <div className="px-1 sm:px-0">
         <h1 className="text-main text-xl sm:text-2xl font-bold tracking-tight leading-tight">
@@ -207,7 +253,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       <div className="bg-surface-muted border-muted rounded-xl border p-1.5 shadow-inner">
         <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           <button
+            id="settings-tab-appearance"
             onClick={() => setActiveTab('appearance')}
+            onKeyDown={(event) => handleSettingsTabKeyDown(event, 'appearance')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'appearance'
                 ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
@@ -219,7 +267,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
 
           <button
+              id="settings-tab-members"
               onClick={() => setActiveTab('members')}
+              onKeyDown={(event) => handleSettingsTabKeyDown(event, 'members')}
               className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'members'
                   ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
@@ -234,7 +284,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
 
           <button
+            id="settings-tab-audit"
             onClick={() => setActiveTab('audit')}
+            onKeyDown={(event) => handleSettingsTabKeyDown(event, 'audit')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'audit'
                 ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
@@ -246,7 +298,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
 
           <button
+            id="settings-tab-backup"
             onClick={() => setActiveTab('backup')}
+            onKeyDown={(event) => handleSettingsTabKeyDown(event, 'backup')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
               activeTab === 'backup'
                 ? 'bg-surface text-main shadow-sm ring-1 ring-[var(--border)]'
@@ -411,8 +465,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="flex-1">
                   <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
                   <input
+                    ref={memberNameInputRef}
                     value={memberName}
                     onChange={(event) => setMemberName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Escape') {
+                        event.preventDefault();
+                        setMemberName('');
+                        event.currentTarget.blur();
+                      }
+                    }}
                     className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                     placeholder="e.g. Vesta"
                     required
@@ -454,8 +516,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <div>
                           <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
                           <input
+                            autoFocus
                             value={editMemberName}
                             onChange={(event) => setEditMemberName(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter') {
+                                event.preventDefault();
+                                if (editMemberName.trim() && !isUpdatingMember) {
+                                  void saveEditedMember(member.id);
+                                }
+                              }
+                              if (event.key === 'Escape') {
+                                event.preventDefault();
+                                setEditingMemberId(null);
+                                setEditMemberName('');
+                              }
+                            }}
                             className="h-10 w-full rounded-xl border border-muted bg-surface px-3 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                           />
                         </div>
