@@ -184,66 +184,65 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   };
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Savings
-          </h1>
-        </div>
+    <div className="space-y-6 pb-12">
+      {/* Header */}
+      <div>
+        <h1 className="w-full whitespace-nowrap text-xl font-bold text-neutral-900 dark:text-neutral-100">
+          Savings
+        </h1>
 
         {canEdit && (
-          <button
-            onClick={() => {
-              setError(null);
-              setGoalName('');
-              setGoalTargetStr('');
-              setGoalCurrentStr('');
-              setShowGoalModal(true);
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-700 text-white text-xs font-semibold hover:bg-emerald-800 shadow-xs transition"
-          >
-            <Plus className="w-4 h-4" />
-            Add Savings Pot
-          </button>
+          <div className="mt-3">
+            <button
+              onClick={() => {
+                setError(null);
+                setGoalName('');
+                setGoalTargetStr('');
+                setGoalCurrentStr('');
+                setShowGoalModal(true);
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-[13px] font-semibold text-white shadow-[0_2px_5px_-3px_rgba(15,23,42,0.25)] hover:bg-emerald-800 transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Pot
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
-          <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+      {/* Compact Savings Metrics */}
+      <div className="grid grid-cols-2 gap-3">
+        <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <span className="block text-[12px] font-medium leading-4 text-[#64748b] dark:text-neutral-400">
             Total Savings
           </span>
-          <div className="text-2xl font-black text-neutral-900 dark:text-neutral-100 mt-1">
+          <div className="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-white whitespace-nowrap">
             {formatPence(totalSavedPence)}
           </div>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 block">
-            Target: {formatPence(totalTargetPence)} ({overallPercent}%)
+          <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
+            target {formatPence(totalTargetPence)} · {overallPercent}%
           </span>
-        </div>
+        </article>
 
-        <div className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
-          <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+        <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+          <span className="block text-[12px] font-medium leading-4 text-[#64748b] dark:text-neutral-400">
             {selectedMonth} Contributions
           </span>
-          <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">
+          <div className="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
             {formatPence(monthSavingsTotalPence)}
           </div>
-        </div>
-
-        <div className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
-          <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-            Savings Pots
+          <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
+            excluded from living spend
           </span>
-          <div className="text-2xl font-black text-neutral-900 dark:text-neutral-100 mt-1">
-            {savingsGoals.length} Pots
-          </div>
-        </div>
+        </article>
       </div>
 
       {/* Savings Pots Grid */}
+      {savingsGoals.length === 0 ? (
+        <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
+          No savings pots
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {savingsGoals.map((goal) => {
           const percent =
@@ -331,6 +330,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           );
         })}
       </div>
+      )}
 
       {/* Selected Month Savings Ledger */}
       <div className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
@@ -338,9 +338,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           {selectedMonth} Savings Movements
         </h2>
         {monthSavingsTxs.length === 0 ? (
-          <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            No savings movements for {selectedMonth}.
-          </p>
+          <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-9 text-center">
+            <p className="text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
+              No savings movements for {selectedMonth}
+            </p>
+          </div>
         ) : (
           <div className="space-y-2">
             {monthSavingsTxs.map((tx) => (
