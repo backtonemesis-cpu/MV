@@ -14,6 +14,7 @@
     --surface-text: #0f172a;
     --surface-muted: #f1f5f9;
     --surface-hover: #e2e8f0;
+    --field: #ffffff;
     --surface-muted-text: #475569;
     --text: #0f172a;
     --text-muted: #64748b;
@@ -44,6 +45,7 @@
     --surface-text: #F8FAFC;
     --surface-muted: #181F32;
     --surface-hover: #1E273E;
+    --field: #111522;
     --surface-muted-text: #94A3B8;
     --text: #FFFFFF;
     --text-muted: #94A3B8;
@@ -74,6 +76,7 @@
     --surface-text: #f1f5f9;
     --surface-muted: #293548;
     --surface-hover: #475569;
+    --field: #1f2937;
     --surface-muted-text: #cbd5e1;
     --text: #f1f5f9;
     --text-muted: #cbd5e1;
@@ -1171,3 +1174,230 @@ html[data-theme] button.bg-white:hover {
   }
 }
 
+
+
+/* ==========================================================================
+   COMPACT MODAL SYSTEM
+   ========================================================================== */
+.mv-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.60) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.mv-modal-card {
+  width: min(100%, 520px);
+  max-width: 520px !important;
+  max-height: min(88vh, 760px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 9px !important;
+  background: var(--surface);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+}
+
+.mv-modal-card.mv-modal-wide {
+  width: min(100%, 640px);
+  max-width: 640px !important;
+}
+
+.mv-modal-header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px !important;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.mv-modal-header h2,
+.mv-modal-header h3 {
+  margin: 0;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
+.mv-modal-form,
+.mv-modal-body {
+  padding: 12px !important;
+}
+
+.mv-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px !important;
+  max-height: calc(88vh - 44px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mv-modal-form > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.mv-modal-form label {
+  display: block;
+  margin-bottom: 4px !important;
+  color: var(--text-subtle) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
+.mv-modal-form input:not([type="checkbox"]):not([type="radio"]),
+.mv-modal-form select,
+.mv-modal-form textarea,
+.mv-modal-body input:not([type="checkbox"]):not([type="radio"]),
+.mv-modal-body select,
+.mv-modal-body textarea {
+  min-height: 30px !important;
+  height: 30px !important;
+  padding: 6px 10px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  background: var(--field) !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+}
+
+.mv-modal-form textarea,
+.mv-modal-body textarea {
+  min-height: 56px !important;
+  height: auto !important;
+  resize: vertical;
+}
+
+.mv-modal-form input:focus,
+.mv-modal-form select:focus,
+.mv-modal-form textarea:focus,
+.mv-modal-body input:focus,
+.mv-modal-body select:focus,
+.mv-modal-body textarea:focus {
+  border-color: var(--primary) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--primary-light) !important;
+}
+
+.mv-modal-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.mv-modal-section {
+  padding: 8px 10px !important;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--field);
+}
+
+.mv-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 0 !important;
+  padding-top: 10px !important;
+  border-top: 1px solid var(--border);
+}
+
+.mv-modal-actions button {
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 5px 10px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.mv-modal-list {
+  max-height: min(330px, 46vh);
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-gutter: stable;
+}
+
+.mv-modal-list-row {
+  min-height: 34px;
+  margin-bottom: 4px;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+}
+
+.mv-modal-list-row:last-child {
+  margin-bottom: 0;
+}
+
+.mv-modal-list-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+.mv-modal-close {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  color: var(--text-muted);
+}
+
+.mv-modal-close:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* Fallback compression for legacy dialogs not yet carrying semantic modal classes. */
+.mv-density-root .fixed.inset-0.z-50 {
+  background: rgba(0, 0, 0, 0.60);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.mv-density-root .fixed.inset-0.z-50 > div {
+  max-height: 88vh;
+}
+
+@media (max-width: 640px) {
+  .mv-modal-backdrop {
+    align-items: flex-end;
+    padding: 8px;
+  }
+
+  .mv-modal-card,
+  .mv-modal-card.mv-modal-wide {
+    width: 100%;
+    max-width: 100% !important;
+    max-height: 92vh;
+    border-radius: 10px 10px 6px 6px !important;
+  }
+
+  .mv-modal-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .mv-modal-form input:not([type="checkbox"]):not([type="radio"]),
+  .mv-modal-form select,
+  .mv-modal-body input:not([type="checkbox"]):not([type="radio"]),
+  .mv-modal-body select {
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+}
