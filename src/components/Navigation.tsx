@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Receipt,
   Landmark,
+  Banknote,
   PiggyBank,
   ArrowLeftRight,
   Settings as SettingsIcon,
@@ -32,6 +33,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: 'dashboard', label: 'Home', mobileLabel: 'Home', icon: LayoutDashboard },
     { id: 'activity', label: 'Activity', mobileLabel: 'Activity', icon: Receipt },
     { id: 'accounts', label: 'Accounts', mobileLabel: 'Accounts', icon: Landmark },
+    { id: 'income', label: 'Income', mobileLabel: 'Income', icon: Banknote },
     { id: 'savings', label: 'Savings', mobileLabel: 'Savings', icon: PiggyBank },
     { id: 'transfer_plan', label: 'Plan', mobileLabel: 'Plan', icon: ArrowLeftRight },
     {
@@ -79,7 +81,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {/* Mobile Bottom Navigation Bar (iPhone-first with 44px+ touch ergonomics) */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors">
-        <div className="grid grid-cols-6 h-14">
+        <div className="grid grid-cols-7 h-14">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -95,7 +97,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 }`}
               >
                 <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-accent' : 'text-muted'}`} />
-                <span className="truncate max-w-[48px]">{tab.mobileLabel}</span>
+                <span className="truncate max-w-[44px]">{tab.mobileLabel}</span>
                 {tab.badge && (
                   <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-danger-soft" />
                 )}
