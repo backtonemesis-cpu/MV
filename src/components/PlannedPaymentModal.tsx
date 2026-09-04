@@ -3,7 +3,6 @@ import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'luci
 import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
-import { accountDisplayLabel } from '../utils/accountLabels';
 
 interface PlannedPaymentModalProps {
   payment?: PlannedPayment | null;
@@ -193,7 +192,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               >
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
-                    {accountDisplayLabel(acc)}
+                    {acc.name} ({acc.ownerPerson || acc.type})
                   </option>
                 ))}
               </select>
@@ -266,22 +265,16 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <div>
                 <span className="text-xs font-medium text-main">Payment Status</span>
               </div>
-              <div className="text-right">
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
-                  disabled={hasRecordedTransaction}
-                  className="text-xs font-medium border border-muted rounded-md px-2.5 py-1 bg-surface focus:ring-1 focus:ring-muted focus:outline-none disabled:opacity-70"
-                >
-                  <option value="unpaid">Unpaid</option>
-                  <option value="paid">Paid</option>
-                </select>
-                {hasRecordedTransaction && (
-                  <p className="mt-1 max-w-[220px] text-[10px] leading-4 text-muted">
-                    Locked as paid because an actual transaction is linked.
-                  </p>
-                )}
-              </div>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
+                disabled={hasRecordedTransaction}
+                title={hasRecordedTransaction ? 'Paid status is locked by a recorded transaction' : 'Payment status'}
+                className="text-xs font-medium border border-muted rounded-md px-2.5 py-1 bg-surface focus:ring-1 focus:ring-muted focus:outline-none disabled:opacity-70"
+              >
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+              </select>
             </div>
           </div>
 
