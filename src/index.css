@@ -102,6 +102,48 @@
     --text-on-primary: #ffffff;
   }
 
+  [data-accent="crimson"] {
+    --primary: #e11d48;
+    --primary-light: rgba(225, 29, 72, 0.1);
+    --primary-light-text: #e11d48;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="amber"] {
+    --primary: #d97706;
+    --primary-light: rgba(217, 119, 6, 0.1);
+    --primary-light-text: #d97706;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="teal"] {
+    --primary: #0d9488;
+    --primary-light: rgba(13, 148, 136, 0.1);
+    --primary-light-text: #0d9488;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="indigo"] {
+    --primary: #4f46e5;
+    --primary-light: rgba(79, 70, 229, 0.1);
+    --primary-light-text: #4f46e5;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="rose"] {
+    --primary: #db2777;
+    --primary-light: rgba(219, 39, 119, 0.1);
+    --primary-light-text: #db2777;
+    --text-on-primary: #ffffff;
+  }
+
+  [data-accent="gold"] {
+    --primary: #b45309;
+    --primary-light: rgba(180, 83, 9, 0.1);
+    --primary-light-text: #b45309;
+    --text-on-primary: #ffffff;
+  }
+
   :root {
     /* Backward-compatible aliases while components migrate to semantic names. */
     --mv-bg: var(--background);
@@ -282,44 +324,63 @@
 
 .mv-accent-picker {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 20px;
-  flex-wrap: wrap;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 16px 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior-inline: contain;
+}
+
+.mv-accent-picker::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .mv-accent-swatch {
   --swatch: var(--primary);
-  width: 44px;
-  height: 44px;
-  padding: 8px;
-  border-radius: 9999px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   border: 0;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: 160ms ease;
-}
-
-.mv-accent-swatch-dot {
-  width: 28px;
-  height: 28px;
   border-radius: 9999px;
+  padding: 0;
+  cursor: pointer;
   background: var(--swatch);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
-  transition: 160ms ease;
+  color: var(--swatch);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
 }
 
-.mv-accent-swatch.is-active .mv-accent-swatch-dot {
+.mv-accent-swatch:hover,
+.mv-accent-swatch:focus-visible {
+  transform: scale(1.06);
+}
+
+.mv-accent-swatch.is-active {
+  transform: scale(1.1);
   box-shadow:
-    0 0 0 4px var(--surface),
-    0 0 0 7px var(--swatch),
-    0 8px 18px -9px var(--swatch);
+    0 0 0 3px var(--background),
+    0 0 0 6px var(--swatch);
 }
 
-.mv-accent-label {
-  color: var(--text-muted);
-  font-size: 12px;
+.mv-accent-swatch:focus-visible {
+  box-shadow:
+    0 0 0 3px var(--background),
+    0 0 0 6px var(--swatch),
+    0 0 0 9px var(--primary-light);
+}
+
+.mv-accent-current-label {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .mv-overlay {
