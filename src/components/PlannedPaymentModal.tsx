@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'lucide-react';
 import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
@@ -43,7 +43,24 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const [notes, setNotes] = useState(payment?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const personOptions = householdPersonOptions(members, [responsiblePerson]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => nameInputRef.current?.focus());
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [onClose]);
 
   // When account changes, default responsible person to account owner if available
   const handleAccountChange = (newAccId: string) => {
@@ -98,9 +115,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
-      <div className="bg-surface rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-muted">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-surface-muted">
+    <div className="mv-modal-backdrop">
+      <div className="mv-modal-card">
+        <div className="mv-modal-header">
           <div>
             <h3 className="text-base font-semibold text-main">
               {isEditing ? 'Edit Bill' : 'Add Bill'}
@@ -108,13 +125,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
+            className="mv-modal-close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mv-modal-form">
           {error && (
             <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs">
               <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
@@ -128,6 +145,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               Name *
             </label>
             <input
+              ref={nameInputRef}
               type="text"
               placeholder="Bill name"
               value={name}
@@ -138,7 +156,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Amount & Month */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-medium text-muted mb-1">
                 Amount *
@@ -176,7 +194,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Payment Account & Responsible */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-medium text-muted mb-1">
                 Payment Account *
@@ -214,7 +232,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Due Date & Category */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-medium text-muted mb-1">
                 Due Date
@@ -244,7 +262,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Status & Plan Inclusion (Separate Concepts) */}
-          <div className="p-3 bg-surface-muted rounded-lg border border-muted space-y-3">
+          <div className="mv-modal-section space-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-xs font-medium text-main">Include in Transfer Plan</span>
@@ -286,7 +304,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="mv-modal-actions">
             <button
               type="button"
               onClick={onClose}
@@ -297,7 +315,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-medium text-on-accent bg-surface hover:bg-surface-muted rounded-md shadow-xs disabled:opacity-50 transition-colors"
+              className="bg-accent text-on-accent font-semibold disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Add'}
             </button>
