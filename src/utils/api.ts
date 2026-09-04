@@ -250,6 +250,7 @@ export async function importMonth(params: {
   sourceMonth: string;
   targetMonth: string;
   paymentIds?: string[];
+  incomeIds?: string[];
   expectedVersion: number;
 }) {
   const { expectedVersion, ...request } = params;
