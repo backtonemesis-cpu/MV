@@ -1489,7 +1489,7 @@ export function executeLocalTransferAllocations(
     }>;
     description?: string;
     date?: string;
-    month: string;
+    month?: string;
   },
   expectedVersion: number
 ): { transactions: Transaction[]; version: number } {
@@ -1517,23 +1517,25 @@ export function executeLocalTransferAllocations(
       if (!destination || destination.isActive === false) {
         throw new Error('Destination account is unavailable.');
       }
-      if (!/^\d{4}-\d{2}$/.test(payload.month)) {
-        throw new Error('Transfer Plan month is required.');
-      }
+      if (payload.month !== undefined) {
+        if (!/^\d{4}-\d{2}$/.test(payload.month)) {
+          throw new Error('Transfer Plan month must use YYYY-MM format.');
+        }
 
-      const monthPayments = state.plannedPayments.filter(
-        (payment) => payment.month === payload.month
-      );
-      const currentRequirement = calculateAccountFunding(
-        destination,
-        monthPayments,
-        state.transactions
-      );
-
-      if (currentRequirement.transferRequiredPence !== payload.expectedTotalPence) {
-        throw new Error(
-          `Transfer Plan funding changed before submission. Current requirement is ${currentRequirement.transferRequiredPence} pence; refresh the plan before funding.`
+        const monthPayments = state.plannedPayments.filter(
+          (payment) => payment.month === payload.month
         );
+        const currentRequirement = calculateAccountFunding(
+          destination,
+          monthPayments,
+          state.transactions
+        );
+
+        if (currentRequirement.transferRequiredPence !== payload.expectedTotalPence) {
+          throw new Error(
+            `Transfer Plan funding changed before submission. Current requirement is ${currentRequirement.transferRequiredPence} pence; refresh the plan before funding.`
+          );
+        }
       }
 
       const category = state.categories.find((item) => item.id === 'cat-transfer');
