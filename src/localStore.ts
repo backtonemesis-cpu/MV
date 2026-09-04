@@ -1786,6 +1786,8 @@ export function contributeLocalSavingsGoal(
       if (goalIndex < 0) throw new Error('Savings goal not found.');
 
       const goal = state.savingsGoals[goalIndex];
+      assertSavingsAllocationCapacity(state, goal.accountId, goal.currentPence, goal.id);
+
       const source = state.accounts.find((account) => account.id === payload.sourceAccountId);
       const destination = state.accounts.find((account) => account.id === goal.accountId);
 
@@ -1861,6 +1863,27 @@ export function contributeLocalSavingsGoal(
   };
 }
 
+function assertSavingsAllocationCapacity(
+  state: HouseholdData,
+  accountId: string,
+  proposedCurrentPence: number,
+  excludedGoalId?: string
+): void {
+  const account = assertAccountExists(state, accountId);
+  const allocatedByOtherGoals = state.savingsGoals
+    .filter((goal) => goal.id !== excludedGoalId && goal.accountId === accountId)
+    .reduce((sum, goal) => sum + goal.currentPence, 0);
+
+  const totalProposedAllocation = allocatedByOtherGoals + proposedCurrentPence;
+  const availableBalance = Math.max(0, account.currentBalancePence);
+
+  if (totalProposedAllocation > availableBalance) {
+    throw new Error(
+      `Savings pot allocations cannot exceed the linked account balance. Available: ${availableBalance} pence; proposed allocation: ${totalProposedAllocation} pence.`
+    );
+  }
+}
+
 export function createLocalSavingsGoal(
   data: Partial<SavingsGoal>,
   expectedVersion: number
@@ -1885,9 +1908,15 @@ export function createLocalSavingsGoal(
       }
       const targetPence = data.targetPence ?? 0;
       const currentPence = data.currentPence ?? 0;
-      if (!isSafePence(targetPence) || !isSafePence(currentPence)) {
-        throw new Error('Savings amounts must be exact integer pence.');
+      if (
+        !isSafePence(targetPence) ||
+        !isSafePence(currentPence) ||
+        targetPence < 0 ||
+        currentPence < 0
+      ) {
+        throw new Error('Savings amounts must be non-negative exact integer pence.');
       }
+      assertSavingsAllocationCapacity(state, data.accountId, currentPence);
       const goal: SavingsGoal = {
         id: data.id || createId('goal'),
         name: data.name.trim(),
@@ -1921,8 +1950,13 @@ export function updateLocalSavingsGoal(
       const index = state.savingsGoals.findIndex((goal) => goal.id === id);
       if (index < 0) throw new Error('Savings goal not found.');
       const next = { ...state.savingsGoals[index], ...data, id };
-      if (!isSafePence(next.targetPence) || !isSafePence(next.currentPence)) {
-        throw new Error('Savings amounts must be exact integer pence.');
+      if (
+        !isSafePence(next.targetPence) ||
+        !isSafePence(next.currentPence) ||
+        next.targetPence < 0 ||
+        next.currentPence < 0
+      ) {
+        throw new Error('Savings amounts must be non-negative exact integer pence.');
       }
       const linkedAccount = assertAccountExists(state, next.accountId);
       if (
@@ -1931,6 +1965,7 @@ export function updateLocalSavingsGoal(
       ) {
         throw new Error('Savings goals must be linked to an active Savings or Cash account.');
       }
+      assertSavingsAllocationCapacity(state, next.accountId, next.currentPence, id);
       state.savingsGoals[index] = next;
       return next;
     }
