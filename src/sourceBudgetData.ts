@@ -441,15 +441,19 @@ export function preserveCompatibleSavingsGoals(existing?: HouseholdData): Saving
   const sourceAccountIds = new Set(SOURCE_ACCOUNTS.map((account) => account.id));
 
   return existing.savingsGoals.flatMap((goal) => {
-    // 1. Exact account ID exists in SOURCE_ACCOUNTS -> preserve it
+    // Household goals no longer require an account link. Preserve unlinked goals as-is.
+    if (!goal.accountId) return [goal];
+
+    // Legacy linked goals keep a compatible account reference for backwards-compatible
+    // backups/audit history, but the link no longer drives goal progress.
     if (sourceAccountIds.has(goal.accountId)) {
       return [goal];
     }
     const oldAccount = existing.accounts.find((account) => account.id === goal.accountId);
-    if (!oldAccount) return [];
+    if (!oldAccount) return [goal];
 
     const resolved = resolveCompatibleAccount(oldAccount, SOURCE_ACCOUNTS);
-    if (!resolved) return [];
+    if (!resolved) return [goal];
 
     return [{ ...goal, accountId: resolved.id }];
   });
