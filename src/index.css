@@ -2808,7 +2808,6 @@ html[data-theme] button.bg-white:hover {
 }
 
 /* Accent-safe capsule fills: preserve full text color with a 10% background tint. */
-.finance-status-positive,
 .finance-status-accent,
 .mv-rollover-pill-expected,
 .mv-accent-badge {
@@ -3007,7 +3006,6 @@ html[data-theme] button.bg-white:hover {
 }
 
 /* Received / Expected and other positive accent-state capsules follow custom RGB safely. */
-.finance-status-positive,
 .finance-status-accent,
 .mv-rollover-pill-expected,
 .mv-accent-badge {
@@ -3163,4 +3161,315 @@ html[data-theme] button.bg-white:hover {
 
 .mv-rollover-controls .mv-month-picker-input:hover::-webkit-calendar-picker-indicator {
   opacity: 1 !important;
+}
+
+
+/* ==========================================================================
+   CUSTOMIZATION GUARDRAILS + SEMANTIC FINANCIAL COLOR ISOLATION
+   ========================================================================== */
+:root {
+  --card-padding: 8px 12px;
+  --card-gap: 8px;
+  --card-font-scale: 13px;
+  --card-radius: 4px;
+  --card-border: 1px solid #26314D;
+
+  --financial-positive: #22C55E;
+  --financial-positive-bg: rgba(34, 197, 94, 0.10);
+  --financial-positive-border: rgba(34, 197, 94, 0.22);
+  --financial-negative: #EF4444;
+  --financial-negative-bg: rgba(239, 68, 68, 0.10);
+  --financial-negative-border: rgba(239, 68, 68, 0.22);
+}
+
+[data-theme="light"] {
+  --protected-primary-text: #0F172A;
+  --protected-secondary-text: #64748B;
+  --protected-neutral-text: #0F172A;
+}
+
+[data-theme="dark"],
+[data-theme="slate"] {
+  --protected-primary-text: #F8FAFC;
+  --protected-secondary-text: #94A3B8;
+  --protected-neutral-text: #F8FAFC;
+}
+
+.mv-density-root {
+  line-height: 1.4;
+}
+
+/* Card variables affect component geometry only; readable type floors remain protected. */
+.mv-density-root :is(
+  .mv-card,
+  .finance-panel,
+  .finance-summary-card,
+  .finance-row,
+  .mv-settings-panel,
+  .mv-settings-tabs,
+  .mv-backup-section,
+  .mv-accent-console,
+  .mv-card-customization
+) {
+  border: var(--card-border) !important;
+  border-radius: var(--card-radius) !important;
+  gap: var(--card-gap);
+}
+
+.mv-density-root :is(
+  .mv-card,
+  .finance-summary-card,
+  .mv-settings-panel,
+  .mv-backup-section,
+  .mv-accent-console,
+  .mv-card-customization
+) {
+  padding: var(--card-padding) !important;
+  font-size: max(13px, var(--card-font-scale));
+}
+
+.mv-density-root :is(
+  .mv-modal-card,
+  .mv-account-modal,
+  .mv-income-modal,
+  .mv-transaction-modal,
+  .mv-rollover-modal,
+  .mv-backup-modal
+) {
+  border: var(--card-border) !important;
+  border-radius: var(--card-radius) !important;
+}
+
+.mv-density-root :is(
+  .mv-modal-form,
+  .mv-modal-body,
+  .mv-modal-scroll-body
+) {
+  padding: var(--card-padding) !important;
+}
+
+.mv-density-root .finance-ledger-row {
+  padding: var(--card-padding) !important;
+  gap: var(--card-gap) !important;
+}
+
+[data-card-density="compact"] .finance-ledger-row {
+  height: 52px;
+  min-height: 52px;
+  max-height: 52px;
+}
+
+[data-card-density="comfortable"] .finance-ledger-row {
+  height: 66px;
+  min-height: 66px;
+  max-height: 66px;
+}
+
+/* Readability floors: density never shrinks semantic content below these values. */
+.mv-density-root h1 {
+  font-size: clamp(18px, 1.25vw, 20px) !important;
+}
+
+.mv-density-root :is(
+  .finance-row-title,
+  .finance-amount,
+  .mv-settings-panel h2,
+  .mv-settings-panel h3,
+  .mv-modal-header h2,
+  .mv-modal-header h3
+) {
+  font-size: max(13px, var(--card-font-scale)) !important;
+}
+
+.mv-density-root :is(
+  .finance-metadata-line,
+  .finance-amount-detail,
+  .mv-settings-panel label,
+  .mv-settings-panel p,
+  .mv-modal-form label
+) {
+  font-size: max(11px, 0.6875rem) !important;
+}
+
+.mv-density-root :is(
+  .finance-row-title,
+  .finance-amount.is-neutral,
+  .mv-settings-panel h2,
+  .mv-settings-panel h3,
+  .mv-modal-header h2,
+  .mv-modal-header h3
+) {
+  color: var(--protected-primary-text) !important;
+}
+
+.mv-density-root :is(
+  .finance-metadata-line,
+  .finance-amount-detail,
+  .mv-settings-panel p,
+  .mv-settings-panel label,
+  .mv-modal-form label
+) {
+  color: var(--protected-secondary-text) !important;
+}
+
+/* Financial meaning is immutable and never follows --accent-rgb. */
+.finance-amount.is-positive,
+.finance-status-positive {
+  color: var(--financial-positive) !important;
+}
+
+.finance-amount.is-negative,
+.finance-status-negative {
+  color: var(--financial-negative) !important;
+}
+
+.finance-amount.is-neutral {
+  color: var(--protected-neutral-text) !important;
+}
+
+.finance-status-positive {
+  border-color: var(--financial-positive-border) !important;
+  background: var(--financial-positive-bg) !important;
+}
+
+.finance-status-negative {
+  border-color: var(--financial-negative-border) !important;
+  background: var(--financial-negative-bg) !important;
+}
+
+/* Non-semantic accent states may follow the user's accent safely. */
+.finance-status-accent,
+.mv-rollover-pill-expected,
+.mv-accent-badge {
+  border-color: rgba(var(--accent-rgb), 0.20) !important;
+  background: rgba(var(--accent-rgb), 0.10) !important;
+  color: rgb(var(--accent-rgb)) !important;
+}
+
+/* Ledger strings cannot collide with protected right-aligned numbers. */
+.finance-row-copy,
+.finance-row-titleline,
+.finance-metadata-line {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.finance-row-title,
+.finance-metadata-line > span,
+.finance-amount {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-row-side {
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+/* Appearance card customization controls */
+.mv-card-customization {
+  display: flex;
+  flex-direction: column;
+  gap: 8px !important;
+  background: var(--surface);
+}
+
+.mv-card-customization-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(260px, 1.2fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.mv-card-customization-label {
+  min-width: 0;
+  color: var(--protected-primary-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.mv-card-customization-label span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-card-toggle-grid {
+  min-width: 0;
+}
+
+.mv-card-toggle-grid.is-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mv-card-toggle-grid.is-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mv-card-toggle-grid .mv-settings-segment {
+  min-width: 0;
+  font-size: 12px !important;
+  white-space: nowrap;
+}
+
+/* RGB console remains compact and high-legibility. */
+.mv-rgb-value {
+  font-size: 11px !important;
+}
+
+.mv-rgb-slider-row input[type="range"]::-webkit-slider-thumb,
+.mv-rgb-slider-row input[type="range"]::-moz-range-thumb {
+  background: #FFFFFF !important;
+}
+
+/* Theme contrast guardrails for legacy hard-coded dark labels. */
+[data-theme="light"] :is(
+  .finance-row-title,
+  .finance-amount.is-neutral,
+  .mv-settings-panel h2,
+  .mv-settings-panel h3,
+  .mv-settings-tab.is-active,
+  .mv-accent-current-label
+) {
+  color: #0F172A !important;
+}
+
+[data-theme="dark"] :is(
+  .finance-row-title,
+  .finance-amount.is-neutral,
+  .mv-settings-panel h2,
+  .mv-settings-panel h3,
+  .mv-settings-tab.is-active,
+  .mv-accent-current-label
+),
+[data-theme="slate"] :is(
+  .finance-row-title,
+  .finance-amount.is-neutral,
+  .mv-settings-panel h2,
+  .mv-settings-panel h3,
+  .mv-settings-tab.is-active,
+  .mv-accent-current-label
+) {
+  color: #F8FAFC !important;
+}
+
+@media (max-width: 700px) {
+  .mv-card-customization-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .mv-card-toggle-grid .mv-settings-segment {
+    min-height: 38px !important;
+  }
+
+  [data-card-density="comfortable"] .finance-ledger-row,
+  [data-card-density="compact"] .finance-ledger-row {
+    height: auto;
+    min-height: 56px;
+    max-height: none;
+  }
 }
