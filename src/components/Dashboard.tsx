@@ -10,7 +10,6 @@ import {
   Calendar,
   Layers,
   ArrowLeftRight,
-  CheckCircle2,
   AlertCircle,
   Clock,
 } from 'lucide-react';
@@ -129,7 +128,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-10 h-10 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-              <Calendar className="w-4.5 h-4.5" />
+              <Calendar className="w-[18px] h-[18px]" />
             </div>
             <div className="flex flex-wrap items-center gap-2 min-w-0">
               <span className="text-sm font-medium text-slate-600 dark:text-neutral-300 whitespace-nowrap">
