@@ -170,6 +170,14 @@ function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
   }
 }
 
+function localTodayDateKey(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function calculateCurrentBalancePence(account: Account, transactions: Transaction[]): number {
   const hasReconciliation =
     Boolean(account.reconciliationDate) &&
@@ -179,7 +187,12 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
     ? account.reconciledBalancePence!
     : account.startingBalancePence;
 
+  const today = localTodayDateKey();
   const effective = transactions.filter((tx) => {
+    // Accounts shows the balance that exists now, not future scheduled activity.
+    // Future-dated income/transfers/expenses remain in the ledger but do not
+    // change the current balance until their transaction date arrives.
+    if (tx.date > today) return false;
     if (!hasReconciliation) return true;
     return tx.date > account.reconciliationDate!;
   });
