@@ -18,6 +18,32 @@ const OWNER_EMAIL = 'marius@local.invalid';
 const OWNER_NAME = 'Marius';
 const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 
+function normalizeThemePreference(value: unknown): UserPreferences['theme'] {
+  if (value === 'light' || value === 'dark' || value === 'slate') return value;
+  if (value === 'system') {
+    try {
+      return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  }
+  return 'light';
+}
+
+function normalizeAccentPreference(value: unknown): UserPreferences['accent'] {
+  if (value === 'emerald' || value === 'sapphire' || value === 'amethyst') return value;
+  if (value === 'blue' || value === 'indigo') return 'sapphire';
+  if (value === 'lilac' || value === 'purple') return 'amethyst';
+  return 'emerald';
+}
+
+function normalizePreferences(value: Partial<UserPreferences> | Record<string, unknown> | null | undefined): UserPreferences {
+  return {
+    theme: normalizeThemePreference(value?.theme),
+    accent: normalizeAccentPreference(value?.accent),
+  };
+}
+
 const STANDARD_CATEGORIES = [
   { id: 'cat-housing', name: 'Rent / Mortgage', group: 'Housing', monthlyBudgetPence: 0 },
   { id: 'cat-council-tax', name: 'Council Tax', group: 'Housing', monthlyBudgetPence: 0 },
@@ -1064,23 +1090,25 @@ export function importLocalMonth(
 
 export function getLocalPreferences(): UserPreferences {
   const storage = getStorage();
-  if (!storage) return { theme: 'system', accent: 'default' };
+  if (!storage) return { theme: 'light', accent: 'emerald' };
   try {
     const parsed = JSON.parse(storage.getItem(PREFS_KEY) || '{}');
-    return {
-      theme: parsed.theme || 'system',
-      accent: parsed.accent || 'default',
-    };
+    const normalized = normalizePreferences(parsed);
+    if (JSON.stringify(parsed) !== JSON.stringify(normalized)) {
+      storage.setItem(PREFS_KEY, JSON.stringify(normalized));
+    }
+    return normalized;
   } catch {
-    return { theme: 'system', accent: 'default' };
+    return { theme: 'light', accent: 'emerald' };
   }
 }
 
 export function saveLocalPreferences(preferences: UserPreferences): UserPreferences {
   const storage = getStorage();
   if (!storage) throw new Error('Browser storage is unavailable.');
-  storage.setItem(PREFS_KEY, JSON.stringify(preferences));
-  return preferences;
+  const normalized = normalizePreferences(preferences);
+  storage.setItem(PREFS_KEY, JSON.stringify(normalized));
+  return normalized;
 }
 
 export function createLocalBackupPackage(): any {
