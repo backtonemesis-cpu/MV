@@ -903,7 +903,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
           {/* Desktop table */}
           <div className="hidden lg:block">
-<table className="mv-plan-ledger-table bg-table text-main border-muted w-full text-left border-collapse text-xs">
+<table className="bg-table text-main border-muted w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-muted bg-surface-muted text-[12px] font-normal text-muted">
                   <th className="pt-3 pb-4 px-4 w-12 text-center whitespace-nowrap">In Plan?</th>
@@ -947,7 +947,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                         {/* Name & Notes */}
                         <td className="py-2.5 px-4">
-                          <div className="mv-plan-ledger-name font-semibold text-main" title={payment.name}>{payment.name}</div>
+                          <div className="font-semibold text-main">{payment.name}</div>
                           {payment.notes && (
                             <div className="text-2xs text-muted text-subtle mt-0.5 truncate max-w-xs">
                               {payment.notes}
@@ -957,14 +957,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                         {/* Payment Account */}
                         <td className="py-2.5 px-4">
-                          <span className="mv-plan-ledger-account font-medium text-muted" title={acc ? `${acc.name} (${acc.ownerPerson || acc.type})` : payment.accountId}>
+                          <span className="font-medium text-main">
                             {acc ? `${acc.name} (${acc.ownerPerson || acc.type})` : payment.accountId}
                           </span>
                         </td>
 
                         {/* Responsible Person */}
                         <td className="py-2.5 px-4">
-                          <span className="mv-plan-ledger-member px-2 py-0.5 text-[10px] font-medium rounded-full bg-accent-soft text-accent">
+                          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-accent-soft text-accent">
                             {payment.responsiblePerson}
                           </span>
                         </td>
@@ -975,7 +975,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         </td>
 
                         {/* Amount in Exact Pence */}
-                        <td className="mv-plan-ledger-amount py-2.5 px-4 text-right font-bold text-main">
+                        <td className="py-2.5 px-4 text-right font-bold text-main">
                           {formatPence(payment.amountPence)}
                         </td>
 
@@ -985,7 +985,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             onClick={() => handleTogglePaymentStatus(payment)}
                             disabled={isViewOnly}
                             title="Status"
-                            className={`mv-plan-ledger-status px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                               payment.status === 'paid'
                                 ? 'bg-success-soft text-success hover:bg-success-soft'
                                 : 'bg-warning-soft text-warning hover:bg-warning-soft'
@@ -998,7 +998,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         {/* Edit / Delete Actions */}
                         {!isViewOnly && (
                           <td className="py-2.5 px-4 text-right">
-                            <div className="mv-plan-ledger-actions flex items-center justify-end gap-1">
+                            <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => setEditingPayment(payment)}
                                 className="p-1 rounded text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
