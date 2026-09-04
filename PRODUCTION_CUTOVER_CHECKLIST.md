@@ -23,6 +23,25 @@ category catalogue created by MV on first initialization.
 
 ## Firebase / Google Cloud prerequisites
 
+A repository bootstrap script is provided:
+
+```bash
+bash scripts/bootstrap-production-gcp.sh
+```
+
+It is idempotent and configures the dedicated runtime/deployment service accounts,
+GitHub Workload Identity Federation and required IAM. If Firestore `(default)`
+does not exist, it refuses to guess the location. Re-run only after explicitly
+choosing a location, for example:
+
+```bash
+MV_FIRESTORE_LOCATION=YOUR_CHOSEN_LOCATION bash scripts/bootstrap-production-gcp.sh
+```
+
+The script prints the exact values required for:
+- `GCP_WORKLOAD_IDENTITY_PROVIDER`
+- `GCP_DEPLOY_SERVICE_ACCOUNT`
+
 Before deploying the Firestore revision:
 
 1. Create/confirm the project's Firestore `(default)` database.
