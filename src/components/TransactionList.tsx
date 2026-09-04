@@ -138,10 +138,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           />
         </div>
 
-        <div className="overflow-x-auto scrollbar-none">
-          <div className="inline-flex min-w-max items-center gap-2 pb-0.5">
+        <div className="mv-hscroll mv-edge-safe pb-0.5">
+          <div className="flex min-w-max items-center gap-2">
             {selectedMonth && (
-              <label className="inline-flex h-9 shrink-0 items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 cursor-pointer">
+              <label className="inline-flex h-9 shrink-0 whitespace-nowrap items-center gap-2 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3.5 text-[13px] font-medium text-slate-700 dark:text-neutral-200 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={filterBySelectedMonth}
@@ -157,7 +157,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <select
                 value={selectedPayer}
                 onChange={(e) => setSelectedPayer(e.target.value)}
-                className="h-9 appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                className="h-9 shrink-0 whitespace-nowrap appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
               >
                 <option value="all">All Payers</option>
                 <option value="Joint">Joint</option>
@@ -171,7 +171,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="h-9 appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                className="h-9 shrink-0 whitespace-nowrap appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
               >
                 <option value="all">All Classifications</option>
                 <option value="expense">Expenses</option>
@@ -188,7 +188,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="h-9 appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                className="h-9 shrink-0 whitespace-nowrap appearance-none rounded-full border-0 bg-[#f8fafc] dark:bg-neutral-800 pl-3.5 pr-8 text-[13px] font-medium text-slate-700 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
               >
                 <option value="all">All Categories</option>
                 {categories.map((c) => (

@@ -76,24 +76,24 @@ export const MembersView: React.FC<MembersViewProps> = ({
                 </div>
 
                 {isOwner ? (
-                  <div className="flex items-center gap-2">
+                  <div className="mv-hscroll mv-edge-safe items-center">
                     <button
                       onClick={() => onApproveMember(member.id, 'editor')}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition"
+                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg transition"
                     >
                       <Check className="w-3.5 h-3.5" />
                       Editor
                     </button>
                     <button
                       onClick={() => onApproveMember(member.id, 'view_only')}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
                     >
                       <Lock className="w-3.5 h-3.5" />
                       View Only
                     </button>
                     <button
                       onClick={() => onRemoveMember(member.id)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold rounded-lg transition"
+                      className="inline-flex shrink-0 whitespace-nowrap items-center gap-1 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-semibold rounded-lg transition"
                     >
                       <X className="w-3.5 h-3.5" />
                       Reject
@@ -139,9 +139,9 @@ export const MembersView: React.FC<MembersViewProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="mv-hscroll mv-edge-safe items-center">
                   {isOwner && !isMarius ? (
-                    <div className="flex items-center gap-2">
+                    <div className="mv-hscroll items-center">
                       <select
                         value={member.role}
                         onChange={(e) => onChangeRole(member.id, e.target.value as UserRole)}

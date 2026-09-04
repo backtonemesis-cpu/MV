@@ -210,162 +210,174 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         )}
       </div>
 
-      {/* Compact Savings Metrics */}
-      <div className="grid grid-cols-2 gap-3">
-        <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-          <span className="block text-[12px] font-medium leading-4 text-[#64748b] dark:text-neutral-400">
-            Total Savings
-          </span>
-          <div className="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-white whitespace-nowrap">
-            {formatPence(totalSavedPence)}
-          </div>
-          <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
-            target {formatPence(totalTargetPence)} · {overallPercent}%
-          </span>
-        </article>
-
-        <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-          <span className="block text-[12px] font-medium leading-4 text-[#64748b] dark:text-neutral-400">
-            {selectedMonth} Contributions
-          </span>
-          <div className="mt-1.5 text-xl sm:text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
-            {formatPence(monthSavingsTotalPence)}
-          </div>
-          <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
-            excluded from living spend
-          </span>
-        </article>
-      </div>
-
-      {/* Savings Pots Grid */}
-      {savingsGoals.length === 0 ? (
-        <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-10 text-center text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
-          No savings pots
-        </div>
-      ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {savingsGoals.map((goal) => {
-          const percent =
-            goal.targetPence > 0
-              ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
-              : 100;
-          const linkedAccount = accounts.find((a) => a.id === goal.accountId);
-
-          return (
-            <div
-              key={goal.id}
-              className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-                      <PiggyBank className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-                        {goal.name}
-                      </h3>
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                        Stored in {linkedAccount?.name || 'Account'}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-black text-neutral-900 dark:text-neutral-100">
-                    {percent}%
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2.5 mt-5">
-                  <div
-                    className="bg-emerald-600 dark:bg-emerald-500 h-2.5 rounded-full transition-all"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-
-                <div className="flex justify-between items-center text-xs mt-3">
-                  <div>
-                    <span className="text-neutral-500 dark:text-neutral-400">Saved: </span>
-                    <span className="font-bold text-neutral-900 dark:text-neutral-100">
-                      {formatPence(goal.currentPence)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-neutral-500 dark:text-neutral-400">Target: </span>
-                    <span className="font-bold text-neutral-900 dark:text-neutral-100">
-                      {formatPence(goal.targetPence)}
-                    </span>
-                  </div>
-                </div>
-
-                {goal.targetDate && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400 mt-2">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Target Date: {goal.targetDate}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-700 flex items-center justify-between">
-                <button
-                  onClick={() => openTransferModal(goal)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 transition"
-                >
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                  Transfer
-                </button>
-
-                {canEdit && (
-                  <button
-                    onClick={() => openEditGoal(goal)}
-                    className="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 transition"
-                  >
-                    Edit
-                  </button>
-                )}
-              </div>
+      {/* Savings Summary, Goals & Movements */}
+      <section className="mv-edge-safe rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/50 p-3 sm:p-4 space-y-5">
+        <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3">
+          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+            <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+              Total Savings
+            </h2>
+            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-slate-950 dark:text-white whitespace-nowrap">
+              {formatPence(totalSavedPence)}
             </div>
-          );
-        })}
-      </div>
-      )}
+            <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
+              target {formatPence(totalTargetPence)} · {overallPercent}%
+            </span>
+          </article>
 
-      {/* Selected Month Savings Ledger */}
-      <div className="bg-white dark:bg-neutral-800 p-5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-xs">
-        <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-3">
-          {selectedMonth} Savings Movements
-        </h2>
-        {monthSavingsTxs.length === 0 ? (
-          <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-9 text-center">
-            <p className="text-[13px] font-medium text-[#94a3b8] dark:text-neutral-500">
-              No savings movements for {selectedMonth}
-            </p>
+          <article className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+            <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+              {selectedMonth} Contributions
+            </h2>
+            <div className="mt-2 text-xl sm:text-2xl font-semibold tracking-tight text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+              {formatPence(monthSavingsTotalPence)}
+            </div>
+            <span className="mt-1 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400">
+              excluded from living spend
+            </span>
+          </article>
+        </div>
+
+        <div className="space-y-3">
+          <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+            Active Savings Goals
+          </h2>
+
+          {savingsGoals.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-6 text-left">
+              <p className="text-[13px] font-medium leading-5 text-[#94a3b8] dark:text-neutral-500">
+                No active savings goals
+              </p>
+            </div>
+          ) : (
+            <div className="mv-fluid-card-grid">
+              {savingsGoals.map((goal) => {
+                const percent =
+                  goal.targetPence > 0
+                    ? Math.min(100, Math.round((goal.currentPence / goal.targetPence) * 100))
+                    : 100;
+                const linkedAccount = accounts.find((a) => a.id === goal.accountId);
+
+                return (
+                  <article
+                    key={goal.id}
+                    className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex min-w-0 items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="w-9 h-9 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
+                            <PiggyBank className="w-4.5 h-4.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white break-words">
+                              {goal.name}
+                            </h3>
+                            <span className="mt-0.5 block text-[12px] font-normal leading-4 text-[#64748b] dark:text-neutral-400 break-words">
+                              {linkedAccount?.name || 'Account'}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-[13px] font-semibold text-slate-700 dark:text-neutral-200">
+                          {percent}%
+                        </span>
+                      </div>
+
+                      <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-2 mt-4 overflow-hidden">
+                        <div
+                          className="bg-emerald-600 dark:bg-emerald-500 h-2 rounded-full transition-all"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mt-3 text-[12px]">
+                        <div className="min-w-0">
+                          <span className="block text-[#64748b] dark:text-neutral-400">saved</span>
+                          <span className="block mt-0.5 font-semibold text-slate-950 dark:text-white whitespace-nowrap">
+                            {formatPence(goal.currentPence)}
+                          </span>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <span className="block text-[#64748b] dark:text-neutral-400">target</span>
+                          <span className="block mt-0.5 font-semibold text-slate-950 dark:text-white whitespace-nowrap">
+                            {formatPence(goal.targetPence)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {goal.targetDate && (
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#64748b] dark:text-neutral-400 mt-2">
+                          <Calendar className="w-3.5 h-3.5 shrink-0" />
+                          <span className="break-words">{goal.targetDate}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mv-hscroll mt-4 pt-3 border-t border-slate-100 dark:border-neutral-800">
+                      <button
+                        onClick={() => openTransferModal(goal)}
+                        className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 text-[13px] font-semibold text-emerald-700 dark:text-emerald-300"
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        Transfer
+                      </button>
+
+                      {canEdit && (
+                        <button
+                          onClick={() => openEditGoal(goal)}
+                          className="shrink-0 whitespace-nowrap rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-3 py-1.5 text-[13px] font-medium text-slate-600 dark:text-neutral-300"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <h2 className="text-[15px] font-semibold leading-5 text-[#0f172a] dark:text-white">
+              Savings Movements
+            </h2>
+            <span className="shrink-0 rounded-full bg-[#f8fafc] dark:bg-neutral-800 px-2.5 py-1 text-[12px] font-medium text-[#64748b] dark:text-neutral-400">
+              {selectedMonth}
+            </span>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {monthSavingsTxs.map((tx) => (
-              <div
-                key={tx.id}
-                className="p-3 bg-neutral-50 dark:bg-neutral-850 rounded-xl border border-neutral-100 dark:border-neutral-700/60 flex items-center justify-between text-xs"
-              >
-                <div>
-                  <span className="font-bold text-neutral-900 dark:text-neutral-100">
-                    {tx.description}
-                  </span>
-                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    {tx.date} • {tx.payer}
+
+          {monthSavingsTxs.length === 0 ? (
+            <div className="rounded-[14px] border border-dashed border-slate-300 dark:border-neutral-700 bg-[#f8fafc]/70 dark:bg-neutral-900/50 px-4 py-6 text-left">
+              <p className="text-[13px] font-medium leading-5 text-[#94a3b8] dark:text-neutral-500">
+                No savings movements for {selectedMonth}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {monthSavingsTxs.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="min-w-0 rounded-[14px] border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="min-w-0">
+                    <span className="block text-[13px] font-semibold text-[#0f172a] dark:text-white break-words">
+                      {tx.description}
+                    </span>
+                    <div className="text-[11px] text-[#64748b] dark:text-neutral-400 mt-0.5">
+                      {tx.date} · {tx.payer}
+                    </div>
+                  </div>
+                  <div className="shrink-0 font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                    +{formatPence(tx.amountPence)}
                   </div>
                 </div>
-                <div className="font-black text-emerald-700 dark:text-emerald-400">
-                  +{formatPence(tx.amountPence)}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* MODAL: Transfer into Savings */}
       {showTransferModal && selectedGoal && (

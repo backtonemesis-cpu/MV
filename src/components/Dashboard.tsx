@@ -149,7 +149,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {canEdit && (
-            <div className="grid grid-cols-2 gap-2 w-full lg:w-auto">
+            <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2 w-full lg:w-auto">
               <button
                 onClick={onOpenMonthImport}
                 className="h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-200 text-[13px] font-semibold whitespace-nowrap hover:bg-slate-50 dark:hover:bg-neutral-800 transition"
@@ -207,7 +207,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Financial Flow Sub-Metrics */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
         <article className="relative min-w-0 overflow-hidden rounded-2xl bg-emerald-900 dark:bg-emerald-950 p-4 text-white shadow-[0_4px_10px_-7px_rgba(6,78,59,0.6)]">
           <div className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
             <TrendingUp className="w-4 h-4 text-emerald-200" />

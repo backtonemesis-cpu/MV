@@ -259,13 +259,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
               Type
             </label>
-            <div className="grid grid-cols-4 gap-1.5 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
+            <div className="mv-segmented">
               {(['expense', 'income', 'transfer', 'refund'] as const).map((t) => (
                 <button
                   type="button"
                   key={t}
                   onClick={() => handleTypeChange(t)}
-                  className={`py-1.5 text-xs font-semibold rounded-lg capitalize transition ${
+                  className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold capitalize transition ${
                     type === t
                       ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-xs'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200'
@@ -451,7 +451,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               {isSplitEnabled && (
                 <div className="space-y-2 p-3 bg-neutral-50 dark:bg-neutral-800/60 rounded-xl border border-neutral-200 dark:border-neutral-700">
                   {splits.map((splitRow, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                    <div key={idx} className="mv-hscroll items-center">
                       <select
                         value={splitRow.categoryId}
                         onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)}

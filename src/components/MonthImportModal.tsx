@@ -281,18 +281,18 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+          <div className="mv-hscroll pt-3 border-t border-neutral-100 dark:border-neutral-800 items-center justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition"
+              className="shrink-0 whitespace-nowrap px-4 py-2 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || selectedPaymentIds.size === 0}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
+              className="inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition"
             >
               <Copy className="w-3.5 h-3.5" />
               {isSubmitting ? 'Importing...' : `Copy ${selectedPaymentIds.size} Bills`}

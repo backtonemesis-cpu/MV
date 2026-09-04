@@ -144,11 +144,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* Settings Tabs */}
-      <div className="rounded-xl bg-[#f1f5f9] dark:bg-neutral-800/90 p-1.5 shadow-inner shadow-slate-200/40 dark:shadow-none overflow-x-auto">
-        <div className="flex min-w-max items-center gap-1">
+      <div className="mv-segmented shadow-inner shadow-slate-200/40 dark:shadow-none">
+        <div className="flex min-w-max items-center gap-2">
           <button
             onClick={() => setActiveTab('appearance')}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === 'appearance'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -161,7 +161,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {!MV_SINGLE_USER_MODE && (
             <button
               onClick={() => setActiveTab('members')}
-              className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
                 activeTab === 'members'
                   ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                   : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -177,7 +177,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === 'audit'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -189,7 +189,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           <button
             onClick={() => setActiveTab('backup')}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+            className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === 'backup'
                 ? 'bg-white dark:bg-neutral-700 text-slate-950 dark:text-white shadow-sm ring-1 ring-slate-200/70 dark:ring-neutral-600'
                 : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-100 hover:bg-white/60 dark:hover:bg-neutral-700/50'
@@ -216,7 +216,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
                 Theme
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
                 <button
                   type="button"
                   onClick={() => onUpdatePreferences({ theme: 'light' })}
@@ -263,7 +263,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
                 Accent
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] sm:grid-cols-3 gap-3">
                 {[
                   { id: 'default', name: 'Emerald (Default)', color: 'bg-emerald-600', glow: 'shadow-[0_0_0_3px_rgba(5,150,105,0.16),0_8px_18px_-10px_rgba(5,150,105,0.45)]' },
                   { id: 'blue', name: 'Ocean Blue', color: 'bg-blue-600', glow: 'shadow-[0_0_0_3px_rgba(37,99,235,0.16),0_8px_18px_-10px_rgba(37,99,235,0.45)]' },
@@ -376,7 +376,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
 
                   {isOwner && m.role !== 'owner' && (
-                    <div className="flex items-center gap-2">
+                    <div className="mv-hscroll items-center max-w-full">
                       {m.role === 'pending' ? (
                         <>
                           <button
@@ -560,17 +560,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <p className="text-xs font-semibold text-rose-800 dark:text-rose-300">
                     This deletes all financial data. Export a backup first if needed.
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="mv-hscroll items-center">
                     <button
                       onClick={handleResetExecute}
                       disabled={isResetting}
-                      className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
+                      className="shrink-0 whitespace-nowrap px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-xs transition"
                     >
                       {isResetting ? 'Resetting...' : 'Delete All Data'}
                     </button>
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-semibold hover:bg-neutral-300 transition"
+                      className="shrink-0 whitespace-nowrap px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-xs font-semibold hover:bg-neutral-300 transition"
                     >
                       Cancel
                     </button>
