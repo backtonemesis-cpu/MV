@@ -45,6 +45,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [splits, setSplits] = useState<{ categoryId: string; amountStr: string; notes?: string }[]>([]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (initialTransaction) {
       setDescription(initialTransaction.description);
       setAmountStr((initialTransaction.amountPence / 100).toFixed(2));
@@ -238,7 +250,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card">
+      <div className="mv-modal-card mv-transaction-modal">
         <div className="mv-modal-header">
           <h2 className="text-base font-bold text-main">
             {initialTransaction ? 'Edit Transaction' : 'New Transaction'}
@@ -251,7 +263,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mv-modal-form">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="mv-modal-scroll-body mv-transaction-body">
           {error && (
             <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
@@ -264,17 +277,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <label className="block text-xs font-semibold text-muted mb-1.5">
               Type
             </label>
-            <div className="mv-segmented">
+            <div className="mv-transaction-type-tabs">
               {(['expense', 'income', 'transfer', 'refund'] as const).map((t) => (
                 <button
                   type="button"
                   key={t}
                   onClick={() => handleTypeChange(t)}
-                  className={`mv-segmented-item shrink-0 whitespace-nowrap text-xs font-semibold capitalize transition ${
-                    type === t
-                      ? 'bg-surface text-main shadow-xs'
-                      : 'text-muted hover:text-main'
-                  }`}
+                  className={`mv-transaction-type-tab ${type === t ? 'is-active' : ''}`}
                 >
                   {t}
                 </button>
@@ -298,7 +307,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   placeholder="0.00"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2 text-sm font-semibold rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent focus:border-success"
+                  className="mv-transaction-control w-full pl-7 font-semibold"
                   required
                 />
               </div>
@@ -312,7 +321,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent focus:border-success"
+                className="mv-transaction-control w-full"
                 required
               />
             </div>
@@ -328,7 +337,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent focus:border-success"
+              className="mv-transaction-control w-full"
               required
             />
           </div>
@@ -344,11 +353,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   type="button"
                   key={person}
                   onClick={() => setPayer(person)}
-                  className={`py-2 px-3 text-xs font-semibold rounded-xl border transition ${
-                    payer === person
-                      ? 'border-success bg-success-soft text-success'
-                      : 'border-muted hover:border-muted text-muted bg-surface'
-                  }`}
+                  className={`mv-transaction-selector-pill ${payer === person ? 'is-active' : ''}`}
                 >
                   {person}
                 </button>
@@ -356,6 +361,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
           </div>
 
+          <div className="mv-transaction-dynamic">
           {/* Account Selection */}
           <div className="mv-modal-grid-2">
             <div>
@@ -365,7 +371,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <select
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent focus:border-success"
+                className="mv-transaction-control w-full"
               >
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
@@ -383,7 +389,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 <select
                   value={targetAccountId}
                   onChange={(e) => setTargetAccountId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent focus:border-success"
+                  className="mv-transaction-control w-full"
                 >
                   <option value="">Select account</option>
                   {accounts
@@ -405,7 +411,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent focus:border-success"
+                  className="mv-transaction-control w-full"
                 >
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
@@ -455,13 +461,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               </div>
 
               {isSplitEnabled && (
-                <div className="space-y-2 p-3 bg-surface-muted rounded-xl border border-muted">
+                <div className="mv-transaction-splits space-y-2">
                   {splits.map((splitRow, idx) => (
                     <div key={idx} className="mv-hscroll items-center">
                       <select
                         value={splitRow.categoryId}
                         onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)}
-                        className="flex-1 px-2.5 py-1.5 text-xs rounded-lg bg-surface border border-muted text-main"
+                        className="mv-transaction-control flex-1"
                       >
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -477,7 +483,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                           placeholder="0.00"
                           value={splitRow.amountStr}
                           onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)}
-                          className="w-full pl-5 pr-2 py-1.5 text-xs font-semibold rounded-lg bg-surface border border-muted text-main"
+                          className="mv-transaction-control w-full pl-5 font-semibold"
                         />
                       </div>
 
@@ -504,14 +510,15 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               )}
             </div>
           )}
+          </div>
 
           {/* Financial Options */}
-          <div className="pt-2 border-t border-muted space-y-2">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider block">
+          <div className="mv-integrity-flags">
+            <span className="mv-integrity-title">
               Integrity Flags
             </span>
 
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-muted">
+            <label className="mv-integrity-flag">
               <input
                 type="checkbox"
                 checked={isRepayment}
@@ -521,7 +528,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <span>Card repayment</span>
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-muted">
+            <label className="mv-integrity-flag">
               <input
                 type="checkbox"
                 checked={isSavings}
@@ -542,23 +549,25 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               placeholder="Notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-xl bg-surface border border-muted text-main focus:ring-2 focus:ring-accent"
+              className="mv-transaction-control w-full"
             />
           </div>
 
+          </div>
+
           {/* Footer Actions */}
-          <div className="mv-modal-actions">
+          <div className="mv-modal-fixed-actions">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-muted hover:text-main hover:bg-surface-muted rounded-xl transition"
+              className="mv-transaction-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 text-xs font-semibold text-on-accent bg-accent hover:bg-success-soft rounded-xl shadow-xs transition disabled:opacity-50"
+              className="mv-transaction-primary"
             >
               {isSubmitting
                 ? 'Saving...'
