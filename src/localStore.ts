@@ -763,6 +763,12 @@ function plannedIncomeFromPartial(data: Partial<PlannedIncome>): PlannedIncome {
   if (!isSafePence(data.expectedAmountPence) || (data.expectedAmountPence ?? -1) < 0) {
     throw new Error('Expected income must be exact integer pence.');
   }
+  if (
+    data.actualAmountPence !== undefined &&
+    (!isSafePence(data.actualAmountPence) || data.actualAmountPence < 0)
+  ) {
+    throw new Error('Actual income must be exact integer pence.');
+  }
   return {
     id: data.id || createId('income'),
     name: data.name.trim(),
