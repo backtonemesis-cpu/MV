@@ -343,7 +343,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             />
           </div>
           <div
-            className={`mt-2 text-2xl font-bold tracking-tight ${
+            className={`mv-private-value mt-2 text-2xl font-bold tracking-tight ${
               plan.totalTransferRequiredPence > 0
                 ? 'text-warning'
                 : 'text-main'
@@ -367,7 +367,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             </span>
             <Layers className="w-4 h-4 shrink-0 text-subtle" />
           </div>
-          <div className="mt-2 text-2xl font-bold tracking-tight text-main">
+          <div className="mv-private-value mt-2 text-2xl font-bold tracking-tight text-main">
             {formatPence(plan.totalSelectedPaymentsPence)}
           </div>
           <p className="mt-1 text-sm leading-5 text-muted">
@@ -387,7 +387,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               }`}
             />
           </div>
-          <div className="mt-2 text-2xl font-bold tracking-tight text-main">
+          <div className="mv-private-value mt-2 text-2xl font-bold tracking-tight text-main">
             {plan.accountsNeedingFunding.length}
           </div>
           <p className="mt-1 text-sm leading-5 text-muted">
@@ -445,7 +445,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       <span className="text-xs font-medium text-warning uppercase tracking-wider block">
                         Transfer Required
                       </span>
-                      <span className="text-xl font-extrabold text-warning">
+                      <span className="mv-private-value text-xl font-extrabold text-warning">
                         {formatPence(req.transferRequiredPence)}
                       </span>
                     </div>
@@ -467,28 +467,28 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-muted bg-surface border-b border-muted text-xs">
                   <div className="p-4">
                     <span className="text-muted text-subtle font-medium block">Balance</span>
-                    <span className="text-sm font-bold text-main mt-1 block">
+                    <span className="mv-private-value text-sm font-bold text-main mt-1 block">
                       {formatPence(req.currentBalancePence)}
                     </span>
                   </div>
 
                   <div className="p-4">
                     <span className="text-muted text-subtle font-medium block">Selected Bills</span>
-                    <span className="text-sm font-bold text-main mt-1 block">
+                    <span className="mv-private-value text-sm font-bold text-main mt-1 block">
                       {formatPence(req.totalSelectedPaymentsPence)}
                     </span>
                   </div>
 
                   <div className="p-4">
                     <span className="text-muted text-subtle font-medium block">Available</span>
-                    <span className="text-sm font-bold text-main mt-1 block">
+                    <span className="mv-private-value text-sm font-bold text-main mt-1 block">
                       {formatPence(req.amountAvailablePence)}
                     </span>
                   </div>
 
                   <div className="p-4 bg-warning-soft">
                     <span className="text-warning font-semibold block">Transfer Required</span>
-                    <span className="text-sm font-extrabold text-warning mt-1 block">
+                    <span className="mv-private-value text-sm font-extrabold text-warning mt-1 block">
                       {formatPence(req.transferRequiredPence)}
                     </span>
                   </div>
@@ -557,7 +557,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                 Needs funds
                               </span>
                             )}
-                            <span className={`font-bold ${p.status === 'paid' ? 'text-muted text-subtle line-through' : 'text-main'}`}>
+                            <span className={`mv-private-value font-bold ${p.status === 'paid' ? 'text-muted text-subtle line-through' : 'text-main'}`}>
                               {formatPence(p.amountPence)}
                             </span>
                           </div>
