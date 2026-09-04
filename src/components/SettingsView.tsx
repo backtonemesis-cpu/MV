@@ -28,6 +28,18 @@ import {
 } from '../types';
 import { MV_SINGLE_USER_MODE } from '../accessPolicy';
 
+const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string }[] = [
+  { id: 'emerald', name: 'Emerald Green', color: '#059669' },
+  { id: 'sapphire', name: 'Sapphire Blue', color: '#2563eb' },
+  { id: 'amethyst', name: 'Amethyst Purple', color: '#8b5cf6' },
+  { id: 'crimson', name: 'Crimson Ruby', color: '#e11d48' },
+  { id: 'amber', name: 'Sunset Amber', color: '#d97706' },
+  { id: 'teal', name: 'Ocean Teal', color: '#0d9488' },
+  { id: 'indigo', name: 'Midnight Indigo', color: '#4f46e5' },
+  { id: 'rose', name: 'Rose Quartz', color: '#db2777' },
+  { id: 'gold', name: 'Classic Gold', color: '#b45309' },
+];
+
 interface SettingsViewProps {
   currentSession: UserSession;
   members: HouseholdMember[];
@@ -68,11 +80,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isRestoring, setIsRestoring] = useState(false);
   const [isSavingAppearance, setIsSavingAppearance] = useState(false);
   const [appearanceSavedMessage, setAppearanceSavedMessage] = useState<string | null>(null);
+  const [hoveredAccent, setHoveredAccent] = useState<AccentColor | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [sampleMessage, setSampleMessage] = useState<string | null>(null);
+
+  const activeAccentName =
+    ACCENT_OPTIONS.find((item) => item.id === (hoveredAccent ?? userPreferences.accent))?.name ??
+    'Emerald Green';
 
   const isOwner = currentSession.role === 'owner';
   const showDevelopmentTools = !import.meta.env.PROD;
@@ -243,36 +260,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
 
             {/* Accent Highlights */}
-            <div>
-              <label className="mv-text-muted block text-xs font-semibold uppercase tracking-[0.08em] mb-3">
-                Accent Highlight
-              </label>
-              <div className="mv-surface-muted rounded-xl px-4 py-4">
-                <div className="mv-accent-picker" role="group" aria-label="Accent highlight">
-                  {[
-                    { id: 'emerald' as AccentColor, name: 'Emerald', color: '#059669' },
-                    { id: 'sapphire' as AccentColor, name: 'Sapphire Blue', color: '#2563eb' },
-                    { id: 'amethyst' as AccentColor, name: 'Amethyst Purple', color: '#8b5cf6' },
-                  ].map((item) => {
-                    const isSelected = userPreferences.accent === item.id;
-                    return (
-                      <div key={item.id} className="flex flex-col items-center gap-1.5">
-                        <button
-                          type="button"
-                          aria-label={item.name}
-                          title={item.name}
-                          aria-pressed={isSelected}
-                          onClick={() => onUpdatePreferences({ accent: item.id })}
-                          className={`mv-accent-swatch ${isSelected ? 'is-active' : ''}`}
-                          style={{ '--swatch': item.color } as React.CSSProperties}
-                        >
-                          <span className="mv-accent-swatch-dot" />
-                        </button>
-                        <span className="mv-accent-label">{item.name}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+            <div className="pb-2">
+              <div className="flex items-center justify-between gap-3">
+                <label className="mv-text-muted text-xs font-semibold uppercase tracking-[0.08em]">
+                  Accent Highlight
+                </label>
+                <span className="mv-accent-current-label" aria-live="polite">
+                  {activeAccentName}
+                </span>
+              </div>
+
+              <div
+                className="mv-accent-picker"
+                role="group"
+                aria-label="Accent highlight"
+                onMouseLeave={() => setHoveredAccent(null)}
+              >
+                {ACCENT_OPTIONS.map((item) => {
+                  const isSelected = userPreferences.accent === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-label={item.name}
+                      title={item.name}
+                      aria-pressed={isSelected}
+                      onMouseEnter={() => setHoveredAccent(item.id)}
+                      onFocus={() => setHoveredAccent(item.id)}
+                      onBlur={() => setHoveredAccent(null)}
+                      onClick={() => onUpdatePreferences({ accent: item.id })}
+                      className={`mv-accent-swatch ${isSelected ? 'is-active' : ''}`}
+                      style={{ '--swatch': item.color } as React.CSSProperties}
+                    />
+                  );
+                })}
               </div>
             </div>
 

@@ -18,10 +18,26 @@ export function normalizeThemePreference(value: unknown): ThemePreference {
 }
 
 export function normalizeAccentPreference(value: unknown): AccentColor {
-  if (value === 'emerald' || value === 'sapphire' || value === 'amethyst') return value;
+  if (
+    value === 'emerald' ||
+    value === 'sapphire' ||
+    value === 'amethyst' ||
+    value === 'crimson' ||
+    value === 'amber' ||
+    value === 'teal' ||
+    value === 'indigo' ||
+    value === 'rose' ||
+    value === 'gold'
+  ) {
+    return value;
+  }
 
-  if (value === 'blue' || value === 'indigo') return 'sapphire';
+  // Legacy accent migration.
+  if (value === 'default' || value === 'green') return 'emerald';
+  if (value === 'blue') return 'sapphire';
   if (value === 'lilac' || value === 'purple') return 'amethyst';
+  if (value === 'red') return 'crimson';
+  if (value === 'yellow' || value === 'orange') return 'amber';
 
   return 'emerald';
 }

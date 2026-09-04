@@ -220,7 +220,16 @@ export interface TestResult {
 }
 
 export type ThemePreference = 'light' | 'dark' | 'slate';
-export type AccentColor = 'emerald' | 'sapphire' | 'amethyst';
+export type AccentColor =
+  | 'emerald'
+  | 'sapphire'
+  | 'amethyst'
+  | 'crimson'
+  | 'amber'
+  | 'teal'
+  | 'indigo'
+  | 'rose'
+  | 'gold';
 
 export interface UserPreferences {
   theme: ThemePreference;
