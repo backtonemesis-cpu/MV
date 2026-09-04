@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { PiggyBank, Plus, ArrowUpRight, CheckCircle2, Target, Calendar, Landmark, X, AlertCircle } from 'lucide-react';
+import { PiggyBank, Plus, ArrowUpRight, CheckCircle2, Target, Calendar, Landmark, X, AlertCircle, Trash2 } from 'lucide-react';
 import { SavingsGoal, Account, Transaction, UserRole, Payer } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 
@@ -11,6 +11,7 @@ interface SavingsViewProps {
   userRole: UserRole;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
   onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
+  onDeleteSavingsGoal: (id: string) => Promise<void>;
   onExecuteTransfer: (payload: {
     sourceAccountId: string;
     destinationAccountId: string;
@@ -29,6 +30,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   userRole,
   onCreateSavingsGoal,
   onUpdateSavingsGoal,
+  onDeleteSavingsGoal,
   onExecuteTransfer,
 }) => {
   const [showGoalModal, setShowGoalModal] = useState(false);
@@ -132,6 +134,24 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       setError(err.message || 'Failed to update savings goal');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteGoal = async (goal: SavingsGoal) => {
+    if (!confirm(`Delete savings pot "${goal.name}"? This removes the goal only and does not delete any account transactions.`)) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await onDeleteSavingsGoal(goal.id);
+      if (selectedGoal?.id === goal.id) {
+        setSelectedGoal(null);
+        setShowEditGoalModal(false);
+        setShowTransferModal(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete savings pot');
     }
   };
 
@@ -323,12 +343,21 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                       </button>
 
                       {canEdit && (
-                        <button
-                          onClick={() => openEditGoal(goal)}
-                          className="shrink-0 whitespace-nowrap rounded-full bg-surface-muted px-3 py-1.5 text-[13px] font-medium text-muted"
-                        >
-                          Edit
-                        </button>
+                        <>
+                          <button
+                            onClick={() => openEditGoal(goal)}
+                            className="shrink-0 whitespace-nowrap rounded-full bg-surface-muted px-3 py-1.5 text-[13px] font-medium text-muted transition-all hover:bg-surface active:scale-[0.98]"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteGoal(goal)}
+                            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-full bg-danger-soft px-3 py-1.5 text-[13px] font-medium text-danger transition-all hover:opacity-80 active:scale-[0.98]"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        </>
                       )}
                     </div>
                   </article>
@@ -541,21 +570,32 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 />
               </div>
 
-              <div className="pt-3 border-t border-muted flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-muted flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowEditGoalModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
+                  onClick={() => handleDeleteGoal(selectedGoal)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-danger bg-danger-soft px-4 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                 >
-                  Cancel
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete Pot
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Saving...' : 'Update Pot'}
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditGoalModal(false)}
+                    className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-accent text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition-all active:scale-[0.98]"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Update Pot'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

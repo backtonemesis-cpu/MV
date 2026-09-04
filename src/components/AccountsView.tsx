@@ -15,6 +15,7 @@ import {
   CreditCard,
   User,
   Calendar,
+  Trash2,
 } from 'lucide-react';
 import { Account, SavingsGoal, UserRole, AccountType, Payer, Transaction } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
@@ -28,6 +29,8 @@ interface AccountsViewProps {
   onUpdateAccount: (id: string, data: Partial<Account> & { reconciledBalancePence?: number }) => Promise<void>;
   onDeleteAccount: (id: string) => Promise<void>;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
+  onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
+  onDeleteSavingsGoal: (id: string) => Promise<void>;
 }
 
 export const AccountsView: React.FC<AccountsViewProps> = ({
@@ -39,14 +42,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   onUpdateAccount,
   onDeleteAccount,
   onCreateSavingsGoal,
+  onUpdateSavingsGoal,
+  onDeleteSavingsGoal,
 }) => {
   const [showAccModal, setShowAccModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReconcileModal, setShowReconcileModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
+  const [showEditGoalModal, setShowEditGoalModal] = useState(false);
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
   // New Account form state
@@ -214,6 +221,55 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       setError(err.message || 'Failed to create savings goal');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const openEditGoal = (goal: SavingsGoal) => {
+    setSelectedGoal(goal);
+    setGoalName(goal.name);
+    setGoalTargetStr((goal.targetPence / 100).toFixed(2));
+    setGoalCurrentStr((goal.currentPence / 100).toFixed(2));
+    setGoalAccountId(goal.accountId);
+    setGoalDate(goal.targetDate || '');
+    setError(null);
+    setShowEditGoalModal(true);
+  };
+
+  const handleEditGoalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedGoal || !goalName.trim() || !goalAccountId) return;
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await onUpdateSavingsGoal(selectedGoal.id, {
+        name: goalName.trim(),
+        targetPence: parseToPence(goalTargetStr),
+        currentPence: parseToPence(goalCurrentStr),
+        accountId: goalAccountId,
+        targetDate: goalDate || undefined,
+      });
+      setShowEditGoalModal(false);
+      setSelectedGoal(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update savings pot');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteGoal = async (goal: SavingsGoal) => {
+    if (!confirm(`Delete savings pot "${goal.name}"? This removes the goal only and does not delete account transactions.`)) {
+      return;
+    }
+    try {
+      setError(null);
+      await onDeleteSavingsGoal(goal.id);
+      if (selectedGoal?.id === goal.id) {
+        setSelectedGoal(null);
+        setShowEditGoalModal(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete savings pot');
     }
   };
 
@@ -470,6 +526,27 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <span>{percent}% funded</span>
                   {goal.targetDate && <span>Target: {goal.targetDate}</span>}
                 </div>
+
+                {canEdit && (
+                  <div className="mt-4 flex items-center justify-end gap-2 border-t border-muted pt-3">
+                    <button
+                      type="button"
+                      onClick={() => openEditGoal(goal)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-muted bg-surface-muted px-3 py-2 text-xs font-semibold text-main transition-all hover:bg-surface active:scale-[0.98]"
+                    >
+                      <Edit2 className="h-3.5 w-3.5 text-accent" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteGoal(goal)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1008,6 +1085,127 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 >
                   {isSubmitting ? 'Saving...' : 'Save Savings Pot'}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Edit Savings Pot */}
+      {showEditGoalModal && selectedGoal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-muted p-6">
+            <div className="flex items-center justify-between pb-3 border-b border-muted">
+              <h3 className="text-base font-bold text-main">Edit Savings Pot</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditGoalModal(false);
+                  setSelectedGoal(null);
+                }}
+                className="p-1 rounded-lg text-subtle hover:text-main hover:bg-surface-muted"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditGoalSubmit} className="mt-4 space-y-4">
+              {error && (
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">Goal Name</label>
+                <input
+                  type="text"
+                  value={goalName}
+                  onChange={(e) => setGoalName(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">Linked Account</label>
+                <select
+                  value={goalAccountId}
+                  onChange={(e) => setGoalAccountId(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  required
+                >
+                  {accounts
+                    .filter((a) => a.isActive !== false || a.id === selectedGoal.accountId)
+                    .map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} ({formatPence(acc.currentBalancePence)})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-muted mb-1">Current (£)</label>
+                  <input
+                    type="text"
+                    value={goalCurrentStr}
+                    onChange={(e) => setGoalCurrentStr(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
+                  <input
+                    type="text"
+                    value={goalTargetStr}
+                    onChange={(e) => setGoalTargetStr(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">Target Date</label>
+                <input
+                  type="date"
+                  value={goalDate}
+                  onChange={(e) => setGoalDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-muted flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDeleteGoal(selectedGoal)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-danger bg-danger-soft px-4 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete Pot
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditGoalModal(false);
+                      setSelectedGoal(null);
+                    }}
+                    className="px-4 py-2 text-xs font-semibold text-muted hover:bg-surface-muted rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-accent text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50 transition-all active:scale-[0.98]"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
