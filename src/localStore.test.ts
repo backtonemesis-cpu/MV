@@ -3,12 +3,19 @@ import {
   LOCAL_STORAGE_KEY,
   createLocalAccount,
   createLocalBackupPackage,
+  createLocalHouseholdMember,
+  createLocalPlannedIncome,
   createLocalTransaction,
   executeLocalTransfer,
   loadLocalHousehold,
+  markLocalIncomeReceived,
   preflightLocalRestore,
   resetLocalHousehold,
   restoreLocalBackup,
+  updateLocalHouseholdMember,
+  updateLocalPlannedIncome,
+  changeLocalHouseholdMemberRole,
+  removeLocalHouseholdMember,
 } from './localStore';
 
 class MemoryStorage implements Storage {
@@ -158,6 +165,122 @@ describe('Penny-style local MV storage', () => {
       state.accounts.find((item) => item.id === savings.account.id)?.currentBalancePence
     ).toBe(70_00);
     expect(state.transactions.every((tx) => Number.isSafeInteger(tx.amountPence))).toBe(true);
+  });
+
+  it('persists household members and supports edit, role change, and removal', () => {
+    let state = loadLocalHousehold();
+
+    const created = createLocalHouseholdMember(
+      {
+        name: 'Vesta',
+        email: 'vesta@example.com',
+        role: 'editor',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.members).toHaveLength(2);
+    expect(state.members.find((member) => member.id === created.member.id)).toEqual(
+      expect.objectContaining({
+        name: 'Vesta',
+        email: 'vesta@example.com',
+        role: 'editor',
+      })
+    );
+
+    updateLocalHouseholdMember(
+      created.member.id,
+      { name: 'Vesta M', email: 'vesta.new@example.com' },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    changeLocalHouseholdMemberRole(created.member.id, 'view_only', state.version);
+    state = loadLocalHousehold();
+
+    expect(state.members.find((member) => member.id === created.member.id)).toEqual(
+      expect.objectContaining({
+        name: 'Vesta M',
+        email: 'vesta.new@example.com',
+        role: 'view_only',
+      })
+    );
+
+    removeLocalHouseholdMember(created.member.id, state.version);
+    state = loadLocalHousehold();
+    expect(state.members.find((member) => member.id === created.member.id)?.role).toBe('removed');
+    expect(state.members.filter((member) => member.role === 'owner')).toHaveLength(1);
+  });
+
+  it('keeps received income and its linked Activity transaction reconciled when edited', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((item) => item.name === 'Lloyds');
+    expect(account).toBeTruthy();
+
+    const created = createLocalPlannedIncome(
+      {
+        name: 'Test Wage',
+        expectedAmountPence: 120000,
+        month: '2026-10',
+        sourcePerson: 'Marius',
+        accountId: account!.id,
+        categoryId: 'cat-salary',
+        expectedDate: '2026-10-01',
+        status: 'expected',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const received = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 119500,
+        actualDate: '2026-10-02',
+        accountId: account!.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    updateLocalPlannedIncome(
+      created.income.id,
+      {
+        name: 'Corrected Wage',
+        expectedAmountPence: 120500,
+        actualAmountPence: 120000,
+        actualDate: '2026-10-03',
+        sourcePerson: 'Marius',
+        accountId: account!.id,
+        categoryId: 'cat-salary',
+        status: 'partial',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const income = state.plannedIncomes?.find((item) => item.id === created.income.id);
+    const linkedTx = state.transactions.find((tx) => tx.id === received.transaction.id);
+
+    expect(income).toEqual(
+      expect.objectContaining({
+        name: 'Corrected Wage',
+        expectedAmountPence: 120500,
+        actualAmountPence: 120000,
+        actualDate: '2026-10-03',
+      })
+    );
+    expect(linkedTx).toEqual(
+      expect.objectContaining({
+        description: 'Corrected Wage',
+        amountPence: 120000,
+        date: '2026-10-03',
+        categoryId: 'cat-salary',
+        accountId: account!.id,
+        plannedIncomeId: created.income.id,
+      })
+    );
   });
 
   it('fails stale local writes instead of silently overwriting another tab', () => {
