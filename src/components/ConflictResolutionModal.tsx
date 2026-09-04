@@ -17,8 +17,8 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs animate-in fade-in">
-      <div className="bg-surface rounded-2xl max-w-md w-full p-6 shadow-2xl border border-muted text-center space-y-4">
+    <div className="mv-modal-backdrop">
+      <div className="mv-modal-card mv-modal-body text-center space-y-3">
         <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
           <AlertTriangle className="w-6 h-6" />
         </div>
