@@ -1,0 +1,98 @@
+name: Test and deploy local MV
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck browser app
+        run: npm run lint
+
+      - name: Run local finance and storage tests
+        run: npm test
+
+      - name: Verify £0 local-only architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          grep --fixed-strings "const STORAGE_KEY = 'mv_local_state_v1'" src/localStore.ts
+          grep --fixed-strings "localStorage" src/localStore.ts
+          grep --fixed-strings '"build": "vite build"' package.json
+          grep --fixed-strings "base: '/MV/'" vite.config.ts
+
+          if grep -R --line-number -E "fetch\(['\"]\/api\/|new EventSource\(" src             --exclude='AuthGate.tsx'             --exclude='firebase.ts'; then
+            echo "Local-only MV must not call a backend API"
+            exit 1
+          fi
+
+          if grep --line-number -E "AuthGate|['\"]\.\/firebase['\"]" src/main.tsx; then
+            echo "Local-only MV must not require Firebase authentication"
+            exit 1
+          fi
+
+      - name: Build static production app
+        run: npm run build
+
+      - name: Verify static output
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          grep --fixed-strings '/MV/assets/' dist/index.html
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: test-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

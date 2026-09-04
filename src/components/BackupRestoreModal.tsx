@@ -9,7 +9,6 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { fetchBackup, preflightRestore, restoreBackup } from '../utils/api';
-import { formatPence } from '../utils/currency';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -29,7 +28,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importJson, setImportJson] = useState<string>('');
-  const [reconciliation, setReconciliation] = useState<any | null>(null);
+  const [restoreComplete, setRestoreComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -85,8 +84,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
       if (!preflight.valid) {
         throw new Error('Backup preflight did not pass.');
       }
-      const res = await restoreBackup(parsed, expectedVersion);
-      setReconciliation(res.reconciliation);
+      await restoreBackup(parsed, expectedVersion);
+      setRestoreComplete(true);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Failed to restore backup');
@@ -101,7 +100,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-700" />
-            <h2 className="text-base font-bold text-neutral-900">Backup & Restore System</h2>
+            <h2 className="text-base font-bold text-neutral-900">Backup & Restore Local Data</h2>
           </div>
           <button
             onClick={onClose}
@@ -122,10 +121,10 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           {/* Export Section */}
           <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
             <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
-              Export Verified Backup
+              Export Local Backup
             </h3>
             <p className="text-xs text-neutral-500 mb-3">
-              Generates a validated JSON archive of all accounts, categories, transactions, splits, plans, savings, and audit evidence.
+              Downloads a validated JSON copy of the data stored in this browser. Keep it somewhere safe so you can restore MV on this or another device.
             </p>
             <button
               onClick={handleExport}
@@ -140,32 +139,24 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
           {/* Restore Section (Owner Only) */}
           <div className="border-t border-neutral-200 pt-5">
             <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-1">
-              Restore / Migration Import
+              Restore Local Backup
             </h3>
             <p className="text-xs text-neutral-500 mb-3">
-              Validates relationships, exact pence values, reconciled balances, and the current household version before one atomic restore.
+              Validates the backup and exact-pence fields before replacing the local browser copy. MV keeps an automatic pre-restore recovery copy.
             </p>
 
             {!isOwner ? (
               <div className="p-3 bg-neutral-100 rounded-xl text-xs text-neutral-600">
                 Only the Household Owner (Marius) can execute dataset restores.
               </div>
-            ) : reconciliation ? (
+            ) : restoreComplete ? (
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs text-emerald-900 space-y-2">
                 <div className="flex items-center gap-2 font-bold text-emerald-800">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Migration & Reconciliation Passed!
+                  Local Backup Restored
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-emerald-200">
-                  <div>
-                    Transactions: {reconciliation.preTransactions} → {reconciliation.postTransactions}
-                  </div>
-                  <div>
-                    Authoritative Balance: {formatPence(reconciliation.postBalancePence)}
-                  </div>
-                </div>
-                <p className="text-[10px] text-emerald-700 mt-1">
-                  Full reconciliation record logged in append-only audit trail.
+                <p className="text-[11px] text-emerald-700 mt-1">
+                  The validated backup is now stored locally in this browser and the restore is recorded in the audit trail.
                 </p>
               </div>
             ) : (
@@ -190,7 +181,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-semibold hover:bg-emerald-800 transition disabled:opacity-50"
                 >
                   <Upload className="w-4 h-4" />
-                  {isImporting ? 'Reconciling & Restoring...' : 'Validate & Execute Restore'}
+                  {isImporting ? 'Validating & Restoring...' : 'Validate & Execute Restore'}
                 </button>
               </div>
             )}

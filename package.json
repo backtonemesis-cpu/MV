@@ -7,13 +7,12 @@
     "node": ">=22.5.0 <23"
   },
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/server.js",
-    "start": "NODE_ENV=production node scripts/production-preflight.mjs && NODE_ENV=production node dist/server.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
     "lint": "tsc --noEmit",
-    "test": "vitest run",
-    "check": "npm run lint && npm test && npm run build",
-    "migrate:firestore": "tsx scripts/migrate-sqlite-to-firestore.ts"
+    "test": "vitest run src",
+    "check": "npm run lint && npm test && npm run build"
   },
   "dependencies": {
     "clsx": "^2.1.1",
