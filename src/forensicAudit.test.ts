@@ -11,6 +11,8 @@ import {
   resetLocalHousehold,
   undoLatestLocalTransferPlanFunding,
   updateLocalPlannedPayment,
+  updateLocalTransaction,
+  deleteLocalTransaction,
   markLocalIncomeReceived,
   LOCAL_STORAGE_KEY,
 } from './localStore';
@@ -634,7 +636,208 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(after.savingsGoals).toHaveLength(0);
   });
 
-  it('13. Savings position uses true account balances and excludes goal allocations', () => {
+  it('13. Editing a linked paid-bill transaction keeps the bill and savings surplus reconciled', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const account = createLocalAccount(
+      {
+        name: 'Bills Current',
+        type: 'current',
+        startingBalancePence: 1000_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Energy',
+        amountPence: 100_00,
+        month: '2026-09',
+        accountId: account.account.id,
+        responsiblePerson: 'Marius',
+        categoryId: 'cat-utilities',
+        status: 'unpaid',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const paid = markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 110_00,
+        actualDate: '2026-09-03',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    updateLocalTransaction(
+      paid.transaction.id,
+      {
+        amountPence: 125_00,
+        date: '2026-09-04',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const syncedBill = state.plannedPayments.find((item) => item.id === bill.payment.id);
+    expect(syncedBill?.actualAmountPence).toBe(125_00);
+    expect(syncedBill?.actualDate).toBe('2026-09-04');
+    expect(syncedBill?.status).toBe('paid');
+
+    const monthly = calculateMonthlySurplus(
+      state.transactions,
+      state.plannedPayments,
+      '2026-09',
+      state.plannedIncomes
+    );
+    expect(monthly.fixedBillsTotalPence).toBe(125_00);
+    expect(monthly.grossOtherSpendingPence).toBe(0);
+    expect(monthly.availableSurplusPence).toBe(-125_00);
+  });
+
+  it('14. Deleting a linked actual bill transaction safely returns the bill to unpaid', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const account = createLocalAccount(
+      {
+        name: 'Delete Test Current',
+        type: 'current',
+        startingBalancePence: 500_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Broadband',
+        amountPence: 40_00,
+        month: '2026-09',
+        accountId: account.account.id,
+        responsiblePerson: 'Marius',
+        categoryId: 'cat-internet',
+        status: 'unpaid',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const paid = markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 42_00,
+        actualDate: '2026-09-03',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    deleteLocalTransaction(paid.transaction.id, state.version);
+    state = loadLocalHousehold();
+
+    const reverted = state.plannedPayments.find((item) => item.id === bill.payment.id);
+    expect(reverted?.status).toBe('unpaid');
+    expect(reverted?.actualAmountPence).toBeUndefined();
+    expect(reverted?.actualDate).toBeUndefined();
+    expect(reverted?.actualTransactionId).toBeUndefined();
+
+    const monthly = calculateMonthlySurplus(
+      state.transactions,
+      state.plannedPayments,
+      '2026-09',
+      state.plannedIncomes
+    );
+    expect(monthly.fixedBillsTotalPence).toBe(40_00);
+    expect(monthly.fixedBillsUnpaidPence).toBe(40_00);
+  });
+
+  it('15. Savings goal contribution transactions cannot be edited or deleted outside Savings', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Protected Current',
+        type: 'current',
+        startingBalancePence: 300_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const saver = createLocalAccount(
+      {
+        name: 'Protected Saver',
+        type: 'savings',
+        startingBalancePence: 50_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const goal = createLocalSavingsGoal(
+      {
+        name: 'Protected Pot',
+        targetPence: 500_00,
+        currentPence: 50_00,
+        accountId: saver.account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const contribution = contributeLocalSavingsGoal(
+      {
+        goalId: goal.goal.id,
+        sourceAccountId: source.account.id,
+        amountPence: 25_00,
+        payer: 'Marius',
+        date: '2026-09-04',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const snapshotVersion = state.version;
+    const snapshotGoal = state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence;
+    const snapshotSavings = state.accounts.find((item) => item.id === saver.account.id)?.currentBalancePence;
+
+    expect(() =>
+      updateLocalTransaction(
+        contribution.transaction.id,
+        { amountPence: 30_00 },
+        state.version
+      )
+    ).toThrow('Savings goal contributions must be managed from the Savings view.');
+
+    state = loadLocalHousehold();
+    expect(state.version).toBe(snapshotVersion);
+
+    expect(() =>
+      deleteLocalTransaction(contribution.transaction.id, state.version)
+    ).toThrow('Savings goal contributions must be managed from the Savings view.');
+
+    state = loadLocalHousehold();
+    expect(state.version).toBe(snapshotVersion);
+    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(snapshotGoal);
+    expect(state.accounts.find((item) => item.id === saver.account.id)?.currentBalancePence).toBe(snapshotSavings);
+    expect(state.transactions.some((tx) => tx.id === contribution.transaction.id)).toBe(true);
+  });
+
+  it('16. Savings position uses true account balances and excludes goal allocations', () => {
     const savingsAcc: Account = {
       id: 'savings-1',
       name: 'Chase Saver',
