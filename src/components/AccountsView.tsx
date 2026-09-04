@@ -385,30 +385,30 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             </button>
 
             {canEdit && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 <button
                   type="button"
                   onClick={() => openReconcileModal(acc)}
-                  title="Reconcile"
-                  className="rounded-lg p-1.5 text-subtle transition hover:bg-surface-muted hover:text-accent"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 text-[11px] font-semibold text-muted transition-all hover:border-strong hover:text-accent active:scale-[0.97]"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
+                  Reconcile
                 </button>
                 <button
                   type="button"
                   onClick={() => openEditModal(acc)}
-                  title="Edit"
-                  className="rounded-lg p-1.5 text-subtle transition hover:bg-surface-muted hover:text-main"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 text-[11px] font-semibold text-main transition-all hover:border-strong active:scale-[0.97]"
                 >
-                  <Edit2 className="h-3.5 w-3.5" />
+                  <Edit2 className="h-3.5 w-3.5 text-accent" />
+                  Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDeactivate(acc)}
-                  title={isArchived ? 'Delete' : 'Archive'}
-                  className="rounded-lg p-1.5 text-subtle transition hover:bg-danger-soft hover:text-danger"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-danger bg-danger-soft px-2.5 text-[11px] font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.97]"
                 >
                   <Archive className="h-3.5 w-3.5" />
+                  {isArchived ? 'Delete' : 'Archive'}
                 </button>
               </div>
             )}
