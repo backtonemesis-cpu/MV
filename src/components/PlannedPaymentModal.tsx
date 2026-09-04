@@ -37,7 +37,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   );
   const [dueDate, setDueDate] = useState(payment?.dueDate || '');
   const [categoryId, setCategoryId] = useState(payment?.categoryId || categories[0]?.id || 'cat-housing');
-  const [status, setStatus] = useState<'unpaid' | 'paid'>(payment?.status || 'unpaid');
   const [includeInTransferPlan, setIncludeInTransferPlan] = useState<boolean>(
     payment?.includeInTransferPlan !== undefined ? payment.includeInTransferPlan : true
   );
@@ -104,7 +103,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
         responsiblePerson,
         dueDate: dueDate || undefined,
         categoryId: categoryId || undefined,
-        status,
         includeInTransferPlan,
         isRecurring,
         notes: notes.trim() || undefined,
@@ -260,7 +258,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Status & Plan Inclusion (Separate Concepts) */}
+          {/* Transfer-plan and recurrence settings. Paid state is derived from linked actual payment evidence. */}
           <div className="mv-modal-section space-y-2">
             <div className="flex items-center justify-between">
               <div>
@@ -288,19 +286,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-muted">
-              <div>
-                <span className="text-xs font-medium text-main">Payment Status</span>
-              </div>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
-                className="text-xs font-medium border border-muted rounded-md px-2.5 py-1 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
-              >
-                <option value="unpaid">Unpaid</option>
-                <option value="paid">Paid</option>
-              </select>
-            </div>
           </div>
 
           {/* Notes */}
