@@ -126,6 +126,8 @@ export interface PlannedPayment {
   categoryId?: string;
   status: 'unpaid' | 'paid';
   includeInTransferPlan: boolean;
+  /** Explicit monthly rollover intent. Irregular/one-off bills should leave this false. */
+  isRecurring?: boolean;
   notes?: string;
   schemaVersion?: number;
   metadata?: Record<string, any>;
