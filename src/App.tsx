@@ -65,7 +65,6 @@ import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { MV_SINGLE_USER_MODE } from './accessPolicy';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 export default function App() {
