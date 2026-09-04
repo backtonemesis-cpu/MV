@@ -299,7 +299,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       </div>
 
       {/* Savings Summary, Goals & Movements */}
-      <section className="mv-edge-safe rounded-2xl border border-muted bg-surface p-3 sm:p-4 space-y-5">
+      <section className="mv-card mv-edge-safe rounded-2xl border border-muted bg-surface p-3 sm:p-4 space-y-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <article className="min-w-0 rounded-[14px] border border-muted bg-surface p-4 shadow-sm">
             <h2 className="text-[12px] font-semibold uppercase tracking-wider text-muted">
