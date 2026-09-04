@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/MV/',
+  base: '/penny-budget/MV/',
   server: {
     host: '0.0.0.0',
     port: 3000,

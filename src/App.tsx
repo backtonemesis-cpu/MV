@@ -52,11 +52,9 @@ import { AccountsView } from './components/AccountsView';
 import { SavingsView } from './components/SavingsView';
 import { SettingsView } from './components/SettingsView';
 import { BudgetView } from './components/BudgetView';
-import { MembersView } from './components/MembersView';
 import { AuditLogView } from './components/AuditLogView';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
-import { PendingAccessScreen } from './components/PendingAccessScreen';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { MV_SINGLE_USER_MODE } from './accessPolicy';
@@ -546,32 +544,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Pending Screen for unapproved accounts */}
-        {!isLoading && session?.role === 'pending' && (
-          <PendingAccessScreen
-            userEmail={session.email}
-            onSwitchToOwner={() => handleSwitchUser('backtonemesis@gmail.com')}
-          />
-        )}
-
-        {/* Revoked Access Screen */}
-        {!isLoading && session?.role === 'removed' && (
-          <div className="min-h-[50vh] flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl p-8 max-w-md w-full text-center border border-neutral-200 dark:border-neutral-800 shadow-md">
-              <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">Access Revoked</h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
-                This account has been removed from the household.
-              </p>
-              <button
-                onClick={() => handleSwitchUser('backtonemesis@gmail.com')}
-                className="mt-6 px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-xl text-xs font-semibold hover:bg-neutral-800 dark:hover:bg-neutral-200 transition"
-              >
-                Switch to Marius (Owner)
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Authorized Active Household Views */}
         {!isLoading && household && session && session.role !== 'pending' && session.role !== 'removed' && (
           <>
@@ -716,17 +688,6 @@ export default function App() {
                 selectedMonth={selectedMonth}
                 availableMonths={availableMonths}
                 onSelectMonth={setSelectedMonth}
-              />
-            )}
-
-            {activeTab === 'members' && (
-              <MembersView
-                members={household.members}
-                userRole={session.role}
-                currentUserEmail={session.email}
-                onApproveMember={handleApproveMember}
-                onChangeRole={handleChangeRole}
-                onRemoveMember={handleRemoveMember}
               />
             )}
 

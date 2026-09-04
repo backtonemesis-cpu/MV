@@ -42,7 +42,7 @@ jobs:
           grep --fixed-strings "const STORAGE_KEY = 'mv_local_state_v1'" src/localStore.ts
           grep --fixed-strings "localStorage" src/localStore.ts
           grep --fixed-strings '"build": "vite build"' package.json
-          grep --fixed-strings "base: '/MV/'" vite.config.ts
+          grep --fixed-strings "base: '/penny-budget/MV/'" vite.config.ts
 
           if grep -R --line-number -E "fetch\(['\"]\/api\/|new EventSource\(" src             --exclude='AuthGate.tsx'             --exclude='firebase.ts'; then
             echo "Local-only MV must not call a backend API"
@@ -57,12 +57,22 @@ jobs:
       - name: Build static production app
         run: npm run build
 
-      - name: Verify static output
+      - name: Verify clean static output
         shell: bash
         run: |
           set -euo pipefail
           test -f dist/index.html
-          grep --fixed-strings '/MV/assets/' dist/index.html
+          grep --fixed-strings '/penny-budget/MV/assets/' dist/index.html
+
+          if grep -R --line-number --fixed-strings 'backtonemesis@gmail.com' dist; then
+            echo "Production bundle must not expose the private owner email"
+            exit 1
+          fi
+
+          if grep -R --line-number -E 'regal-campus-198sv|firebaseapp\.com|@firebase/' dist; then
+            echo "Production bundle must not contain the retired Firebase configuration"
+            exit 1
+          fi
 
       - name: Upload verified static MV bundle
         if: github.event_name != 'pull_request'

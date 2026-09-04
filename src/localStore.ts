@@ -14,7 +14,7 @@ const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
 const PREFS_KEY = 'mv_local_preferences_v1';
 const LOCAL_EVENT = 'mv-local-state-updated';
-const OWNER_EMAIL = 'backtonemesis@gmail.com';
+const OWNER_EMAIL = 'marius@local.invalid';
 const OWNER_NAME = 'Marius';
 const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 
