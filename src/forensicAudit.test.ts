@@ -838,7 +838,67 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(state.transactions.some((tx) => tx.id === contribution.transaction.id)).toBe(true);
   });
 
-  it('16. Savings position uses true account balances and excludes goal allocations', () => {
+  it('16. Savings contributions update balances correctly across reconciliation anchors', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const current = createLocalAccount(
+      {
+        name: 'Anchored Current',
+        type: 'current',
+        startingBalancePence: 500_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+    reconcileLocalAccount(current.account.id, 500_00, '2026-09-30', state.version);
+    state = loadLocalHousehold();
+
+    const saver = createLocalAccount(
+      {
+        name: 'Anchored Savings',
+        type: 'savings',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+    reconcileLocalAccount(saver.account.id, 100_00, '2026-09-30', state.version);
+    state = loadLocalHousehold();
+
+    const goal = createLocalSavingsGoal(
+      {
+        name: 'Anchored Pot',
+        targetPence: 1000_00,
+        currentPence: 100_00,
+        accountId: saver.account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    contributeLocalSavingsGoal(
+      {
+        goalId: goal.goal.id,
+        sourceAccountId: current.account.id,
+        amountPence: 75_00,
+        payer: 'Marius',
+        date: '2026-09-04',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+
+    expect(state.accounts.find((a) => a.id === current.account.id)?.currentBalancePence).toBe(425_00);
+    expect(state.accounts.find((a) => a.id === saver.account.id)?.currentBalancePence).toBe(175_00);
+    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(175_00);
+  });
+
+  it('17. Savings position uses true account balances and excludes goal allocations', () => {
     const savingsAcc: Account = {
       id: 'savings-1',
       name: 'Chase Saver',
