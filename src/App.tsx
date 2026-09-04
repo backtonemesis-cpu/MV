@@ -698,7 +698,7 @@ export default function App() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-app text-main flex flex-col font-sans transition-colors">
+    <div className="mv-density-root min-h-screen bg-app text-main flex flex-col font-sans transition-colors">
       {/* Top Header */}
       <Header
         session={session}
@@ -721,7 +721,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 sm:pb-8">
+      <main className="flex-1 min-w-0 w-full max-w-[1440px] mx-auto px-4 py-4 pb-20 sm:pb-5">
         {/* Error notification banner if any */}
         {error && (
           <div className="mb-6 p-4 rounded-2xl bg-danger-soft border border-danger text-danger text-xs flex items-center justify-between">
