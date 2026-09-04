@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { GoogleAuthProvider, onIdTokenChanged, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, onIdTokenChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { LogIn, ShieldCheck, Loader2 } from 'lucide-react';
 import { auth } from '../firebase';
 import { clearAuthToken, setAuthToken } from '../utils/api';
+import { isMvOwnerEmail, MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../accessPolicy';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -37,6 +38,16 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
           return;
         }
 
+        if (MV_SINGLE_USER_MODE && !isMvOwnerEmail(user.email)) {
+          await signOut(auth);
+          clearAuthToken();
+          clearEventStreamAuthCookie();
+          setIsSignedIn(false);
+          setIsReady(true);
+          setError(`MV is currently private. Only ${MV_OWNER_EMAIL} can sign in.`);
+          return;
+        }
+
         const idToken = await user.getIdToken();
         setAuthToken(idToken);
         setEventStreamAuthCookie(idToken);
@@ -58,7 +69,10 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
+      provider.setCustomParameters({
+        prompt: 'select_account',
+        login_hint: MV_OWNER_EMAIL,
+      });
       await signInWithPopup(auth, provider);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed.');
@@ -91,7 +105,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
           </div>
           <h1 className="mt-5 text-2xl font-black text-neutral-900 dark:text-neutral-100">MV Finance</h1>
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-            Sign in with your verified Google account. New household users start Pending and receive no household financial data until approved by the Owner.
+            MV is currently private and restricted to Marius. Sign in with ${MV_OWNER_EMAIL}.
           </p>
 
           {error && (
@@ -111,7 +125,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({ children }) => {
           </button>
 
           <p className="mt-4 text-[11px] text-neutral-400 dark:text-neutral-500">
-            Household access does not grant GitHub, deployment, Firebase administration, or development access.
+            Other Google accounts are rejected and receive no MV financial data.
           </p>
         </div>
       </div>
