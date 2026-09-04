@@ -120,8 +120,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     return plannedPayments.filter((p) => p.month === selectedMonth);
   }, [plannedPayments, selectedMonth]);
 
-  const isPaymentPaid = (payment: PlannedPayment) =>
-    payment.status === 'paid' || Boolean(payment.actualTransactionId);
+  const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
 
   const toggleAccountExpand = (accountId: string) => {
     setExpandedAccountIds((prev) => ({
@@ -142,7 +141,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   };
 
   const handleTogglePaymentStatus = async (payment: PlannedPayment) => {
-    if (isViewOnly || payment.actualTransactionId) return;
+    if (isViewOnly) return;
     const newStatus = payment.status === 'unpaid' ? 'paid' : 'unpaid';
     try {
       await onUpdatePlannedPayment(payment.id, {
@@ -688,8 +687,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                       <button
                         onClick={() => handleTogglePaymentStatus(payment)}
-                        disabled={isViewOnly || Boolean(payment.actualTransactionId)}
-                        title={payment.actualTransactionId ? 'Paid status is locked by a recorded transaction' : 'Status'}
+                        disabled={isViewOnly}
+                        title="Status"
                         className={`min-w-0 rounded-xl px-2.5 py-2 text-[12px] font-medium transition-colors capitalize ${
                           isPaymentPaid(payment)
                             ? 'bg-success-soft text-success hover:bg-success-soft'

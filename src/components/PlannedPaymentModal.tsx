@@ -36,10 +36,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   );
   const [dueDate, setDueDate] = useState(payment?.dueDate || '');
   const [categoryId, setCategoryId] = useState(payment?.categoryId || categories[0]?.id || 'cat-housing');
-  const hasRecordedTransaction = Boolean(payment?.actualTransactionId);
-  const [status, setStatus] = useState<'unpaid' | 'paid'>(
-    hasRecordedTransaction ? 'paid' : payment?.status || 'unpaid'
-  );
+  const [status, setStatus] = useState<'unpaid' | 'paid'>(payment?.status || 'unpaid');
   const [includeInTransferPlan, setIncludeInTransferPlan] = useState<boolean>(
     payment?.includeInTransferPlan !== undefined ? payment.includeInTransferPlan : true
   );
@@ -268,9 +265,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'unpaid' | 'paid')}
-                disabled={hasRecordedTransaction}
-                title={hasRecordedTransaction ? 'Paid status is locked by a recorded transaction' : 'Payment status'}
-                className="text-xs font-medium border border-muted rounded-md px-2.5 py-1 bg-surface focus:ring-1 focus:ring-muted focus:outline-none disabled:opacity-70"
+                className="text-xs font-medium border border-muted rounded-md px-2.5 py-1 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 <option value="unpaid">Unpaid</option>
                 <option value="paid">Paid</option>

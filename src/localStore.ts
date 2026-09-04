@@ -878,11 +878,6 @@ export function updateLocalPlannedPayment(
       const index = state.plannedPayments.findIndex((item) => item.id === id);
       if (index < 0) throw new Error('Planned bill not found.');
       const next = plannedPaymentFromPartial({ ...state.plannedPayments[index], ...data, id });
-      if (next.actualTransactionId) {
-        // A recorded actual transaction is authoritative evidence that the bill
-        // has already been paid. Prevent Transfer Plan from funding it twice.
-        next.status = 'paid';
-      }
       next.updatedAt = nowIso();
       next.updatedBy = OWNER_EMAIL;
       assertAccountExists(state, next.accountId);
@@ -938,10 +933,10 @@ export function bulkToggleLocalPlannedPayments(
       state.plannedPayments = state.plannedPayments.map((payment) => {
         if (params.month && payment.month !== params.month) return payment;
         if (ids && !ids.has(payment.id)) return payment;
-        const effectivelyPaid = payment.status === 'paid' || Boolean(payment.actualTransactionId);
-        if (params.onlyUnpaid && effectivelyPaid) return payment;
-        if (params.status === 'paid' && !effectivelyPaid) return payment;
-        if (params.status === 'unpaid' && effectivelyPaid) return payment;
+        const isPaid = payment.status === 'paid';
+        if (params.onlyUnpaid && isPaid) return payment;
+        if (params.status === 'paid' && !isPaid) return payment;
+        if (params.status === 'unpaid' && isPaid) return payment;
         return {
           ...payment,
           includeInTransferPlan: params.include,

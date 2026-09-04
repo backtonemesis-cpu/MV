@@ -84,19 +84,18 @@ describe('Transfer Plan account identity and funding calculations', () => {
     expect(plan.accountsFullyFunded.some((item) => item.account.id === chase.id)).toBe(false);
   });
 
-  it('treats a linked actual transaction as paid even if stale status says unpaid', () => {
+  it('uses the explicit Plan status even when a linked actual transaction exists', () => {
     const current = account('current', 'Current', 'Marius', 0);
-    const stale = payment('recorded-bill', current.id, 12_000, 'unpaid', 'actual-1');
+    const linkedUnpaid = payment('recorded-bill', current.id, 12_000, 'unpaid', 'actual-1');
 
-    const funding = calculateAccountFunding(current, [stale]);
-    expect(funding.paidPayments).toHaveLength(1);
-    expect(funding.unpaidPayments).toHaveLength(0);
-    expect(funding.transferRequiredPence).toBe(0);
+    const funding = calculateAccountFunding(current, [linkedUnpaid]);
+    expect(funding.paidPayments).toHaveLength(0);
+    expect(funding.unpaidPayments).toHaveLength(1);
+    expect(funding.transferRequiredPence).toBe(12_000);
 
-    const plan = generateTransferPlan([current], [stale], '2026-10');
-    expect(plan.accountsNeedingFunding).toHaveLength(0);
-    expect(plan.accountsFullyFunded).toHaveLength(0);
-    expect(plan.totalSelectedPaymentsCount).toBe(0);
-    expect(plan.totalPaidSelectedPaymentsCount).toBe(1);
+    const plan = generateTransferPlan([current], [linkedUnpaid], '2026-10');
+    expect(plan.accountsNeedingFunding).toHaveLength(1);
+    expect(plan.totalSelectedPaymentsCount).toBe(1);
+    expect(plan.totalPaidSelectedPaymentsCount).toBe(0);
   });
 });
