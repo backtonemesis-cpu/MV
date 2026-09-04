@@ -8,6 +8,7 @@ import type {
   SavingsGoal,
   Transaction,
   UserPreferences,
+  UserRole,
 } from './types';
 import { normalizeUserPreferences } from './themeEngine';
 import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
