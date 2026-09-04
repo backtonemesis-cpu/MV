@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, CalendarDays, Layers, X } from 'lucide-react';
+import { AlertCircle, Layers, X } from 'lucide-react';
 import { Account, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
+import { MonthPicker } from './MonthPicker';
 
 interface MonthImportModalProps {
   isOpen: boolean;
@@ -313,29 +314,21 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
             <div className="mv-modal-grid-2">
               <label>
                 From Month
-                <span className="mv-month-input-wrap">
-                  <input
-                    ref={sourceMonthRef}
-                    type="month"
-                    value={sourceMonth}
-                    onChange={(event) => setSourceMonth(event.target.value)}
-                    required
-                  />
-                  <CalendarDays className="mv-month-input-icon" aria-hidden="true" />
-                </span>
+                <MonthPicker
+                  ref={sourceMonthRef}
+                  value={sourceMonth}
+                  onChange={setSourceMonth}
+                  ariaLabel="Source month"
+                />
               </label>
 
               <label>
                 Target Month
-                <span className="mv-month-input-wrap">
-                  <input
-                    type="month"
-                    value={targetMonth}
-                    onChange={(event) => setTargetMonth(event.target.value)}
-                    required
-                  />
-                  <CalendarDays className="mv-month-input-icon" aria-hidden="true" />
-                </span>
+                <MonthPicker
+                  value={targetMonth}
+                  onChange={setTargetMonth}
+                  ariaLabel="Target month"
+                />
               </label>
             </div>
 
