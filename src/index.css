@@ -1401,3 +1401,369 @@ html[data-theme] button.bg-white:hover {
     height: 38px !important;
   }
 }
+
+
+/* ==========================================================================
+   PREPARE NEXT MONTH — HIGH-DENSITY ROLLOVER WORKFLOW
+   ========================================================================== */
+.mv-rollover-modal {
+  display: flex;
+  max-height: 85vh !important;
+  flex-direction: column;
+  background: var(--surface);
+  border-color: var(--border);
+  border-radius: 8px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.50);
+}
+
+.mv-rollover-form {
+  min-height: 0;
+  flex: 1;
+  gap: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.mv-rollover-controls {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.mv-rollover-controls .mv-modal-grid-2 {
+  gap: 12px;
+}
+
+.mv-rollover-controls > .mv-modal-grid-2 > label {
+  display: block !important;
+  margin: 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.mv-month-input-wrap {
+  position: relative;
+  display: block;
+  margin-top: 4px;
+}
+
+.mv-rollover-controls input[type="month"] {
+  width: 100%;
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 6px 34px 6px 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  background: var(--field) !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  font-weight: 500;
+  color-scheme: dark;
+}
+
+.mv-month-input-icon {
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  color: var(--text-subtle);
+}
+
+.mv-rollover-controls input[type="month"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 4px;
+  width: 30px;
+  height: 28px;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.mv-rollover-scopes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mv-modal-form .mv-rollover-scope {
+  display: flex !important;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  margin: 0 !important;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--text) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mv-rollover-scope:hover {
+  background: var(--surface-hover);
+}
+
+.mv-rollover-scope input[type="checkbox"],
+.mv-rollover-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  accent-color: #22C55E;
+  cursor: pointer;
+}
+
+.mv-rollover-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--danger-border);
+  border-radius: 6px;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.mv-rollover-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 8px 0 12px;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: #2E374A transparent;
+}
+
+.mv-rollover-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mv-rollover-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mv-rollover-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #2E374A;
+}
+
+.mv-rollover-scroll section + section {
+  margin-top: 4px;
+}
+
+.mv-rollover-section-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 4px 5px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mv-rollover-section-header > span:last-child {
+  color: var(--text-subtle);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mv-modal-form .mv-rollover-row {
+  display: flex !important;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  margin: 0 !important;
+  padding: 8px 4px !important;
+  border-bottom: 1px solid #232C42;
+  background: transparent;
+  color: var(--text) !important;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 120ms ease;
+}
+
+.mv-rollover-row:hover {
+  background: var(--surface-hover);
+}
+
+.mv-rollover-row.is-disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.mv-rollover-row.is-disabled:hover {
+  background: transparent;
+}
+
+.mv-rollover-row-main {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+.mv-rollover-title {
+  display: block;
+  overflow: hidden;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-rollover-meta {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-rollover-row-side {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mv-rollover-amount {
+  min-width: 82px;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.mv-rollover-pill {
+  display: inline-flex;
+  min-width: 58px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+.mv-rollover-pill-expected {
+  border: 1px solid rgba(245, 158, 11, 0.20);
+  background: rgba(245, 158, 11, 0.10);
+  color: #FBBF24;
+}
+
+.mv-rollover-pill-unpaid {
+  border: 1px solid rgba(239, 68, 68, 0.20);
+  background: rgba(239, 68, 68, 0.10);
+  color: #F87171;
+}
+
+.mv-rollover-empty {
+  padding: 10px 4px;
+  border-bottom: 1px solid #232C42;
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+
+.mv-rollover-scroll .is-scope-disabled {
+  opacity: 0.55;
+}
+
+.mv-rollover-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.mv-rollover-footer button {
+  min-height: 30px !important;
+  height: 30px !important;
+  border-radius: 6px !important;
+  padding: 6px 11px !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  line-height: 1 !important;
+}
+
+.mv-rollover-cancel {
+  color: var(--text-muted);
+}
+
+.mv-rollover-cancel:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.mv-rollover-submit {
+  background: #22C55E;
+  color: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+.mv-rollover-submit:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.mv-rollover-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .mv-rollover-scopes,
+  .mv-rollover-controls .mv-modal-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .mv-rollover-row-side {
+    gap: 5px;
+  }
+
+  .mv-rollover-pill {
+    min-width: 52px;
+    font-size: 9px;
+  }
+
+  .mv-rollover-footer {
+    justify-content: stretch;
+  }
+
+  .mv-rollover-footer button {
+    flex: 1;
+  }
+}
