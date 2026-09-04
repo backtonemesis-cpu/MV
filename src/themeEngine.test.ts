@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   normalizeAccentPreference,
   normalizeAccentRgb,
+  normalizeCardBorderPreference,
+  normalizeCardDensityPreference,
+  normalizeCardRadiusPreference,
   normalizeThemePreference,
   normalizeUserPreferences,
   readStoredUserPreferences,
@@ -77,6 +80,22 @@ describe('token theme engine', () => {
     expect(normalizeAccentPreference('default')).toBe('emerald');
   });
 
+  it('normalizes card appearance preferences safely', () => {
+    expect(normalizeCardDensityPreference('compact')).toBe('compact');
+    expect(normalizeCardDensityPreference('comfortable')).toBe('comfortable');
+    expect(normalizeCardDensityPreference('unknown')).toBe('compact');
+
+    expect(normalizeCardRadiusPreference('sharp')).toBe('sharp');
+    expect(normalizeCardRadiusPreference('subtle')).toBe('subtle');
+    expect(normalizeCardRadiusPreference('rounded')).toBe('rounded');
+    expect(normalizeCardRadiusPreference('unknown')).toBe('subtle');
+
+    expect(normalizeCardBorderPreference('none')).toBe('none');
+    expect(normalizeCardBorderPreference('subtle')).toBe('subtle');
+    expect(normalizeCardBorderPreference('high')).toBe('high');
+    expect(normalizeCardBorderPreference('unknown')).toBe('subtle');
+  });
+
   it('normalizes custom RGB accent channels safely', () => {
     expect(normalizeAccentRgb({ r: 6, g: 182, b: 212 })).toEqual({
       r: 6,
@@ -100,6 +119,9 @@ describe('token theme engine', () => {
       theme: 'dark',
       accent: 'teal',
       accentRgb: { r: 6, g: 182, b: 212 },
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
     });
   });
 
@@ -110,6 +132,9 @@ describe('token theme engine', () => {
     expect(readStoredUserPreferences(storage)).toEqual({
       theme: 'slate',
       accent: 'sapphire',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
     });
   });
 
@@ -117,6 +142,9 @@ describe('token theme engine', () => {
     expect(normalizeUserPreferences({})).toEqual({
       theme: 'light',
       accent: 'emerald',
+      cardDensity: 'compact',
+      cardRadius: 'subtle',
+      cardBorder: 'subtle',
     });
   });
 });
