@@ -58,12 +58,19 @@ describe('Penny-style local MV storage', () => {
     const state = loadLocalHousehold();
 
     expect(state.version).toBe(1);
-    expect(state.members).toEqual([
-      expect.objectContaining({
-        email: 'marius@local.invalid',
-        role: 'owner',
-      }),
-    ]);
+    expect(state.members).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'Marius',
+          email: 'marius@local.invalid',
+          role: 'owner',
+        }),
+        expect.objectContaining({
+          name: 'Vesta',
+          role: 'editor',
+        }),
+      ])
+    );
     expect(state.accounts.map((item) => item.name)).toEqual(
       expect.arrayContaining(['Chase', 'Santander', 'Cash', 'Lloyds', 'NatWest', 'Credit Card'])
     );
@@ -167,49 +174,73 @@ describe('Penny-style local MV storage', () => {
     expect(state.transactions.every((tx) => Number.isSafeInteger(tx.amountPence))).toBe(true);
   });
 
-  it('persists household members and supports edit, role change, and removal', () => {
+  it('persists financial household members, renames finance references, and supports removal', () => {
     let state = loadLocalHousehold();
 
     const created = createLocalHouseholdMember(
       {
-        name: 'Vesta',
-        email: 'vesta@example.com',
-        role: 'editor',
+        name: 'Alex',
       },
       state.version
     );
 
     state = loadLocalHousehold();
-    expect(state.members).toHaveLength(2);
     expect(state.members.find((member) => member.id === created.member.id)).toEqual(
       expect.objectContaining({
-        name: 'Vesta',
-        email: 'vesta@example.com',
+        name: 'Alex',
         role: 'editor',
       })
     );
 
-    updateLocalHouseholdMember(
-      created.member.id,
-      { name: 'Vesta M', email: 'vesta.new@example.com' },
+    const account = createLocalAccount(
+      {
+        name: 'Alex Current',
+        type: 'current',
+        startingBalancePence: 10000,
+        ownerPerson: 'Alex',
+      },
       state.version
     );
     state = loadLocalHousehold();
 
-    changeLocalHouseholdMemberRole(created.member.id, 'view_only', state.version);
+    createLocalTransaction(
+      {
+        description: 'Alex test',
+        amountPence: 1000,
+        type: 'expense',
+        categoryId: 'cat-groceries',
+        accountId: account.account.id,
+        payer: 'Alex',
+      },
+      state.version
+    );
     state = loadLocalHousehold();
 
-    expect(state.members.find((member) => member.id === created.member.id)).toEqual(
-      expect.objectContaining({
-        name: 'Vesta M',
-        email: 'vesta.new@example.com',
-        role: 'view_only',
-      })
+    createLocalPlannedIncome(
+      {
+        name: 'Alex wage',
+        expectedAmountPence: 50000,
+        month: '2026-10',
+        sourcePerson: 'Alex',
+        accountId: account.account.id,
+        categoryId: 'cat-salary',
+        status: 'expected',
+      },
+      state.version
     );
+    state = loadLocalHousehold();
+
+    updateLocalHouseholdMember(created.member.id, { name: 'Alex M' }, state.version);
+    state = loadLocalHousehold();
+
+    expect(state.accounts.find((item) => item.id === account.account.id)?.ownerPerson).toBe('Alex M');
+    expect(state.transactions.find((item) => item.description === 'Alex test')?.payer).toBe('Alex M');
+    expect(state.plannedIncomes?.find((item) => item.name === 'Alex wage')?.sourcePerson).toBe('Alex M');
 
     removeLocalHouseholdMember(created.member.id, state.version);
     state = loadLocalHousehold();
     expect(state.members.find((member) => member.id === created.member.id)?.role).toBe('removed');
+    expect(state.accounts.find((item) => item.id === account.account.id)?.ownerPerson).toBe('Alex M');
     expect(state.members.filter((member) => member.role === 'owner')).toHaveLength(1);
   });
 
@@ -335,7 +366,9 @@ describe('Penny-style local MV storage', () => {
     state = loadLocalHousehold();
     expect(state.accounts).toHaveLength(7);
     expect(state.accounts.find((account) => account.name === 'Main')?.startingBalancePence).toBe(123_45);
-    expect(state.members).toHaveLength(1);
+    expect(state.members.map((member) => member.name)).toEqual(
+      expect.arrayContaining(['Marius', 'Vesta'])
+    );
     expect(state.members[0].email).toBe('marius@local.invalid');
     expect(state.auditLogs.map((entry) => entry.action)).toContain('database_restored');
   });
