@@ -11,6 +11,7 @@ import {
   deleteAccount,
   createSavingsGoal,
   updateSavingsGoal,
+  deleteSavingsGoal,
   createPlannedPayment,
   updatePlannedPayment,
   deletePlannedPayment,
@@ -291,6 +292,22 @@ export default function App() {
         setConflictServerVersion(err.serverVersion || household.version + 1);
       } else {
         setError(err.message || 'Failed to update savings goal');
+      }
+    }
+  };
+
+  // Delete Savings Goal
+  const handleDeleteSavingsGoal = async (id: string) => {
+    if (!household) return;
+    try {
+      await deleteSavingsGoal(id, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to delete savings goal');
+        throw err;
       }
     }
   };
@@ -618,6 +635,8 @@ export default function App() {
                 onUpdateAccount={handleUpdateAccount}
                 onDeleteAccount={handleDeleteAccount}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
+                onUpdateSavingsGoal={handleUpdateSavingsGoal}
+                onDeleteSavingsGoal={handleDeleteSavingsGoal}
               />
             )}
 
@@ -630,6 +649,7 @@ export default function App() {
                 userRole={session.role}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
                 onUpdateSavingsGoal={handleUpdateSavingsGoal}
+                onDeleteSavingsGoal={handleDeleteSavingsGoal}
                 onExecuteTransfer={handleSavingsTransfer}
               />
             )}
