@@ -361,6 +361,25 @@ html[data-accent] button.bg-emerald-600:hover {
   filter: brightness(0.94);
 }
 
+
+html[data-accent] button.bg-neutral-900 {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+html[data-theme] button.bg-neutral-100,
+html[data-theme] button.bg-white {
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+html[data-theme] button.bg-neutral-100:hover,
+html[data-theme] button.bg-white:hover {
+  background-color: var(--surface-muted) !important;
+}
+
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
