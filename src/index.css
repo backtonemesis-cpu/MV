@@ -3773,3 +3773,14 @@ html[data-theme] button.bg-white:hover {
     margin: 8px auto;
   }
 }
+
+
+/* Legacy semantic utility classes are also locked so no financial view can
+   accidentally route meaning through the user-selected accent. */
+.mv-density-root .text-success {
+  color: #22C55E !important;
+}
+
+.mv-density-root .text-danger {
+  color: #EF4444 !important;
+}
