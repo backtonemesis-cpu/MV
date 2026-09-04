@@ -57,45 +57,7 @@ import { AcceptanceTestsModal } from './components/AcceptanceTestsModal';
 import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { MV_SINGLE_USER_MODE } from './accessPolicy';
-
-function normalizeInitialTheme(value: unknown): UserPreferences['theme'] {
-  if (value === 'light' || value === 'dark' || value === 'slate') return value;
-  if (value === 'system') {
-    try {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    } catch {
-      return 'light';
-    }
-  }
-  return 'light';
-}
-
-function normalizeInitialAccent(value: unknown): UserPreferences['accent'] {
-  if (value === 'emerald' || value === 'sapphire' || value === 'amethyst') return value;
-  if (value === 'blue' || value === 'indigo') return 'sapphire';
-  if (value === 'lilac' || value === 'purple') return 'amethyst';
-  return 'emerald';
-}
-
-function readInitialPreferences(): UserPreferences {
-  try {
-    const saved = localStorage.getItem('mv_local_preferences_v1');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        theme: normalizeInitialTheme(parsed.theme),
-        accent: normalizeInitialAccent(parsed.accent),
-      };
-    }
-
-    return {
-      theme: normalizeInitialTheme(localStorage.getItem('mv-theme-mode')),
-      accent: 'emerald',
-    };
-  } catch {
-    return { theme: 'light', accent: 'emerald' };
-  }
-}
+import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
@@ -118,7 +80,7 @@ export default function App() {
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
-  const [userPreferences, setUserPreferences] = useState<UserPreferences>(readInitialPreferences);
+  const [userPreferences, setUserPreferences] = useState<UserPreferences>(readStoredUserPreferences);
 
   // Build a complete month list instead of limiting the picker to months that already contain data.
   // Always include the current calendar year and next year, plus any years already present in household data.
@@ -160,14 +122,8 @@ export default function App() {
 
   // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
-    const root = document.documentElement;
-    root.setAttribute('data-theme', userPreferences.theme);
-    root.setAttribute('data-accent', userPreferences.accent);
-
-    // Keep Tailwind's legacy dark: utilities readable while semantic tokens take precedence.
-    root.classList.toggle('dark', userPreferences.theme !== 'light');
-    root.style.colorScheme = userPreferences.theme === 'light' ? 'light' : 'dark';
-  }, [userPreferences.theme, userPreferences.accent]);
+    applyThemePreferences(userPreferences);
+  }, [userPreferences]);
 
   // Load Session & Household Data
   const loadData = useCallback(async () => {
