@@ -414,7 +414,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 ] as const).map(([channel, label]) => {
                   const value = currentAccentRgb[channel];
                   return (
-                    <label key={channel} className="mv-rgb-slider-row">
+                    <label key={channel} className={`mv-rgb-slider-row is-${channel}`}>
                       <span className="mv-rgb-channel">{label}</span>
                       <input
                         type="range"
