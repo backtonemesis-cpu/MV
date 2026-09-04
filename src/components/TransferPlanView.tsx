@@ -236,7 +236,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       </div>
 
       {/* Compact Summary Metrics */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
         <article
           id="stat-transfer-required"
           className="min-w-0 rounded-2xl border border-[#f1f5f9] dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
@@ -373,7 +373,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 </div>
 
                 {/* 4-Column Exact Financial Breakdown per Handoff Specification */}
-                <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-neutral-200 bg-white border-b border-neutral-100 text-xs">
+                <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-neutral-200 bg-white border-b border-neutral-100 text-xs">
                   <div className="p-4">
                     <span className="text-neutral-500 font-medium block">Balance</span>
                     <span className="text-sm font-bold text-neutral-900 mt-1 block">
