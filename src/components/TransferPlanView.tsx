@@ -24,11 +24,12 @@ import {
   HouseholdMember,
   Transaction,
 } from '../types';
-import { formatPence } from '../utils/currency';
+import { formatPence, isPlannedPaymentEffectivelyPaid } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
 import { MonthPicker } from './MonthPicker';
+import { MarkPaymentPaidModal } from './MarkPaymentPaidModal';
 
 interface TransferPlanViewProps {
   accounts: Account[];
@@ -44,6 +45,14 @@ interface TransferPlanViewProps {
   onCreatePlannedPayment: (data: Partial<PlannedPayment>) => Promise<void>;
   onUpdatePlannedPayment: (id: string, data: Partial<PlannedPayment>) => Promise<void>;
   onDeletePlannedPayment: (id: string) => Promise<void>;
+  onMarkPaymentPaid: (
+    id: string,
+    payload: {
+      actualAmountPence: number;
+      actualDate: string;
+      accountId: string;
+    }
+  ) => Promise<void>;
   onBulkTogglePlannedPayments: (params: {
     month?: string;
     include: boolean;
@@ -78,6 +87,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onCreatePlannedPayment,
   onUpdatePlannedPayment,
   onDeletePlannedPayment,
+  onMarkPaymentPaid,
   onBulkTogglePlannedPayments,
   onExecuteTransfer,
   onUndoFunding,
@@ -98,6 +108,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     useState<AccountFundingRequirement | null>(null);
   const [lastFundingSourceAccountId, setLastFundingSourceAccountId] = useState<string>('');
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
+  const [markingPayment, setMarkingPayment] = useState<PlannedPayment | null>(null);
   const [undoingFundingAccountId, setUndoingFundingAccountId] = useState<string | null>(null);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
@@ -108,15 +119,16 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
   // Generate authoritative Transfer Plan with exact integer-pence math
   const plan = useMemo(() => {
-    return generateTransferPlan(accounts, plannedPayments, selectedMonth);
-  }, [accounts, plannedPayments, selectedMonth]);
+    return generateTransferPlan(accounts, plannedPayments, selectedMonth, transactions);
+  }, [accounts, plannedPayments, selectedMonth, transactions]);
 
   // Filtered payments for the selected month
   const monthPayments = useMemo(() => {
     return plannedPayments.filter((p) => p.month === selectedMonth);
   }, [plannedPayments, selectedMonth]);
 
-  const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
+  const isPaymentPaid = (payment: PlannedPayment) =>
+    isPlannedPaymentEffectivelyPaid(payment, transactions);
 
   const latestFundingBatchByDestination = useMemo(() => {
     const result = new Map<
@@ -217,14 +229,24 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
   const handleTogglePaymentStatus = async (payment: PlannedPayment) => {
     if (isViewOnly) return;
-    const newStatus = payment.status === 'unpaid' ? 'paid' : 'unpaid';
-    try {
-      await onUpdatePlannedPayment(payment.id, {
-        status: newStatus,
-      });
-    } catch (err: any) {
-      console.error('Failed to toggle status', err);
+
+    if (isPaymentPaid(payment)) {
+      if (payment.actualTransactionId) {
+        window.alert(
+          'This bill is paid because it has a linked actual expense transaction. Edit or delete that Activity transaction to change the payment record.'
+        );
+        return;
+      }
+
+      try {
+        await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
+      } catch (err: any) {
+        window.alert(err.message || 'Failed to update bill status.');
+      }
+      return;
     }
+
+    setMarkingPayment(payment);
   };
 
   const handleBulkIncludeUnpaid = async () => {
@@ -1017,6 +1039,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             }
             await onExecuteTransfer(payload);
           }}
+        />
+      )}
+
+      {markingPayment && (
+        <MarkPaymentPaidModal
+          payment={markingPayment}
+          accounts={accounts}
+          onClose={() => setMarkingPayment(null)}
+          onConfirm={(payload) => onMarkPaymentPaid(markingPayment.id, payload)}
         />
       )}
 
