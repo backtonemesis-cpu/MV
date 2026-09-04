@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Banknote,
   CalendarDays,
@@ -73,6 +73,23 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      if (showReceiveModal) {
+        setShowReceiveModal(false);
+        setSelectedIncome(null);
+      } else if (showEditModal) {
+        setShowEditModal(false);
+        setSelectedIncome(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showEditModal, showReceiveModal]);
 
   const personOptions = useMemo(
     () => householdPersonOptions(members, [sourcePerson]),
@@ -581,6 +598,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Income source</label>
                 <input
+                  autoFocus
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="e.g. Marius salary"
@@ -751,6 +769,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
                 <input
+                  autoFocus
                   value={actualAmount}
                   onChange={(event) => setActualAmount(event.target.value)}
                   className={inputClassName}
