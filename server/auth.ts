@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { getDb } from './db';
 import { verifyFirebaseIdentity, type VerifiedFirebaseIdentity } from './firebaseAdmin';
 import { UserRole } from '../src/types';
-import { isMvOwnerEmail, MV_MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../src/accessPolicy';
+import { isMvOwnerEmail, MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../src/accessPolicy';
 import { FirestoreHouseholdStore } from './storage/firestoreStore';
 import { isFirestoreRuntime } from './storage/runtimeBackend';
 
