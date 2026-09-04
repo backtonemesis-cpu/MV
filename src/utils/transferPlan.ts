@@ -1,4 +1,11 @@
-import { Account, PlannedPayment, AccountFundingRequirement, TransferPlanSummary } from '../types';
+import {
+  Account,
+  PlannedPayment,
+  AccountFundingRequirement,
+  TransferPlanSummary,
+  Transaction,
+} from '../types';
+import { isPlannedPaymentEffectivelyPaid } from './currency';
 
 /**
  * Calculates the exact funding requirement for a single account based on selected upcoming payments.
@@ -18,14 +25,19 @@ import { Account, PlannedPayment, AccountFundingRequirement, TransferPlanSummary
  */
 export function calculateAccountFunding(
   account: Account,
-  plannedPayments: PlannedPayment[]
+  plannedPayments: PlannedPayment[],
+  transactions: Transaction[] = []
 ): AccountFundingRequirement {
   const selectedPayments = plannedPayments.filter(
     (p) => p.accountId === account.id && p.includeInTransferPlan === true
   );
 
-  const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
-  const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
+  const paidPayments = selectedPayments.filter((p) =>
+    isPlannedPaymentEffectivelyPaid(p, transactions)
+  );
+  const unpaidPayments = selectedPayments.filter(
+    (p) => !isPlannedPaymentEffectivelyPaid(p, transactions)
+  );
 
   // Sort upcoming unpaid obligations chronologically by due date
   const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
@@ -78,7 +90,8 @@ export function calculateAccountFunding(
 export function generateTransferPlan(
   accounts: Account[],
   allPlannedPayments: PlannedPayment[],
-  selectedMonth?: string
+  selectedMonth?: string,
+  transactions: Transaction[] = []
 ): TransferPlanSummary {
   // Filter payments by month if selectedMonth is provided
   const relevantPayments = selectedMonth
@@ -97,7 +110,7 @@ export function generateTransferPlan(
   const activeAccounts = accounts.filter((a) => a.isActive !== false);
 
   for (const account of activeAccounts) {
-    const funding = calculateAccountFunding(account, relevantPayments);
+    const funding = calculateAccountFunding(account, relevantPayments, transactions);
 
     totalPaidSelectedPaymentsCount += funding.paidPayments.length;
 
