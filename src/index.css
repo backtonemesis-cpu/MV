@@ -4144,3 +4144,236 @@ html[data-theme] button.bg-white:hover {
   font-weight: 500;
   line-height: 1.35;
 }
+
+
+/* ==========================================================================
+   PLAN ROSTER DENSITY + INCOME CLIPPING REGRESSION GUARD
+   Keeps the preferred Transfer Plan funding cards intact while making the
+   lower bill roster dense, single-line, and safe at Windows 150% scaling.
+   ========================================================================== */
+.mv-plan-bill-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) max-content max-content max-content;
+  min-width: 0;
+  min-height: 38px;
+  max-height: 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  overflow: hidden;
+}
+
+.mv-plan-bill-check {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex: 0 0 14px;
+  cursor: pointer;
+}
+
+.mv-plan-bill-copy {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 7px;
+  overflow: hidden;
+}
+
+.mv-plan-bill-title {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-plan-bill-meta {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: #64748B;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-plan-bill-amount {
+  min-width: 72px;
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.mv-plan-bill-status {
+  display: inline-flex;
+  min-width: 48px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mv-plan-bill-status.is-paid {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.mv-plan-bill-status.is-unpaid {
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.mv-plan-bill-actions {
+  display: flex;
+  min-width: 42px;
+  align-items: center;
+  gap: 2px;
+}
+
+.mv-plan-bill-action {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  color: #64748B;
+  transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+
+.mv-plan-bill-action:hover,
+.mv-plan-bill-action:focus-visible {
+  background: var(--surface-hover);
+  color: var(--text);
+  outline: none;
+}
+
+.mv-plan-bill-action.is-danger:hover,
+.mv-plan-bill-action.is-danger:focus-visible {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.mv-plan-bills-table {
+  table-layout: fixed;
+}
+
+.mv-plan-bill-table-row {
+  height: 40px;
+  max-height: 40px;
+}
+
+.mv-plan-bill-cell {
+  height: 40px;
+  max-height: 40px;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mv-plan-bill-table-row .mv-plan-bill-actions {
+    opacity: 0;
+  }
+
+  .mv-plan-bill-table-row:hover .mv-plan-bill-actions,
+  .mv-plan-bill-table-row:focus-within .mv-plan-bill-actions {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .mv-plan-bill-row {
+    grid-template-columns: 18px minmax(0, 1fr) max-content max-content;
+  }
+
+  .mv-plan-bill-meta {
+    display: none;
+  }
+
+  .mv-plan-bill-actions {
+    min-width: 20px;
+  }
+
+  .mv-plan-bill-actions .is-danger {
+    display: none;
+  }
+}
+
+/* Long income labels must surrender width before status, amount, or actions do. */
+.finance-row-left,
+.finance-row-copy,
+.finance-row-titleline {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.finance-row-copy {
+  padding-right: 8px;
+}
+
+.finance-row-titleline {
+  overflow: hidden;
+}
+
+.finance-row-title {
+  flex: 1 1 0%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-income-status {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.finance-metadata-line {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.finance-metadata-token {
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.finance-metadata-token.is-account {
+  flex: 1 1 0%;
+}
+
+.finance-metadata-separator {
+  flex: 0 0 auto;
+}
+
+.finance-row-side,
+.finance-amount-block {
+  flex-shrink: 0;
+}
