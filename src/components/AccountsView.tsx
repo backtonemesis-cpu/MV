@@ -17,8 +17,8 @@ import {
   Calendar,
   Trash2,
 } from 'lucide-react';
-import { Account, SavingsGoal, UserRole, AccountType, Payer, Transaction, HouseholdMember } from '../types';
-import { householdPersonOptions } from '../utils/householdPeople';
+import { JOINT_ACCOUNT_OWNER_ID } from '../types';
+import type { Account, SavingsGoal, UserRole, AccountType, Transaction, HouseholdMember } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 
 interface AccountsViewProps {
@@ -64,14 +64,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   // New Account form state
   const [accName, setAccName] = useState('');
   const [accType, setAccType] = useState<AccountType>('current');
-  const [accOwner, setAccOwner] = useState<Payer>('Joint');
+  const [accOwnerMemberId, setAccOwnerMemberId] = useState('');
   const [accBalanceStr, setAccBalanceStr] = useState('');
   const [accNotes, setAccNotes] = useState('');
 
   // Edit Account form state
   const [editName, setEditName] = useState('');
   const [editType, setEditType] = useState<AccountType>('current');
-  const [editOwner, setEditOwner] = useState<Payer>('Joint');
+  const [editOwnerMemberId, setEditOwnerMemberId] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
 
@@ -90,10 +90,31 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
-  const personOptions = useMemo(
-    () => householdPersonOptions(members, [accOwner, editOwner]),
-    [members, accOwner, editOwner]
+  const ownerOptions = useMemo(
+    () => [
+      { id: JOINT_ACCOUNT_OWNER_ID, name: 'Joint' },
+      ...members
+        .filter((member) => member.role !== 'removed')
+        .map((member) => ({ id: member.id, name: member.name })),
+    ],
+    [members]
   );
+
+  const editOwnerOptions = useMemo(() => {
+    const options = [...ownerOptions];
+    const currentOwnerId = selectedAccount?.ownerMemberId;
+    if (
+      currentOwnerId &&
+      currentOwnerId !== JOINT_ACCOUNT_OWNER_ID &&
+      !options.some((option) => option.id === currentOwnerId)
+    ) {
+      const removedMember = members.find((member) => member.id === currentOwnerId);
+      if (removedMember) {
+        options.push({ id: removedMember.id, name: `${removedMember.name} (removed)` });
+      }
+    }
+    return options;
+  }, [members, ownerOptions, selectedAccount]);
 
   // Filter accounts
   const displayedAccounts = useMemo(() => {
@@ -121,6 +142,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accName.trim()) return;
+    if (!accOwnerMemberId) {
+      setError('Account owner is required. Choose a household member or Joint.');
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
@@ -128,11 +153,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       await onCreateAccount({
         name: accName.trim(),
         type: accType,
-        ownerPerson: accOwner,
+        ownerMemberId: accOwnerMemberId,
         startingBalancePence: pence,
         notes: accNotes.trim() || undefined,
       });
       setAccName('');
+      setAccOwnerMemberId('');
       setAccBalanceStr('');
       setAccNotes('');
       setShowAccModal(false);
@@ -148,7 +174,16 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setSelectedAccount(acc);
     setEditName(acc.name);
     setEditType(acc.type);
-    setEditOwner(acc.ownerPerson || 'Joint');
+    const resolvedOwnerId =
+      acc.ownerMemberId ||
+      (acc.ownerPerson?.trim().toLowerCase() === 'joint'
+        ? JOINT_ACCOUNT_OWNER_ID
+        : members.find(
+            (member) =>
+              member.name.trim().toLowerCase() === acc.ownerPerson?.trim().toLowerCase()
+          )?.id) ||
+      '';
+    setEditOwnerMemberId(resolvedOwnerId);
     setEditNotes(acc.notes || '');
     setEditIsActive(acc.isActive !== false);
     setError(null);
@@ -159,13 +194,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAccount || !editName.trim()) return;
+    if (!editOwnerMemberId) {
+      setError('Account owner is required. Choose a household member or Joint.');
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
       await onUpdateAccount(selectedAccount.id, {
         name: editName.trim(),
         type: editType,
-        ownerPerson: editOwner,
+        ownerMemberId: editOwnerMemberId,
         notes: editNotes.trim() || undefined,
         isActive: editIsActive,
       });
@@ -307,6 +346,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const renderAccountCard = (acc: Account) => {
     const isArchived = acc.isActive === false;
     const isCredit = acc.type === 'credit';
+    const ownerLabel =
+      acc.ownerMemberId === JOINT_ACCOUNT_OWNER_ID
+        ? 'Joint'
+        : members.find((member) => member.id === acc.ownerMemberId)?.name ||
+          acc.ownerPerson ||
+          'Unassigned';
     const balancePence = isCredit
       ? acc.currentBalancePence !== 0
         ? Math.max(0, -acc.currentBalancePence)
@@ -337,7 +382,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 {acc.type}
               </span>
               <span className="rounded-full border border-muted bg-surface-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted">
-                {acc.ownerPerson || 'Joint'}
+                {ownerLabel}
               </span>
               {isArchived && (
                 <span className="rounded-full border border-warning bg-warning-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-warning">
@@ -649,13 +694,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     Owner
                   </label>
                   <select
-                    value={accOwner}
-                    onChange={(e) => setAccOwner(e.target.value as Payer)}
+                    value={accOwnerMemberId}
+                    onChange={(e) => setAccOwnerMemberId(e.target.value)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    required
                   >
-                    {personOptions.map((person) => (
-                      <option key={person} value={person}>
-                        {person}
+                    <option value="" disabled>
+                      Select owner
+                    </option>
+                    {ownerOptions.map((owner) => (
+                      <option key={owner.id} value={owner.id}>
+                        {owner.name}
                       </option>
                     ))}
                   </select>
@@ -767,13 +816,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     Owner
                   </label>
                   <select
-                    value={editOwner}
-                    onChange={(e) => setEditOwner(e.target.value as Payer)}
+                    value={editOwnerMemberId}
+                    onChange={(e) => setEditOwnerMemberId(e.target.value)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    required
                   >
-                    {personOptions.map((person) => (
-                      <option key={person} value={person}>
-                        {person}
+                    <option value="" disabled>
+                      Select owner
+                    </option>
+                    {editOwnerOptions.map((owner) => (
+                      <option key={owner.id} value={owner.id}>
+                        {owner.name}
                       </option>
                     ))}
                   </select>
