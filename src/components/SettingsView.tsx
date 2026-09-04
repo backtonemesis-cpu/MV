@@ -26,7 +26,6 @@ import {
   AccentColor,
   UserPreferences,
 } from '../types';
-import { MV_SINGLE_USER_MODE } from '../accessPolicy';
 
 const ACCENT_OPTIONS: { id: AccentColor; name: string; color: string }[] = [
   { id: 'emerald', name: 'Emerald Green', color: '#059669' },
@@ -47,6 +46,11 @@ interface SettingsViewProps {
   userPreferences: UserPreferences;
   onUpdatePreferences: (prefs: Partial<UserPreferences>) => void;
   onSaveAppearance?: () => Promise<void>;
+  onCreateMember: (data: {
+    name: string;
+    email: string;
+    role?: 'editor' | 'view_only' | 'pending';
+  }) => Promise<void>;
   onApproveMember: (memberId: string, role: 'editor' | 'view_only') => Promise<void>;
   onChangeRole: (memberId: string, newRole: UserRole) => Promise<void>;
   onRemoveMember: (memberId: string) => Promise<void>;
@@ -64,6 +68,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   userPreferences,
   onUpdatePreferences,
   onSaveAppearance,
+  onCreateMember,
   onApproveMember,
   onChangeRole,
   onRemoveMember,
@@ -86,6 +91,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [isLoadingSample, setIsLoadingSample] = useState(false);
   const [sampleMessage, setSampleMessage] = useState<string | null>(null);
+  const [memberName, setMemberName] = useState('');
+  const [memberEmail, setMemberEmail] = useState('');
+  const [memberRole, setMemberRole] = useState<'editor' | 'view_only'>('editor');
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [memberMessage, setMemberMessage] = useState<string | null>(null);
 
   const activeAccentName =
     ACCENT_OPTIONS.find((item) => item.id === (hoveredAccent ?? userPreferences.accent))?.name ??
@@ -151,6 +161,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     reader.readAsText(file);
   };
 
+  const handleAddMember = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      setIsAddingMember(true);
+      setMemberMessage(null);
+      await onCreateMember({
+        name: memberName.trim(),
+        email: memberEmail.trim(),
+        role: memberRole,
+      });
+      setMemberName('');
+      setMemberEmail('');
+      setMemberRole('editor');
+      setMemberMessage('Household member added.');
+    } catch (err: any) {
+      setMemberMessage(err.message || 'Failed to add household member.');
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
   return (
     <div className="space-y-7 pb-12 px-1 sm:px-0">
       {/* Header */}
@@ -162,7 +193,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Settings Tabs */}
       <div className="bg-surface-muted border-muted rounded-xl border p-1.5 shadow-inner">
-        <div className={`grid gap-1.5 ${MV_SINGLE_USER_MODE ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
           <button
             onClick={() => setActiveTab('appearance')}
             className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
@@ -175,8 +206,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="leading-none">Appearance</span>
           </button>
 
-          {!MV_SINGLE_USER_MODE && (
-            <button
+          <button
               onClick={() => setActiveTab('members')}
               className={`min-w-0 rounded-lg px-2 py-2 text-[11px] sm:text-xs font-semibold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 ${
                 activeTab === 'members'
@@ -185,12 +215,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }`}
             >
               <Users className="w-4 h-4 shrink-0" />
-              <span className="leading-none">Access</span>
+              <span className="leading-none">Household</span>
               {members.some((m) => m.role === 'pending') && (
                 <span className="w-2 h-2 rounded-full bg-warning-soft inline-block" />
               )}
             </button>
-          )}
 
           <button
             onClick={() => setActiveTab('audit')}
@@ -335,8 +364,85 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       )}
 
       {/* TAB 2: Members & Access */}
-      {!MV_SINGLE_USER_MODE && activeTab === 'members' && (
+      {activeTab === 'members' && (
         <div className="space-y-4 max-w-3xl">
+          <div className="rounded-2xl border border-muted bg-surface p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <Users className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+              <div>
+                <h2 className="text-sm font-bold text-main">Household Members</h2>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Manage household member records and intended roles in this local MV dataset.
+                  This static build does not authenticate another device or grant remote access.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {isOwner && (
+            <form
+              onSubmit={handleAddMember}
+              className="rounded-2xl border border-muted bg-surface p-5 shadow-sm"
+            >
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-main">Add Household Member</h3>
+                <p className="mt-0.5 text-xs text-muted">
+                  Add a person to the household record and assign their intended access role.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
+                  <input
+                    value={memberName}
+                    onChange={(event) => setMemberName(event.target.value)}
+                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                    placeholder="e.g. Vesta"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Email</label>
+                  <input
+                    type="email"
+                    value={memberEmail}
+                    onChange={(event) => setMemberEmail(event.target.value)}
+                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                    placeholder="name@example.com"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Role</label>
+                  <select
+                    value={memberRole}
+                    onChange={(event) =>
+                      setMemberRole(event.target.value as 'editor' | 'view_only')
+                    }
+                    className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
+                  >
+                    <option value="editor">Household Editor</option>
+                    <option value="view_only">View Only</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3 border-t border-muted pt-4">
+                <span className="text-xs text-muted">{memberMessage || ''}</span>
+                <button
+                  type="submit"
+                  disabled={isAddingMember}
+                  className="h-10 rounded-xl bg-accent px-4 text-xs font-semibold text-on-accent transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isAddingMember ? 'Adding...' : 'Add Member'}
+                </button>
+              </div>
+            </form>
+          )}
+
           <div className="bg-surface p-6 rounded-2xl border border-muted shadow-xs">
             <h2 className="text-sm font-bold text-main mb-4">
               Members
@@ -395,9 +501,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           onChange={(e) => onChangeRole(m.id, e.target.value as UserRole)}
                           className="px-2 py-1 bg-surface border border-muted rounded-lg text-xs font-medium text-main"
                         >
-                          <option value="editor">Editor</option>
-                          <option value="view_only">View-Only</option>
-                          <option value="removed">Remove</option>
+                          <option value="editor">Household Editor</option>
+                          <option value="view_only">View Only</option>
                         </select>
                       )}
                       <button
