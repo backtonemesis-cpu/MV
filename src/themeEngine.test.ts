@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  applyThemePreferences,
   normalizeAccentPreference,
   normalizeAccentRgb,
   normalizeCardBorderPreference,
@@ -123,6 +124,44 @@ describe('token theme engine', () => {
       cardRadius: 'subtle',
       cardBorder: 'subtle',
     });
+  });
+
+  it('applies accent and card geometry variables together', () => {
+    const properties = new Map<string, string>();
+    const attributes = new Map<string, string>();
+
+    const root = {
+      setAttribute: (name: string, value: string) => attributes.set(name, value),
+      style: {
+        setProperty: (name: string, value: string) => properties.set(name, value),
+        colorScheme: '',
+      },
+      classList: {
+        toggle: vi.fn(),
+      },
+    } as unknown as HTMLElement;
+
+    applyThemePreferences(
+      {
+        theme: 'dark',
+        accent: 'teal',
+        accentRgb: { r: 6, g: 182, b: 212 },
+        cardDensity: 'comfortable',
+        cardRadius: 'rounded',
+        cardBorder: 'high',
+      },
+      root
+    );
+
+    expect(properties.get('--accent-rgb')).toBe('6, 182, 212');
+    expect(properties.get('--card-padding')).toBe('16px 20px');
+    expect(properties.get('--card-gap')).toBe('14px');
+    expect(properties.get('--card-font-scale')).toBe('14px');
+    expect(properties.get('--card-radius')).toBe('8px');
+    expect(properties.get('--card-border')).toBe('1px solid #3B4B75');
+    expect(attributes.get('data-card-density')).toBe('comfortable');
+    expect(attributes.get('data-card-radius')).toBe('rounded');
+    expect(attributes.get('data-card-border')).toBe('high');
   });
 
   it('normalizes stored legacy preferences safely', () => {
