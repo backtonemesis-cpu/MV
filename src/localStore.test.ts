@@ -141,6 +141,7 @@ describe('Penny-style local MV storage', () => {
       expect(payment.accountId).toBe(source?.accountId);
       expect(payment.responsiblePerson).toBe(source?.responsiblePerson);
       expect(payment.amountPence).toBe(source?.amountPence);
+      expect(payment.isRecurring).toBe(source?.isRecurring);
     });
 
     targetIncomes.forEach((income) => {
@@ -169,6 +170,77 @@ describe('Penny-style local MV storage', () => {
     );
 
     expect(duplicateAttempt.imported).toBe(0);
+  });
+
+  it('preserves explicit recurring intent while keeping irregular bills opt-in only', () => {
+    let state = loadLocalHousehold();
+
+    const account = createLocalAccount(
+      {
+        name: 'Rollover Test Current',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const recurring = createLocalPlannedPayment(
+      {
+        name: 'Recurring Rent',
+        amountPence: 900_00,
+        month: '2026-11',
+        accountId: account.account.id,
+        responsiblePerson: 'Marius',
+        categoryId: 'cat-housing',
+        status: 'unpaid',
+        includeInTransferPlan: true,
+        isRecurring: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const irregular = createLocalPlannedPayment(
+      {
+        name: 'One-off Repair',
+        amountPence: 75_00,
+        month: '2026-11',
+        accountId: account.account.id,
+        responsiblePerson: 'Marius',
+        categoryId: 'cat-housing',
+        status: 'unpaid',
+        includeInTransferPlan: true,
+        isRecurring: false,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(recurring.payment.isRecurring).toBe(true);
+    expect(irregular.payment.isRecurring).toBe(false);
+
+    importLocalMonth(
+      {
+        sourceMonth: '2026-11',
+        targetMonth: '2026-12',
+        paymentIds: [recurring.payment.id],
+        incomeIds: [],
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const december = state.plannedPayments.filter((payment) => payment.month === '2026-12');
+    expect(december).toHaveLength(1);
+    expect(december[0]).toEqual(
+      expect.objectContaining({
+        name: 'Recurring Rent',
+        isRecurring: true,
+        status: 'unpaid',
+      })
+    );
   });
 
   it('persists exact-pence movements and recalculates local account balances', () => {
