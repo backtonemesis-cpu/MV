@@ -700,6 +700,7 @@ export default function App() {
                 accounts={household.accounts}
                 categories={household.categories}
                 plannedPayments={household.plannedPayments || []}
+                members={household.members}
                 userRole={session.role}
                 currentVersion={household.version}
                 selectedMonth={selectedMonth}
@@ -718,6 +719,7 @@ export default function App() {
                 transactions={household.transactions}
                 accounts={household.accounts}
                 categories={household.categories}
+                members={household.members}
                 userRole={session.role}
                 selectedMonth={selectedMonth}
                 onAddTransaction={() => {
@@ -737,6 +739,7 @@ export default function App() {
                 accounts={household.accounts}
                 savingsGoals={household.savingsGoals}
                 transactions={household.transactions}
+                members={household.members}
                 userRole={session.role}
                 onCreateAccount={handleCreateAccount}
                 onUpdateAccount={handleUpdateAccount}
@@ -753,6 +756,7 @@ export default function App() {
                 accounts={household.accounts}
                 categories={household.categories}
                 transactions={household.transactions}
+                members={household.members}
                 selectedMonth={selectedMonth}
                 availableMonths={availableMonths}
                 userRole={session.role}
@@ -771,6 +775,7 @@ export default function App() {
                 transactions={household.transactions}
                 plannedPayments={household.plannedPayments || []}
                 plannedIncomes={household.plannedIncomes || []}
+                members={household.members}
                 selectedMonth={selectedMonth}
                 userRole={session.role}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
@@ -796,8 +801,6 @@ export default function App() {
                 }}
                 onCreateMember={handleCreateHouseholdMember}
                 onUpdateMember={handleUpdateHouseholdMember}
-                onApproveMember={handleApproveMember}
-                onChangeRole={handleChangeRole}
                 onRemoveMember={handleRemoveMember}
                 onDownloadBackup={async () => {
                   const data = await fetchBackup();
@@ -857,6 +860,7 @@ export default function App() {
           initialTransaction={editingTx}
           accounts={household.accounts}
           categories={household.categories}
+          members={household.members}
           isSubmitting={isSubmitting}
         />
       )}
@@ -867,6 +871,7 @@ export default function App() {
           payment={editingPlannedPayment}
           accounts={household.accounts}
           categories={household.categories}
+          members={household.members}
           activeMonth={selectedMonth}
           onClose={() => {
             setShowPlannedPaymentModal(false);
