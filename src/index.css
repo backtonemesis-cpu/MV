@@ -101,9 +101,9 @@
 
   :root,
   [data-accent="emerald"] {
-    --primary: #059669;
-    --primary-light: rgba(5, 150, 105, 0.1);
-    --primary-light-text: #059669;
+    --primary: #22C55E;
+    --primary-light: rgba(34, 197, 94, 0.10);
+    --primary-light-text: #22C55E;
     --text-on-primary: #ffffff;
   }
 
@@ -1204,8 +1204,8 @@ html[data-theme] button.bg-white:hover {
 }
 
 .mv-modal-card.mv-modal-wide {
-  width: min(100%, 640px);
-  max-width: 640px !important;
+  width: min(100%, 540px);
+  max-width: 540px !important;
 }
 
 .mv-modal-header {
