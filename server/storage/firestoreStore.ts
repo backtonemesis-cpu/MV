@@ -5,7 +5,7 @@ import {
   type Firestore,
   type Transaction as FirestoreTransaction,
 } from 'firebase-admin/firestore';
-import { isMvOwnerEmail, MV_MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../../src/accessPolicy';
+import { isMvOwnerEmail, MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../../src/accessPolicy';
 import type {
   Account,
   AuditLogEntry,
