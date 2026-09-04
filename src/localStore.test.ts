@@ -288,7 +288,7 @@ describe('Penny-style local MV storage', () => {
           { sourceAccountId: sourceB.account.id, amountPence: 40_00 },
         ],
         description: 'Fund bills',
-        date: '2026-10-01',
+        date: '2026-09-04',
       },
       beforeVersion
     );
