@@ -76,39 +76,39 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
-      <div className="mv-surface bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border mv-border border-neutral-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs">
+      <div className="bg-surface rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-muted">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 mv-surface-muted bg-neutral-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-muted bg-surface-muted">
           <div>
-            <h3 className="text-base font-semibold mv-text text-neutral-900">Transfer Funds</h3>
+            <h3 className="text-base font-semibold text-main">Transfer Funds</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg mv-text-muted text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+            className="p-1 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Transfer Context Card */}
-        <div className="px-6 py-4 bg-amber-50/60 border-b border-amber-100">
+        <div className="px-6 py-4 bg-warning-soft border-b border-warning">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-medium text-amber-800 uppercase tracking-wide">
+              <span className="text-xs font-medium text-warning uppercase tracking-wide">
                 Needs Funding
               </span>
-              <div className="text-sm font-semibold mv-text text-neutral-900 mt-0.5">
+              <div className="text-sm font-semibold text-main mt-0.5">
                 {targetAccount.name}
               </div>
-              <div className="text-xs text-neutral-600 mt-0.5">
+              <div className="text-xs text-muted mt-0.5">
                 Balance: {formatPence(targetAccount.currentBalancePence)} · Bills:{' '}
                 {formatPence(fundingRequirement.totalSelectedPaymentsPence)}
               </div>
             </div>
             <div className="text-right">
-              <span className="text-xs font-medium text-amber-800">Required</span>
-              <div className="text-lg font-bold text-amber-900">
+              <span className="text-xs font-medium text-warning">Required</span>
+              <div className="text-lg font-bold text-warning">
                 {formatPence(fundingRequirement.transferRequiredPence)}
               </div>
             </div>
@@ -118,20 +118,20 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-800 text-xs">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs">
+              <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Transfer Route Visualizer */}
-          <div className="grid grid-cols-2 gap-3 p-3 mv-surface-muted bg-neutral-50 rounded-lg border mv-border border-neutral-200 items-center">
+          <div className="grid grid-cols-2 gap-3 p-3 bg-surface-muted rounded-lg border border-muted items-center">
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">From Account</label>
+              <label className="block text-xs font-medium text-muted mb-1">From Account</label>
               <select
                 value={sourceAccountId}
                 onChange={(e) => setSourceAccountId(e.target.value)}
-                className="w-full text-xs font-medium border mv-border border-neutral-300 rounded-md p-2 mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 <option value="">Select account</option>
                 {availableSourceAccounts
@@ -145,18 +145,18 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">To Account</label>
-              <div className="p-2 border mv-border border-neutral-200 bg-neutral-100 rounded-md text-xs font-semibold text-neutral-800 truncate">
+              <label className="block text-xs font-medium text-muted mb-1">To Account</label>
+              <div className="p-2 border border-muted bg-surface-muted rounded-md text-xs font-semibold text-main truncate">
                 {targetAccount.name}
               </div>
             </div>
           </div>
 
           {selectedSourceAccount && (
-            <div className="text-xs mv-text-muted text-neutral-500 flex justify-between px-1">
+            <div className="text-xs text-muted text-main0 flex justify-between px-1">
               <span>Source available: {formatPence(selectedSourceAccount.currentBalancePence)}</span>
               {selectedSourceAccount.currentBalancePence < enteredPence && (
-                <span className="text-rose-600 font-medium">Warning: Exceeds source balance</span>
+                <span className="text-danger font-medium">Warning: Exceeds source balance</span>
               )}
             </div>
           )}
@@ -164,30 +164,30 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
           {/* Amount & Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">
+              <label className="block text-xs font-medium text-muted mb-1">
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-sm mv-text-muted text-neutral-400 font-medium">£</span>
+                <span className="absolute left-3 top-2 text-sm text-muted text-subtle font-medium">£</span>
                 <input
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">Transfer Date</label>
+              <label className="block text-xs font-medium text-muted mb-1">Transfer Date</label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                 required
               />
             </div>
@@ -196,21 +196,21 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
           {/* Description & Person */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-xs font-medium text-neutral-700 mb-1">Description</label>
+              <label className="block text-xs font-medium text-muted mb-1">Description</label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border mv-border border-neutral-300 rounded-md focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1">By</label>
+              <label className="block text-xs font-medium text-muted mb-1">By</label>
               <select
                 value={payer}
                 onChange={(e) => setPayer(e.target.value)}
-                className="w-full px-2 py-1.5 text-xs border mv-border border-neutral-300 rounded-md mv-surface bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none"
+                className="w-full px-2 py-1.5 text-xs border border-muted rounded-md bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 <option value="Marius">Marius</option>
                 <option value="Vesta">Vesta</option>
@@ -224,14 +224,14 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
+              className="px-4 py-2 text-xs font-medium text-muted hover:bg-surface-muted rounded-md transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !sourceAccountId || enteredPence <= 0}
-              className="px-4 py-2 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md shadow-xs disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+              className="px-4 py-2 text-xs font-medium text-on-accent bg-surface hover:bg-surface-muted rounded-md shadow-xs disabled:opacity-50 flex items-center gap-1.5 transition-colors"
             >
               {isSubmitting ? 'Transferring...' : 'Transfer'}
               <ArrowRight className="w-3.5 h-3.5" />
