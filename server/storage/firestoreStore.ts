@@ -5,6 +5,7 @@ import {
   type Firestore,
   type Transaction as FirestoreTransaction,
 } from 'firebase-admin/firestore';
+import { isMvOwnerEmail, MV_MV_OWNER_EMAIL, MV_SINGLE_USER_MODE } from '../../src/accessPolicy';
 import type {
   Account,
   AuditLogEntry,
@@ -27,7 +28,6 @@ import {
   HOUSEHOLD_CURRENCY,
   HOUSEHOLD_ID,
   HOUSEHOLD_NAME,
-  OWNER_EMAIL,
   initialRoleForVerifiedEmail,
   type HouseholdMutationRequest,
   type HouseholdMutationResult,
@@ -433,6 +433,10 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
     email: string;
     name: string;
   }): Promise<HouseholdMember> {
+    if (MV_SINGLE_USER_MODE && !isMvOwnerEmail(identity.email)) {
+      throw new Error('MV is currently restricted to the verified Marius owner account.');
+    }
+
     await this.ensureHousehold();
 
     const email = normalizeEmail(identity.email);
@@ -469,7 +473,7 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
           throw new Error('Firebase UID is already bound to a different household email.');
         }
 
-        if (email === OWNER_EMAIL && existing.role !== 'owner') {
+        if (email === MV_OWNER_EMAIL && existing.role !== 'owner') {
           transaction.update(memberRef, {
             role: 'owner',
             name: identity.name,
@@ -478,7 +482,7 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
           return { ...existing, name: identity.name, role: 'owner' as const, lastActiveAt: now };
         }
 
-        if (email !== OWNER_EMAIL && existing.role === 'owner') {
+        if (email !== MV_OWNER_EMAIL && existing.role === 'owner') {
           throw new Error('Only Marius may hold the Household Owner role.');
         }
 
@@ -492,9 +496,9 @@ export class FirestoreHouseholdStore implements PersistentHouseholdStore {
       const ownerSnapshot = await transaction.get(
         this.collection('members').where('role', '==', 'owner').limit(2)
       );
-      if (email === OWNER_EMAIL) {
+      if (email === MV_OWNER_EMAIL) {
         const foreignOwner = ownerSnapshot.docs.find(
-          (doc) => normalizeEmail(asString(doc.data().email)) !== OWNER_EMAIL
+          (doc) => normalizeEmail(asString(doc.data().email)) !== MV_OWNER_EMAIL
         );
         if (foreignOwner) {
           throw new Error('Household Owner state requires administrator repair before sign-in can continue.');
