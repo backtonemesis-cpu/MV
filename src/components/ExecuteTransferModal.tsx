@@ -220,14 +220,14 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               <div className="text-sm font-semibold text-main mt-0.5">
                 {targetAccount.name} ({targetAccount.ownerPerson || targetAccount.type})
               </div>
-              <div className="text-xs text-muted mt-0.5">
+              <div className="mv-private-value text-xs text-muted mt-0.5">
                 Balance: {formatPence(targetAccount.currentBalancePence)} · Bills:{' '}
                 {formatPence(fundingRequirement.totalSelectedPaymentsPence)}
               </div>
             </div>
             <div className="text-right">
               <span className="text-xs font-medium text-warning">Required</span>
-              <div className="text-lg font-bold text-warning">
+              <div className="mv-private-value text-lg font-bold text-warning">
                 {formatPence(requiredPence)}
               </div>
             </div>
@@ -341,7 +341,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                     </div>
 
                     {source && (
-                      <div className="mt-1.5 flex justify-between gap-2 text-[10px] text-subtle">
+                      <div className="mv-private-value mt-1.5 flex justify-between gap-2 text-[10px] text-subtle">
                         <span>
                           Available: {formatPence(source.currentBalancePence)} · By:{' '}
                           {source.ownerPerson || 'Joint'}
@@ -360,7 +360,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               <span className="text-muted">
                 To: <span className="font-semibold text-main">{targetAccount.name} ({targetAccount.ownerPerson || targetAccount.type})</span>
               </span>
-              <div className="text-right">
+              <div className="mv-private-value text-right">
                 <div className="font-semibold text-main">
                   Allocated: {formatPence(allocatedTotalPence)}
                 </div>
