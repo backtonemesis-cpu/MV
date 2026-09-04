@@ -394,8 +394,8 @@ function sourcePlannedIncomes(): PlannedIncome[] {
 }
 
 export function resolveCompatibleAccount(
-  oldAccount: Pick<Account, 'id' | 'name' | 'type' | 'ownerPerson'>,
-  candidateAccounts: Pick<Account, 'id' | 'name' | 'type' | 'ownerPerson'>[]
+  oldAccount: Pick<Account, 'id' | 'name' | 'type' | 'ownerMemberId' | 'ownerPerson'>,
+  candidateAccounts: Pick<Account, 'id' | 'name' | 'type' | 'ownerMemberId' | 'ownerPerson'>[]
 ): Account | undefined {
   // 1. Exact account ID exists in candidate accounts -> preserve it
   const exactMatch = candidateAccounts.find((candidate) => candidate.id === oldAccount.id);
@@ -417,11 +417,24 @@ export function resolveCompatibleAccount(
     return nameTypeCandidates[0] as Account;
   }
 
-  // 4. If multiple candidates exist, use ownerPerson to disambiguate and require exactly one owner match
+  // 4. If multiple candidates exist, prefer the stable household-member ID.
   if (nameTypeCandidates.length > 1) {
+    const oldOwnerMemberId = oldAccount.ownerMemberId?.trim();
+    if (oldOwnerMemberId) {
+      const memberIdMatches = nameTypeCandidates.filter(
+        (candidate) => candidate.ownerMemberId === oldOwnerMemberId
+      );
+      if (memberIdMatches.length === 1) {
+        return memberIdMatches[0] as Account;
+      }
+      if (memberIdMatches.length > 1) {
+        return undefined;
+      }
+    }
+
+    // Legacy fallback for imported accounts that pre-date stable owner IDs.
     const oldOwner = normalized(oldAccount.ownerPerson);
     if (!oldOwner) {
-      // Cannot disambiguate without owner information
       return undefined;
     }
     const ownerMatches = nameTypeCandidates.filter(
@@ -430,6 +443,7 @@ export function resolveCompatibleAccount(
     if (ownerMatches.length === 1) {
       return ownerMatches[0] as Account;
     }
+
     // 5. Never map arbitrarily between multiple same-name accounts
     return undefined;
   }

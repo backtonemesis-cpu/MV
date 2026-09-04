@@ -1,8 +1,10 @@
+import { JOINT_ACCOUNT_OWNER_ID } from './types';
 import type {
   Account,
   AuditLogEntry,
   HouseholdData,
   HouseholdMember,
+  Payer,
   PlannedIncome,
   PlannedPayment,
   SavingsGoal,
@@ -282,6 +284,128 @@ function financeMemberId(name: string): string {
   return `local-person-${financeMemberKey(name)}`;
 }
 
+function normalizedPersonName(value?: string): string {
+  return value?.trim().toLowerCase() || '';
+}
+
+function createInferredFinancialMember(name: string): HouseholdMember {
+  return {
+    id: financeMemberId(name),
+    email: financeMemberEmail(name),
+    name: name.trim(),
+    role: 'editor',
+    joinedAt: nowIso(),
+    approvedAt: nowIso(),
+    approvedBy: OWNER_EMAIL,
+  };
+}
+
+function normalizeAccountOwnership(state: HouseholdData): void {
+  const membersById = new Map(state.members.map((member) => [member.id, member]));
+
+  state.accounts = state.accounts.map((account) => {
+    if (
+      account.ownerMemberId === JOINT_ACCOUNT_OWNER_ID ||
+      normalizedPersonName(account.ownerPerson) === 'joint'
+    ) {
+      return {
+        ...account,
+        ownerMemberId: JOINT_ACCOUNT_OWNER_ID,
+        ownerPerson: 'Joint',
+      };
+    }
+
+    if (account.ownerMemberId) {
+      const linkedMember = membersById.get(account.ownerMemberId);
+      if (linkedMember) {
+        return {
+          ...account,
+          ownerPerson: linkedMember.name,
+        };
+      }
+
+      // Unknown legacy IDs are preserved rather than guessed. The edit form
+      // requires the user to choose a valid current household member.
+      return account;
+    }
+
+    const ownerName = normalizedPersonName(account.ownerPerson);
+    if (!ownerName) return account;
+
+    const matches = state.members.filter(
+      (member) => normalizedPersonName(member.name) === ownerName
+    );
+    if (matches.length !== 1) return account;
+
+    return {
+      ...account,
+      ownerMemberId: matches[0].id,
+      ownerPerson: matches[0].name,
+    };
+  });
+}
+
+function resolveAccountOwnerForWrite(
+  state: HouseholdData,
+  ownerMemberId?: string,
+  legacyOwnerPerson?: string
+): { ownerMemberId: string; ownerPerson: Payer } {
+  if (ownerMemberId === JOINT_ACCOUNT_OWNER_ID) {
+    return { ownerMemberId: JOINT_ACCOUNT_OWNER_ID, ownerPerson: 'Joint' };
+  }
+
+  if (ownerMemberId) {
+    const member = state.members.find((candidate) => candidate.id === ownerMemberId);
+    if (!member || member.role === 'removed') {
+      throw new Error('Account owner must be an active household member or Joint.');
+    }
+    return { ownerMemberId: member.id, ownerPerson: member.name };
+  }
+
+  const legacyName = legacyOwnerPerson?.trim();
+  if (!legacyName) {
+    throw new Error('Account owner is required. Choose a household member or Joint.');
+  }
+
+  if (legacyName.toLowerCase() === 'joint') {
+    return { ownerMemberId: JOINT_ACCOUNT_OWNER_ID, ownerPerson: 'Joint' };
+  }
+
+  const activeMatches = state.members.filter(
+    (member) =>
+      member.role !== 'removed' &&
+      normalizedPersonName(member.name) === normalizedPersonName(legacyName)
+  );
+  if (activeMatches.length === 1) {
+    return {
+      ownerMemberId: activeMatches[0].id,
+      ownerPerson: activeMatches[0].name,
+    };
+  }
+
+  if (activeMatches.length > 1) {
+    throw new Error('Account owner is ambiguous. Choose a specific household member.');
+  }
+
+  const removedMatch = state.members.find(
+    (member) =>
+      member.role === 'removed' &&
+      normalizedPersonName(member.name) === normalizedPersonName(legacyName)
+  );
+  if (removedMatch) {
+    throw new Error('This household member is removed and cannot own a new account.');
+  }
+
+  // Backwards-compatible path for legacy callers that still submit ownerPerson
+  // instead of ownerMemberId. The normal UI always submits the stable member ID.
+  const inferredMember = createInferredFinancialMember(legacyName);
+  state.members.push(inferredMember);
+  return {
+    ownerMemberId: inferredMember.id,
+    ownerPerson: inferredMember.name,
+  };
+}
+
 function referencedFinancialPeople(state: HouseholdData): string[] {
   const names = new Set<string>();
 
@@ -349,9 +473,19 @@ function repairDuplicateAccountRouting(state: HouseholdData): number {
     const personKey = normalized(person);
     if (!personKey || personKey === 'joint') return undefined;
 
+    const memberMatches = state.members.filter(
+      (member) => normalized(member.name) === personKey
+    );
+    const personMemberId = memberMatches.length === 1 ? memberMatches[0].id : undefined;
+
     const current = state.accounts.find((account) => account.id === currentAccountId);
     if (!current) return undefined;
-    if (normalized(current.ownerPerson) === personKey) return undefined;
+    if (
+      (personMemberId && current.ownerMemberId === personMemberId) ||
+      normalized(current.ownerPerson) === personKey
+    ) {
+      return undefined;
+    }
 
     const candidates = state.accounts.filter(
       (account) =>
@@ -359,7 +493,10 @@ function repairDuplicateAccountRouting(state: HouseholdData): number {
         account.id !== current.id &&
         normalized(account.name) === normalized(current.name) &&
         account.type === current.type &&
-        normalized(account.ownerPerson) === personKey
+        (
+          (personMemberId && account.ownerMemberId === personMemberId) ||
+          normalized(account.ownerPerson) === personKey
+        )
     );
 
     return candidates.length === 1 ? candidates[0].id : undefined;
@@ -482,6 +619,7 @@ function normalizeHousehold(input: HouseholdData): HouseholdData {
   state.members = [owner, ...otherMembers, ...inferredMembers];
 
   state.plannedIncomes = state.plannedIncomes || [];
+  normalizeAccountOwnership(state);
 
   // Same-named bank accounts are distinguished by stable account ID and owner.
   // If a record is attached to the wrong owner's duplicate account, repair only
@@ -733,6 +871,11 @@ export function createLocalAccount(
       if (!data.name?.trim()) throw new Error('Account name is required.');
       const starting = data.startingBalancePence ?? data.currentBalancePence ?? 0;
       if (!isSafePence(starting)) throw new Error('Starting balance must be exact integer pence.');
+      const owner = resolveAccountOwnerForWrite(
+        state,
+        data.ownerMemberId,
+        data.ownerPerson
+      );
       const account: Account = {
         id: data.id || createId('account'),
         name: data.name.trim(),
@@ -740,7 +883,8 @@ export function createLocalAccount(
         currency: 'GBP',
         startingBalancePence: starting,
         currentBalancePence: starting,
-        ownerPerson: data.ownerPerson || 'Marius',
+        ownerMemberId: owner.ownerMemberId,
+        ownerPerson: owner.ownerPerson,
         isActive: data.isActive !== false,
         reconciledAt: data.reconciledAt,
         reconciliationDate: data.reconciliationDate,
@@ -774,7 +918,37 @@ export function updateLocalAccount(
     (state) => {
       const index = state.accounts.findIndex((account) => account.id === id);
       if (index < 0) throw new Error('Account not found.');
-      const next = { ...state.accounts[index], ...data, id, currency: 'GBP' as const };
+
+      const existingAccount = state.accounts[index];
+      let ownerFields: Pick<Account, 'ownerMemberId' | 'ownerPerson'> = {
+        ownerMemberId: existingAccount.ownerMemberId,
+        ownerPerson: existingAccount.ownerPerson,
+      };
+      if (data.ownerMemberId !== undefined || data.ownerPerson !== undefined) {
+        const isKeepingExistingStableOwner =
+          Boolean(existingAccount.ownerMemberId) &&
+          data.ownerMemberId === existingAccount.ownerMemberId &&
+          data.ownerPerson === undefined;
+
+        ownerFields = isKeepingExistingStableOwner
+          ? {
+              ownerMemberId: existingAccount.ownerMemberId,
+              ownerPerson: existingAccount.ownerPerson,
+            }
+          : resolveAccountOwnerForWrite(
+              state,
+              data.ownerMemberId,
+              data.ownerPerson
+            );
+      }
+
+      const next = {
+        ...state.accounts[index],
+        ...data,
+        ...ownerFields,
+        id,
+        currency: 'GBP' as const,
+      };
       if (!isSafePence(next.startingBalancePence)) throw new Error('Starting balance must be exact integer pence.');
       if (next.reconciledBalancePence !== undefined && !isSafePence(next.reconciledBalancePence)) {
         throw new Error('Reconciled balance must be exact integer pence.');
