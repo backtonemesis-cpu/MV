@@ -156,6 +156,7 @@ try {
   await reset();
   result = runPreflight({
     FIRESTORE_EMULATOR_HOST: '127.0.0.1:9',
+    MV_FIRESTORE_PREFLIGHT_TIMEOUT_MS: '2000',
   });
   assertExit(result, 78, 'unreachable Firestore');
   assertIncludes(
