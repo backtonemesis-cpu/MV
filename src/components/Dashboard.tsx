@@ -184,7 +184,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="bg-app space-y-6 pb-16 text-main">
       {/* Active period */}
-      <section className="rounded-2xl border border-muted bg-surface p-4 shadow-sm">
+      <section className="mv-card rounded-2xl border border-muted bg-surface p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
@@ -279,7 +279,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           return (
             <article
               key={metric.label}
-              className="relative min-w-0 overflow-hidden rounded-2xl border border-muted bg-surface p-4 shadow-sm"
+              className="mv-card relative min-w-0 overflow-hidden rounded-2xl border border-muted bg-surface p-4 shadow-sm"
             >
               <div className="absolute inset-x-0 top-0 h-[2px] bg-accent" />
 
