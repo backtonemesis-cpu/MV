@@ -216,7 +216,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
                 Theme
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-3">
                 <button
                   type="button"
                   onClick={() => onUpdatePreferences({ theme: 'light' })}
@@ -263,7 +263,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <label className="block text-xs font-semibold uppercase tracking-[0.08em] text-slate-600 dark:text-neutral-300 mb-3">
                 Accent
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] sm:grid-cols-3 gap-3">
                 {[
                   { id: 'default', name: 'Emerald (Default)', color: 'bg-emerald-600', glow: 'shadow-[0_0_0_3px_rgba(5,150,105,0.16),0_8px_18px_-10px_rgba(5,150,105,0.45)]' },
                   { id: 'blue', name: 'Ocean Blue', color: 'bg-blue-600', glow: 'shadow-[0_0_0_3px_rgba(37,99,235,0.16),0_8px_18px_-10px_rgba(37,99,235,0.45)]' },
