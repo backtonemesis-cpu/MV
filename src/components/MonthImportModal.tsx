@@ -213,7 +213,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
             </div>
 
             {sourcePayments.length === 0 ? (
-              <div className="p-4 text-center text-xs text-muted text-main0 bg-surface-muted rounded-xl border border-muted">
+              <div className="p-4 text-center text-xs text-muted text-subtle bg-surface-muted rounded-xl border border-muted">
                 No bills in {sourceMonth}.
               </div>
             ) : (
@@ -262,7 +262,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                               </span>
                             )}
                           </div>
-                          <div className="text-[11px] text-muted text-main0 mt-0.5">
+                          <div className="text-[11px] text-muted text-subtle mt-0.5">
                             {acc?.name || 'Account'} • Due {payment.dueDate ? payment.dueDate.split('-')[2] : 'Day 1'}
                           </div>
                         </div>
