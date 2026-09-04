@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { calculateFinancialSummary, calculateMonthlySurplus } from './utils/currency';
+import {
+  calculateFinancialSummary,
+  calculateMonthlySurplus,
+  calculateSavingsPosition,
+} from './utils/currency';
 import {
   createSourceBudgetHousehold,
   SOURCE_BUDGET_EXPECTED,
@@ -43,6 +47,29 @@ describe('September source budget snapshot', () => {
     expect(currentSavingsPence + surplus.availableSurplusPence).toBe(
       SOURCE_BUDGET_EXPECTED.projectedEndSavingsPence
     );
+
+    const savingsPosition = calculateSavingsPosition(
+      state.accounts,
+      state.transactions,
+      state.plannedPayments,
+      SOURCE_BUDGET_EXPECTED.month,
+      state.plannedIncomes || []
+    );
+
+    expect(savingsPosition.currentSavingsPence).toBe(
+      SOURCE_BUDGET_EXPECTED.currentSavingsPence
+    );
+    expect(savingsPosition.savedThisMonthPence).toBe(
+      SOURCE_BUDGET_EXPECTED.savedThisMonthPence
+    );
+    expect(savingsPosition.projectedEndSavingsPence).toBe(
+      SOURCE_BUDGET_EXPECTED.projectedEndSavingsPence
+    );
+    expect(savingsPosition.savingsAccounts.map((account) => account.name)).toEqual([
+      'Chase',
+      'Santander',
+      'Cash',
+    ]);
 
     expect(state.transactions).toHaveLength(19);
     expect(state.plannedPayments).toHaveLength(13);

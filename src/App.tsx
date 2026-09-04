@@ -645,6 +645,8 @@ export default function App() {
                 savingsGoals={household.savingsGoals}
                 accounts={household.accounts}
                 transactions={household.transactions}
+                plannedPayments={household.plannedPayments || []}
+                plannedIncomes={household.plannedIncomes || []}
                 selectedMonth={selectedMonth}
                 userRole={session.role}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
