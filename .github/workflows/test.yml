@@ -25,6 +25,9 @@ jobs:
       - name: Typecheck
         run: npm run lint
 
+      - name: Validate production bootstrap shell
+        run: bash -n scripts/bootstrap-production-gcp.sh
+
       - name: Run automated test suite
         run: npm test
 

@@ -23,6 +23,7 @@ env:
   PROJECT_ID: regal-campus-198sv
   REGION: us-east1
   SERVICE: mv
+  RUNTIME_SERVICE_ACCOUNT: mv-runtime@regal-campus-198sv.iam.gserviceaccount.com
 
 jobs:
   deploy:
@@ -86,54 +87,128 @@ jobs:
       - name: Verify default Firestore exists
         run: |
           set -euo pipefail
-          gcloud firestore databases describe             --project="$PROJECT_ID"             --database="(default)"             --format="value(name,type,locationId)"
+          gcloud firestore databases describe \
+            --project="$PROJECT_ID" \
+            --database="(default)" \
+            --format="value(name,type,locationId)"
+
+      - name: Verify runtime service account exists
+        run: |
+          set -euo pipefail
+          gcloud iam service-accounts describe "$RUNTIME_SERVICE_ACCOUNT" \
+            --project="$PROJECT_ID" \
+            --format="value(email)"
 
       - name: Deploy deny-all Firestore browser rules
         run: |
           set -euo pipefail
-          npx --yes firebase-tools@15.28.2 deploy             --project "$PROJECT_ID"             --only firestore:rules             --non-interactive
+          npx --yes firebase-tools@15.28.2 deploy \
+            --project "$PROJECT_ID" \
+            --only firestore:rules \
+            --non-interactive
 
-      - name: Deploy Cloud Run source
+      - name: Deploy new Cloud Run revision with no traffic
         id: deploy
-        uses: google-github-actions/deploy-cloudrun@v3
-        with:
-          project_id: ${{ env.PROJECT_ID }}
-          service: ${{ env.SERVICE }}
-          region: ${{ env.REGION }}
-          source: .
-          env_vars_update_strategy: merge
-          env_vars: |-
-            NODE_ENV=production
-            MV_DATA_BACKEND=firestore
-            MV_FIRESTORE_DATABASE_ID=(default)
-
-      - name: Verify deployed revision is Ready
         run: |
           set -euo pipefail
-          gcloud run services describe "$SERVICE"             --project="$PROJECT_ID"             --region="$REGION"             --format="yaml(status.url,status.latestReadyRevisionName,status.conditions,spec.template.spec.serviceAccountName)"
 
-      - name: Verify live Firestore backend
-        env:
-          SERVICE_URL: ${{ steps.deploy.outputs.url }}
-        run: |
-          set -euo pipefail
-          if [ -z "$SERVICE_URL" ]; then
-            echo "::error::Cloud Run deploy action returned no service URL"
+          gcloud run deploy "$SERVICE" \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --source=. \
+            --no-traffic \
+            --service-account="$RUNTIME_SERVICE_ACCOUNT" \
+            --update-env-vars='NODE_ENV=production,MV_DATA_BACKEND=firestore,MV_FIRESTORE_DATABASE_ID=(default)' \
+            --quiet
+
+          revision="$(gcloud run services describe "$SERVICE" \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --format='value(status.latestCreatedRevisionName)')"
+
+          if [ -z "$revision" ]; then
+            echo "::error::Cloud Run did not report a latest created revision"
             exit 1
           fi
 
-          curl --fail --silent --show-error             "$SERVICE_URL/api/system/schema-status"             -o /tmp/schema-status.json
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+
+      - name: Verify new revision is Ready before traffic
+        env:
+          REVISION: ${{ steps.deploy.outputs.revision }}
+        run: |
+          set -euo pipefail
+
+          gcloud run revisions describe "$REVISION" \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --format=json > /tmp/revision.json
+
+          cat /tmp/revision.json
+
+          jq -e 'any(.status.conditions[]?; .type == "Ready" and .status == "True")' \
+            /tmp/revision.json >/dev/null
+
+          test "$(jq -r '.spec.serviceAccountName' /tmp/revision.json)" = "$RUNTIME_SERVICE_ACCOUNT"
+
+      - name: Shift production traffic only after readiness
+        id: live
+        env:
+          REVISION: ${{ steps.deploy.outputs.revision }}
+        run: |
+          set -euo pipefail
+
+          gcloud run services update-traffic "$SERVICE" \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --to-latest \
+            --quiet
+
+          ready_revision="$(gcloud run services describe "$SERVICE" \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --format='value(status.latestReadyRevisionName)')"
+
+          if [ "$ready_revision" != "$REVISION" ]; then
+            echo "::error::Latest Ready revision '$ready_revision' does not equal deployed revision '$REVISION'"
+            exit 1
+          fi
+
+          service_url="$(gcloud run services describe "$SERVICE" \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --format='value(status.url)')"
+
+          if [ -z "$service_url" ]; then
+            echo "::error::Cloud Run service has no URL"
+            exit 1
+          fi
+
+          echo "url=$service_url" >> "$GITHUB_OUTPUT"
+
+      - name: Verify live Firestore backend
+        env:
+          SERVICE_URL: ${{ steps.live.outputs.url }}
+        run: |
+          set -euo pipefail
+
+          curl --fail --silent --show-error \
+            "$SERVICE_URL/api/system/schema-status" \
+            -o /tmp/schema-status.json
 
           cat /tmp/schema-status.json
           grep --fixed-strings '"backend":"firestore"' /tmp/schema-status.json
 
-          curl --fail --silent --show-error             "$SERVICE_URL/"             -o /tmp/mv-index.html
+          curl --fail --silent --show-error \
+            "$SERVICE_URL/" \
+            -o /tmp/mv-index.html
 
           grep --ignore-case --fixed-strings '<!doctype html>' /tmp/mv-index.html
 
       - name: Deployment summary
         env:
-          SERVICE_URL: ${{ steps.deploy.outputs.url }}
+          SERVICE_URL: ${{ steps.live.outputs.url }}
+          REVISION: ${{ steps.deploy.outputs.revision }}
         run: |
           {
             echo "## MV production deployment"
@@ -143,6 +218,9 @@ jobs:
             echo "- Project: \`$PROJECT_ID\`"
             echo "- Region: \`$REGION\`"
             echo "- Service: \`$SERVICE\`"
+            echo "- Revision: \`$REVISION\`"
+            echo "- Runtime identity: \`$RUNTIME_SERVICE_ACCOUNT\`"
             echo "- URL: $SERVICE_URL"
             echo "- Backend verification: Firestore"
+            echo "- Traffic shift: after revision Ready"
           } >> "$GITHUB_STEP_SUMMARY"
