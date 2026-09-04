@@ -274,7 +274,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-muted text-main0 mt-1 flex-wrap">
+                      <div className="flex items-center gap-2 text-xs text-muted text-subtle mt-1 flex-wrap">
                         <span>{tx.date}</span>
                         <span>•</span>
                         <span className="font-semibold text-muted">
