@@ -22,6 +22,7 @@ import {
   bulkTogglePlannedPayments,
   executeTransferPlanTransfer,
   createHouseholdMember,
+  updateHouseholdMember,
   approveMember,
   changeMemberRole,
   removeMember,
@@ -573,6 +574,20 @@ export default function App() {
     }
   };
 
+  const handleUpdateHouseholdMember = async (
+    memberId: string,
+    data: { name?: string; email?: string }
+  ) => {
+    try {
+      if (!household) return;
+      await updateHouseholdMember(memberId, data, household.version);
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update household member');
+      throw err;
+    }
+  };
+
   const handleApproveMember = async (memberId: string, role: 'editor' | 'view_only') => {
     try {
       if (!household) return;
@@ -781,6 +796,7 @@ export default function App() {
                   localStorage.setItem('mv-theme-mode', saved.theme);
                 }}
                 onCreateMember={handleCreateHouseholdMember}
+                onUpdateMember={handleUpdateHouseholdMember}
                 onApproveMember={handleApproveMember}
                 onChangeRole={handleChangeRole}
                 onRemoveMember={handleRemoveMember}
