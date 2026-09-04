@@ -553,6 +553,7 @@ export default function App() {
     }>;
     description: string;
     date: string;
+    month: string;
   }) => {
     if (!household) return;
     try {
