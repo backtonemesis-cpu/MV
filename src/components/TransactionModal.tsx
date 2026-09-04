@@ -237,21 +237,21 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const remainingSplitPence = totalPence - currentSplitsTotalPence;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-xs animate-in fade-in">
-      <div className="bg-surface rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-muted">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-muted">
+    <div className="mv-modal-backdrop">
+      <div className="mv-modal-card">
+        <div className="mv-modal-header">
           <h2 className="text-base font-bold text-main">
             {initialTransaction ? 'Edit Transaction' : 'New Transaction'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted text-subtle hover:text-muted hover:bg-surface-muted transition"
+            className="mv-modal-close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="mv-modal-form">
           {error && (
             <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
@@ -283,7 +283,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
 
           {/* Amount & Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-semibold text-muted mb-1">
                 Amount
@@ -293,6 +293,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   £
                 </span>
                 <input
+                  autoFocus
                   type="text"
                   placeholder="0.00"
                   value={amountStr}
@@ -356,7 +357,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
 
           {/* Account Selection */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-semibold text-muted mb-1">
                 {isTransfer ? 'From Account' : 'Account'}
@@ -546,7 +547,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-muted">
+          <div className="mv-modal-actions">
             <button
               type="button"
               onClick={onClose}
