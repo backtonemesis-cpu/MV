@@ -185,6 +185,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 value={month}
                 onChange={setMonth}
                 ariaLabel="Billing month"
+                className="is-fluid"
               />
             </div>
           </div>
