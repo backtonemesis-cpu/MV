@@ -158,7 +158,11 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
     setSelectedPaymentIds(
       new Set(
         sourcePayments
-          .filter((payment) => !duplicatePaymentIds.has(payment.id))
+          .filter(
+            (payment) =>
+              payment.isRecurring === true &&
+              !duplicatePaymentIds.has(payment.id)
+          )
           .map((payment) => payment.id)
       )
     );
@@ -236,7 +240,11 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
       setSelectedPaymentIds(
         new Set(
           sourcePayments
-            .filter((payment) => !duplicatePaymentIds.has(payment.id))
+            .filter(
+              (payment) =>
+                payment.isRecurring === true &&
+                !duplicatePaymentIds.has(payment.id)
+            )
             .map((payment) => payment.id)
         )
       );
@@ -436,7 +444,12 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
                       />
 
                       <span className="mv-rollover-row-main">
-                        <span className="mv-rollover-title">{payment.name}</span>
+                        <span className="mv-rollover-title">
+                          {payment.name}
+                          {payment.isRecurring === true && (
+                            <span className="mv-rollover-recurring-tag">Recurring</span>
+                          )}
+                        </span>
                         <span className="mv-rollover-meta">
                           {payment.responsiblePerson} • {account?.name || 'Account'} • {dayLabel(payment.dueDate, 'Due')}
                           {duplicate ? ' • Exists' : ''}
