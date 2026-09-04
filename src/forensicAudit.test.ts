@@ -3,6 +3,8 @@ import {
   createLocalAccount,
   createLocalPlannedPayment,
   createLocalPlannedIncome,
+  createLocalSavingsGoal,
+  contributeLocalSavingsGoal,
   executeLocalTransferAllocations,
   loadLocalHousehold,
   reconcileLocalAccount,
@@ -437,7 +439,202 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(finalSummary.actualIncomeReceivedPence).toBe(3361_02 + 1200_00);
   });
 
-  it('10. Savings position uses true account balances and excludes goal allocations', () => {
+  it('10. Savings contribution is atomic, updates both balances and pot once, and remains non-spending', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const current = createLocalAccount(
+      {
+        name: 'Savings Funding Current',
+        type: 'current',
+        startingBalancePence: 500_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const saver = createLocalAccount(
+      {
+        name: 'Savings Vault',
+        type: 'savings',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const goal = createLocalSavingsGoal(
+      {
+        name: 'Emergency Fund',
+        targetPence: 1000_00,
+        currentPence: 100_00,
+        accountId: saver.account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const versionBefore = state.version;
+    const transactionsBefore = state.transactions.length;
+
+    const result = contributeLocalSavingsGoal(
+      {
+        goalId: goal.goal.id,
+        sourceAccountId: current.account.id,
+        amountPence: 125_00,
+        payer: 'Marius',
+        date: '2026-09-04',
+      },
+      state.version
+    );
+
+    expect(result.version).toBe(versionBefore + 1);
+
+    state = loadLocalHousehold();
+    expect(state.transactions).toHaveLength(transactionsBefore + 1);
+
+    const transfer = state.transactions.find((tx) => tx.id === result.transaction.id);
+    expect(transfer).toEqual(
+      expect.objectContaining({
+        amountPence: 125_00,
+        type: 'transfer',
+        isTransfer: true,
+        isSavings: true,
+        accountId: current.account.id,
+        targetAccountId: saver.account.id,
+      })
+    );
+
+    expect(state.accounts.find((a) => a.id === current.account.id)?.currentBalancePence).toBe(375_00);
+    expect(state.accounts.find((a) => a.id === saver.account.id)?.currentBalancePence).toBe(225_00);
+    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(225_00);
+
+    const monthly = calculateMonthlySurplus(
+      state.transactions,
+      state.plannedPayments,
+      '2026-09',
+      state.plannedIncomes
+    );
+    expect(monthly.savingsTransfersPence).toBe(125_00);
+    expect(monthly.grossOtherSpendingPence).toBe(0);
+    expect(monthly.actualIncomeReceivedPence).toBe(0);
+    expect(monthly.availableSurplusPence).toBe(0);
+
+    const position = calculateSavingsPosition(
+      state.accounts,
+      state.transactions,
+      state.plannedPayments,
+      '2026-09',
+      state.plannedIncomes
+    );
+    expect(position.currentSavingsPence).toBe(225_00);
+    expect(position.savingsTransfersPence).toBe(125_00);
+  });
+
+  it('11. Savings contribution rejects credit funding without partial writes', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const credit = createLocalAccount(
+      {
+        name: 'Credit Funding',
+        type: 'credit',
+        startingBalancePence: 500_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const saver = createLocalAccount(
+      {
+        name: 'Protected Savings',
+        type: 'savings',
+        startingBalancePence: 200_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const goal = createLocalSavingsGoal(
+      {
+        name: 'Protected Goal',
+        targetPence: 1000_00,
+        currentPence: 200_00,
+        accountId: saver.account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const snapshot = {
+      version: state.version,
+      transactions: state.transactions.length,
+      creditBalance: state.accounts.find((a) => a.id === credit.account.id)?.currentBalancePence,
+      savingsBalance: state.accounts.find((a) => a.id === saver.account.id)?.currentBalancePence,
+      goalCurrent: state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence,
+    };
+
+    expect(() =>
+      contributeLocalSavingsGoal(
+        {
+          goalId: goal.goal.id,
+          sourceAccountId: credit.account.id,
+          amountPence: 50_00,
+          payer: 'Marius',
+          date: '2026-09-04',
+        },
+        state.version
+      )
+    ).toThrow('Credit accounts cannot be used to fund savings.');
+
+    state = loadLocalHousehold();
+    expect(state.version).toBe(snapshot.version);
+    expect(state.transactions).toHaveLength(snapshot.transactions);
+    expect(state.accounts.find((a) => a.id === credit.account.id)?.currentBalancePence).toBe(snapshot.creditBalance);
+    expect(state.accounts.find((a) => a.id === saver.account.id)?.currentBalancePence).toBe(snapshot.savingsBalance);
+    expect(state.savingsGoals.find((item) => item.id === goal.goal.id)?.currentPence).toBe(snapshot.goalCurrent);
+  });
+
+  it('12. Savings goals cannot be linked to Current or Credit accounts', () => {
+    let state = loadLocalHousehold();
+    resetLocalHousehold(state.version);
+    state = loadLocalHousehold();
+
+    const current = createLocalAccount(
+      {
+        name: 'Not A Savings Account',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      createLocalSavingsGoal(
+        {
+          name: 'Invalid Goal',
+          targetPence: 500_00,
+          currentPence: 0,
+          accountId: current.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Savings goals must be linked to an active Savings or Cash account.');
+
+    const after = loadLocalHousehold();
+    expect(after.version).toBe(state.version);
+    expect(after.savingsGoals).toHaveLength(0);
+  });
+
+  it('13. Savings position uses true account balances and excludes goal allocations', () => {
     const savingsAcc: Account = {
       id: 'savings-1',
       name: 'Chase Saver',
