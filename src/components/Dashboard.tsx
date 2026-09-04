@@ -297,7 +297,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           return (
             <article
               key={metric.label}
-              className="mv-card relative min-w-0 overflow-hidden rounded-2xl border border-muted bg-surface p-4 shadow-sm"
+              className="mv-card mv-dashboard-metric-card relative min-w-0 overflow-hidden rounded-xl border border-muted bg-surface p-3 shadow-sm"
             >
               <div className="absolute inset-x-0 top-0 h-[2px] bg-accent" />
 
@@ -306,16 +306,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   {metric.label}
                 </div>
 
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                  <Icon className="h-4 w-4" />
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+                  <Icon className="h-3.5 w-3.5" />
                 </div>
               </div>
 
-              <div className="mt-5 truncate font-mono text-xl font-semibold tracking-tight text-main tabular-nums sm:text-2xl">
+              <div className="mv-dashboard-metric-value mt-3 truncate font-mono text-lg font-semibold tracking-tight text-main tabular-nums sm:text-xl">
                 {formatPence(metric.value)}
               </div>
 
-              <div className="mv-private-value mt-1.5 truncate text-[11px] text-subtle">{metric.note}</div>
+              <div className="mv-private-value mv-dashboard-metric-note mt-1 truncate text-[10px] text-subtle">{metric.note}</div>
             </article>
           );
         })}
