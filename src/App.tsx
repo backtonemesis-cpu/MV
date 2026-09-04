@@ -539,7 +539,7 @@ export default function App() {
           <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-8 h-8 text-emerald-700 dark:text-emerald-400 animate-spin" />
             <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-              Loading MV data from this browser...
+              Loading...
             </span>
           </div>
         )}
