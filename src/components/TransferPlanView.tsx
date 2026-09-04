@@ -330,7 +330,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
         <article
           id="stat-transfer-required"
-          className="min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
+          className="mv-card min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-muted">
@@ -360,7 +360,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </p>
         </article>
 
-        <article className="min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+        <article className="mv-card min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-muted">
               Payments in Plan
@@ -376,7 +376,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </p>
         </article>
 
-        <article className="min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
+        <article className="mv-card min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-medium leading-5 text-muted">
               Accounts
@@ -419,7 +419,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <div
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
                 {/* Account Card Header */}
                 <div className="p-4 sm:p-5 bg-surface border-b border-muted flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -583,7 +583,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <article
                 key={req.account.id}
                 id={`funding-card-${req.account.id}`}
-                className="bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
               >
                 <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -787,7 +787,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         </div>
 
         {/* Payments */}
-        <div className="bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
           {/* Mobile / tablet cards: everything visible without horizontal scrolling */}
           <div className="lg:hidden divide-y divide-muted">
             {monthPayments.length === 0 ? (
