@@ -859,9 +859,27 @@ export function updateLocalTransaction(
     (state) => {
       const index = state.transactions.findIndex((tx) => tx.id === id);
       if (index < 0) throw new Error('Transaction not found.');
-      const next = { ...state.transactions[index], ...data, id, updatedAt: nowIso(), updatedBy: OWNER_EMAIL };
+      const existing = state.transactions[index];
+      if (existing.metadata?.savingsGoalId) {
+        throw new Error('Savings goal contributions must be managed from the Savings view.');
+      }
+
+      const next = { ...existing, ...data, id, updatedAt: nowIso(), updatedBy: OWNER_EMAIL };
       if (!isSafePence(next.amountPence) || next.amountPence < 0) {
         throw new Error('Transaction amount must be exact integer pence.');
+      }
+
+      if (
+        existing.plannedPaymentId &&
+        (next.type !== 'expense' || next.isTransfer || next.isRepayment || next.isSavings || next.isRefund)
+      ) {
+        throw new Error('A transaction linked to a paid bill must remain an expense.');
+      }
+      if (
+        existing.plannedIncomeId &&
+        (next.type !== 'income' || next.isTransfer || next.isRepayment || next.isSavings || next.isRefund)
+      ) {
+        throw new Error('A transaction linked to received income must remain income.');
       }
       assertAccountExists(state, next.accountId);
       assertCategoryExists(state, next.categoryId);
@@ -871,6 +889,51 @@ export function updateLocalTransaction(
         if (total !== next.amountPence) throw new Error('Transaction split total must equal transaction amount.');
       }
       state.transactions[index] = next;
+
+      if (next.plannedPaymentId) {
+        const paymentIndex = state.plannedPayments.findIndex(
+          (payment) => payment.id === next.plannedPaymentId
+        );
+        if (paymentIndex >= 0) {
+          state.plannedPayments[paymentIndex] = {
+            ...state.plannedPayments[paymentIndex],
+            actualAmountPence: next.amountPence,
+            actualDate: next.date,
+            actualTransactionId: next.id,
+            accountId: next.accountId,
+            categoryId: next.categoryId,
+            responsiblePerson: next.payer,
+            status: 'paid',
+            updatedAt: nowIso(),
+            updatedBy: OWNER_EMAIL,
+          };
+        }
+      }
+
+      if (next.plannedIncomeId) {
+        const incomeIndex = (state.plannedIncomes || []).findIndex(
+          (income) => income.id === next.plannedIncomeId
+        );
+        if (incomeIndex >= 0) {
+          const linkedIncome = state.plannedIncomes[incomeIndex];
+          state.plannedIncomes[incomeIndex] = {
+            ...linkedIncome,
+            actualAmountPence: next.amountPence,
+            actualDate: next.date,
+            actualTransactionId: next.id,
+            linkedTransactionId: next.id,
+            receivedDate: next.date,
+            accountId: next.accountId,
+            categoryId: next.categoryId,
+            sourcePerson: next.payer,
+            status:
+              next.amountPence < linkedIncome.expectedAmountPence ? 'partial' : 'received',
+            updatedAt: nowIso(),
+            updatedBy: OWNER_EMAIL,
+          };
+        }
+      }
+
       return next;
     }
   );
@@ -887,9 +950,49 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
       summary: 'Transaction deleted',
     },
     (state) => {
-      const before = state.transactions.length;
+      const existing = state.transactions.find((tx) => tx.id === id);
+      if (!existing) throw new Error('Transaction not found.');
+      if (existing.metadata?.savingsGoalId) {
+        throw new Error('Savings goal contributions must be managed from the Savings view.');
+      }
+
       state.transactions = state.transactions.filter((tx) => tx.id !== id);
-      if (state.transactions.length === before) throw new Error('Transaction not found.');
+
+      if (existing.plannedPaymentId) {
+        const paymentIndex = state.plannedPayments.findIndex(
+          (payment) => payment.id === existing.plannedPaymentId
+        );
+        if (paymentIndex >= 0) {
+          state.plannedPayments[paymentIndex] = {
+            ...state.plannedPayments[paymentIndex],
+            status: 'unpaid',
+            actualAmountPence: undefined,
+            actualDate: undefined,
+            actualTransactionId: undefined,
+            updatedAt: nowIso(),
+            updatedBy: OWNER_EMAIL,
+          };
+        }
+      }
+
+      if (existing.plannedIncomeId) {
+        const incomeIndex = (state.plannedIncomes || []).findIndex(
+          (income) => income.id === existing.plannedIncomeId
+        );
+        if (incomeIndex >= 0) {
+          state.plannedIncomes[incomeIndex] = {
+            ...state.plannedIncomes[incomeIndex],
+            status: 'expected',
+            actualAmountPence: undefined,
+            actualDate: undefined,
+            actualTransactionId: undefined,
+            linkedTransactionId: undefined,
+            receivedDate: undefined,
+            updatedAt: nowIso(),
+            updatedBy: OWNER_EMAIL,
+          };
+        }
+      }
     }
   );
   return { version: result.state.version };
@@ -1728,6 +1831,9 @@ export function contributeLocalSavingsGoal(
         isRepayment: false,
         isSavings: true,
         isRefund: false,
+        metadata: {
+          savingsGoalId: goal.id,
+        },
         createdAt: nowIso(),
         createdBy: OWNER_EMAIL,
       };
