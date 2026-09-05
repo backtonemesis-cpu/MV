@@ -634,6 +634,36 @@ describe('Penny-style local MV storage', () => {
     );
     state = loadLocalHousehold();
 
+    createLocalPlannedPayment(
+      {
+        name: 'September month-scope bill',
+        amountPence: 60_00,
+        month: '2026-09',
+        responsiblePerson: 'Vesta',
+        accountId: destination.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalPlannedPayment(
+      {
+        // After the £60 September funding reaches this account, £130 of
+        // October selected bills leaves a genuine £70 October requirement.
+        name: 'October month-scope bill',
+        amountPence: 130_00,
+        month: '2026-10',
+        responsiblePerson: 'Vesta',
+        accountId: destination.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
     executeLocalTransferAllocations(
       {
         destinationAccountId: destination.account.id,
