@@ -37,6 +37,21 @@ describe('Global finance UI consistency contract', () => {
     expect(localDateInputValue(local)).toBe('2026-09-05');
   });
 
+  it('keeps Edit Bill currency prefixes protected and payment reversal out of the status chip', () => {
+    const billModal = component('PlannedPaymentModal.tsx');
+    const plan = component('TransferPlanView.tsx');
+
+    expect(billModal).toContain('mv-money-input-with-prefix');
+    expect(billModal).toContain('mv-money-prefix');
+    expect(plan).toContain('Payment recorded in Activity');
+    expect(plan).toContain('title="Record payment"');
+    expect(plan).not.toContain(
+      'This bill has a linked actual expense transaction. Edit or delete that Activity transaction to reverse the recorded payment.'
+    );
+    expect(plan).toContain('Paid / Complete');
+    expect(plan).toContain('totalUnpaidSelectedPaymentsPence');
+  });
+
   it('keeps Transfer Plan funding choices explicit and removes By', () => {
     const modal = component('ExecuteTransferModal.tsx');
 
