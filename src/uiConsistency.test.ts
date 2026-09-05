@@ -37,7 +37,7 @@ describe('Global finance UI consistency contract', () => {
     expect(localDateInputValue(local)).toBe('2026-09-05');
   });
 
-  it('keeps Edit Bill currency prefixes protected and makes paid status safely reversible', () => {
+  it('keeps bill editing outside Transfer Plan and makes paid status safely reversible', () => {
     const billModal = component('PlannedPaymentModal.tsx');
     const transactionModal = component('TransactionModal.tsx');
     const plan = component('TransferPlanView.tsx');
@@ -46,16 +46,23 @@ describe('Global finance UI consistency contract', () => {
     expect(billModal).toContain('mv-money-prefix');
     expect(transactionModal.match(/mv-money-input-with-prefix/g)?.length).toBe(2);
     expect(transactionModal.match(/mv-money-prefix/g)?.length).toBe(2);
+
     expect(plan).toContain("'Undo payment'");
     expect(plan).toContain("'Record paid'");
     expect(plan).toContain("'Undo recorded payment'");
     expect(plan).toContain("'Record payment'");
     expect(plan).toContain('onUndoPaymentPaid');
     expect(plan).toContain('remove the linked Activity expense');
+    expect(plan).toContain('Funding records are not changed.');
     expect(plan).toContain('Paid / Complete');
-    expect(plan).toContain('completedAccountRequirements');
-    expect(plan).toContain('All selected bills are recorded as paid.');
-    expect(plan).toContain('totalUnpaidSelectedPaymentsPence');
+
+    expect(plan).toContain('Selection only');
+    expect(plan).toContain('Bill details are read-only here');
+    expect(plan).not.toContain('<PlannedPaymentModal');
+    expect(plan).not.toContain('onCreatePlannedPayment');
+    expect(plan).not.toContain('onDeletePlannedPayment');
+    expect(plan).not.toContain('editingPayment');
+    expect(plan).not.toContain('isAddingPayment');
   });
 
   it('keeps Transfer Plan cards as the primary working surface', () => {
@@ -68,7 +75,9 @@ describe('Global finance UI consistency contract', () => {
     expect(plan).toContain("'Undo payment'");
     expect(plan).toContain("'Record paid'");
     expect(plan).toContain('Undo all funding for this card');
-    expect(plan).toContain('onUndoFunding(account.id, selectedMonth)');
+    expect(plan).toContain('onUndoFunding(requirement.account.id, selectedMonth)');
+    expect(plan).toContain('Funding recorded');
+    expect(plan).toContain('buildTransferPlanAccountModels');
     expect(plan).toContain('Bills · {formatMonthLabel(selectedMonth)}');
   });
 
@@ -188,6 +197,6 @@ describe('Global finance UI consistency contract', () => {
     expect(activity).toContain(' → ');
     expect(savings).toContain('accountIdentityLabel(sourceAccount)');
     expect(savings).toContain('→');
-    expect(plan).toContain('accountIdentityLabel(acc)');
+    expect(plan).toContain('accountIdentityLabel(account)');
   });
 });
