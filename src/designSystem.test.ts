@@ -138,6 +138,7 @@ describe('semantic design system enforcement', () => {
     const app = fs.readFileSync(path.join(SRC_DIR, 'App.tsx'), 'utf8');
     const header = fs.readFileSync(path.join(COMPONENT_DIR, 'Header.tsx'), 'utf8');
     const navigation = fs.readFileSync(path.join(COMPONENT_DIR, 'Navigation.tsx'), 'utf8');
+    const transactionList = fs.readFileSync(path.join(COMPONENT_DIR, 'TransactionList.tsx'), 'utf8');
     const css = fs.readFileSync(path.join(SRC_DIR, 'index.css'), 'utf8');
 
     expect(app).toContain("type LayoutMode = 'pc' | 'phone'");
@@ -152,6 +153,10 @@ describe('semantic design system enforcement', () => {
     expect(header).toContain("onLayoutModeChange('pc')");
     expect(header).toContain("onLayoutModeChange('phone')");
     expect(header).not.toContain('Mobile View');
+    expect(transactionList).toContain('finance-filter-control-leading');
+    expect(transactionList).toContain('finance-filter-control-trailing');
+    expect(transactionList).toContain('finance-filter-grid');
+    expect(transactionList).toContain('finance-ledger-panel');
 
     expect(css).toContain('DEVICE-OPTIMISED LAYOUT MODES — HP OMNIBOOK 7 + IPHONE 13');
     expect(css).toContain('.mv-layout-pc .mv-workspace');
@@ -172,6 +177,13 @@ describe('semantic design system enforcement', () => {
     expect(navigation).toContain('Settings');
     expect(css).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))');
     expect(css).toContain('.mv-mobile-more-menu');
+    expect(css).toContain('SCREEN REAL-ESTATE PASS — VIEWPORT-FIRST PC + PHONE');
+    expect(css).toContain('width: 100vw !important');
+    expect(css).toContain('.finance-filter-control.finance-filter-control-leading');
+    expect(css).toContain('.finance-filter-control.finance-filter-control-trailing');
+    expect(css).toContain('.mv-layout-pc .finance-ledger-row');
+    expect(css).toContain('.mv-layout-phone .finance-filter-grid');
+    expect(navigation).toContain('mobile-nav-tab-more');
   });
 
 });
