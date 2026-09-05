@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { localDateInputValue } from './utils/dateInput';
 import {
   fetchSession,
   switchSession,
@@ -382,7 +383,7 @@ export default function App() {
           destinationAccountId: payload.destinationAccountId,
           amountPence: payload.amountPence,
           payer: payload.payer,
-          date: new Date().toISOString().substring(0, 10),
+          date: localDateInputValue(),
         },
         household.version
       );
@@ -933,7 +934,7 @@ export default function App() {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `mv-household-backup-${new Date().toISOString().substring(0, 10)}.json`;
+                  a.download = `mv-household-backup-${localDateInputValue()}.json`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
