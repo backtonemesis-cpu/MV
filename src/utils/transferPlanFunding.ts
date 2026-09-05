@@ -106,6 +106,11 @@ export function getLegacyIncomingFundingBatches(
         return false;
       }
 
+      const looksLikeLegacyFunding = /\bfund(?:ing|ed)?\b/i.test(
+        transaction.description
+      );
+      if (!looksLikeLegacyFunding) return false;
+
       return !month || transaction.date.slice(0, 7) === month;
     })
     .map((transaction) => ({
