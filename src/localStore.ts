@@ -1639,7 +1639,8 @@ export function undoLatestLocalTransferPlanFunding(
   const fundingBatch = findLatestTransferPlanFundingBatch(
     current.transactions,
     destinationAccountId,
-    month
+    month,
+    true
   );
 
   if (!fundingBatch) {
