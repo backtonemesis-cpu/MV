@@ -152,7 +152,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             </span>
             <TrendingUp className="w-4 h-4 text-success" />
           </div>
-          <div className="mv-private-value text-2xl font-black text-main mt-2">
+          <div className="mv-private-value text-2xl font-black text-success mt-2">
             {formatPence(actualIncomePence)}
           </div>
           <div className="mv-private-value text-xs text-muted text-subtle mt-1">
@@ -186,13 +186,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             </span>
             <Clock className="w-4 h-4 text-warning" />
           </div>
-          <div
-            className={`mv-private-value text-2xl font-black mt-2 ${
-              totalActualLivingPence > totalBudgetedPence
-                ? 'text-danger'
-                : 'text-success'
-            }`}
-          >
+          <div className="mv-private-value text-2xl font-black text-danger mt-2">
             {formatPence(totalActualLivingPence)}
           </div>
           <div className="mv-private-value text-xs text-muted text-subtle mt-1">
@@ -212,7 +206,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                 Planned Income
               </h2>
             </div>
-            <span className="mv-private-value text-xs font-bold text-success">
+            <span className="mv-private-value text-xs font-bold text-main">
               Total Expected: {formatPence(totalExpectedIncomePence)}
             </span>
           </div>
@@ -227,7 +221,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                   <span className="text-xs font-bold text-main">
                     {inc.name}
                   </span>
-                  <span className="mv-private-value text-xs font-extrabold text-success">
+                  <span className="mv-private-value text-xs font-extrabold text-main">
                     {formatPence(inc.expectedAmountPence)}
                   </span>
                 </div>
@@ -271,13 +265,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
                         {cat.name}
                       </span>
                       <div className="mv-private-value text-xs">
-                        <span
-                          className={`font-bold ${
-                            isOver
-                              ? 'text-danger'
-                              : 'text-main'
-                          }`}
-                        >
+                        <span className="font-bold text-danger">
                           {formatPence(spent)}
                         </span>
                         <span className="text-muted text-subtle">
