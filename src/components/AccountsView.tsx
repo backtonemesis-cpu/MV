@@ -23,6 +23,7 @@ import {
   formatPence,
   parseToPence,
 } from '../utils/currency';
+import { localDateInputValue } from '../utils/dateInput';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -66,7 +67,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   // New Account form state
   const [accName, setAccName] = useState('');
-  const [accType, setAccType] = useState<AccountType>('current');
+  const [accType, setAccType] = useState<AccountType | ''>('');
   const [accOwnerMemberId, setAccOwnerMemberId] = useState('');
   const [accBalanceStr, setAccBalanceStr] = useState('');
   const [accNotes, setAccNotes] = useState('');
@@ -80,7 +81,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   // Reconcile form state
   const [reconcileBalanceStr, setReconcileBalanceStr] = useState('');
-  const [reconcileDate, setReconcileDate] = useState(new Date().toISOString().substring(0, 10));
+  const [reconcileDate, setReconcileDate] = useState(localDateInputValue());
 
   // New Goal form state
   const [goalName, setGoalName] = useState('');
@@ -189,7 +190,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     e.preventDefault();
     if (!accName.trim()) return;
     if (!accOwnerMemberId) {
-      setError('Account owner is required. Choose a household member or Joint.');
+      setError('Choose the account owner.');
+      return;
+    }
+    if (!accType) {
+      setError('Choose the account type.');
       return;
     }
     try {
@@ -198,12 +203,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       const pence = parseToPence(accBalanceStr);
       await onCreateAccount({
         name: accName.trim(),
-        type: accType,
+        type: accType as AccountType,
         ownerMemberId: accOwnerMemberId,
         startingBalancePence: pence,
         notes: accNotes.trim() || undefined,
       });
       setAccName('');
+      setAccType('');
       setAccOwnerMemberId('');
       setAccBalanceStr('');
       setAccNotes('');
@@ -266,7 +272,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const openReconcileModal = (acc: Account) => {
     setSelectedAccount(acc);
     setReconcileBalanceStr((acc.currentBalancePence / 100).toFixed(2));
-    setReconcileDate(acc.reconciliationDate || new Date().toISOString().substring(0, 10));
+    setReconcileDate(acc.reconciliationDate || localDateInputValue());
     setError(null);
     setShowReconcileModal(true);
   };
@@ -555,6 +561,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 type="button"
                 onClick={() => {
                   setError(null);
+                  setAccName('');
+                  setAccType('');
+                  setAccOwnerMemberId('');
+                  setAccBalanceStr('');
+                  setAccNotes('');
                   setShowAccModal(true);
                 }}
                 className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-accent px-4 text-sm font-semibold text-on-accent shadow-sm transition-all hover:brightness-95 active:scale-[0.98]"
@@ -769,9 +780,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   </label>
                   <select
                     value={accType}
-                    onChange={(e) => setAccType(e.target.value as AccountType)}
+                    onChange={(e) => setAccType(e.target.value as AccountType | '')}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    required
                   >
+                    <option value="" disabled>Select account type</option>
                     <option value="current">Current Account</option>
                     <option value="savings">Savings Account</option>
                     <option value="credit">Credit Card</option>
