@@ -111,10 +111,10 @@ export function generateTransferPlan(
 
     totalPaidSelectedPaymentsCount += funding.paidPayments.length;
 
-    // Funding cards represent destination accounts that currently have unpaid
-    // selected bills. Accounts with no unpaid selected bills are not "fully
-    // funded" — they simply have nothing to fund and belong outside this list.
-    if (funding.unpaidPayments.length === 0) continue;
+    // Keep every destination account with at least one selected bill visible in
+    // the Account Funding section. Paid-only accounts require £0 new funding,
+    // but remaining visible preserves the completed/covered funding audit trail.
+    if (funding.selectedPayments.length === 0) continue;
 
     if (funding.transferRequiredPence > 0) {
       accountsNeedingFunding.push(funding);
