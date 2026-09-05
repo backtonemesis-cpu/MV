@@ -1045,29 +1045,18 @@ describe('Penny-style local MV storage', () => {
     expect(state.members.filter((member) => member.role === 'owner')).toHaveLength(1);
   });
 
-  it('repairs imported same-name account routing by unique household owner without mixing account IDs', () => {
-    let state = loadLocalHousehold();
-    const originalLloyds = state.accounts.find((account) => account.name === 'Lloyds');
-    expect(originalLloyds).toBeTruthy();
-
-    updateLocalAccount(
-      originalLloyds!.id,
-      { ownerPerson: 'Marius' },
-      state.version
+  it('keeps imported same-name Lloyds routing isolated by explicit owner', () => {
+    const state = loadLocalHousehold();
+    const mariusLloyds = state.accounts.find(
+      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Marius'
     );
-    state = loadLocalHousehold();
-
-    const vestaLloyds = createLocalAccount(
-      {
-        name: 'Lloyds',
-        type: 'current',
-        startingBalancePence: 0,
-        ownerPerson: 'Vesta',
-      },
-      state.version
+    const vestaLloyds = state.accounts.find(
+      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Vesta'
     );
 
-    state = loadLocalHousehold();
+    expect(mariusLloyds).toBeTruthy();
+    expect(vestaLloyds).toBeTruthy();
+    expect(mariusLloyds!.id).not.toBe(vestaLloyds!.id);
 
     const vestaImportedBills = state.plannedPayments.filter(
       (payment) =>
@@ -1076,7 +1065,9 @@ describe('Penny-style local MV storage', () => {
         ['Council tax', 'Internet - Vodafone', 'Phone', 'Lloyds'].includes(payment.name)
     );
     expect(vestaImportedBills).toHaveLength(4);
-    expect(vestaImportedBills.every((payment) => payment.accountId === vestaLloyds.account.id)).toBe(true);
+    expect(
+      vestaImportedBills.every((payment) => payment.accountId === vestaLloyds!.id)
+    ).toBe(true);
 
     const mariusImportedLloydsBills = state.plannedPayments.filter(
       (payment) =>
@@ -1086,7 +1077,7 @@ describe('Penny-style local MV storage', () => {
     );
     expect(mariusImportedLloydsBills).toHaveLength(2);
     expect(
-      mariusImportedLloydsBills.every((payment) => payment.accountId === originalLloyds!.id)
+      mariusImportedLloydsBills.every((payment) => payment.accountId === mariusLloyds!.id)
     ).toBe(true);
 
     const vestaLloydsIncome = state.plannedIncomes?.find(
@@ -1095,7 +1086,7 @@ describe('Penny-style local MV storage', () => {
         income.sourcePerson === 'Vesta' &&
         income.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID
     );
-    expect(vestaLloydsIncome?.accountId).toBe(vestaLloyds.account.id);
+    expect(vestaLloydsIncome?.accountId).toBe(vestaLloyds!.id);
 
     const mariusLloydsIncome = state.plannedIncomes?.find(
       (income) =>
@@ -1103,27 +1094,19 @@ describe('Penny-style local MV storage', () => {
         income.sourcePerson === 'Marius' &&
         income.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID
     );
-    expect(mariusLloydsIncome?.accountId).toBe(originalLloyds!.id);
+    expect(mariusLloydsIncome?.accountId).toBe(mariusLloyds!.id);
   });
 
   it('repairs manually-created same-name bills to the matching household owner account', () => {
     let state = loadLocalHousehold();
-    const originalLloyds = state.accounts.find((account) => account.name === 'Lloyds');
-    expect(originalLloyds).toBeTruthy();
-
-    updateLocalAccount(originalLloyds!.id, { ownerPerson: 'Marius' }, state.version);
-    state = loadLocalHousehold();
-
-    const vestaLloyds = createLocalAccount(
-      {
-        name: 'Lloyds',
-        type: 'current',
-        startingBalancePence: 0,
-        ownerPerson: 'Vesta',
-      },
-      state.version
+    const mariusLloyds = state.accounts.find(
+      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Marius'
     );
-    state = loadLocalHousehold();
+    const vestaLloyds = state.accounts.find(
+      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Vesta'
+    );
+    expect(mariusLloyds).toBeTruthy();
+    expect(vestaLloyds).toBeTruthy();
 
     const bill = createLocalPlannedPayment(
       {
@@ -1131,7 +1114,7 @@ describe('Penny-style local MV storage', () => {
         amountPence: 1234,
         month: '2026-10',
         responsiblePerson: 'Vesta',
-        accountId: originalLloyds!.id,
+        accountId: mariusLloyds!.id,
         status: 'unpaid',
         includeInTransferPlan: true,
       },
@@ -1141,7 +1124,7 @@ describe('Penny-style local MV storage', () => {
     state = loadLocalHousehold();
     expect(
       state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.accountId
-    ).toBe(vestaLloyds.account.id);
+    ).toBe(vestaLloyds!.id);
   });
 
   it('selects paid and unpaid bills independently using linked actual payment evidence', () => {
@@ -1324,7 +1307,7 @@ describe('Penny-style local MV storage', () => {
     const backup = createLocalBackupPackage();
     const preflight = preflightLocalRestore(backup);
     expect(preflight.valid).toBe(true);
-    expect(preflight.counts.accounts).toBe(7);
+    expect(preflight.counts.accounts).toBe(8);
 
     state = loadLocalHousehold();
     resetLocalHousehold(state.version);
@@ -1333,7 +1316,7 @@ describe('Penny-style local MV storage', () => {
 
     restoreLocalBackup(backup, state.version);
     state = loadLocalHousehold();
-    expect(state.accounts).toHaveLength(7);
+    expect(state.accounts).toHaveLength(8);
     expect(state.accounts.find((account) => account.name === 'Main')?.startingBalancePence).toBe(123_45);
     expect(state.members.map((member) => member.name)).toEqual(
       expect.arrayContaining(['Marius', 'Vesta'])
