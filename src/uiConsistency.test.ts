@@ -58,6 +58,20 @@ describe('Global finance UI consistency contract', () => {
     expect(plan).toContain('totalUnpaidSelectedPaymentsPence');
   });
 
+  it('keeps Transfer Plan cards as the primary working surface', () => {
+    const plan = component('TransferPlanView.tsx');
+
+    expect(plan).toContain('Bills in this card');
+    expect(plan).toContain('Show bills (');
+    expect(plan).toContain('Hide bills');
+    expect(plan).toContain('renderCardPaymentAction');
+    expect(plan).toContain("'Undo payment'");
+    expect(plan).toContain("'Record paid'");
+    expect(plan).toContain('Undo all funding for this card');
+    expect(plan).toContain('onUndoFunding(account.id, selectedMonth)');
+    expect(plan).toContain('Bills · {formatMonthLabel(selectedMonth)}');
+  });
+
   it('keeps Transfer Plan funding choices explicit and removes By', () => {
     const modal = component('ExecuteTransferModal.tsx');
 
