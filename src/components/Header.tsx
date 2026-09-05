@@ -3,6 +3,7 @@ import {
   Shield,
   RefreshCw,
   DownloadCloud,
+  Monitor,
   Smartphone,
   Eye,
   EyeOff,
@@ -19,8 +20,8 @@ interface HeaderProps {
   onOpenTestsModal: () => void;
   isLoading: boolean;
   availableIdentities: { email: string; name: string; role: any }[];
-  isMobilePreview: boolean;
-  onToggleMobilePreview: () => void;
+  layoutMode: 'pc' | 'phone';
+  onLayoutModeChange: (mode: 'pc' | 'phone') => void;
   isPrivacyMasked: boolean;
   onTogglePrivacyMask: () => void;
 }
@@ -31,8 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   onOpenBackupModal,
   isLoading,
-  isMobilePreview,
-  onToggleMobilePreview,
+  layoutMode,
+  onLayoutModeChange,
   isPrivacyMasked,
   onTogglePrivacyMask,
 }) => {
@@ -119,21 +120,33 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
 
-            <button
-              type="button"
-              id="header-mobile-preview-btn"
-              onClick={onToggleMobilePreview}
-              aria-pressed={isMobilePreview}
-              className={`mv-mobile-preview-toggle inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[11px] font-semibold transition-colors ${
-                isMobilePreview
-                  ? 'border-accent bg-accent text-on-accent'
-                  : 'border-muted bg-surface text-main hover:bg-surface-muted'
-              }`}
-              title={isMobilePreview ? 'Exit mobile preview' : 'Preview mobile layout'}
+            <div
+              className="mv-layout-switcher"
+              role="group"
+              aria-label="App display mode"
+              title="Choose the layout for this device"
             >
-              <Smartphone className="h-4 w-4 shrink-0" />
-              <span className="mv-mobile-preview-label">Mobile View</span>
-            </button>
+              <button
+                type="button"
+                id="header-layout-pc-btn"
+                onClick={() => onLayoutModeChange('pc')}
+                aria-pressed={layoutMode === 'pc'}
+                className={`mv-layout-switcher-option ${layoutMode === 'pc' ? 'is-active' : ''}`}
+              >
+                <Monitor className="h-4 w-4 shrink-0" />
+                <span>PC</span>
+              </button>
+              <button
+                type="button"
+                id="header-layout-phone-btn"
+                onClick={() => onLayoutModeChange('phone')}
+                aria-pressed={layoutMode === 'phone'}
+                className={`mv-layout-switcher-option ${layoutMode === 'phone' ? 'is-active' : ''}`}
+              >
+                <Smartphone className="h-4 w-4 shrink-0" />
+                <span>Phone</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
