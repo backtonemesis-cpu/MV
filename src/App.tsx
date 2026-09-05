@@ -842,13 +842,10 @@ export default function App() {
                 transactions={household.transactions}
                 members={household.members}
                 userRole={session.role}
-                currentVersion={household.version}
                 selectedMonth={selectedMonth}
                 onSelectMonth={setSelectedMonth}
                 onOpenMonthImport={() => setShowMonthImportModal(true)}
-                onCreatePlannedPayment={handleCreatePlannedPayment}
                 onUpdatePlannedPayment={handleUpdatePlannedPayment}
-                onDeletePlannedPayment={handleDeletePlannedPayment}
                 onMarkPaymentPaid={handleMarkPlannedPaymentPaid}
                 onUndoPaymentPaid={handleUndoPlannedPaymentPaid}
                 onBulkTogglePlannedPayments={handleBulkTogglePlannedPayments}
