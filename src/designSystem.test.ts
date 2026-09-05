@@ -108,6 +108,15 @@ describe('semantic design system enforcement', () => {
     expect(plan).toContain('Unpaid');
     expect(plan).toContain('buildTransferPlanAccountModels');
     expect(plan).toContain('groupTransferPlanAccountModels');
+
+    // V2 must remain inside the same application-wide visual language used by
+    // Dashboard, Accounts and Activity rather than introducing tab-only skin.
+    expect(plan).toContain('finance-workspace');
+    expect(plan).toContain('finance-panel');
+    expect(plan).toContain('finance-summary-card');
+    expect(plan).toContain('mv-card');
+    expect(plan).toContain('finance-semantic-positive');
+
     expect(fundingHistory).toContain('transferPlanMonth');
     expect(fundingHistory).toContain('Transfer Plan:');
     expect(fundingHistory).toContain('legacy_incoming');
