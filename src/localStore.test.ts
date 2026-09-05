@@ -1263,6 +1263,77 @@ describe('Penny-style local MV storage', () => {
     expect(state.auditLogs.map((entry) => entry.action)).toContain('database_restored');
   });
 
+  it('rejects omitted creation choices instead of inventing financial facts', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((item) => item.isActive !== false);
+    expect(account).toBeTruthy();
+
+    expect(() =>
+      createLocalAccount(
+        {
+          name: 'No Type',
+          startingBalancePence: 0,
+          ownerPerson: 'Marius',
+        },
+        state.version
+      )
+    ).toThrow('Account type is required');
+
+    expect(() =>
+      createLocalTransaction(
+        {
+          description: 'No Type Transaction',
+          amountPence: 10_00,
+          categoryId: 'cat-groceries',
+          accountId: account!.id,
+          payer: 'Marius',
+        },
+        state.version
+      )
+    ).toThrow('Transaction type is required');
+
+    expect(() =>
+      createLocalPlannedPayment(
+        {
+          name: 'No Person Bill',
+          amountPence: 10_00,
+          month: '2026-10',
+          accountId: account!.id,
+        },
+        state.version
+      )
+    ).toThrow('Responsible person is required');
+
+    expect(() =>
+      createLocalPlannedIncome(
+        {
+          name: 'No Person Income',
+          expectedAmountPence: 10_00,
+          month: '2026-10',
+          accountId: account!.id,
+        },
+        state.version
+      )
+    ).toThrow('Income person is required');
+
+    const created = createLocalPlannedPayment(
+      {
+        name: 'Explicit Person, No Plan Choice',
+        amountPence: 10_00,
+        month: '2026-10',
+        accountId: account!.id,
+        responsiblePerson: 'Marius',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.plannedPayments.find((item) => item.id === created.payment.id)
+        ?.includeInTransferPlan
+    ).toBe(false);
+  });
+
   it('locks out malformed stored JSON rather than overwriting it', () => {
     storage.setItem(LOCAL_STORAGE_KEY, '{not-json');
 
