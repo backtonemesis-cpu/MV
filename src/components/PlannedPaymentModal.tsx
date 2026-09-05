@@ -3,6 +3,7 @@ import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'luci
 import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
+import { accountOptionLabel } from '../utils/accountDisplay';
 import { MonthPicker } from './MonthPicker';
 
 interface PlannedPaymentModalProps {
@@ -31,21 +32,24 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     payment ? (payment.amountPence / 100).toFixed(2) : ''
   );
   const [month, setMonth] = useState(payment?.month || activeMonth || '2026-09');
-  const [accountId, setAccountId] = useState(payment?.accountId || accounts[0]?.id || '');
-  const [responsiblePerson, setResponsiblePerson] = useState<Payer>(
-    payment?.responsiblePerson || 'Joint'
+  const [accountId, setAccountId] = useState(payment?.accountId || '');
+  const [responsiblePerson, setResponsiblePerson] = useState<Payer | ''>(
+    payment?.responsiblePerson || ''
   );
   const [dueDate, setDueDate] = useState(payment?.dueDate || '');
-  const [categoryId, setCategoryId] = useState(payment?.categoryId || categories[0]?.id || 'cat-housing');
+  const [categoryId, setCategoryId] = useState(payment?.categoryId || '');
   const [includeInTransferPlan, setIncludeInTransferPlan] = useState<boolean>(
-    payment?.includeInTransferPlan !== undefined ? payment.includeInTransferPlan : true
+    payment?.includeInTransferPlan === true
   );
   const [isRecurring, setIsRecurring] = useState<boolean>(payment?.isRecurring === true);
   const [notes, setNotes] = useState(payment?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  const personOptions = householdPersonOptions(members, [responsiblePerson]);
+  const personOptions = householdPersonOptions(
+    members,
+    responsiblePerson ? [responsiblePerson] : []
+  );
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => nameInputRef.current?.focus());
@@ -63,13 +67,8 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     };
   }, [onClose]);
 
-  // When account changes, default responsible person to account owner if available
   const handleAccountChange = (newAccId: string) => {
     setAccountId(newAccId);
-    const selectedAcc = accounts.find((a) => a.id === newAccId);
-    if (selectedAcc?.ownerPerson) {
-      setResponsiblePerson(selectedAcc.ownerPerson);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +83,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
       return;
     }
     if (!accountId) {
-      setError('Please choose a payment account.');
+      setError('Choose the account that will pay this bill.');
+      return;
+    }
+    if (!responsiblePerson) {
+      setError('Choose the responsible person.');
       return;
     }
     if (!month.trim()) {
@@ -100,7 +103,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
         amountPence: pence,
         month: month.trim(),
         accountId,
-        responsiblePerson,
+        responsiblePerson: responsiblePerson as Payer,
         dueDate: dueDate || undefined,
         categoryId: categoryId || undefined,
         includeInTransferPlan,
@@ -202,9 +205,10 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
                 required
               >
+                <option value="">Select payment account</option>
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
-                    {acc.name} ({acc.ownerPerson || acc.type})
+                    {accountOptionLabel(acc)}
                   </option>
                 ))}
               </select>
@@ -216,9 +220,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               </label>
               <select
                 value={responsiblePerson}
-                onChange={(e) => setResponsiblePerson(e.target.value as Payer)}
+                onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
+                required
               >
+                <option value="">Select person</option>
                 {personOptions.map((person) => (
                   <option key={person} value={person}>
                     {person}
@@ -249,6 +255,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
+                <option value="">Select category (optional)</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
