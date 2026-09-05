@@ -113,7 +113,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
   const [fundingAccountToTransfer, setFundingAccountToTransfer] =
     useState<AccountFundingRequirement | null>(null);
-  const [lastFundingSourceAccountId, setLastFundingSourceAccountId] = useState<string>('');
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
   const [markingPayment, setMarkingPayment] = useState<PlannedPayment | null>(null);
   const [undoingFundingAccountId, setUndoingFundingAccountId] = useState<string | null>(null);
@@ -149,6 +148,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const selectedPlanUnpaidCount = selectedPlanPayments.length - selectedPlanPaidCount;
   const planAccountCount =
     plan.accountsNeedingFunding.length + plan.accountsFullyFunded.length;
+
+  const reservedPlanPenceByAccountId = useMemo(
+    () =>
+      Object.fromEntries(
+        [...plan.accountsNeedingFunding, ...plan.accountsFullyFunded].map(
+          (requirement) => [
+            requirement.account.id,
+            requirement.totalSelectedPaymentsPence,
+          ]
+        )
+      ) as Record<string, number>,
+    [plan.accountsNeedingFunding, plan.accountsFullyFunded]
+  );
 
   // Payment status shown inside Transfer Plan is the explicit Plan status.
   // A linked Activity transaction must not silently remove a bill from funding.
@@ -1102,12 +1114,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           fundingRequirement={fundingAccountToTransfer}
           availableSourceAccounts={accounts}
           members={members}
-          defaultSourceAccountId={lastFundingSourceAccountId}
+          reservedPlanPenceByAccountId={reservedPlanPenceByAccountId}
           onClose={() => setFundingAccountToTransfer(null)}
           onExecute={async (payload) => {
-            if (payload.allocations[0]?.sourceAccountId) {
-              setLastFundingSourceAccountId(payload.allocations[0].sourceAccountId);
-            }
             await onExecuteTransfer({
               ...payload,
               month: selectedMonth,
