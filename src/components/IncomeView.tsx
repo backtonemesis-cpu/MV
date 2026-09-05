@@ -20,6 +20,7 @@ import type {
 } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 import { householdPersonOptions } from '../utils/householdPeople';
+import { accountOptionLabel } from '../utils/accountDisplay';
 import { MonthPicker } from './MonthPicker';
 
 interface IncomeViewProps {
@@ -62,7 +63,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
   const [name, setName] = useState('');
   const [expectedAmount, setExpectedAmount] = useState('');
-  const [sourcePerson, setSourcePerson] = useState<Payer>('Joint');
+  const [sourcePerson, setSourcePerson] = useState<Payer | ''>('');
   const [accountId, setAccountId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [expectedDate, setExpectedDate] = useState('');
@@ -90,7 +91,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   }, [showEditModal, showReceiveModal]);
 
   const personOptions = useMemo(
-    () => householdPersonOptions(members, [sourcePerson]),
+    () => householdPersonOptions(members, sourcePerson ? [sourcePerson] : []),
     [members, sourcePerson]
   );
 
@@ -169,10 +170,10 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
     setSelectedIncome(null);
     setName('');
     setExpectedAmount('');
-    setSourcePerson(personOptions.find((person) => person !== 'Joint') || 'Joint');
-    setAccountId(accounts.find((account) => account.isActive !== false)?.id || '');
-    setCategoryId(incomeCategories[0]?.id || '');
-    setExpectedDate(`${selectedMonth}-01`);
+    setSourcePerson('');
+    setAccountId('');
+    setCategoryId('');
+    setExpectedDate('');
     setActualAmount('');
     setActualDate('');
     setNotes('');
@@ -191,8 +192,8 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
     setExpectedAmount((income.expectedAmountPence / 100).toFixed(2));
     setSourcePerson(income.sourcePerson);
     setAccountId(income.accountId);
-    setCategoryId(income.categoryId || linkedTx?.categoryId || incomeCategories[0]?.id || '');
-    setExpectedDate(income.expectedDate || `${income.month}-01`);
+    setCategoryId(income.categoryId || linkedTx?.categoryId || '');
+    setExpectedDate(income.expectedDate || '');
     setActualAmount(
       income.actualAmountPence !== undefined
         ? (income.actualAmountPence / 100).toFixed(2)
@@ -208,9 +209,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
   const openReceive = (income: PlannedIncome) => {
     setSelectedIncome(income);
-    setActualAmount((income.expectedAmountPence / 100).toFixed(2));
-    setActualDate(income.expectedDate || new Date().toISOString().slice(0, 10));
-    setAccountId(income.accountId);
+    setActualAmount('');
+    setActualDate('');
+    setAccountId('');
     setError(null);
     setShowReceiveModal(true);
   };
@@ -226,8 +227,12 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       setError('Expected income must not be negative.');
       return;
     }
+    if (!sourcePerson) {
+      setError('Choose who receives this income.');
+      return;
+    }
     if (!accountId) {
-      setError('Receiving account is required.');
+      setError('Choose the receiving account.');
       return;
     }
 
@@ -235,7 +240,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       name: name.trim(),
       expectedAmountPence,
       month: selectedIncome?.month || selectedMonth,
-      sourcePerson,
+      sourcePerson: sourcePerson as Payer,
       accountId,
       categoryId: categoryId || undefined,
       expectedDate: expectedDate || undefined,
@@ -270,11 +275,24 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   const markReceived = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedIncome) return;
+    const actualAmountPence = parseToPence(actualAmount);
+    if (actualAmountPence <= 0) {
+      setError('Enter the amount actually received.');
+      return;
+    }
+    if (!actualDate) {
+      setError('Choose the received date.');
+      return;
+    }
+    if (!accountId) {
+      setError('Choose the account that received the income.');
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
       await onMarkIncomeReceived(selectedIncome.id, {
-        actualAmountPence: parseToPence(actualAmount),
+        actualAmountPence,
         actualDate: actualDate || undefined,
         accountId,
       });
@@ -623,9 +641,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                   <label className="mb-1 block text-xs font-semibold text-muted">Received by</label>
                   <select
                     value={sourcePerson}
-                    onChange={(event) => setSourcePerson(event.target.value as Payer)}
+                    onChange={(event) => setSourcePerson(event.target.value as Payer | '')}
                     className={inputClassName}
+                    required
                   >
+                    <option value="">Select person</option>
                     {personOptions.map((person) => (
                       <option key={person} value={person}>
                         {person}
@@ -642,11 +662,12 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     className={inputClassName}
                     required
                   >
+                    <option value="">Select receiving account</option>
                     {accounts
                       .filter((account) => account.isActive !== false)
                       .map((account) => (
                         <option key={account.id} value={account.id}>
-                          {account.name}
+                          {accountOptionLabel(account)}
                         </option>
                       ))}
                   </select>
@@ -659,6 +680,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     onChange={(event) => setCategoryId(event.target.value)}
                     className={inputClassName}
                   >
+                    <option value="">Select category (optional)</option>
                     {incomeCategories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
@@ -785,12 +807,14 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                   value={accountId}
                   onChange={(event) => setAccountId(event.target.value)}
                   className={inputClassName}
+                  required
                 >
+                  <option value="">Select receiving account</option>
                   {accounts
                     .filter((account) => account.isActive !== false)
                     .map((account) => (
                       <option key={account.id} value={account.id}>
-                        {account.name}
+                        {accountOptionLabel(account)}
                       </option>
                     ))}
                 </select>
