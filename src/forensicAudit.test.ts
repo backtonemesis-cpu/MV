@@ -413,7 +413,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
     expect(after.plannedPayments.find((p) => p.id === bill.payment.id)?.status).toBe('paid');
   });
 
-  it('12. Transfer Plan inclusion drives funding independently from Paid / Unpaid status', () => {
+  it('12. Transfer Plan keeps paid rows visible without funding them twice', () => {
     const account: Account = {
       id: 'acc-test',
       name: 'Test Current',
@@ -451,7 +451,8 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const funding1 = calculateAccountFunding(account, [billA, billB]);
     expect(funding1.totalSelectedPaymentsPence).toBe(160_00);
-    expect(funding1.transferRequiredPence).toBe(110_00);
+    expect(funding1.totalUnpaidSelectedPaymentsPence).toBe(120_00);
+    expect(funding1.transferRequiredPence).toBe(70_00);
     expect(funding1.paidPayments.map((payment) => payment.id)).toEqual(['bill-2']);
     expect(funding1.unpaidPayments.map((payment) => payment.id)).toEqual(['bill-1']);
 
@@ -460,6 +461,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
       { ...billB, status: 'unpaid', includeInTransferPlan: true },
     ]);
     expect(funding2.totalSelectedPaymentsPence).toBe(160_00);
+    expect(funding2.totalUnpaidSelectedPaymentsPence).toBe(160_00);
     expect(funding2.transferRequiredPence).toBe(110_00);
     expect(funding2.paidPayments).toHaveLength(0);
     expect(funding2.unpaidPayments).toHaveLength(2);
@@ -469,6 +471,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
       { ...billB, includeInTransferPlan: false },
     ]);
     expect(funding3.totalSelectedPaymentsPence).toBe(0);
+    expect(funding3.totalUnpaidSelectedPaymentsPence).toBe(0);
     expect(funding3.transferRequiredPence).toBe(0);
   });
 
