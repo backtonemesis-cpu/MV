@@ -1,41 +1,37 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  ArrowLeftRight,
-  Plus,
-  CheckCircle2,
   AlertCircle,
-    Layers,
+  ArrowLeftRight,
+  CheckCircle2,
+  CheckSquare,
   ChevronDown,
   ChevronUp,
-  CheckSquare,
-  Square,
-  Edit2,
-  Trash2,
-  HelpCircle,
-  Sparkles,
+  Layers,
   RotateCcw,
+  Square,
 } from 'lucide-react';
-import {
+import type {
   Account,
   Category,
-  PlannedPayment,
-  UserRole,
-  AccountFundingRequirement,
   HouseholdMember,
+  PlannedPayment,
   Transaction,
+  UserRole,
 } from '../types';
 import { formatPence } from '../utils/currency';
-import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
-import { getLatestTransferPlanFundingByDestination } from '../utils/transferPlanFunding';
+import { formatMonthLabel, generateTransferPlan } from '../utils/transferPlan';
 import {
   accountIdentityLabel,
-  accountOwnerLabel,
-  accountTypeLabel,
 } from '../utils/accountDisplay';
+import {
+  buildTransferPlanAccountModels,
+  groupTransferPlanAccountModels,
+  type TransferPlanAccountModel,
+  type TransferPlanLifecycle,
+} from '../utils/transferPlanViewModel';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
-import { PlannedPaymentModal } from './PlannedPaymentModal';
-import { MonthPicker } from './MonthPicker';
 import { MarkPaymentPaidModal } from './MarkPaymentPaidModal';
+import { MonthPicker } from './MonthPicker';
 
 interface TransferPlanViewProps {
   accounts: Account[];
@@ -44,13 +40,13 @@ interface TransferPlanViewProps {
   transactions: Transaction[];
   members: HouseholdMember[];
   userRole: UserRole;
-  currentVersion: number;
   selectedMonth?: string;
   onSelectMonth?: (month: string) => void;
   onOpenMonthImport?: () => void;
-  onCreatePlannedPayment: (data: Partial<PlannedPayment>) => Promise<void>;
-  onUpdatePlannedPayment: (id: string, data: Partial<PlannedPayment>) => Promise<void>;
-  onDeletePlannedPayment: (id: string) => Promise<void>;
+  onUpdatePlannedPayment: (
+    id: string,
+    data: Partial<PlannedPayment>
+  ) => Promise<void>;
   onMarkPaymentPaid: (
     id: string,
     payload: {
@@ -81,6 +77,49 @@ interface TransferPlanViewProps {
   onUndoFunding: (destinationAccountId: string, month: string) => Promise<void>;
 }
 
+function formatDueDate(value?: string): string {
+  if (!value) return 'No due date';
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  });
+}
+
+function lifecycleMeta(lifecycle: TransferPlanLifecycle): {
+  label: string;
+  description: string;
+  pillClassName: string;
+} {
+  switch (lifecycle) {
+    case 'needs_funding':
+      return {
+        label: 'Needs Funding',
+        description: 'Additional money is required.',
+        pillClassName: 'border border-warning/30 bg-warning-soft text-warning',
+      };
+    case 'funded':
+      return {
+        label: 'Funded by Transfer',
+        description: 'Transfer Plan funding is recorded.',
+        pillClassName: 'finance-status-positive border',
+      };
+    case 'covered':
+      return {
+        label: 'Covered by Existing Balance',
+        description: 'No Transfer Plan funding is required.',
+        pillClassName: 'border border-muted bg-surface-muted text-muted',
+      };
+    case 'paid':
+      return {
+        label: 'Paid / Complete',
+        description: 'All selected bills are recorded as paid.',
+        pillClassName: 'finance-status-positive border',
+      };
+  }
+}
+
 export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   accounts,
   categories,
@@ -88,13 +127,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   transactions,
   members,
   userRole,
-  currentVersion,
   selectedMonth: propSelectedMonth,
   onSelectMonth: propOnSelectMonth,
   onOpenMonthImport,
-  onCreatePlannedPayment,
   onUpdatePlannedPayment,
-  onDeletePlannedPayment,
   onMarkPaymentPaid,
   onUndoPaymentPaid,
   onBulkTogglePlannedPayments,
@@ -103,160 +139,138 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 }) => {
   const isViewOnly = userRole === 'view_only';
 
-  const [internalSelectedMonth, setInternalSelectedMonth] = useState<string>('2026-09');
+  const [internalSelectedMonth, setInternalSelectedMonth] =
+    useState<string>('2026-09');
   const selectedMonth = propSelectedMonth || internalSelectedMonth;
+
+  const [fundingModel, setFundingModel] =
+    useState<TransferPlanAccountModel | null>(null);
+  const [markingPayment, setMarkingPayment] =
+    useState<PlannedPayment | null>(null);
+  const [expandedAccountIds, setExpandedAccountIds] =
+    useState<Record<string, boolean>>({});
+  const [undoingFundingAccountId, setUndoingFundingAccountId] =
+    useState<string | null>(null);
+  const [undoingPaymentId, setUndoingPaymentId] =
+    useState<string | null>(null);
+  const [selectionBusyId, setSelectionBusyId] =
+    useState<string | null>(null);
+  const [bulkSelectionBusy, setBulkSelectionBusy] = useState(false);
+
   const handleSelectMonth = (month: string) => {
-    if (propOnSelectMonth) {
-      propOnSelectMonth(month);
-    } else {
-      setInternalSelectedMonth(month);
-    }
+    if (propOnSelectMonth) propOnSelectMonth(month);
+    else setInternalSelectedMonth(month);
   };
 
-  const [fundingAccountToTransfer, setFundingAccountToTransfer] =
-    useState<AccountFundingRequirement | null>(null);
-  const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
-  const [markingPayment, setMarkingPayment] = useState<PlannedPayment | null>(null);
-  const [undoingFundingAccountId, setUndoingFundingAccountId] = useState<string | null>(null);
-  const [undoingPaymentId, setUndoingPaymentId] = useState<string | null>(null);
-  const [isAddingPayment, setIsAddingPayment] = useState(false);
-  const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
-    'acc-marius-current': true,
-    'acc-joint-current': true,
-    'acc-vesta-current': true,
-  });
+  const plan = useMemo(
+    () =>
+      generateTransferPlan(
+        accounts,
+        plannedPayments,
+        selectedMonth,
+        transactions
+      ),
+    [accounts, plannedPayments, selectedMonth, transactions]
+  );
 
-  // Generate authoritative Transfer Plan with exact integer-pence math
-  const plan = useMemo(() => {
-    return generateTransferPlan(accounts, plannedPayments, selectedMonth, transactions);
-  }, [accounts, plannedPayments, selectedMonth, transactions]);
+  const accountModels = useMemo(
+    () =>
+      buildTransferPlanAccountModels(
+        plan,
+        transactions,
+        selectedMonth
+      ),
+    [plan, transactions, selectedMonth]
+  );
 
-  // Filtered payments for the selected month
-  const monthPayments = useMemo(() => {
-    return plannedPayments.filter((p) => p.month === selectedMonth);
-  }, [plannedPayments, selectedMonth]);
+  const groups = useMemo(
+    () => groupTransferPlanAccountModels(accountModels),
+    [accountModels]
+  );
 
-  const selectedPlanPayments = useMemo(
+  const monthPayments = useMemo(
+    () =>
+      plannedPayments
+        .filter((payment) => payment.month === selectedMonth)
+        .sort((a, b) => {
+          const dateA = a.dueDate || '9999-99-99';
+          const dateB = b.dueDate || '9999-99-99';
+          const byDate = dateA.localeCompare(dateB);
+          return byDate || a.name.localeCompare(b.name);
+        }),
+    [plannedPayments, selectedMonth]
+  );
+
+  const selectedPayments = useMemo(
     () => monthPayments.filter((payment) => payment.includeInTransferPlan),
     [monthPayments]
   );
-  const selectedPlanTotalPence = useMemo(
-    () => selectedPlanPayments.reduce((sum, payment) => sum + payment.amountPence, 0),
-    [selectedPlanPayments]
+
+  const selectedPaidCount = useMemo(
+    () => selectedPayments.filter((payment) => payment.status === 'paid').length,
+    [selectedPayments]
   );
-  const selectedPlanPaidCount = useMemo(
-    () => selectedPlanPayments.filter((payment) => payment.status === 'paid').length,
-    [selectedPlanPayments]
+
+  const selectedUnpaidCount = selectedPayments.length - selectedPaidCount;
+
+  const accountsById = useMemo(
+    () => new Map(accounts.map((account) => [account.id, account])),
+    [accounts]
   );
-  const selectedPlanUnpaidCount = selectedPlanPayments.length - selectedPlanPaidCount;
+
+  const categoriesById = useMemo(
+    () => new Map(categories.map((category) => [category.id, category.name])),
+    [categories]
+  );
+
   const reservedPlanPenceByAccountId = useMemo(
     () =>
       Object.fromEntries(
-        [...plan.accountsNeedingFunding, ...plan.accountsFullyFunded].map(
-          (requirement) => [
-            requirement.account.id,
-            requirement.totalUnpaidSelectedPaymentsPence,
-          ]
-        )
+        accountModels.map((model) => [
+          model.requirement.account.id,
+          model.requirement.totalUnpaidSelectedPaymentsPence,
+        ])
       ) as Record<string, number>,
-    [plan.accountsNeedingFunding, plan.accountsFullyFunded]
+    [accountModels]
   );
-
-  // Payment status shown inside Transfer Plan is the explicit Plan status.
-  // A linked Activity transaction must not silently remove a bill from funding.
-  const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
-
-  const latestFundingBatchByDestination = useMemo(
-    () =>
-      getLatestTransferPlanFundingByDestination(
-        transactions,
-        selectedMonth,
-        true
-      ),
-    [transactions, selectedMonth]
-  );
-
-  const fundedAccountRequirements = useMemo(
-    () =>
-      plan.accountsFullyFunded.filter((requirement) =>
-        latestFundingBatchByDestination.has(requirement.account.id)
-      ),
-    [plan.accountsFullyFunded, latestFundingBatchByDestination]
-  );
-
-  const coveredAccountRequirements = useMemo(
-    () =>
-      plan.accountsFullyFunded.filter(
-        (requirement) =>
-          !latestFundingBatchByDestination.has(requirement.account.id) &&
-          requirement.unpaidPayments.length > 0
-      ),
-    [plan.accountsFullyFunded, latestFundingBatchByDestination]
-  );
-
-  const completedAccountRequirements = useMemo(
-    () =>
-      plan.accountsFullyFunded.filter(
-        (requirement) =>
-          !latestFundingBatchByDestination.has(requirement.account.id) &&
-          requirement.unpaidPayments.length === 0
-      ),
-    [plan.accountsFullyFunded, latestFundingBatchByDestination]
-  );
-
-  const planAccountCount =
-    plan.accountsNeedingFunding.length +
-    fundedAccountRequirements.length +
-    coveredAccountRequirements.length +
-    completedAccountRequirements.length;
-
-  const handleUndoFunding = async (account: Account) => {
-    if (isViewOnly) return;
-
-    const funding = latestFundingBatchByDestination.get(account.id);
-    if (!funding) return;
-
-    const sourceNames = funding.sourceAccountIds
-      .map((accountId) => accounts.find((candidate) => candidate.id === accountId))
-      .filter((candidate): candidate is Account => Boolean(candidate))
-      .map((candidate) => accountIdentityLabel(candidate))
-      .join(' + ');
-
-    const fundingLabel =
-      funding.kind === 'legacy_incoming'
-        ? 'legacy incoming funding transfer'
-        : 'Transfer Plan funding';
-
-    const confirmed = window.confirm(
-      `Undo the latest ${formatPence(funding.totalPence)} ${fundingLabel} for ${accountIdentityLabel(account)}${sourceNames ? ` from ${sourceNames}` : ''}? The money will be returned to the original funding account(s).`
-    );
-    if (!confirmed) return;
-
-    try {
-      setUndoingFundingAccountId(account.id);
-      await onUndoFunding(account.id, selectedMonth);
-    } catch (err: any) {
-      window.alert(err.message || 'Failed to undo Transfer Plan funding.');
-    } finally {
-      setUndoingFundingAccountId(null);
-    }
-  };
 
   const toggleAccountExpand = (accountId: string) => {
-    setExpandedAccountIds((prev) => ({
-      ...prev,
-      [accountId]: !prev[accountId],
+    setExpandedAccountIds((current) => ({
+      ...current,
+      [accountId]: !current[accountId],
     }));
   };
 
   const handleTogglePaymentInPlan = async (payment: PlannedPayment) => {
     if (isViewOnly) return;
     try {
+      setSelectionBusyId(payment.id);
       await onUpdatePlannedPayment(payment.id, {
         includeInTransferPlan: !payment.includeInTransferPlan,
       });
-    } catch (err: any) {
-      console.error('Failed to toggle plan inclusion', err);
+    } catch (error: any) {
+      window.alert(error.message || 'Failed to update Transfer Plan selection.');
+    } finally {
+      setSelectionBusyId(null);
+    }
+  };
+
+  const handleBulkSelection = async (
+    include: boolean,
+    status?: 'paid' | 'unpaid'
+  ) => {
+    if (isViewOnly) return;
+    try {
+      setBulkSelectionBusy(true);
+      await onBulkTogglePlannedPayments({
+        month: selectedMonth,
+        include,
+        status,
+      });
+    } catch (error: any) {
+      window.alert(error.message || 'Failed to update Transfer Plan selection.');
+    } finally {
+      setBulkSelectionBusy(false);
     }
   };
 
@@ -264,20 +278,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     if (isViewOnly) return;
 
     if (payment.status !== 'paid') {
-      // Recording Paid always goes through the actual-payment modal so the
-      // Plan status and Activity evidence are created together exactly once.
       setMarkingPayment(payment);
       return;
     }
 
-    const account = accounts.find((candidate) => candidate.id === payment.accountId);
-    const accountLabel = account ? accountIdentityLabel(account) : payment.accountId;
-    const evidenceLabel = payment.actualTransactionId
-      ? 'This will remove the linked Activity expense and return the bill to Unpaid.'
-      : 'No linked Activity expense exists; only the legacy Paid status will be returned to Unpaid.';
+    const account = accountsById.get(payment.accountId);
+    const accountLabel = account
+      ? accountIdentityLabel(account)
+      : 'the recorded payment account';
 
     const confirmed = window.confirm(
-      `Undo the recorded payment for ${payment.name} (${formatPence(payment.actualAmountPence ?? payment.amountPence)}) from ${accountLabel}? ${evidenceLabel}`
+      `Undo recorded payment for ${payment.name} (${formatPence(
+        payment.actualAmountPence ?? payment.amountPence
+      )}) from ${accountLabel}? This will remove the linked Activity expense and return the bill to Unpaid. Funding records are not changed.`
     );
     if (!confirmed) return;
 
@@ -286,988 +299,655 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       if (payment.actualTransactionId) {
         await onUndoPaymentPaid(payment.id);
       } else {
+        // Compatibility for legacy paid rows that pre-date linked Activity
+        // evidence. New paid rows always use the linked payment workflow.
         await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
       }
-    } catch (err: any) {
-      window.alert(err.message || 'Failed to undo recorded payment.');
+    } catch (error: any) {
+      window.alert(error.message || 'Failed to undo recorded payment.');
     } finally {
       setUndoingPaymentId(null);
     }
   };
 
-  const handleBulkIncludeUnpaid = async () => {
-    if (isViewOnly) return;
-    try {
-      await onBulkTogglePlannedPayments({
-        month: selectedMonth,
-        include: true,
-        status: 'unpaid',
-      });
-    } catch (err: any) {
-      console.error('Failed to bulk include unpaid', err);
-    }
-  };
+  const handleUndoFunding = async (model: TransferPlanAccountModel) => {
+    if (isViewOnly || !model.latestFundingBatch) return;
 
-  const handleBulkIncludePaid = async () => {
-    if (isViewOnly) return;
-    try {
-      await onBulkTogglePlannedPayments({
-        month: selectedMonth,
-        include: true,
-        status: 'paid',
-      });
-    } catch (err: any) {
-      console.error('Failed to bulk include paid', err);
-    }
-  };
+    const { requirement, latestFundingBatch } = model;
+    const sourceNames = latestFundingBatch.sourceAccountIds
+      .map((id) => accountsById.get(id))
+      .filter((account): account is Account => Boolean(account))
+      .map((account) => accountIdentityLabel(account))
+      .join(' + ');
 
-  const handleBulkDeselectAll = async () => {
-    if (isViewOnly) return;
-    try {
-      await onBulkTogglePlannedPayments({
-        month: selectedMonth,
-        include: false,
-      });
-    } catch (err: any) {
-      console.error('Failed to bulk deselect', err);
-    }
-  };
+    const paidCount = requirement.paidPayments.length;
+    const paidWarning =
+      paidCount > 0
+        ? ` ${paidCount} recorded bill payment${paidCount === 1 ? '' : 's'} will remain recorded; this action reverses funding only.`
+        : '';
 
-  const handleBulkSelectAll = async () => {
-    if (isViewOnly) return;
+    const confirmed = window.confirm(
+      `Undo the latest ${formatPence(
+        latestFundingBatch.totalPence
+      )} funding for ${accountIdentityLabel(requirement.account)}${
+        sourceNames ? ` from ${sourceNames}` : ''
+      }? The exact latest funding batch will be returned to its original source account(s).${paidWarning}`
+    );
+    if (!confirmed) return;
+
     try {
-      await onBulkTogglePlannedPayments({
-        month: selectedMonth,
-        include: true,
-      });
-    } catch (err: any) {
-      console.error('Failed to bulk select all', err);
+      setUndoingFundingAccountId(requirement.account.id);
+      await onUndoFunding(requirement.account.id, selectedMonth);
+    } catch (error: any) {
+      window.alert(error.message || 'Failed to undo Transfer Plan funding.');
+    } finally {
+      setUndoingFundingAccountId(null);
     }
   };
 
   const renderCardPaymentAction = (payment: PlannedPayment) => {
     if (isViewOnly) return null;
 
-    const isPaid = isPaymentPaid(payment);
+    const isPaid = payment.status === 'paid';
     return (
       <button
         type="button"
         onClick={() => handlePaymentStatusAction(payment)}
         disabled={undoingPaymentId === payment.id}
-        title={isPaid ? 'Undo recorded payment for this bill' : 'Record this bill as paid'}
         className={
           isPaid
-            ? 'inline-flex items-center justify-center gap-1 rounded-lg border border-muted bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-main transition hover:border-strong disabled:opacity-50'
-            : 'inline-flex items-center justify-center gap-1 rounded-lg bg-success-soft px-2.5 py-1.5 text-[11px] font-semibold text-success transition hover:opacity-80 disabled:opacity-50'
+            ? 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50'
+            : 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50'
         }
+        title={isPaid ? 'Undo recorded payment' : 'Record payment'}
       >
-        {isPaid && <RotateCcw className="h-3 w-3" />}
-        {undoingPaymentId === payment.id
-          ? 'Undoing…'
-          : isPaid
-            ? 'Undo payment'
-            : 'Record paid'}
+        {isPaid ? (
+          <RotateCcw className="h-3.5 w-3.5" />
+        ) : (
+          <CheckCircle2 className="h-3.5 w-3.5" />
+        )}
+        {isPaid ? 'Undo payment' : 'Record paid'}
       </button>
     );
   };
 
-  const renderReadyAccountCard = (req: AccountFundingRequirement) => (
-    <article
-                    key={req.account.id}
-                    id={`funding-card-${req.account.id}`}
-                    className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
-                  >
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
-                            Bills paid from
-                          </div>
-                          <h3 className="mt-1 text-base font-bold tracking-tight text-main">
-                            {req.account.name}
-                          </h3>
-                          <div className="mt-0.5 text-xs text-muted">
-                            {accountTypeLabel(req.account.type)} · {accountOwnerLabel(req.account)}
-                          </div>
-                        </div>
-    
-                        <div className="shrink-0 flex items-center gap-2">
-                          <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-success-soft text-success">
-                            {latestFundingBatchByDestination.has(req.account.id)
-                              ? latestFundingBatchByDestination.get(req.account.id)!.kind ===
-                                'legacy_incoming'
-                                ? 'Funded · Legacy'
-                                : 'Funded'
-                              : req.unpaidPayments.length === 0
-                                ? 'Paid / Complete'
-                                : 'Covered'}
-                          </span>
-                          {!isViewOnly && latestFundingBatchByDestination.has(req.account.id) && (
-                            <button
-                              type="button"
-                              onClick={() => handleUndoFunding(req.account)}
-                              disabled={undoingFundingAccountId === req.account.id}
-                              title="Undo all funding for this card and return the money to the original source account(s)"
-                              className="inline-flex items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted transition hover:border-strong hover:text-main disabled:opacity-50"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                              {undoingFundingAccountId === req.account.id ? 'Undoing...' : 'Undo Funding'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-    
-                      <div className="mt-5">
-                        <div className="text-xs font-medium text-subtle">
-                          {latestFundingBatchByDestination.has(req.account.id)
-                            ? 'Balance after funding'
-                            : 'Current balance'}
-                        </div>
-                        <div className="mt-1 text-2xl font-extrabold tracking-tight text-main">
-                          {formatPence(req.currentBalancePence)}
-                        </div>
-    
-                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
-                            <div className="text-[11px] font-medium text-subtle">Selected bills</div>
-                            <div className="mt-0.5 text-[13px] font-bold text-main">
-                              {formatPence(
-                                req.selectedPayments.reduce(
-                                  (sum, payment) => sum + payment.amountPence,
-                                  0
-                                )
-                              )}
-                            </div>
-                          </div>
-                          <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
-                            <div className="text-[11px] font-medium text-subtle">
-                              Left after unpaid bills
-                            </div>
-                            <div className="mt-0.5 text-[13px] font-bold text-main">
-                              {formatPence(
-                                Math.max(
-                                  0,
-                                  req.amountAvailablePence - req.totalUnpaidSelectedPaymentsPence
-                                )
-                              )}
-                            </div>
-                          </div>
-                          <div className="col-span-2 sm:col-span-1 rounded-xl bg-surface-muted px-3.5 py-2.5">
-                            <div className="text-[11px] font-medium text-subtle">Bills selected</div>
-                            <div className="mt-0.5 text-[13px] font-bold text-main">
-                              {req.selectedPayments.length}
-                            </div>
-                          </div>
-                        </div>
-    
-                        {latestFundingBatchByDestination.has(req.account.id) ? (
-                          <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5">
-                            <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
-                              {latestFundingBatchByDestination.get(req.account.id)!.kind ===
-                              'legacy_incoming'
-                                ? 'Legacy funding received'
-                                : 'Funding received'}
-                            </div>
-                            <div className="mt-1.5 divide-y divide-muted">
-                              {latestFundingBatchByDestination
-                                .get(req.account.id)!
-                                .allocations.map((allocation, index) => {
-                                  const sourceAccount = accounts.find(
-                                    (account) => account.id === allocation.sourceAccountId
-                                  );
-                                  const sourceName = sourceAccount?.name || 'Unknown account';
-                                  const fundingBatch = latestFundingBatchByDestination.get(
-                                    req.account.id
-                                  )!;
-                                  const sourceOwner =
-                                    sourceAccount?.ownerPerson ||
-                                    fundingBatch.transactions[index]?.payer ||
-                                    'Owner not recorded';
-                                  const sourceType = sourceAccount
-                                    ? `${sourceAccount.type.charAt(0).toUpperCase()}${sourceAccount.type.slice(1)} account`
-                                    : '';
-    
-                                  return (
-                                    <div
-                                      key={`${allocation.sourceAccountId}-${index}`}
-                                      className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
-                                    >
-                                      <div className="min-w-0">
-                                        <div className="text-[12px] font-semibold text-main">
-                                          From {sourceName}
-                                        </div>
-                                        <div className="text-[11px] text-subtle">
-                                          {sourceOwner}{sourceType ? ` · ${sourceType}` : ''}
-                                        </div>
-                                      </div>
-                                      <div className="shrink-0 text-[13px] font-bold text-main">
-                                        {formatPence(allocation.amountPence)}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
-                            {req.unpaidPayments.length === 0
-                              ? 'All selected bills are recorded as paid. No new Transfer Plan funding is required.'
-                              : 'Covered by the existing account balance. No Transfer Plan funding transfer was recorded, so there is nothing to undo.'}
-                          </div>
-                        )}
-                      </div>
-    
-                      <div className="mt-5">
-                        {req.selectedPayments.length > 0 ? (
-                          <div className="rounded-xl border border-muted bg-surface-muted overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => toggleAccountExpand(req.account.id)}
-                              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-surface"
-                              aria-expanded={Boolean(expandedAccountIds[req.account.id])}
-                            >
-                              <div className="min-w-0">
-                                <div className="text-[12px] font-semibold text-main">
-                                  Bills in this card
-                                </div>
-                                <div className="mt-0.5 text-[11px] text-subtle">
-                                  {req.selectedPayments.length} selected · {req.paidPayments.length} paid · {req.unpaidPayments.length} unpaid
-                                </div>
-                              </div>
-                              <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-muted">
-                                {expandedAccountIds[req.account.id] ? (
-                                  <>
-                                    Hide bills
-                                    <ChevronUp className="h-3.5 w-3.5" />
-                                  </>
-                                ) : (
-                                  <>
-                                    Show bills ({req.selectedPayments.length})
-                                    <ChevronDown className="h-3.5 w-3.5" />
-                                  </>
-                                )}
-                              </span>
-                            </button>
+  const renderFundingHistory = (model: TransferPlanAccountModel) => {
+    if (model.fundingBatches.length === 0) return null;
 
-                            {expandedAccountIds[req.account.id] && (
-                              <div className="divide-y divide-muted border-t border-muted bg-surface">
-                                {req.selectedPayments.map((p) => (
-                                  <div
-                                    key={p.id}
-                                    className="px-3.5 py-3"
-                                  >
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                      <div className="flex min-w-0 items-start gap-2.5">
-                                        <input
-                                          type="checkbox"
-                                          checked={p.includeInTransferPlan}
-                                          onChange={() => handleTogglePaymentInPlan(p)}
-                                          disabled={isViewOnly}
-                                          title="In plan"
-                                          className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-muted text-main focus:ring-muted cursor-pointer"
-                                        />
-                                        <div className="min-w-0">
-                                          <div className="font-semibold text-main text-xs">
-                                            {p.name}
-                                          </div>
-                                          <div className="mt-0.5 text-[11px] text-subtle">
-                                            Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
-                                          </div>
-                                        </div>
-                                      </div>
+    const destination = model.requirement.account;
 
-                                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                                        <span
-                                          className={
-                                            p.status === 'paid'
-                                              ? 'text-[10px] font-semibold uppercase tracking-wider text-success'
-                                              : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
-                                          }
-                                        >
-                                          {p.status === 'paid' ? 'Paid' : 'Unpaid'}
-                                        </span>
-                                        <span
-                                          className={
-                                            latestFundingBatchByDestination.has(req.account.id)
-                                              ? 'text-[10px] font-semibold uppercase tracking-wider text-accent'
-                                              : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
-                                          }
-                                        >
-                                          {latestFundingBatchByDestination.has(req.account.id)
-                                            ? 'Funding recorded'
-                                            : p.status === 'paid'
-                                              ? 'Complete'
-                                              : 'Covered'}
-                                        </span>
-                                        <span className="mv-private-value font-bold text-main text-xs">
-                                          {formatPence(p.amountPence)}
-                                        </span>
-                                        {renderCardPaymentAction(p)}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="rounded-xl border border-dashed border-muted bg-surface-muted px-4 py-4 text-center">
-                            <span className="text-[13px] font-medium text-muted">
-                              No payments selected for this account
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-  );
-
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* View Header with Month Filter & Quick Context */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-muted pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-main tracking-tight">Plan</h1>
-            <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-surface-muted text-main border border-muted">
-              {formatMonthLabel(selectedMonth)}
+    return (
+      <div className="mt-3 rounded-lg border border-muted bg-surface-muted p-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <ArrowLeftRight className="h-3.5 w-3.5 shrink-0 text-muted" />
+            <span className="text-[11px] font-semibold text-main">
+              Funding recorded
             </span>
           </div>
+          <span className="finance-semantic-positive mv-private-value shrink-0 font-mono text-xs font-bold tabular-nums">
+            {formatPence(model.fundingTotalPence)}
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:min-w-[360px]">
-          {/* Month Selector */}
-          <div className="col-span-2">
-            <MonthPicker
-              id="transfer-plan-month-select"
-              value={selectedMonth}
-              onChange={handleSelectMonth}
-              ariaLabel="Transfer plan month"
-              className="is-fluid"
-            />
-          </div>
+        <div className="mt-2 space-y-1.5">
+          {model.fundingBatches.map((batch) => {
+            const sources = batch.sourceAccountIds
+              .map((id) => accountsById.get(id))
+              .filter((account): account is Account => Boolean(account));
 
-          {onOpenMonthImport && !isViewOnly && (
-            <button
-              onClick={onOpenMonthImport}
-              className="min-w-0 px-3 py-2 text-xs font-medium text-muted bg-surface border border-muted hover:bg-surface-muted rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
-              title="Prepare next month"
-            >
-              <Layers className="w-3.5 h-3.5 shrink-0 text-muted text-subtle" />
-              <span>Prepare Next Month</span>
-            </button>
-          )}
+            const sourceLabel =
+              sources.length > 0
+                ? sources.map((account) => accountIdentityLabel(account)).join(' + ')
+                : 'Source account unavailable';
 
-          {!isViewOnly && (
-            <button
-              id="add-planned-payment-button"
-              onClick={() => setIsAddingPayment(true)}
-              className="min-w-0 px-3 py-2 text-xs font-medium text-on-accent bg-surface hover:bg-surface-muted rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5 shrink-0" />
-              <span>Add Bill</span>
-            </button>
-          )}
+            const date = batch.transactions[0]?.date;
+
+            return (
+              <div
+                key={`${batch.destinationAccountId}-${batch.batchKey}`}
+                className="flex flex-col gap-1 border-t border-muted/60 pt-1.5 first:border-t-0 first:pt-0 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0 text-[10px] text-muted">
+                  <span className="font-medium text-main">{sourceLabel}</span>
+                  <span className="mx-1.5">→</span>
+                  <span>{accountIdentityLabel(destination)}</span>
+                  {date ? <span className="ml-1.5 text-subtle">· {formatDueDate(date)}</span> : null}
+                </div>
+                <span className="finance-semantic-positive mv-private-value shrink-0 font-mono text-[11px] font-semibold tabular-nums">
+                  {formatPence(batch.totalPence)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
+    );
+  };
 
-      {/* Compact Summary Metrics */}
-      <section className="grid grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-4 gap-3">
-        <article
-          id="stat-transfer-required"
-          className="mv-card min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium leading-5 text-muted">
-              Transfer Required
-            </span>
-            <ArrowLeftRight
-              className={`w-4 h-4 shrink-0 ${
-                plan.totalTransferRequiredPence > 0 ? 'text-warning' : 'text-success'
-              }`}
-            />
-          </div>
-          <div
-            className={`mv-private-value mt-2 text-2xl font-bold tracking-tight ${
-              plan.totalTransferRequiredPence > 0
-                ? 'text-warning'
-                : 'text-main'
-            }`}
-          >
-            {formatPence(plan.totalTransferRequiredPence)}
-          </div>
-          <p className="mt-1 text-sm leading-5 text-muted">
-            {plan.accountsNeedingFunding.length > 0
-              ? `${plan.accountsNeedingFunding.length} account${
-                  plan.accountsNeedingFunding.length !== 1 ? 's' : ''
-                } need funding`
-              : planAccountCount > 0
-                ? 'No new funding required'
-                : 'No selected accounts to fund'}
-          </p>
-        </article>
+  const billFundingLabel = (
+    model: TransferPlanAccountModel,
+    payment: PlannedPayment
+  ) => {
+    if (payment.status === 'paid') return 'Paid';
 
-        <article className="mv-card min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium leading-5 text-muted">
-              Payments in Plan
-            </span>
-            <Layers className="w-4 h-4 shrink-0 text-subtle" />
-          </div>
-          <div className="mv-private-value mt-2 text-2xl font-bold tracking-tight text-main">
-            {formatPence(selectedPlanTotalPence)}
-          </div>
-          <p className="mt-1 text-sm leading-5 text-muted">
-            {selectedPlanPayments.length} selected · {selectedPlanUnpaidCount} unpaid · {selectedPlanPaidCount} paid
-          </p>
-        </article>
+    if (model.lifecycle === 'funded') return 'Funding recorded';
+    if (model.lifecycle === 'covered') return 'Covered by balance';
+    if (model.lifecycle === 'paid') return 'Paid';
 
-        <article className="mv-card min-w-0 rounded-2xl border border-muted bg-surface p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)]">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-medium leading-5 text-muted">
-              Accounts
-            </span>
-            <AlertCircle
-              className={`w-4 h-4 shrink-0 ${
-                plan.accountsNeedingFunding.length > 0 ? 'text-warning' : 'text-subtle'
-              }`}
-            />
-          </div>
-          <div className="mv-private-value mt-2 text-2xl font-bold tracking-tight text-main">
-            {planAccountCount}
-          </div>
-          <p className="mt-1 text-sm leading-5 text-muted">
-            {plan.accountsNeedingFunding.length} need funding · {fundedAccountRequirements.length} funded · {coveredAccountRequirements.length} covered · {completedAccountRequirements.length} complete
-          </p>
-        </article>
+    const coveredByBalance = model.requirement.fundedPayments.some(
+      (candidate) => candidate.id === payment.id
+    );
+    return coveredByBalance ? 'Covered by balance' : 'Needs funding';
+  };
 
-      </section>
+  const renderCardBills = (model: TransferPlanAccountModel) => {
+    const { requirement } = model;
+    const payments = [...requirement.selectedPayments].sort((a, b) => {
+      const dateA = a.dueDate || '9999-99-99';
+      const dateB = b.dueDate || '9999-99-99';
+      return dateA.localeCompare(dateB) || a.name.localeCompare(b.name);
+    });
 
-      {/* SECTION 1: Account Funding Requirements (The Primary Purpose) */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+    return (
+      <div className="mt-3 overflow-hidden rounded-lg border border-muted">
+        <div className="flex items-center justify-between gap-3 bg-surface-muted px-3 py-2">
           <div>
-            <h2 className="text-base font-bold text-main">
-              Account Funding
-            </h2>
+            <div className="text-[11px] font-semibold text-main">Bills in this card</div>
+            <div className="text-[10px] text-subtle">
+              {requirement.selectedPayments.length} selected · {requirement.paidPayments.length} paid · {requirement.unpaidPayments.length} unpaid
+            </div>
           </div>
         </div>
 
-        {/* Accounts Needing Funding First */}
-        {plan.accountsNeedingFunding.length > 0 && (
-          <div className="space-y-4">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-warning">
-              <AlertCircle className="w-3.5 h-3.5 text-warning shrink-0" />
-              <span className="whitespace-nowrap">Needs Funding ({plan.accountsNeedingFunding.length})</span>
-            </div>
+        <div className="divide-y divide-muted">
+          {payments.map((payment) => {
+            const category = payment.categoryId
+              ? categoriesById.get(payment.categoryId)
+              : undefined;
+            const statusLabel = billFundingLabel(model, payment);
 
-            {plan.accountsNeedingFunding.map((req) => (
+            return (
               <div
-                key={req.account.id}
-                id={`funding-card-${req.account.id}`}
-                className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                key={payment.id}
+                className="flex flex-col gap-2 bg-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
-                {/* Account Card Header */}
-                <div className="p-4 sm:p-5 bg-surface border-b border-muted flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-base font-bold text-main">{req.account.name}</h3>
-                    <div className="mt-0.5 text-xs text-muted">
-                      {accountTypeLabel(req.account.type)} · {accountOwnerLabel(req.account)}
-                    </div>
-                    <div className="text-xs text-subtle mt-1">
-                      {req.selectedPayments.length} selected bill{req.selectedPayments.length === 1 ? '' : 's'}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <span className="text-xs font-medium text-warning uppercase tracking-wider block">
-                        Transfer Required
-                      </span>
-                      <span className="mv-private-value text-xl font-extrabold text-warning">
-                        {formatPence(req.transferRequiredPence)}
-                      </span>
-                    </div>
-
-                    {!isViewOnly && (
-                      <button
-                        id={`btn-transfer-${req.account.id}`}
-                        onClick={() => setFundingAccountToTransfer(req)}
-                        className="px-3.5 py-2 text-xs font-semibold text-on-accent bg-surface hover:bg-surface-muted rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
-                      >
-                        <ArrowLeftRight className="w-3.5 h-3.5" />
-                        <span>Record Funding</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* 4-Column Exact Financial Breakdown per Handoff Specification */}
-                <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-muted bg-surface border-b border-muted text-xs">
-                  <div className="p-4">
-                    <span className="text-muted text-subtle font-medium block">Balance</span>
-                    <span className="mv-private-value text-sm font-bold text-main mt-1 block">
-                      {formatPence(req.currentBalancePence)}
-                    </span>
-                  </div>
-
-                  <div className="p-4">
-                    <span className="text-muted text-subtle font-medium block">Selected Bills</span>
-                    <span className="mv-private-value text-sm font-bold text-main mt-1 block">
-                      {formatPence(req.totalSelectedPaymentsPence)}
-                    </span>
-                  </div>
-
-                  <div className="p-4">
-                    <span className="text-muted text-subtle font-medium block">Available</span>
-                    <span className="mv-private-value text-sm font-bold text-main mt-1 block">
-                      {formatPence(req.amountAvailablePence)}
-                    </span>
-                  </div>
-
-                  <div className="p-4 bg-warning-soft">
-                    <span className="text-warning font-semibold block">Transfer Required</span>
-                    <span className="mv-private-value text-sm font-extrabold text-warning mt-1 block">
-                      {formatPence(req.transferRequiredPence)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Selected upcoming payments that create this requirement */}
-                <div className="p-4 bg-surface-muted">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-muted">
-                      Selected payments
-                    </span>
-                    <button
-                      onClick={() => toggleAccountExpand(req.account.id)}
-                      className="text-xs text-muted text-subtle hover:text-main flex items-center gap-1 transition-colors"
-                    >
-                      {expandedAccountIds[req.account.id] ? (
-                        <>
-                          <span>Collapse</span>
-                          <ChevronUp className="w-3.5 h-3.5" />
-                        </>
-                      ) : (
-                        <>
-                          <span>Expand ({req.selectedPayments.length})</span>
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {expandedAccountIds[req.account.id] && (
-                    <div className="space-y-1.5 mt-2">
-                      {req.selectedPayments.map((p) => (
-                        <div
-                          key={p.id}
-                          className="flex flex-col gap-2 px-3 py-2 bg-surface rounded-lg border border-muted text-xs hover:border-muted transition-colors sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={p.includeInTransferPlan}
-                              onChange={() => handleTogglePaymentInPlan(p)}
-                              disabled={isViewOnly}
-                              title="In plan"
-                              className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
-                            />
-                            <div>
-                              <span className="font-semibold text-main">{p.name}</span>
-                              <span className="text-muted text-subtle ml-2">
-                                Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-end gap-2">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider ${
-                                p.status === 'paid'
-                                  ? 'bg-success-soft text-success'
-                                  : 'bg-surface-muted text-muted'
-                              }`}
-                            >
-                              {p.status === 'paid' ? 'Paid' : 'Unpaid'}
-                            </span>
-                            {req.fundedPayments?.some((fp) => fp.id === p.id) ? (
-                              <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-accent-soft text-accent">
-                                Covered
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-warning-soft text-warning">
-                                Needs funds
-                              </span>
-                            )}
-                            <span className="mv-private-value font-bold text-main">
-                              {formatPence(p.amountPence)}
-                            </span>
-                            {renderCardPaymentAction(p)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="flex min-w-0 items-start gap-2.5">
+                  {!isViewOnly && (
+                    <label className="mt-0.5 flex shrink-0 items-center" title="In Transfer Plan">
+                      <input
+                        type="checkbox"
+                        checked={payment.includeInTransferPlan}
+                        onChange={() => handleTogglePaymentInPlan(payment)}
+                        disabled={selectionBusyId === payment.id}
+                        className="h-4 w-4 rounded border-muted"
+                      />
+                      <span className="sr-only">In Plan</span>
+                    </label>
                   )}
+
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="truncate text-xs font-semibold text-main">
+                        {payment.name}
+                      </span>
+                      <span
+                        className={
+                          payment.status === 'paid'
+                            ? 'finance-status-positive rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide'
+                            : 'rounded-full border border-muted bg-surface-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted'
+                        }
+                      >
+                        {payment.status === 'paid' ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </div>
+
+                    <div className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] text-subtle">
+                      <span>{formatDueDate(payment.dueDate)}</span>
+                      <span>·</span>
+                      <span>{payment.responsiblePerson}</span>
+                      {category ? (
+                        <>
+                          <span>·</span>
+                          <span>{category}</span>
+                        </>
+                      ) : null}
+                      <span>·</span>
+                      <span>{statusLabel}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                  <span className="mv-private-value min-w-[82px] text-right font-mono text-xs font-bold tabular-nums text-main">
+                    {formatPence(payment.amountPence)}
+                  </span>
+                  {renderCardPaymentAction(payment)}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Completed funding is kept separate from simple balance coverage. */}
-        {fundedAccountRequirements.length > 0 && (
-          <div className="space-y-4 pt-2">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-success">
-              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
-              <span className="whitespace-nowrap">
-                Funded by Transfer ({fundedAccountRequirements.length})
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {fundedAccountRequirements.map(renderReadyAccountCard)}
-            </div>
-          </div>
-        )}
-
-        {coveredAccountRequirements.length > 0 && (
-          <div className="space-y-4 pt-2">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-success">
-              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
-              <span className="whitespace-nowrap">
-                Covered by Existing Balance ({coveredAccountRequirements.length})
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {coveredAccountRequirements.map(renderReadyAccountCard)}
-            </div>
-          </div>
-        )}
-
-        {completedAccountRequirements.length > 0 && (
-          <div className="space-y-4 pt-2">
-            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-success">
-              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
-              <span className="whitespace-nowrap">
-                Paid / Complete ({completedAccountRequirements.length})
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {completedAccountRequirements.map(renderReadyAccountCard)}
-            </div>
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
+    );
+  };
 
-      {/* SECTION 2: Upcoming Scheduled Payments Roster & Inclusion Controls */}
-      <div className="space-y-3 pt-5 border-t border-muted">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
-          <div>
-            <h2 className="text-base font-bold text-main">
-              Bills · {formatMonthLabel(selectedMonth)}
-            </h2>
+  const renderAccountCard = (model: TransferPlanAccountModel) => {
+    const { requirement, lifecycle, latestFundingBatch } = model;
+    const account = requirement.account;
+    const meta = lifecycleMeta(lifecycle);
+    const expanded = expandedAccountIds[account.id] === true;
+    const leftAfterUnpaid =
+      requirement.currentBalancePence -
+      requirement.totalUnpaidSelectedPaymentsPence;
+
+    const stateMetric =
+      lifecycle === 'needs_funding'
+        ? {
+            label: 'Transfer required',
+            value: requirement.transferRequiredPence,
+            valueClassName: 'text-main',
+          }
+        : lifecycle === 'funded'
+          ? {
+              label: 'Funding received',
+              value: model.fundingTotalPence,
+              valueClassName: 'finance-semantic-positive',
+            }
+          : lifecycle === 'covered'
+            ? {
+                label: 'Left after unpaid bills',
+                value: leftAfterUnpaid,
+                valueClassName: 'text-main',
+              }
+            : {
+                label: 'Unpaid remaining',
+                value: 0,
+                valueClassName: 'finance-semantic-positive',
+              };
+
+    return (
+      <article
+        key={account.id}
+        className="mv-card rounded-xl border border-muted bg-surface p-3.5 shadow-sm"
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="truncate text-sm font-bold text-main">
+                {accountIdentityLabel(account)}
+              </h3>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em] ${meta.pillClassName}`}
+              >
+                {meta.label}
+              </span>
+            </div>
+            <p className="mt-1 text-[10px] text-subtle">{meta.description}</p>
           </div>
 
-          {!isViewOnly && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            {lifecycle === 'needs_funding' && !isViewOnly && (
               <button
-                onClick={handleBulkIncludeUnpaid}
-                className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
+                type="button"
+                onClick={() => setFundingModel(model)}
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-md bg-accent px-3 text-[11px] font-semibold text-on-accent hover:brightness-95"
               >
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+                Record transfer
+              </button>
+            )}
+
+            {latestFundingBatch && !isViewOnly && (
+              <button
+                type="button"
+                onClick={() => handleUndoFunding(model)}
+                disabled={undoingFundingAccountId === account.id}
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-muted px-3 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
+                title="Undo all funding for this card and return the money to the original source account(s)"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Undo Funding
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => toggleAccountExpand(account.id)}
+              aria-expanded={expanded}
+              className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted"
+            >
+              {expanded ? (
+                <ChevronUp className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+              {expanded
+                ? 'Hide bills'
+                : `Show bills (${requirement.selectedPayments.length})`}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-muted bg-surface-muted px-2.5 py-2">
+            <div className="text-[9px] font-semibold uppercase tracking-wide text-subtle">
+              Current balance
+            </div>
+            <div className="mv-private-value mt-0.5 font-mono text-sm font-bold tabular-nums text-main">
+              {formatPence(requirement.currentBalancePence)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-muted bg-surface-muted px-2.5 py-2">
+            <div className="text-[9px] font-semibold uppercase tracking-wide text-subtle">
+              Selected bills
+            </div>
+            <div className="mv-private-value mt-0.5 font-mono text-sm font-bold tabular-nums text-main">
+              {formatPence(requirement.totalSelectedPaymentsPence)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-muted bg-surface-muted px-2.5 py-2">
+            <div className="text-[9px] font-semibold uppercase tracking-wide text-subtle">
+              Unpaid in plan
+            </div>
+            <div className="mv-private-value mt-0.5 font-mono text-sm font-bold tabular-nums text-main">
+              {formatPence(requirement.totalUnpaidSelectedPaymentsPence)}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-muted bg-surface-muted px-2.5 py-2">
+            <div className="text-[9px] font-semibold uppercase tracking-wide text-subtle">
+              {stateMetric.label}
+            </div>
+            <div
+              className={`mv-private-value mt-0.5 font-mono text-sm font-bold tabular-nums ${stateMetric.valueClassName}`}
+            >
+              {formatPence(stateMetric.value)}
+            </div>
+          </div>
+        </div>
+
+        {renderFundingHistory(model)}
+        {expanded ? renderCardBills(model) : null}
+      </article>
+    );
+  };
+
+  const renderLifecycleSection = (
+    title: string,
+    models: TransferPlanAccountModel[],
+    emptyMessage?: string
+  ) => {
+    if (models.length === 0) {
+      if (!emptyMessage) return null;
+      return (
+        <section className="finance-panel p-3">
+          <div className="text-xs font-semibold text-main">{title}</div>
+          <div className="mt-1 text-[10px] text-subtle">{emptyMessage}</div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="space-y-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xs font-bold uppercase tracking-[0.1em] text-muted">
+            {title}
+          </h2>
+          <span className="rounded-full border border-muted bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-muted">
+            {models.length}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {models.map(renderAccountCard)}
+        </div>
+      </section>
+    );
+  };
+
+  return (
+    <div className="finance-workspace space-y-5 pb-16">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">
+            Transfer Plan
+          </h1>
+          <p className="mt-0.5 text-[12px] text-subtle">
+            Position money for selected bills. Funding and payment stay separate.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <MonthPicker
+            value={selectedMonth}
+            onChange={handleSelectMonth}
+            ariaLabel="Transfer Plan month"
+            className="min-w-[170px]"
+          />
+          {onOpenMonthImport && !isViewOnly && (
+            <button
+              type="button"
+              onClick={onOpenMonthImport}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-md border border-muted px-3 text-xs font-semibold text-muted hover:bg-surface-muted"
+            >
+              <Layers className="h-3.5 w-3.5" />
+              Prepare month
+            </button>
+          )}
+        </div>
+      </header>
+
+      <section className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className="finance-summary-card rounded-xl border border-muted bg-surface p-3">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-subtle">
+            Transfer required
+          </div>
+          <div className="mv-private-value mt-1 font-mono text-xl font-bold tabular-nums text-main">
+            {formatPence(plan.totalTransferRequiredPence)}
+          </div>
+          <div className="mt-0.5 text-[10px] text-subtle">
+            {groups.needsFunding.length} account{groups.needsFunding.length === 1 ? '' : 's'}
+          </div>
+        </div>
+
+        <div className="finance-summary-card rounded-xl border border-muted bg-surface p-3">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-subtle">
+            Bills in plan
+          </div>
+          <div className="mt-1 text-xl font-bold text-main">
+            {selectedPayments.length}
+          </div>
+          <div className="mt-0.5 text-[10px] text-subtle">
+            {selectedUnpaidCount} unpaid · {selectedPaidCount} paid
+          </div>
+        </div>
+
+        <div className="finance-summary-card rounded-xl border border-muted bg-surface p-3">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-subtle">
+            Funded cards
+          </div>
+          <div className="mt-1 text-xl font-bold finance-semantic-positive">
+            {groups.funded.length}
+          </div>
+          <div className="mt-0.5 text-[10px] text-subtle">
+            {groups.covered.length} covered by balance
+          </div>
+        </div>
+
+        <div className="finance-summary-card rounded-xl border border-muted bg-surface p-3">
+          <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-subtle">
+            Complete
+          </div>
+          <div className="mt-1 text-xl font-bold finance-semantic-positive">
+            {groups.paid.length}
+          </div>
+          <div className="mt-0.5 text-[10px] text-subtle">
+            Paid account cards
+          </div>
+        </div>
+      </section>
+
+      {selectedPayments.length === 0 ? (
+        <section className="finance-panel p-5">
+          <div className="flex min-h-[120px] flex-col items-center justify-center text-center">
+            <AlertCircle className="h-5 w-5 text-subtle" />
+            <p className="mt-2 text-sm font-semibold text-main">
+              No bills selected for {formatMonthLabel(selectedMonth)}
+            </p>
+            <p className="mt-1 text-[11px] text-subtle">
+              Use the bill selection list below to choose what belongs in this Transfer Plan.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <div className="space-y-5">
+          {renderLifecycleSection('Needs Funding', groups.needsFunding)}
+          {renderLifecycleSection('Funded by Transfer', groups.funded)}
+          {renderLifecycleSection('Covered by Existing Balance', groups.covered)}
+          {renderLifecycleSection('Paid / Complete', groups.paid)}
+        </div>
+      )}
+
+      <section className="finance-panel overflow-hidden" aria-label="Transfer Plan bill selection">
+        <div className="flex flex-col gap-2 border-b border-muted px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-main">
+                Bills · {formatMonthLabel(selectedMonth)}
+              </h2>
+              <span className="rounded-full border border-muted bg-surface-muted px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted">
+                Selection only
+              </span>
+            </div>
+            <p className="mt-0.5 text-[10px] text-subtle">
+              Bill details are read-only here. Select only what belongs in the Transfer Plan.
+            </p>
+          </div>
+
+          {!isViewOnly && monthPayments.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleBulkSelection(true, 'unpaid')}
+                disabled={bulkSelectionBusy}
+                className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
+              >
+                <CheckSquare className="h-3.5 w-3.5" />
                 Select Unpaid
               </button>
               <button
-                onClick={handleBulkIncludePaid}
-                className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
+                type="button"
+                onClick={() => handleBulkSelection(true, 'paid')}
+                disabled={bulkSelectionBusy}
+                className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
+                <CheckSquare className="h-3.5 w-3.5" />
                 Select Paid
               </button>
               <button
-                onClick={handleBulkSelectAll}
-                className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
+                type="button"
+                onClick={() => handleBulkSelection(true)}
+                disabled={bulkSelectionBusy}
+                className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
+                <CheckSquare className="h-3.5 w-3.5" />
                 Select All
               </button>
               <button
-                onClick={handleBulkDeselectAll}
-                className="min-w-0 px-3 py-2 text-[12px] font-medium text-muted rounded-xl bg-surface-muted border border-muted hover:bg-surface hover:shadow-sm transition-all"
+                type="button"
+                onClick={() => handleBulkSelection(false)}
+                disabled={bulkSelectionBusy}
+                className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
+                <Square className="h-3.5 w-3.5" />
                 Deselect All
               </button>
             </div>
           )}
         </div>
 
-        {/* Payments */}
-        <div className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
-          {/* Mobile / tablet cards: everything visible without horizontal scrolling */}
-          <div className="lg:hidden divide-y divide-muted">
-            {monthPayments.length === 0 ? (
-              <div className="px-4 py-8 text-center text-[13px] text-subtle">
-                No scheduled payments for {formatMonthLabel(selectedMonth)}
-              </div>
-            ) : (
-              monthPayments.map((payment) => {
-                const acc = accounts.find((a) => a.id === payment.accountId);
-                return (
-                  <article
-                    key={payment.id}
-                    className={`p-4 ${payment.includeInTransferPlan ? 'bg-surface' : 'bg-surface-muted'}`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-start gap-2.5">
-                          <input
-                            type="checkbox"
-                            checked={payment.includeInTransferPlan}
-                            onChange={() => handleTogglePaymentInPlan(payment)}
-                            disabled={isViewOnly}
-                            title="In plan"
-                            className="mt-0.5 w-4 h-4 shrink-0 text-main rounded border-muted focus:ring-muted cursor-pointer"
-                          />
-                          <div className="min-w-0">
-                            <h3 className="text-[13px] font-semibold leading-5 text-main break-words">
-                              {payment.name}
-                            </h3>
-                            <div className="mt-1 text-[11px] leading-4 text-muted break-words">
-                              {acc ? accountIdentityLabel(acc) : payment.accountId} · {payment.dueDate || 'Flexible'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+        {monthPayments.length === 0 ? (
+          <div className="p-5 text-center text-xs text-subtle">
+            No scheduled bills exist for this month.
+          </div>
+        ) : (
+          <div className="divide-y divide-muted">
+            {monthPayments.map((payment) => {
+              const account = accountsById.get(payment.accountId);
+              const category = payment.categoryId
+                ? categoriesById.get(payment.categoryId)
+                : undefined;
 
-                      <div className="shrink-0 text-right">
-                        <div className="text-[13px] font-bold text-main whitespace-nowrap">
-                          {formatPence(payment.amountPence)}
-                        </div>
-                      </div>
+              return (
+                <div
+                  key={payment.id}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] gap-2.5 px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_110px_92px] sm:items-center"
+                >
+                  <label className="flex items-center" title="Include in Transfer Plan">
+                    <input
+                      type="checkbox"
+                      checked={payment.includeInTransferPlan}
+                      onChange={() => handleTogglePaymentInPlan(payment)}
+                      disabled={isViewOnly || selectionBusyId === payment.id}
+                      className="h-4 w-4 rounded border-muted"
+                    />
+                    <span className="sr-only">
+                      {payment.includeInTransferPlan ? 'In Plan' : 'Not in Plan'}
+                    </span>
+                  </label>
+
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-semibold text-main">
+                      {payment.name}
                     </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <span className="inline-flex min-w-0 items-center justify-center rounded-xl bg-accent-soft px-2.5 py-2 text-[12px] font-medium text-accent">
-                        {payment.responsiblePerson}
+                    <div className="mt-0.5 flex flex-wrap gap-x-1.5 gap-y-0.5 text-[10px] text-subtle">
+                      <span>{formatDueDate(payment.dueDate)}</span>
+                      <span>·</span>
+                      <span>{payment.responsiblePerson}</span>
+                      {category ? (
+                        <>
+                          <span>·</span>
+                          <span>{category}</span>
+                        </>
+                      ) : null}
+                      <span>·</span>
+                      <span className={account ? '' : 'text-danger'}>
+                        {account ? accountIdentityLabel(account) : 'Account missing'}
                       </span>
-
-                      {isPaymentPaid(payment) ? (
-                        <span
-                          title="Paid"
-                          className="inline-flex min-w-0 items-center justify-center rounded-xl bg-success-soft px-2.5 py-2 text-center text-[12px] font-medium text-success"
-                        >
-                          Paid
-                        </span>
-                      ) : (
-                        <span
-                          title="Unpaid"
-                          className="inline-flex min-w-0 items-center justify-center rounded-xl bg-warning-soft px-2.5 py-2 text-center text-[12px] font-medium text-warning"
-                        >
-                          Unpaid
-                        </span>
-                      )}
                     </div>
+                  </div>
 
-                    {payment.notes && (
-                      <div className="mt-3 text-[11px] leading-4 text-subtle break-words">
-                        {payment.notes}
-                      </div>
-                    )}
+                  <div className="col-start-2 flex items-center gap-2 sm:col-start-auto sm:justify-end">
+                    <span
+                      className={
+                        payment.status === 'paid'
+                          ? 'finance-status-positive rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide'
+                          : 'rounded-full border border-muted bg-surface-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted'
+                      }
+                    >
+                      {payment.status === 'paid' ? 'Paid' : 'Unpaid'}
+                    </span>
+                  </div>
 
-                    {!isViewOnly && (
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handlePaymentStatusAction(payment)}
-                          disabled={undoingPaymentId === payment.id}
-                          title={isPaymentPaid(payment) ? 'Undo recorded payment' : 'Record payment'}
-                          className={
-                            isPaymentPaid(payment)
-                              ? 'inline-flex items-center justify-center gap-1 rounded-xl bg-surface-muted px-2.5 py-2 text-[12px] font-semibold text-main disabled:opacity-50'
-                              : 'inline-flex items-center justify-center gap-1 rounded-xl bg-success-soft px-2.5 py-2 text-[12px] font-semibold text-success disabled:opacity-50'
-                          }
-                        >
-                          {isPaymentPaid(payment) && <RotateCcw className="h-3.5 w-3.5" />}
-                          {undoingPaymentId === payment.id
-                            ? 'Undoing…'
-                            : isPaymentPaid(payment)
-                              ? 'Undo payment'
-                              : 'Record paid'}
-                        </button>
-                        <button
-                          onClick={() => setEditingPayment(payment)}
-                          className="rounded-xl bg-surface-muted px-3 py-2 text-[12px] font-medium text-muted"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => onDeletePlannedPayment(payment.id)}
-                          className="rounded-xl bg-danger-soft px-3 py-2 text-[12px] font-medium text-danger"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                );
-              })
-            )}
+                  <div className="mv-private-value col-start-2 text-left font-mono text-xs font-bold tabular-nums text-main sm:col-start-auto sm:text-right">
+                    {formatPence(payment.amountPence)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
+        )}
+      </section>
 
-          {/* Desktop table */}
-          <div className="hidden lg:block">
-<table className="bg-table text-main border-muted w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-muted bg-surface-muted text-[12px] font-normal text-muted">
-                  <th className="pt-3 pb-4 px-4 w-12 text-center whitespace-nowrap">In Plan?</th>
-                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Payment / Bill</th>
-                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Payment Account</th>
-                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Responsible</th>
-                  <th className="pt-3 pb-4 px-4 whitespace-nowrap">Due Date</th>
-                  <th className="pt-3 pb-4 px-4 text-right whitespace-nowrap">Amount</th>
-                  <th className="pt-3 pb-4 px-4 text-center whitespace-nowrap">Status</th>
-                  {!isViewOnly && <th className="pt-3 pb-4 px-4 text-right whitespace-nowrap">Actions</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-muted">
-                {monthPayments.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted text-subtle italic">
-                      No scheduled payments recorded for {formatMonthLabel(selectedMonth)}.
-                    </td>
-                  </tr>
-                ) : (
-                  monthPayments.map((payment) => {
-                    const acc = accounts.find((a) => a.id === payment.accountId);
-                    return (
-                      <tr
-                        key={payment.id}
-                        className={`hover:bg-surface-muted transition-colors ${
-                          payment.includeInTransferPlan ? 'bg-surface' : 'bg-surface-muted opacity-70'
-                        }`}
-                      >
-                        {/* Checkbox for Plan Inclusion */}
-                        <td className="py-2.5 px-4 text-center">
-                          <input
-                            type="checkbox"
-                            checked={payment.includeInTransferPlan}
-                            onChange={() => handleTogglePaymentInPlan(payment)}
-                            disabled={isViewOnly}
-                            title="In plan"
-                            className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
-                          />
-                        </td>
-
-                        {/* Name & Notes */}
-                        <td className="py-2.5 px-4">
-                          <div className="font-semibold text-main">{payment.name}</div>
-                          {payment.notes && (
-                            <div className="text-2xs text-muted text-subtle mt-0.5 truncate max-w-xs">
-                              {payment.notes}
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Payment Account */}
-                        <td className="py-2.5 px-4">
-                          <span className="font-medium text-main">
-                            {acc ? accountIdentityLabel(acc) : payment.accountId}
-                          </span>
-                        </td>
-
-                        {/* Responsible Person */}
-                        <td className="py-2.5 px-4">
-                          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-accent-soft text-accent">
-                            {payment.responsiblePerson}
-                          </span>
-                        </td>
-
-                        {/* Due Date */}
-                        <td className="py-2.5 px-4 text-muted">
-                          {payment.dueDate || 'Flexible'}
-                        </td>
-
-                        {/* Amount in Exact Pence */}
-                        <td className="py-2.5 px-4 text-right font-bold text-main">
-                          {formatPence(payment.amountPence)}
-                        </td>
-
-                        {/* Paid / Unpaid Status Toggle */}
-                        <td className="py-2.5 px-4 text-center">
-                          {isPaymentPaid(payment) ? (
-                            <span
-                              title="Paid"
-                              className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-success-soft text-success"
-                            >
-                              Paid
-                            </span>
-                          ) : (
-                            <span
-                              title="Unpaid"
-                              className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-warning-soft text-warning"
-                            >
-                              Unpaid
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Edit / Delete Actions */}
-                        {!isViewOnly && (
-                          <td className="py-2.5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handlePaymentStatusAction(payment)}
-                                disabled={undoingPaymentId === payment.id}
-                                className={
-                                  isPaymentPaid(payment)
-                                    ? 'inline-flex items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2 py-1 text-[11px] font-semibold text-main hover:border-strong disabled:opacity-50'
-                                    : 'inline-flex items-center gap-1 rounded-lg bg-success-soft px-2 py-1 text-[11px] font-semibold text-success disabled:opacity-50'
-                                }
-                                title={isPaymentPaid(payment) ? 'Undo recorded payment' : 'Record payment'}
-                              >
-                                {isPaymentPaid(payment) && <RotateCcw className="w-3 h-3" />}
-                                {undoingPaymentId === payment.id
-                                  ? 'Undoing…'
-                                  : isPaymentPaid(payment)
-                                    ? 'Undo payment'
-                                    : 'Record paid'}
-                              </button>
-                              <button
-                                onClick={() => setEditingPayment(payment)}
-                                className="p-1 rounded text-muted text-subtle hover:text-muted hover:bg-surface-muted transition-colors"
-                                title="Edit"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => onDeletePlannedPayment(payment.id)}
-                                className="p-1 rounded text-muted text-subtle hover:text-danger hover:bg-danger-soft transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Execute Transfer Modal */}
-      {fundingAccountToTransfer && (
+      {fundingModel && (
         <ExecuteTransferModal
-          fundingRequirement={fundingAccountToTransfer}
+          fundingRequirement={fundingModel.requirement}
           availableSourceAccounts={accounts}
           members={members}
           reservedPlanPenceByAccountId={reservedPlanPenceByAccountId}
-          onClose={() => setFundingAccountToTransfer(null)}
+          onClose={() => setFundingModel(null)}
           onExecute={async (payload) => {
             await onExecuteTransfer({
               ...payload,
@@ -1282,28 +962,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           payment={markingPayment}
           accounts={accounts}
           onClose={() => setMarkingPayment(null)}
-          onConfirm={(payload) => onMarkPaymentPaid(markingPayment.id, payload)}
-        />
-      )}
-
-      {/* Planned Payment Modal (Add or Edit) */}
-      {(isAddingPayment || editingPayment) && (
-        <PlannedPaymentModal
-          payment={editingPayment}
-          accounts={accounts}
-          categories={categories}
-          members={members}
-          activeMonth={selectedMonth}
-          onClose={() => {
-            setIsAddingPayment(false);
-            setEditingPayment(null);
-          }}
-          onSave={async (data) => {
-            if (editingPayment) {
-              await onUpdatePlannedPayment(editingPayment.id, data);
-            } else {
-              await onCreatePlannedPayment(data);
-            }
+          onConfirm={async (payload) => {
+            await onMarkPaymentPaid(markingPayment.id, payload);
           }}
         />
       )}

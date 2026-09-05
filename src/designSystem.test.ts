@@ -81,29 +81,42 @@ describe('semantic design system enforcement', () => {
       "label: 'Fixed Bills',\n      value: surplusCalculation.fixedBillsUnpaidPence"
     );
 
-    // Plan roster: preserve the full former-glory interaction model.
-    // Bill inclusion and status stay independent, and explicit Edit/Delete
-    // controls remain visible instead of being collapsed into icon-only rows.
+    // Transfer Plan V2 is a selection + funding workflow, not a second bill
+    // editor. Bulk inclusion remains fast, while bill facts stay read-only.
     expect(plan).toContain('Select Unpaid');
     expect(plan).toContain('Select Paid');
     expect(plan).toContain('Select All');
     expect(plan).toContain('Deselect All');
-    expect(plan).toContain('Edit');
-    expect(plan).toContain('Delete');
-    expect(plan).not.toContain('mv-plan-bill-row');
+    expect(plan).toContain('Selection only');
+    expect(plan).toContain('Bill details are read-only here');
+    expect(plan).not.toContain('<PlannedPaymentModal');
+    expect(plan).not.toContain('onCreatePlannedPayment');
+    expect(plan).not.toContain('onDeletePlannedPayment');
+    expect(plan).not.toContain('editingPayment');
+    expect(plan).not.toContain('isAddingPayment');
+
+    // Lifecycle states remain explicit and funding evidence is derived through
+    // the clean view-model layer rather than ad-hoc component flags.
     expect(plan).toContain('Funding received');
     expect(plan).toContain('Undo Funding');
     expect(plan).toContain('Paid / Complete');
-    expect(plan).toContain('completedAccountRequirements');
     expect(plan).not.toContain('Accounts Covered / Funded');
     expect(plan).toContain('Funded by Transfer');
     expect(plan).toContain('Covered by Existing Balance');
-    expect(plan).toContain('No Transfer Plan funding transfer was recorded, so there is nothing to undo.');
-    expect(plan).toContain('Needs funds');
+    expect(plan).toContain('Needs Funding');
     expect(plan).toContain('Paid');
     expect(plan).toContain('Unpaid');
-    expect(plan).toContain('selectedPlanTotalPence');
-    expect(plan).toContain('getLatestTransferPlanFundingByDestination');
+    expect(plan).toContain('buildTransferPlanAccountModels');
+    expect(plan).toContain('groupTransferPlanAccountModels');
+
+    // V2 must remain inside the same application-wide visual language used by
+    // Dashboard, Accounts and Activity rather than introducing tab-only skin.
+    expect(plan).toContain('finance-workspace');
+    expect(plan).toContain('finance-panel');
+    expect(plan).toContain('finance-summary-card');
+    expect(plan).toContain('mv-card');
+    expect(plan).toContain('finance-semantic-positive');
+
     expect(fundingHistory).toContain('transferPlanMonth');
     expect(fundingHistory).toContain('Transfer Plan:');
     expect(fundingHistory).toContain('legacy_incoming');
