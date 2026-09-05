@@ -3,6 +3,8 @@ import { X, AlertCircle, Plus, Trash2, Split } from 'lucide-react';
 import { Transaction, Account, Category, Payer, TransactionType, TransactionSplit, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
+import { accountOptionLabel } from '../utils/accountDisplay';
+import { localDateInputValue } from '../utils/dateInput';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -27,12 +29,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 }) => {
   const [description, setDescription] = useState('');
   const [amountStr, setAmountStr] = useState('');
-  const [type, setType] = useState<TransactionType>('expense');
+  const [type, setType] = useState<TransactionType | ''>('');
   const [categoryId, setCategoryId] = useState('');
   const [accountId, setAccountId] = useState('');
   const [targetAccountId, setTargetAccountId] = useState('');
-  const [payer, setPayer] = useState<Payer>('Joint');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [payer, setPayer] = useState<Payer | ''>('');
+  const [date, setDate] = useState(localDateInputValue());
   const [notes, setNotes] = useState('');
   const [isTransfer, setIsTransfer] = useState(false);
   const [isRepayment, setIsRepayment] = useState(false);
@@ -88,12 +90,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     } else {
       setDescription('');
       setAmountStr('');
-      setType('expense');
-      setCategoryId(categories[0]?.id || '');
-      setAccountId(accounts[0]?.id || '');
-      setTargetAccountId(accounts[1]?.id || '');
-      setPayer('Joint');
-      setDate(new Date().toISOString().split('T')[0]);
+      setType('');
+      setCategoryId('');
+      setAccountId('');
+      setTargetAccountId('');
+      setPayer('');
+      setDate(localDateInputValue());
       setNotes('');
       setIsTransfer(false);
       setIsRepayment(false);
@@ -105,7 +107,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setError(null);
   }, [initialTransaction, isOpen, accounts, categories]);
 
-  const personOptions = householdPersonOptions(members, [payer, initialTransaction?.payer]);
+  const personOptions = householdPersonOptions(
+    members,
+    [payer, initialTransaction?.payer].filter(
+      (value): value is Payer => Boolean(value)
+    )
+  );
 
   if (!isOpen) return null;
 
@@ -134,8 +141,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   };
 
   const handleAddSplitRow = () => {
-    const defaultCat = categories[0]?.id || '';
-    setSplits((prev) => [...prev, { categoryId: defaultCat, amountStr: '', notes: '' }]);
+    setSplits((prev) => [...prev, { categoryId: '', amountStr: '', notes: '' }]);
   };
 
   const handleRemoveSplitRow = (idx: number) => {
@@ -156,6 +162,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     e.preventDefault();
     setError(null);
 
+    if (!type) {
+      setError('Choose the transaction type.');
+      return;
+    }
+
     const pence = parseToPence(amountStr);
     if (pence <= 0) {
       setError('Please enter a valid amount greater than £0.00');
@@ -168,7 +179,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
 
     if (!accountId) {
-      setError('Please select an account');
+      setError(isTransfer ? 'Choose the source account.' : 'Choose the account.');
+      return;
+    }
+
+    if (!isTransfer && !payer) {
+      setError(type === 'income' || type === 'refund' ? 'Choose who received it.' : 'Choose who paid it.');
+      return;
+    }
+
+    if (!isTransfer && !isSplitEnabled && !categoryId) {
+      setError('Choose a category.');
       return;
     }
 
@@ -218,15 +239,20 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       finalSplits = formattedSplits;
     }
 
+    const sourceAccount = accounts.find((account) => account.id === accountId);
+    const resolvedPayer: Payer = isTransfer
+      ? sourceAccount?.ownerPerson || 'Joint'
+      : (payer as Payer);
+
     try {
       await onSave({
         description: description.trim(),
         amountPence: pence,
-        type,
-        categoryId: categoryId || categories[0]?.id,
+        type: type as TransactionType,
+        categoryId: isTransfer ? undefined : categoryId || undefined,
         accountId,
         targetAccountId: isTransfer || isRepayment ? targetAccountId : undefined,
-        payer,
+        payer: resolvedPayer,
         date,
         notes: notes.trim(),
         isTransfer,
@@ -342,24 +368,31 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             />
           </div>
 
-          {/* Paid by household member */}
-          <div>
-            <label className="block text-xs font-semibold text-muted mb-1.5">
-              Paid by
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {personOptions.map((person) => (
-                <button
-                  type="button"
-                  key={person}
-                  onClick={() => setPayer(person)}
-                  className={`mv-transaction-selector-pill ${payer === person ? 'is-active' : ''}`}
-                >
-                  {person}
-                </button>
-              ))}
+          {/* Person is a deliberate fact for income/expense/refund. Transfers derive owner from source account. */}
+          {!isTransfer && (
+            <div>
+              <label className="block text-xs font-semibold text-muted mb-1.5">
+                {type === 'income' || type === 'refund' ? 'Received by' : 'Paid by'}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {personOptions.map((person) => (
+                  <button
+                    type="button"
+                    key={person}
+                    onClick={() => setPayer(person)}
+                    className={`mv-transaction-selector-pill ${payer === person ? 'is-active' : ''}`}
+                  >
+                    {person}
+                  </button>
+                ))}
+              </div>
+              {!payer && (
+                <div className="mt-1 text-[10px] text-subtle">
+                  Select a household member.
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           <div className="mv-transaction-dynamic">
           {/* Account Selection */}
@@ -372,10 +405,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
                 className="mv-transaction-control w-full"
+                required
               >
+                <option value="">
+                  {isTransfer ? 'Select source account' : 'Select account'}
+                </option>
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
-                    {acc.name} ({formatPence(acc.currentBalancePence)})
+                    {accountOptionLabel(acc)}
                   </option>
                 ))}
               </select>
@@ -396,7 +433,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     .filter((a) => a.id !== accountId)
                     .map((acc) => (
                       <option key={acc.id} value={acc.id}>
-                        {acc.name} ({formatPence(acc.currentBalancePence)})
+                        {accountOptionLabel(acc)}
                       </option>
                     ))}
                 </select>
@@ -412,7 +449,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="mv-transaction-control w-full"
+                  required
                 >
+                  <option value="">Select category</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name} ({cat.group})
@@ -468,7 +507,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         value={splitRow.categoryId}
                         onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)}
                         className="mv-transaction-control flex-1"
+                        required
                       >
+                        <option value="">Select category</option>
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name}
