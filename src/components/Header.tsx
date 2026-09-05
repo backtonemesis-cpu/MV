@@ -41,13 +41,13 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-30 bg-surface backdrop-blur border-b border-muted transition-colors">
       <div className="mv-shell-boundary mx-auto w-full max-w-[1200px] px-4">
         <div className="flex h-[44px] items-center justify-between gap-2.5">
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="mv-header-brand flex min-w-0 items-center gap-2.5">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-[12px] font-bold text-on-accent">
               MV
             </div>
-            <div className="min-w-0">
+            <div className="mv-header-brand-copy min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[14px] font-semibold tracking-tight text-main">
+                <span className="mv-header-brand-title text-[14px] font-semibold tracking-tight text-main">
                   MV Finance
                 </span>
                 <span
@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="mv-header-actions flex items-center gap-1.5 sm:gap-2">
             <button
               id="header-backup-btn"
               onClick={onOpenBackupModal}

@@ -201,7 +201,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="bg-app space-y-6 pb-16 text-main">
       {/* Active period */}
-      <section className="mv-card rounded-2xl border border-muted bg-surface p-4 shadow-sm">
+      <section className="mv-card mv-dashboard-period-card rounded-2xl border border-muted bg-surface p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
@@ -227,7 +227,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* Household surplus */}
-      <section className="relative overflow-hidden rounded-[24px] border border-muted bg-surface p-6 shadow-lg sm:p-8">
+      <section className="mv-dashboard-surplus-card relative overflow-hidden rounded-[24px] border border-muted bg-surface p-6 shadow-lg sm:p-8">
         <div className="absolute inset-x-0 top-0 h-[2px] bg-accent" />
 
         <div className="relative">
@@ -256,7 +256,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* Primary actions */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="mv-dashboard-actions grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <button
           id="dashboard-open-transfer-plan-btn"
           onClick={() => onNavigateToTab('transfer_plan')}
@@ -297,7 +297,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </section>
 
       {/* Financial metrics */}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section className="mv-dashboard-metrics grid grid-cols-2 gap-3 lg:grid-cols-4">
         {metricCards.map((metric) => {
           const Icon = metric.icon;
 
