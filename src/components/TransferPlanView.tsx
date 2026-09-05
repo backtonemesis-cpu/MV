@@ -150,7 +150,12 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
 
   const latestFundingBatchByDestination = useMemo(
-    () => getLatestTransferPlanFundingByDestination(transactions, selectedMonth),
+    () =>
+      getLatestTransferPlanFundingByDestination(
+        transactions,
+        selectedMonth,
+        true
+      ),
     [transactions, selectedMonth]
   );
 
@@ -166,8 +171,13 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       .map((candidate) => `${candidate.name} (${candidate.ownerPerson || candidate.type})`)
       .join(' + ');
 
+    const fundingLabel =
+      funding.kind === 'legacy_incoming'
+        ? 'legacy incoming funding transfer'
+        : 'Transfer Plan funding';
+
     const confirmed = window.confirm(
-      `Undo the latest ${formatPence(funding.totalPence)} Transfer Plan funding for ${account.name}${sourceNames ? ` from ${sourceNames}` : ''}? The money will be returned to the original funding account(s).`
+      `Undo the latest ${formatPence(funding.totalPence)} ${fundingLabel} for ${account.name}${sourceNames ? ` from ${sourceNames}` : ''}? The money will be returned to the original funding account(s).`
     );
     if (!confirmed) return;
 
@@ -616,7 +626,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     <div className="shrink-0 flex items-center gap-2">
                       <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-success-soft text-success">
                         {latestFundingBatchByDestination.has(req.account.id)
-                          ? 'Funded'
+                          ? latestFundingBatchByDestination.get(req.account.id)!.kind ===
+                            'legacy_incoming'
+                            ? 'Funded · Legacy'
+                            : 'Funded'
                           : req.unpaidPayments.length === 0
                             ? 'Paid / Complete'
                             : 'Covered'}
@@ -684,7 +697,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                     {latestFundingBatchByDestination.has(req.account.id) ? (
                       <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5">
                         <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
-                          Funding received
+                          {latestFundingBatchByDestination.get(req.account.id)!.kind ===
+                          'legacy_incoming'
+                            ? 'Legacy funding received'
+                            : 'Funding received'}
                         </div>
                         <div className="mt-1.5 divide-y divide-muted">
                           {latestFundingBatchByDestination
