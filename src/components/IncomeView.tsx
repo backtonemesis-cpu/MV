@@ -667,7 +667,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Category</label>
+                  <label className="mb-1 block text-xs font-semibold text-muted">Category (optional)</label>
                   <select
                     value={categoryId}
                     onChange={(event) => setCategoryId(event.target.value)}
