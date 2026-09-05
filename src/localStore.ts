@@ -1344,10 +1344,9 @@ export function bulkToggleLocalPlannedPayments(
       state.plannedPayments = state.plannedPayments.map((payment) => {
         if (params.month && payment.month !== params.month) return payment;
         if (ids && !ids.has(payment.id)) return payment;
-        const isPaid = isPlannedPaymentEffectivelyPaid(
-          payment,
-          state.transactions
-        );
+        // Transfer Plan bulk selection follows explicit Plan status only.
+        // Linked Activity evidence must not silently change Plan inclusion.
+        const isPaid = payment.status === 'paid';
         if (params.onlyUnpaid && isPaid) return payment;
 
         if (params.status) {
