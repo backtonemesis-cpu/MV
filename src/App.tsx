@@ -577,11 +577,14 @@ export default function App() {
     }
   };
 
-  const handleUndoTransferPlanFunding = async (destinationAccountId: string) => {
+  const handleUndoTransferPlanFunding = async (
+    destinationAccountId: string,
+    month: string
+  ) => {
     if (!household) return;
     try {
       setIsSubmitting(true);
-      await undoTransferPlanFunding(destinationAccountId, household.version);
+      await undoTransferPlanFunding(destinationAccountId, month, household.version);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
