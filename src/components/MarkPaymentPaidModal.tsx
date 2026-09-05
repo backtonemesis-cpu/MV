@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, X } from 'lucide-react';
 import type { Account, PlannedPayment } from '../types';
-import { formatPenceToPoundsInput, parseToPence } from '../utils/currency';
+import { formatPence, formatPenceToPoundsInput, parseToPence } from '../utils/currency';
+import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 
 interface MarkPaymentPaidModalProps {
   payment: PlannedPayment;
@@ -22,14 +23,15 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
 }) => {
   const amountRef = useRef<HTMLInputElement>(null);
   const [amount, setAmount] = useState(
-    formatPenceToPoundsInput(payment.actualAmountPence ?? payment.amountPence)
+    payment.actualAmountPence !== undefined
+      ? formatPenceToPoundsInput(payment.actualAmountPence)
+      : ''
   );
-  const [date, setDate] = useState(
-    payment.actualDate || payment.dueDate || new Date().toISOString().slice(0, 10)
-  );
-  const [accountId, setAccountId] = useState(payment.accountId);
+  const [date, setDate] = useState(payment.actualDate || '');
+  const [accountId, setAccountId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const plannedAccount = accounts.find((account) => account.id === payment.accountId);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => amountRef.current?.focus());
@@ -83,7 +85,7 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
       <section className="mv-modal-card" role="dialog" aria-modal="true" aria-label="Mark bill paid">
         <div className="mv-modal-header">
           <div>
-            <h3 className="text-base font-bold text-main">Mark Paid</h3>
+            <h3 className="text-base font-bold text-main">Record Payment</h3>
             <p className="mt-0.5 text-[11px] text-subtle">{payment.name}</p>
           </div>
           <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close">
@@ -97,6 +99,11 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
               {error}
             </div>
           )}
+
+          <div className="rounded-lg border border-muted bg-surface-muted px-3 py-2 text-[11px] text-muted">
+            Planned {formatPence(payment.amountPence)}
+            {plannedAccount ? ` · ${accountIdentityLabel(plannedAccount)}` : ''}
+          </div>
 
           <div className="mv-modal-grid-2">
             <div>
@@ -130,11 +137,12 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
               className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-xs text-main"
               required
             >
+              <option value="">Select payment account</option>
               {accounts
                 .filter((account) => account.isActive !== false)
                 .map((account) => (
                   <option key={account.id} value={account.id}>
-                    {account.name} · {account.ownerPerson || account.type}
+                    {accountOptionLabel(account)}
                   </option>
                 ))}
             </select>
