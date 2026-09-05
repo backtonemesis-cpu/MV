@@ -646,3 +646,109 @@ body,
     line-height: var(--mv-ds-leading-heading) !important;
   }
 }
+
+
+/* ==========================================================================
+   DESKTOP POLISH PASS — READABLE, COMPACT, INDUSTRY-STANDARD
+   Refines the now-correct 100% desktop scale: reduces oversized empty panels,
+   fixes the month control, and improves dashboard scanning without changing
+   the global type/spacing system or finance semantics.
+   ========================================================================== */
+
+.mv-dashboard-workspace > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-4) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-period-card {
+  padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-period-card > div {
+  min-height: var(--mv-ds-control-large);
+}
+
+.mv-dashboard-workspace .mv-dashboard-surplus-card {
+  padding: var(--mv-ds-space-6) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-surplus-card .mt-3 {
+  margin-top: var(--mv-ds-space-2) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-surplus-card .mt-4 {
+  margin-top: var(--mv-ds-space-3) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-actions,
+.mv-dashboard-workspace .mv-dashboard-metrics {
+  gap: var(--mv-ds-space-4) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-actions > button {
+  min-height: var(--mv-ds-control-large) !important;
+  height: var(--mv-ds-control-large) !important;
+}
+
+.mv-dashboard-workspace .mv-dashboard-metric-card {
+  padding: var(--mv-ds-space-4) !important;
+}
+
+/* Month picker: use one deliberate icon only. The wrapper owns the click and
+   opens the native picker, so hiding Chrome's second calendar glyph prevents
+   the clipped/doubled icon seen in production. */
+.mv-density-root .mv-month-picker {
+  min-width: 12rem;
+  height: var(--mv-ds-control-large) !important;
+  border-radius: var(--mv-ds-radius-md) !important;
+}
+
+.mv-density-root .mv-month-picker-input {
+  width: 100%;
+  min-width: 0;
+  height: var(--mv-ds-control-large) !important;
+  min-height: var(--mv-ds-control-large) !important;
+  padding-left: var(--mv-ds-space-10) !important;
+  padding-right: var(--mv-ds-space-3) !important;
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root .mv-month-picker-input::-webkit-calendar-picker-indicator {
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mv-density-root .mv-month-picker-icon {
+  left: var(--mv-ds-space-3) !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  pointer-events: none;
+}
+
+/* Keep the desktop chrome visually balanced at the industry-standard 64px bar. */
+.mv-layout-pc .mv-header-brand {
+  min-width: 12rem;
+}
+
+.mv-layout-pc .mv-header-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 40rem) {
+  .mv-dashboard-workspace > :not([hidden]) ~ :not([hidden]) {
+    margin-top: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-dashboard-workspace .mv-dashboard-surplus-card {
+    padding: var(--mv-ds-space-4) !important;
+  }
+
+  .mv-density-root .mv-month-picker {
+    min-width: 0;
+    width: 100%;
+  }
+}

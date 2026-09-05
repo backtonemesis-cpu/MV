@@ -199,7 +199,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const activeAccounts = household.accounts.filter((account) => account.isActive !== false);
 
   return (
-    <div className="bg-app space-y-6 pb-16 text-main">
+    <div className="mv-dashboard-workspace bg-app space-y-6 pb-16 text-main">
       {/* Active period */}
       <section className="mv-card mv-dashboard-period-card rounded-2xl border border-muted bg-surface p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
