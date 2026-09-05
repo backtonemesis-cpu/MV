@@ -1770,7 +1770,7 @@ export function executeLocalTransferAllocations(
         }
         const reservedPlanPence = planMonthPayments
           ? calculateAccountFunding(source, planMonthPayments, state.transactions)
-              .totalSelectedPaymentsPence
+              .totalUnpaidSelectedPaymentsPence
           : 0;
         const safeToMovePence = Math.max(
           0,
@@ -1778,7 +1778,7 @@ export function executeLocalTransferAllocations(
         );
         if (safeToMovePence < allocation.amountPence) {
           throw new Error(
-            `${source.name} has only ${safeToMovePence} pence safe to move after its own selected bills.`
+            `${source.name} has only ${safeToMovePence} pence safe to move after its own selected unpaid bills.`
           );
         }
 
