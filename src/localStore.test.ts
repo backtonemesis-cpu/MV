@@ -526,7 +526,7 @@ describe('Penny-style local MV storage', () => {
     // Simulates an older funding transfer created before transferBatchId existed.
     createLocalTransaction(
       {
-        description: 'Fund Vesta current',
+        description: 'Transfer Plan: Fund Vesta current',
         amountPence: 100_00,
         type: 'transfer',
         categoryId: 'cat-transfer',
@@ -553,6 +553,146 @@ describe('Penny-style local MV storage', () => {
     expect(
       state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
     ).toBe(200_00);
+  });
+
+  it('does not let Transfer Plan Undo reverse an unrelated incoming transfer', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Ordinary Transfer Source',
+        type: 'current',
+        startingBalancePence: 150_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Ordinary Transfer Destination',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransfer(
+      {
+        sourceAccountId: source.account.id,
+        destinationAccountId: destination.account.id,
+        amountPence: 40_00,
+        description: 'Ordinary household transfer',
+        date: '2026-09-04',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(() =>
+      undoLatestLocalTransferPlanFunding(
+        destination.account.id,
+        state.version,
+        '2026-09'
+      )
+    ).toThrow('No Transfer Plan funding is available to undo');
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
+    ).toBe(110_00);
+    expect(
+      state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence
+    ).toBe(40_00);
+  });
+
+  it('scopes Undo Funding to the selected Transfer Plan month', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Month Scope Source',
+        type: 'savings',
+        startingBalancePence: 300_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Month Scope Destination',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 60_00,
+        allocations: [{ sourceAccountId: source.account.id, amountPence: 60_00 }],
+        description: 'Transfer Plan: Fund September',
+        date: '2026-09-04',
+        month: '2026-09',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 70_00,
+        allocations: [{ sourceAccountId: source.account.id, amountPence: 70_00 }],
+        description: 'Transfer Plan: Fund October',
+        date: '2026-10-04',
+        month: '2026-10',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    const septemberFunding = state.transactions.find(
+      (transaction) => transaction.description === 'Transfer Plan: Fund September'
+    );
+    const octoberFunding = state.transactions.find(
+      (transaction) => transaction.description === 'Transfer Plan: Fund October'
+    );
+    expect(septemberFunding?.metadata?.transferPlanMonth).toBe('2026-09');
+    expect(octoberFunding?.metadata?.transferPlanMonth).toBe('2026-10');
+
+    const beforeUndoVersion = state.version;
+    undoLatestLocalTransferPlanFunding(
+      destination.account.id,
+      beforeUndoVersion,
+      '2026-09'
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.transactions.some(
+        (transaction) => transaction.description === 'Transfer Plan: Fund September'
+      )
+    ).toBe(false);
+    expect(
+      state.transactions.some(
+        (transaction) => transaction.description === 'Transfer Plan: Fund October'
+      )
+    ).toBe(true);
+    expect(
+      state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
+    ).toBe(230_00);
+    expect(
+      state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence
+    ).toBe(70_00);
   });
 
   it('undoes the latest Transfer Plan funding batch and restores source and destination balances', () => {
