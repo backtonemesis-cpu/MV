@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Layers, X } from 'lucide-react';
 import { Account, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
+import { localDateInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
 
 interface MonthImportModalProps {
@@ -143,7 +144,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    const source = activeMonth || new Date().toISOString().slice(0, 7);
+    const source = activeMonth || localDateInputValue().slice(0, 7);
     setSourceMonth(source);
     setTargetMonth(nextMonth(source));
     setIncludeIncomes(true);
