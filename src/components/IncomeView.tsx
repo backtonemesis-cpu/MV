@@ -8,7 +8,6 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { JOINT_ACCOUNT_OWNER_ID } from '../types';
 import type {
   Account,
   Category,
@@ -20,7 +19,7 @@ import type {
 } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 import { householdPersonOptions } from '../utils/householdPeople';
-import { accountOptionLabel } from '../utils/accountDisplay';
+import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 import { MonthPicker } from './MonthPicker';
 
 interface IncomeViewProps {
@@ -444,14 +443,8 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                         (category) => category.id === (income.categoryId || linkedTx?.categoryId)
                       )?.name || 'Income';
                     const targetAccount = accounts.find((account) => account.id === income.accountId);
-                    const targetOwnerName = targetAccount
-                      ? targetAccount.ownerMemberId === JOINT_ACCOUNT_OWNER_ID
-                        ? 'Joint'
-                        : members.find((member) => member.id === targetAccount.ownerMemberId)?.name ||
-                          targetAccount.ownerPerson
-                      : undefined;
                     const accountName = targetAccount
-                      ? `${targetAccount.name}${targetOwnerName ? ` (${targetOwnerName})` : ''}`
+                      ? accountIdentityLabel(targetAccount)
                       : 'Account';
                     const statusLabel =
                       income.status === 'partial' ? 'Partial' : received ? 'Received' : 'Expected';
