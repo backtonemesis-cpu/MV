@@ -324,7 +324,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 Amount
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-sm font-bold text-muted text-subtle">
+                <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-subtle">
                   £
                 </span>
                 <input
@@ -518,7 +518,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       </select>
 
                       <div className="relative w-36">
-                        <span className="absolute left-2 top-1.5 text-xs text-muted text-subtle">£</span>
+                        <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">£</span>
                         <input
                           type="text"
                           placeholder="0.00"
