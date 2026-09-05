@@ -37,7 +37,7 @@ describe('Global finance UI consistency contract', () => {
     expect(localDateInputValue(local)).toBe('2026-09-05');
   });
 
-  it('keeps Edit Bill currency prefixes protected and payment reversal out of the status chip', () => {
+  it('keeps Edit Bill currency prefixes protected and makes paid status safely reversible', () => {
     const billModal = component('PlannedPaymentModal.tsx');
     const transactionModal = component('TransactionModal.tsx');
     const plan = component('TransferPlanView.tsx');
@@ -46,11 +46,10 @@ describe('Global finance UI consistency contract', () => {
     expect(billModal).toContain('mv-money-prefix');
     expect(transactionModal.match(/mv-money-input-with-prefix/g)?.length).toBe(2);
     expect(transactionModal.match(/mv-money-prefix/g)?.length).toBe(2);
-    expect(plan).toContain('Payment recorded in Activity');
     expect(plan).toContain('title="Record payment"');
-    expect(plan).not.toContain(
-      'This bill has a linked actual expense transaction. Edit or delete that Activity transaction to reverse the recorded payment.'
-    );
+    expect(plan).toContain('title="Undo recorded payment"');
+    expect(plan).toContain('onUndoPaymentPaid');
+    expect(plan).toContain('remove the linked Activity expense');
     expect(plan).toContain('Paid / Complete');
     expect(plan).toContain('completedAccountRequirements');
     expect(plan).toContain('All selected bills are recorded as paid.');
