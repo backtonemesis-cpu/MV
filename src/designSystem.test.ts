@@ -94,7 +94,10 @@ describe('semantic design system enforcement', () => {
     expect(plan).toContain('Funding received');
     expect(plan).toContain('Undo Funding');
     expect(plan).not.toContain('Paid / Complete');
-    expect(plan).toContain('Accounts Covered / Funded');
+    expect(plan).not.toContain('Accounts Covered / Funded');
+    expect(plan).toContain('Funded by Transfer');
+    expect(plan).toContain('Covered by Existing Balance');
+    expect(plan).toContain('No Transfer Plan funding transfer was recorded, so there is nothing to undo.');
     expect(plan).toContain('Needs funds');
     expect(plan).toContain('Paid');
     expect(plan).toContain('Unpaid');
