@@ -753,7 +753,7 @@ function recoverTransferPlanFundingFromSourceBackup(
       name: SOURCE_IMPORT_FUNDING_RECOVERY_ID,
       appliedAt: nowIso(),
       executionTimeMs: 0,
-      checksum: \`recovered-\${recoveredBatches}-batches-\${recoveredTransactions}-transactions\`,
+      checksum: `recovered-${recoveredBatches}-batches-${recoveredTransactions}-transactions`,
     },
   ];
   next.schemaStatus = schemaStatus;
@@ -770,7 +770,7 @@ function recoverTransferPlanFundingFromSourceBackup(
         entityId: 'source-import-recovery',
         summary:
           recoveredTransactions > 0
-            ? \`Recovered \${recoveredBatches} Transfer Plan funding batch\${recoveredBatches === 1 ? '' : 'es'} from the pre-import rollback copy.\`
+            ? `Recovered ${recoveredBatches} Transfer Plan funding batch${recoveredBatches === 1 ? '' : 'es'} from the pre-import rollback copy.`
             : 'No unambiguous Transfer Plan funding batch could be recovered from the pre-import rollback copy.',
         details: {
           recoveredBatches,
