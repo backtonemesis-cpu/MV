@@ -1252,3 +1252,466 @@ body,
     font-variant-numeric: tabular-nums lining-nums;
   }
 }
+
+
+/* ==========================================================================
+   FUNDING TRANSFER MODAL — INDUSTRY-STANDARD WORKFLOW SHELL
+   Fixed header + scrollable body + persistent footer. Keeps every funding
+   control reachable at 100% zoom on the HP OmniBook and on iPhone 13.
+   ========================================================================== */
+
+.mv-funding-modal-backdrop {
+  padding: var(--mv-ds-space-4) !important;
+}
+
+.mv-funding-modal {
+  display: flex;
+  width: min(48rem, calc(100vw - var(--mv-ds-space-8))) !important;
+  max-width: 48rem !important;
+  max-height: calc(100dvh - var(--mv-ds-space-8)) !important;
+  flex-direction: column;
+  overflow: hidden !important;
+  border-radius: var(--mv-ds-radius-xl) !important;
+}
+
+.mv-funding-modal-header {
+  flex: 0 0 auto;
+  min-height: var(--mv-ds-top-nav-height) !important;
+  padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+}
+
+.mv-funding-modal-header h3 {
+  font-size: var(--mv-ds-text-card) !important;
+  line-height: var(--mv-ds-leading-heading) !important;
+}
+
+.mv-funding-modal-kicker {
+  margin-top: var(--mv-ds-space-1);
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-modal .mv-modal-close {
+  width: var(--mv-ds-control-large) !important;
+  min-width: var(--mv-ds-control-large) !important;
+  height: var(--mv-ds-control-large) !important;
+  min-height: var(--mv-ds-control-large) !important;
+}
+
+.mv-funding-modal-form {
+  display: flex !important;
+  min-height: 0;
+  flex: 1 1 auto;
+  gap: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.mv-funding-modal-scroll {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--mv-ds-space-4);
+  scrollbar-gutter: stable;
+}
+
+.mv-funding-modal-scroll > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-4);
+}
+
+.mv-funding-modal-summary,
+.mv-funding-sources-section {
+  padding: var(--mv-ds-space-4) !important;
+  border-radius: var(--mv-ds-radius-lg) !important;
+}
+
+.mv-funding-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--mv-ds-space-4);
+}
+
+.mv-funding-summary-stat {
+  display: flex;
+  min-width: 8rem;
+  flex-direction: column;
+  gap: var(--mv-ds-space-1);
+  text-align: right;
+}
+
+.mv-funding-summary-stat strong {
+  font-size: var(--mv-ds-text-card);
+  line-height: var(--mv-ds-leading-heading);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.mv-funding-modal-error,
+.mv-funding-empty-state {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mv-ds-space-2);
+  padding: var(--mv-ds-space-3);
+  border-radius: var(--mv-ds-radius-md);
+  font-size: var(--mv-ds-text-compact);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-funding-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-4);
+}
+
+.mv-funding-section-title {
+  margin: 0;
+  font-size: var(--mv-ds-text-subhead) !important;
+  line-height: var(--mv-ds-leading-heading) !important;
+}
+
+.mv-funding-section-help {
+  margin-top: var(--mv-ds-space-1);
+  max-width: 42rem;
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-add-source,
+.mv-funding-remove-source,
+.mv-funding-cancel,
+.mv-funding-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mv-ds-space-2);
+  min-height: var(--mv-ds-control-large) !important;
+  height: var(--mv-ds-control-large) !important;
+  border-radius: var(--mv-ds-radius-md) !important;
+}
+
+.mv-funding-add-source {
+  flex: 0 0 auto;
+  padding-inline: var(--mv-ds-space-3) !important;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--mv-ds-text-compact) !important;
+  font-weight: 600;
+}
+
+.mv-funding-add-source:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.mv-funding-allocation-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mv-ds-space-3);
+  margin-top: var(--mv-ds-space-3);
+}
+
+.mv-funding-allocation-card {
+  padding: var(--mv-ds-space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--mv-ds-radius-md);
+  background: var(--surface);
+}
+
+.mv-funding-allocation-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 12rem) var(--mv-ds-control-large);
+  align-items: end;
+  gap: var(--mv-ds-space-3);
+}
+
+.mv-funding-modal-form label {
+  margin-bottom: var(--mv-ds-space-2) !important;
+  font-size: var(--mv-ds-text-compact) !important;
+  line-height: var(--mv-ds-leading-compact) !important;
+}
+
+.mv-funding-modal-form input:not([type="checkbox"]):not([type="radio"]),
+.mv-funding-modal-form select {
+  width: 100%;
+  height: var(--mv-ds-control-large) !important;
+  min-height: var(--mv-ds-control-large) !important;
+  padding: 0 var(--mv-ds-space-3) !important;
+  border-radius: var(--mv-ds-radius-md) !important;
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-funding-money-field {
+  position: relative;
+}
+
+.mv-funding-money-field .mv-money-prefix {
+  pointer-events: none;
+  position: absolute;
+  left: var(--mv-ds-space-3);
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-body);
+}
+
+.mv-funding-modal-form input.mv-money-input-with-prefix {
+  padding-left: var(--mv-ds-space-8) !important;
+  padding-right: var(--mv-ds-space-3) !important;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.mv-funding-allocation-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.mv-funding-remove-source {
+  width: var(--mv-ds-control-large) !important;
+  min-width: var(--mv-ds-control-large) !important;
+  padding: 0 !important;
+  color: var(--text-subtle);
+}
+
+.mv-funding-remove-source:hover {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.mv-funding-source-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--mv-ds-space-3);
+  margin-top: var(--mv-ds-space-3);
+  padding-top: var(--mv-ds-space-3);
+  border-top: 1px solid var(--border);
+}
+
+.mv-funding-source-route {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mv-ds-space-2);
+  font-size: var(--mv-ds-text-compact);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-funding-safe-balance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mv-ds-space-1);
+  text-align: right;
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-source-placeholder {
+  margin-top: var(--mv-ds-space-2);
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-allocation-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mv-ds-space-4);
+  margin-top: var(--mv-ds-space-4);
+  padding-top: var(--mv-ds-space-4);
+  border-top: 1px solid var(--border);
+}
+
+.mv-funding-summary-label {
+  display: block;
+  margin-bottom: var(--mv-ds-space-1);
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-destination {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--mv-ds-space-2);
+  font-size: var(--mv-ds-text-body);
+  line-height: var(--mv-ds-leading-body);
+}
+
+.mv-funding-allocation-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mv-ds-space-1);
+  text-align: right;
+  font-size: var(--mv-ds-text-compact);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-funding-details-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  gap: var(--mv-ds-space-4);
+}
+
+.mv-funding-optional {
+  color: var(--text-subtle);
+  font-weight: 400;
+}
+
+.mv-funding-modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mv-ds-space-4) !important;
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding:
+    var(--mv-ds-space-3)
+    var(--mv-ds-space-4)
+    calc(var(--mv-ds-space-3) + env(safe-area-inset-bottom))
+    !important;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.12);
+}
+
+.mv-funding-footer-status {
+  min-width: 0;
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-compact);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-funding-footer-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mv-ds-space-2);
+}
+
+.mv-funding-cancel,
+.mv-funding-submit {
+  padding-inline: var(--mv-ds-space-4) !important;
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+  font-weight: 600;
+}
+
+.mv-funding-cancel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.mv-funding-submit {
+  border: 1px solid transparent;
+  background: rgb(var(--accent-rgb));
+  color: var(--text-on-primary, #fff);
+}
+
+.mv-funding-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 40rem) {
+  .mv-funding-modal-backdrop {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .mv-funding-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: calc(100dvh - env(safe-area-inset-top)) !important;
+    margin: 0 !important;
+    border-radius: var(--mv-ds-radius-xl) var(--mv-ds-radius-xl) 0 0 !important;
+  }
+
+  .mv-funding-modal-header {
+    padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+  }
+
+  .mv-funding-modal-kicker {
+    display: none;
+  }
+
+  .mv-funding-modal-scroll {
+    padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+  }
+
+  .mv-funding-summary-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--mv-ds-space-3);
+  }
+
+  .mv-funding-summary-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .mv-funding-summary-stat {
+    min-width: 0;
+    text-align: left;
+  }
+
+  .mv-funding-section-header {
+    align-items: stretch;
+  }
+
+  .mv-funding-section-help {
+    display: none;
+  }
+
+  .mv-funding-add-source {
+    align-self: flex-start;
+  }
+
+  .mv-funding-allocation-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mv-ds-space-3);
+  }
+
+  .mv-funding-allocation-actions {
+    justify-content: flex-start;
+  }
+
+  .mv-funding-source-detail,
+  .mv-funding-allocation-summary,
+  .mv-funding-details-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mv-funding-safe-balance,
+  .mv-funding-allocation-status {
+    text-align: left;
+  }
+
+  .mv-funding-modal-actions {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-funding-footer-buttons {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .mv-funding-cancel,
+  .mv-funding-submit {
+    width: 100%;
+  }
+}
