@@ -131,6 +131,18 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     expect(state.accounts.find((a) => a.id === source.account.id)?.currentBalancePence).toBe(420_00);
     expect(state.accounts.find((a) => a.id === dest.account.id)?.currentBalancePence).toBe(100_00);
+
+    const activityTransfers = state.transactions.filter(
+      (tx) =>
+        tx.type === 'transfer' &&
+        tx.isTransfer &&
+        tx.accountId === source.account.id &&
+        tx.targetAccountId === dest.account.id
+    );
+    expect(activityTransfers).toHaveLength(1);
+    expect(activityTransfers[0].amountPence).toBe(80_00);
+    expect(activityTransfers[0].metadata?.transferPlanMonth).toBe('2026-09');
+    expect(activityTransfers[0].metadata?.transferBatchId).toBeTruthy();
   });
 
   it('4. Executes split-source transfer plan funding atomically across multiple accounts', () => {
@@ -201,6 +213,15 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     expect(state.accounts.find((a) => a.id === source.account.id)?.currentBalancePence).toBe(1000_00);
     expect(state.accounts.find((a) => a.id === dest.account.id)?.currentBalancePence).toBe(100_00);
+    expect(
+      state.transactions.filter(
+        (tx) =>
+          tx.type === 'transfer' &&
+          tx.isTransfer &&
+          tx.accountId === source.account.id &&
+          tx.targetAccountId === dest.account.id
+      )
+    ).toHaveLength(0);
   });
 
   it('6. Vesta Lloyds Undo does NOT touch Marius Lloyds (Strict Same-Name Separation)', () => {
