@@ -184,10 +184,6 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('.mv-layout-pc .finance-ledger-row');
     expect(css).toContain('.mv-layout-phone .finance-filter-grid');
     expect(css).toContain('PC READABILITY FLOOR — HP OMNIBOOK 7 AT 150% WINDOWS SCALE');
-    expect(css).toContain('DESKTOP POLISH PASS — READABLE, COMPACT, INDUSTRY-STANDARD');
-    expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-period-card');
-    expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-surplus-card');
-    expect(css).toContain('.mv-month-picker-input::-webkit-calendar-picker-indicator');
     expect(css).toContain('@media (min-width: 641px)');
     expect(css).toContain('.mv-layout-pc .text-xs { font-size: 14px !important; }');
     expect(css).toContain('.mv-layout-pc .text-base { font-size: 17px !important; }');
@@ -228,6 +224,10 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('height: var(--mv-ds-top-nav-height) !important');
     expect(css).toContain('@media (min-width: 80rem)');
     expect(css).toContain('max-width: var(--mv-ds-canvas-max) !important');
+    expect(css).toContain('DESKTOP POLISH PASS — READABLE, COMPACT, INDUSTRY-STANDARD');
+    expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-period-card');
+    expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-surplus-card');
+    expect(css).toContain('.mv-month-picker-input::-webkit-calendar-picker-indicator');
 
     expect(css).not.toMatch(/(?:margin|padding|gap)[^;]*:\s*[^;]*(?:5px|10px|15px|25px)/);
   });
