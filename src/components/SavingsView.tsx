@@ -102,6 +102,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     [accounts]
   );
 
+  const savingsAccountIds = useMemo(
+    () => new Set(savingsAccounts.map((account) => account.id)),
+    [savingsAccounts]
+  );
+
   // Authoritative savings position. Goals are allocations only; they do not define total savings.
   const savingsPosition = useMemo(
     () =>
@@ -118,6 +123,25 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const transferredFromSavingsPence = useMemo(
     () => calculateTransferredFromSavingsPence(accounts, transactions, selectedMonth),
     [accounts, transactions, selectedMonth]
+  );
+
+  const monthSavingsTxs = useMemo(
+    () =>
+      transactions.filter((tx) => {
+        if (
+          !tx.date.startsWith(selectedMonth) ||
+          tx.type !== 'transfer' ||
+          !tx.isTransfer ||
+          !tx.targetAccountId
+        ) {
+          return false;
+        }
+
+        const sourceIsSavings = savingsAccountIds.has(tx.accountId);
+        const targetIsSavings = savingsAccountIds.has(tx.targetAccountId);
+        return sourceIsSavings !== targetIsSavings;
+      }),
+    [transactions, selectedMonth, savingsAccountIds]
   );
 
   // Household savings goals are targets only. Progress is derived from all
