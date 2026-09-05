@@ -345,6 +345,32 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     }
   };
 
+  const renderCardPaymentAction = (payment: PlannedPayment) => {
+    if (isViewOnly) return null;
+
+    const isPaid = isPaymentPaid(payment);
+    return (
+      <button
+        type="button"
+        onClick={() => handlePaymentStatusAction(payment)}
+        disabled={undoingPaymentId === payment.id}
+        title={isPaid ? 'Undo recorded payment for this bill' : 'Record this bill as paid'}
+        className={
+          isPaid
+            ? 'inline-flex items-center justify-center gap-1 rounded-lg border border-muted bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-main transition hover:border-strong disabled:opacity-50'
+            : 'inline-flex items-center justify-center gap-1 rounded-lg bg-success-soft px-2.5 py-1.5 text-[11px] font-semibold text-success transition hover:opacity-80 disabled:opacity-50'
+        }
+      >
+        {isPaid && <RotateCcw className="h-3 w-3" />}
+        {undoingPaymentId === payment.id
+          ? 'Undoing…'
+          : isPaid
+            ? 'Undo payment'
+            : 'Record paid'}
+      </button>
+    );
+  };
+
   const renderReadyAccountCard = (req: AccountFundingRequirement) => (
     <article
                     key={req.account.id}
@@ -381,7 +407,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                               type="button"
                               onClick={() => handleUndoFunding(req.account)}
                               disabled={undoingFundingAccountId === req.account.id}
-                              title="Undo the latest incoming funding transfer and return the money to the original source account(s)"
+                              title="Undo all funding for this card and return the money to the original source account(s)"
                               className="inline-flex items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted transition hover:border-strong hover:text-main disabled:opacity-50"
                             >
                               <RotateCcw className="h-3.5 w-3.5" />
@@ -493,52 +519,96 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     
                       <div className="mt-5">
                         {req.selectedPayments.length > 0 ? (
-                          <div className="rounded-xl border border-muted bg-surface-muted px-4 py-2">
-                            <div className="divide-y divide-muted">
-                              {req.selectedPayments.map((p) => (
-                                <div key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <input
-                                      type="checkbox"
-                                      checked={p.includeInTransferPlan}
-                                      onChange={() => handleTogglePaymentInPlan(p)}
-                                      disabled={isViewOnly}
-                                      className="w-3.5 h-3.5 text-main rounded border-muted focus:ring-muted cursor-pointer"
-                                    />
-                                    <span className="font-semibold text-main truncate">
-                                      {p.name}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-2 shrink-0">
-                                    <span
-                                      className={
-                                        p.status === 'paid'
-                                          ? 'text-[10px] font-semibold uppercase tracking-wider text-success'
-                                          : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
-                                      }
-                                    >
-                                      {p.status === 'paid' ? 'Paid' : 'Unpaid'}
-                                    </span>
-                                    <span
-                                      className={
-                                        latestFundingBatchByDestination.has(req.account.id)
-                                          ? 'text-[10px] font-semibold uppercase tracking-wider text-accent'
-                                          : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
-                                      }
-                                    >
-                                      {latestFundingBatchByDestination.has(req.account.id)
-                                        ? 'Funded'
-                                        : p.status === 'paid'
-                                          ? 'Complete'
-                                          : 'Covered'}
-                                    </span>
-                                    <span className="font-bold text-main">
-                                      {formatPence(p.amountPence)}
-                                    </span>
-                                  </div>
+                          <div className="rounded-xl border border-muted bg-surface-muted overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => toggleAccountExpand(req.account.id)}
+                              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-surface"
+                              aria-expanded={Boolean(expandedAccountIds[req.account.id])}
+                            >
+                              <div className="min-w-0">
+                                <div className="text-[12px] font-semibold text-main">
+                                  Bills in this card
                                 </div>
-                              ))}
-                            </div>
+                                <div className="mt-0.5 text-[11px] text-subtle">
+                                  {req.selectedPayments.length} selected · {req.paidPayments.length} paid · {req.unpaidPayments.length} unpaid
+                                </div>
+                              </div>
+                              <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-muted">
+                                {expandedAccountIds[req.account.id] ? (
+                                  <>
+                                    Hide bills
+                                    <ChevronUp className="h-3.5 w-3.5" />
+                                  </>
+                                ) : (
+                                  <>
+                                    Show bills ({req.selectedPayments.length})
+                                    <ChevronDown className="h-3.5 w-3.5" />
+                                  </>
+                                )}
+                              </span>
+                            </button>
+
+                            {expandedAccountIds[req.account.id] && (
+                              <div className="divide-y divide-muted border-t border-muted bg-surface">
+                                {req.selectedPayments.map((p) => (
+                                  <div
+                                    key={p.id}
+                                    className="px-3.5 py-3"
+                                  >
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                      <div className="flex min-w-0 items-start gap-2.5">
+                                        <input
+                                          type="checkbox"
+                                          checked={p.includeInTransferPlan}
+                                          onChange={() => handleTogglePaymentInPlan(p)}
+                                          disabled={isViewOnly}
+                                          title="In plan"
+                                          className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-muted text-main focus:ring-muted cursor-pointer"
+                                        />
+                                        <div className="min-w-0">
+                                          <div className="font-semibold text-main text-xs">
+                                            {p.name}
+                                          </div>
+                                          <div className="mt-0.5 text-[11px] text-subtle">
+                                            Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                        <span
+                                          className={
+                                            p.status === 'paid'
+                                              ? 'text-[10px] font-semibold uppercase tracking-wider text-success'
+                                              : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
+                                          }
+                                        >
+                                          {p.status === 'paid' ? 'Paid' : 'Unpaid'}
+                                        </span>
+                                        <span
+                                          className={
+                                            latestFundingBatchByDestination.has(req.account.id)
+                                              ? 'text-[10px] font-semibold uppercase tracking-wider text-accent'
+                                              : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
+                                          }
+                                        >
+                                          {latestFundingBatchByDestination.has(req.account.id)
+                                            ? 'Funding recorded'
+                                            : p.status === 'paid'
+                                              ? 'Complete'
+                                              : 'Covered'}
+                                        </span>
+                                        <span className="mv-private-value font-bold text-main text-xs">
+                                          {formatPence(p.amountPence)}
+                                        </span>
+                                        {renderCardPaymentAction(p)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="rounded-xl border border-dashed border-muted bg-surface-muted px-4 py-4 text-center">
@@ -792,7 +862,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       {req.selectedPayments.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between px-3 py-2 bg-surface rounded-lg border border-muted text-xs hover:border-muted transition-colors"
+                          className="flex flex-col gap-2 px-3 py-2 bg-surface rounded-lg border border-muted text-xs hover:border-muted transition-colors sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="flex items-center gap-2.5">
                             <input
@@ -811,7 +881,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center justify-end gap-2">
                             <span
                               className={`px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider ${
                                 p.status === 'paid'
@@ -833,6 +903,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                             <span className="mv-private-value font-bold text-main">
                               {formatPence(p.amountPence)}
                             </span>
+                            {renderCardPaymentAction(p)}
                           </div>
                         </div>
                       ))}
