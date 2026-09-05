@@ -228,6 +228,12 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-period-card');
     expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-surplus-card');
     expect(css).toContain('.mv-month-picker-input::-webkit-calendar-picker-indicator');
+    expect(css).toContain('MOBILE POLISH PASS — IPHONE 13 + PHONE MODE');
+    expect(css).toContain('.mv-layout-phone .finance-filter-grid > label:first-child');
+    expect(css).toContain('grid-template-columns: repeat(2, minmax(0, 1fr)) !important');
+    expect(css).toContain('.mv-layout-phone .finance-ledger-row');
+    expect(css).toContain('.mv-layout-phone .mv-settings-tabs');
+    expect(css).toContain('.mv-layout-phone .mv-modal-card');
 
     expect(css).not.toMatch(/(?:margin|padding|gap)[^;]*:\s*[^;]*(?:5px|10px|15px|25px)/);
   });
