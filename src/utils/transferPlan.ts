@@ -36,8 +36,10 @@ export function calculateAccountFunding(
   const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
   const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
 
-  // Sort upcoming unpaid obligations chronologically by due date
-  const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
+  // Funding is driven by explicit Transfer Plan inclusion. Paid/Unpaid is a
+  // separate payment-status dimension and must not remove a selected bill from
+  // the funding requirement.
+  const sortedSelected = [...selectedPayments].sort((a, b) => {
     const dateA = a.dueDate || '9999-99-99';
     const dateB = b.dueDate || '9999-99-99';
     return dateA.localeCompare(dateB);
@@ -46,12 +48,13 @@ export function calculateAccountFunding(
   const currentBalancePence = account.currentBalancePence;
   const amountAvailablePence = Math.max(0, currentBalancePence);
 
-  // Distinguish obligations that are funded by current cash from those that are unfunded
+  // Distinguish selected bills covered by the current account balance from
+  // selected bills that still need funding.
   let runningBalance = amountAvailablePence;
   const fundedPayments: PlannedPayment[] = [];
   const unfundedPayments: PlannedPayment[] = [];
 
-  for (const p of sortedUnpaid) {
+  for (const p of sortedSelected) {
     if (runningBalance >= p.amountPence) {
       fundedPayments.push(p);
       runningBalance -= p.amountPence;
@@ -60,9 +63,17 @@ export function calculateAccountFunding(
     }
   }
 
-  // Exact Transfer Required formula: only unpaid commitments require future funding
-  const totalSelectedPaymentsPence = unpaidPayments.reduce((sum, p) => sum + p.amountPence, 0);
-  const transferRequiredPence = Math.max(0, totalSelectedPaymentsPence - currentBalancePence);
+  // Exact Transfer Required formula:
+  // selected In-Plan bills - current destination-account balance.
+  // Payment status remains visible separately and does not change this amount.
+  const totalSelectedPaymentsPence = selectedPayments.reduce(
+    (sum, p) => sum + p.amountPence,
+    0
+  );
+  const transferRequiredPence = Math.max(
+    0,
+    totalSelectedPaymentsPence - currentBalancePence
+  );
   const isFullyFunded = transferRequiredPence === 0;
 
   return {
@@ -112,8 +123,8 @@ export function generateTransferPlan(
     totalPaidSelectedPaymentsCount += funding.paidPayments.length;
 
     // Keep every destination account with at least one selected bill visible in
-    // the Account Funding section. Paid-only accounts require £0 new funding,
-    // but remaining visible preserves the completed/covered funding audit trail.
+    // the Account Funding section. Funding is based on In Plan selection; the
+    // Paid/Unpaid count remains a separate status metric.
     if (funding.selectedPayments.length === 0) continue;
 
     if (funding.transferRequiredPence > 0) {
@@ -124,7 +135,7 @@ export function generateTransferPlan(
     }
 
     totalSelectedPaymentsPence += funding.totalSelectedPaymentsPence;
-    totalSelectedPaymentsCount += funding.unpaidPayments.length;
+    totalSelectedPaymentsCount += funding.selectedPayments.length;
   }
 
   // Sort accounts needing funding by highest transfer required first
