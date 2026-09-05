@@ -336,6 +336,33 @@ export function calculateSavingsGoalAllocationIntegrity(
   });
 }
 
+export function calculateTransferredFromSavingsPence(
+  accounts: Account[],
+  transactions: Transaction[],
+  month: string
+): number {
+  const savingsAccountIds = new Set(
+    accounts.filter(isSavingsPositionAccount).map((account) => account.id)
+  );
+
+  return transactions
+    .filter(
+      (tx) =>
+        tx.date.startsWith(month) &&
+        tx.isTransfer &&
+        tx.type === 'transfer' &&
+        Boolean(tx.targetAccountId)
+    )
+    .reduce((sum, tx) => {
+      const sourceIsSavings = savingsAccountIds.has(tx.accountId);
+      const targetIsSavings = tx.targetAccountId
+        ? savingsAccountIds.has(tx.targetAccountId)
+        : false;
+
+      return sourceIsSavings && !targetIsSavings ? sum + tx.amountPence : sum;
+    }, 0);
+}
+
 export function calculateNetSavingsMovementPence(
   accounts: Account[],
   transactions: Transaction[],
