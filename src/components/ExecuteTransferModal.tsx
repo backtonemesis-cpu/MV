@@ -14,7 +14,7 @@ interface ExecuteTransferModalProps {
   fundingRequirement: AccountFundingRequirement;
   availableSourceAccounts: Account[];
   members: HouseholdMember[];
-  defaultSourceAccountId?: string;
+  reservedPlanPenceByAccountId: Record<string, number>;
   onClose: () => void;
   onExecute: (payload: {
     destinationAccountId: string;
@@ -38,19 +38,25 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   fundingRequirement,
   availableSourceAccounts,
   members: _members,
-  defaultSourceAccountId: _defaultSourceAccountId,
+  reservedPlanPenceByAccountId,
   onClose,
   onExecute,
 }) => {
   const targetAccount = fundingRequirement.account;
   const requiredPence = fundingRequirement.transferRequiredPence;
 
+  const safeToMovePence = (account: Account): number =>
+    Math.max(
+      0,
+      account.currentBalancePence - (reservedPlanPenceByAccountId[account.id] || 0)
+    );
+
   const eligibleSources = availableSourceAccounts.filter(
     (account) =>
       account.isActive !== false &&
       account.type !== 'credit' &&
       account.id !== targetAccount.id &&
-      account.currentBalancePence > 0
+      safeToMovePence(account) > 0
   );
 
   // A funding source is a deliberate user choice. Do not preselect one.
@@ -157,9 +163,12 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
         setError('One selected source account is no longer available.');
         return;
       }
-      if (allocation.amountPence > source.currentBalancePence) {
+      const safePence = safeToMovePence(source);
+      if (allocation.amountPence > safePence) {
         setError(
-          `${accountIdentityLabel(source)} does not have enough available balance.`
+          `${accountIdentityLabel(source)} has only ${formatPence(
+            safePence
+          )} safe to move after its own selected bills.`
         );
         return;
       }
@@ -286,7 +295,9 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                                 value={account.id}
                                 disabled={usedElsewhere}
                               >
-                                {accountOptionLabel(account)}
+                                {accountOptionLabel(account, { includeBalance: false })} · Safe {formatPence(
+                                  safeToMovePence(account)
+                                )}
                               </option>
                             );
                           })}
@@ -339,10 +350,18 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                           <span className="mx-1.5">→</span>
                           <span className="font-medium text-main">{accountIdentityLabel(targetAccount)}</span>
                         </div>
-                        <div className="mv-private-value shrink-0">
-                          Available {formatPence(source.currentBalancePence)}
-                          {allocationPence > source.currentBalancePence && (
-                            <span className="ml-2 text-danger font-medium">Exceeds balance</span>
+                        <div className="mv-private-value shrink-0 text-right">
+                          <div>
+                            Safe to move {formatPence(safeToMovePence(source))}
+                          </div>
+                          {(reservedPlanPenceByAccountId[source.id] || 0) > 0 && (
+                            <div className="text-subtle">
+                              Balance {formatPence(source.currentBalancePence)} · Reserved{' '}
+                              {formatPence(reservedPlanPenceByAccountId[source.id] || 0)}
+                            </div>
+                          )}
+                          {allocationPence > safeToMovePence(source) && (
+                            <span className="text-danger font-medium">Exceeds safe amount</span>
                           )}
                         </div>
                       </div>
