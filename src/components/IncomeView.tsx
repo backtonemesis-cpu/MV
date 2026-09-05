@@ -655,7 +655,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     className={inputClassName}
                     required
                   >
-                    <option value="">Select receiving account</option>
+                    <option value="">Select account</option>
                     {accounts
                       .filter((account) => account.isActive !== false)
                       .map((account) => (
@@ -673,7 +673,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     onChange={(event) => setCategoryId(event.target.value)}
                     className={inputClassName}
                   >
-                    <option value="">Select category (optional)</option>
+                    <option value="">Select category</option>
                     {incomeCategories.map((category) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
@@ -802,7 +802,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                   className={inputClassName}
                   required
                 >
-                  <option value="">Select receiving account</option>
+                  <option value="">Select account</option>
                   {accounts
                     .filter((account) => account.isActive !== false)
                     .map((account) => (
