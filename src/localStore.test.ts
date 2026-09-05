@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LOCAL_STORAGE_KEY,
+  SOURCE_IMPORT_BACKUP_STORAGE_KEY,
   createLocalAccount,
   createLocalBackupPackage,
   createLocalHouseholdMember,
@@ -554,6 +555,78 @@ describe('Penny-style local MV storage', () => {
     expect(
       state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
     ).toBe(200_00);
+  });
+
+  it('recovers a traceable Transfer Plan funding batch lost by a source-data migration', () => {
+    let state = loadLocalHousehold();
+    const pristineRaw = storage.getItem(LOCAL_STORAGE_KEY)!;
+    const santander = state.accounts.find(
+      (account) => account.name === 'Santander' && account.ownerPerson === 'Marius'
+    )!;
+    const chase = state.accounts.find(
+      (account) => account.name === 'Chase' && account.ownerPerson === 'Marius'
+    )!;
+
+    createLocalPlannedPayment(
+      {
+        name: 'Recovery Test Bill',
+        amountPence: 4_500_00,
+        month: '2026-09',
+        accountId: santander.id,
+        responsiblePerson: 'Marius',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: santander.id,
+        expectedTotalPence: 500_00,
+        allocations: [{ sourceAccountId: chase.id, amountPence: 500_00 }],
+        description: 'Transfer Plan: recovery test',
+        date: '2026-09-05',
+        month: '2026-09',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+    const fundedRaw = storage.getItem(LOCAL_STORAGE_KEY)!;
+    const fundedChaseBalance = state.accounts.find(
+      (account) => account.id === chase.id
+    )!.currentBalancePence;
+
+    storage.setItem(LOCAL_STORAGE_KEY, pristineRaw);
+    storage.setItem(SOURCE_IMPORT_BACKUP_STORAGE_KEY, fundedRaw);
+
+    state = loadLocalHousehold();
+    const recovered = state.transactions.filter(
+      (transaction) => transaction.metadata?.recoveredFromSourceImportBackup === true
+    );
+    expect(recovered).toHaveLength(1);
+    expect(recovered[0]).toEqual(
+      expect.objectContaining({
+        accountId: chase.id,
+        targetAccountId: santander.id,
+        amountPence: 500_00,
+      })
+    );
+    expect(
+      state.accounts.find((account) => account.id === santander.id)?.currentBalancePence
+    ).toBe(4_500_00);
+    expect(
+      state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
+    ).toBe(fundedChaseBalance);
+
+    undoLatestLocalTransferPlanFunding(santander.id, state.version, '2026-09');
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === santander.id)?.currentBalancePence
+    ).toBe(4_000_00);
+    expect(
+      state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
+    ).toBe(15_687_47);
   });
 
   it('prevents Transfer Plan funding from draining a source account below its own selected bills', () => {
