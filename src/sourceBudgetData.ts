@@ -9,7 +9,7 @@ import type {
   Transaction,
 } from './types';
 
-export const SOURCE_BUDGET_IMPORT_ID = 'source-budget-2026-09-v1';
+export const SOURCE_BUDGET_IMPORT_ID = 'source-budget-2026-09-v2';
 export const SOURCE_BUDGET_NAME = 'LIVE - 2026 September budget';
 export const SOURCE_BUDGET_MONTH = '2026-09';
 
@@ -31,7 +31,8 @@ const categoryIds = {
 
 const accountIds = {
   santander: 'src-account-santander',
-  lloyds: 'src-account-lloyds',
+  lloydsMarius: 'src-account-lloyds-marius',
+  lloydsVesta: 'src-account-lloyds-vesta',
   natwest: 'src-account-natwest',
   chase: 'src-account-chase',
   cash: 'src-account-cash',
@@ -95,11 +96,13 @@ const SOURCE_ACCOUNTS: Account[] = [
     currency: 'GBP',
     startingBalancePence: 1568747,
     currentBalancePence: 1568747,
+    ownerPerson: 'Marius',
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 1568747,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceRows: [19],
       sourceBalancePence: 1568747,
@@ -113,11 +116,13 @@ const SOURCE_ACCOUNTS: Account[] = [
     currency: 'GBP',
     startingBalancePence: 400000,
     currentBalancePence: 400000,
+    ownerPerson: 'Marius',
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 400000,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceRows: [20],
       sourceBalancePence: 400000,
@@ -131,11 +136,13 @@ const SOURCE_ACCOUNTS: Account[] = [
     currency: 'GBP',
     startingBalancePence: 0,
     currentBalancePence: 0,
+    ownerPerson: 'Joint',
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceRows: [21],
       sourceBalancePence: 0,
@@ -143,17 +150,37 @@ const SOURCE_ACCOUNTS: Account[] = [
     },
   },
   {
-    id: accountIds.lloyds,
+    id: accountIds.lloydsMarius,
     name: 'Lloyds',
     type: 'current',
     currency: 'GBP',
     startingBalancePence: 0,
     currentBalancePence: 0,
+    ownerPerson: 'Marius',
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
+      sourceSheet: 'Transactions',
+      sourceBalanceProvided: false,
+    },
+  },
+  {
+    id: accountIds.lloydsVesta,
+    name: 'Lloyds',
+    type: 'current',
+    currency: 'GBP',
+    startingBalancePence: 0,
+    currentBalancePence: 0,
+    ownerPerson: 'Vesta',
+    isActive: true,
+    reconciliationDate: '2026-09-30',
+    reconciledBalancePence: 0,
+    metadata: {
+      source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceBalanceProvided: false,
     },
@@ -165,11 +192,13 @@ const SOURCE_ACCOUNTS: Account[] = [
     currency: 'GBP',
     startingBalancePence: 0,
     currentBalancePence: 0,
+    ownerPerson: 'Vesta',
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceBalanceProvided: false,
     },
@@ -182,11 +211,13 @@ const SOURCE_ACCOUNTS: Account[] = [
     startingBalancePence: 0,
     currentBalancePence: 0,
     balanceOwedPence: 0,
+    ownerPerson: 'Marius',
     isActive: true,
     reconciliationDate: '2026-09-30',
     reconciledBalancePence: 0,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceBalanceProvided: false,
     },
@@ -208,17 +239,17 @@ type SourceExpense = {
 const SOURCE_EXPENSES: SourceExpense[] = [
   { row: 6, amountPence: 120000, description: 'Rent', categoryId: categoryIds.fixed, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.santander },
   { row: 7, amountPence: 21700, description: 'Electric', categoryId: categoryIds.fixed, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.santander },
-  { row: 8, amountPence: 16700, description: 'Council tax', categoryId: categoryIds.fixed, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloyds },
-  { row: 9, amountPence: 2000, description: 'Internet - Vodafone', categoryId: categoryIds.fixed, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloyds },
-  { row: 17, amountPence: 20000, description: 'Child Maintenance', categoryId: categoryIds.emma, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.lloyds },
+  { row: 8, amountPence: 16700, description: 'Council tax', categoryId: categoryIds.fixed, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloydsVesta },
+  { row: 9, amountPence: 2000, description: 'Internet - Vodafone', categoryId: categoryIds.fixed, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloydsVesta },
+  { row: 17, amountPence: 20000, description: 'Child Maintenance', categoryId: categoryIds.emma, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.lloydsMarius },
   { row: 24, amountPence: 1299, description: 'Netflix', categoryId: categoryIds.subscriptions, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.santander },
   { row: 25, amountPence: 801, description: 'Phone', categoryId: categoryIds.phones, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.santander },
-  { row: 26, amountPence: 795, description: 'Phone', categoryId: categoryIds.phones, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloyds },
+  { row: 26, amountPence: 795, description: 'Phone', categoryId: categoryIds.phones, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloydsVesta },
   { row: 27, amountPence: 1899, description: 'Google One', categoryId: categoryIds.subscriptions, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.creditCard },
   { row: 28, amountPence: 1999, description: 'ChatGPT', categoryId: categoryIds.subscriptions, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.creditCard },
-  { row: 29, amountPence: 1470, description: 'National Trust', categoryId: categoryIds.subscriptions, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.lloyds },
+  { row: 29, amountPence: 1470, description: 'National Trust', categoryId: categoryIds.subscriptions, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.lloydsMarius },
   { row: 36, amountPence: 300, description: 'Santander', categoryId: categoryIds.bankFees, expenseType: 'Fixed', paid: true, payer: 'Marius', sourcePaidBy: 'Marius', accountId: accountIds.santander },
-  { row: 37, amountPence: 500, description: 'Lloyds', categoryId: categoryIds.bankFees, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloyds },
+  { row: 37, amountPence: 500, description: 'Lloyds', categoryId: categoryIds.bankFees, expenseType: 'Fixed', paid: true, payer: 'Vesta', sourcePaidBy: 'Vesta', accountId: accountIds.lloydsVesta },
   { row: 44, amountPence: 100000, description: 'Food and shopping', categoryId: categoryIds.variableHousehold, expenseType: 'Variable', paid: true, payer: 'Joint', sourcePaidBy: 'Household', accountId: accountIds.creditCard },
 ];
 
@@ -236,11 +267,11 @@ type SourceIncome = {
 };
 
 const SOURCE_INCOMES: SourceIncome[] = [
-  { row: 5, date: '2026-09-01', sourceDateLabel: '1st', amountPence: 350303, description: 'Paycheck', categoryId: categoryIds.employment, incomeType: 'Employment', payer: 'Marius', sourceReceivedBy: 'Marius', accountId: accountIds.lloyds },
+  { row: 5, date: '2026-09-01', sourceDateLabel: '1st', amountPence: 350303, description: 'Paycheck', categoryId: categoryIds.employment, incomeType: 'Employment', payer: 'Marius', sourceReceivedBy: 'Marius', accountId: accountIds.lloydsMarius },
   { row: 6, date: '2026-09-05', sourceDateLabel: '5th', amountPence: 80000, description: 'U Credit', categoryId: categoryIds.benefits, incomeType: 'Benefits', payer: 'Vesta', sourceReceivedBy: 'Vesta', accountId: accountIds.natwest },
   { row: 7, date: '2026-09-11', sourceDateLabel: '11th', amountPence: 34979, description: 'Child M', categoryId: categoryIds.maintenanceIncome, incomeType: 'C Maintenance', payer: 'Vesta', sourceReceivedBy: 'Vesta', accountId: accountIds.natwest },
   { row: 8, date: '2026-09-22', sourceDateLabel: '22nd', amountPence: 10820, description: 'Child B', categoryId: categoryIds.childBenefit, incomeType: 'C Benefit', payer: 'Vesta', sourceReceivedBy: 'Vesta', accountId: accountIds.natwest },
-  { row: 9, date: '2026-09-11', sourceDateLabel: '11th', amountPence: 100000, description: 'Paycheck', categoryId: categoryIds.employment, incomeType: 'Employment', payer: 'Vesta', sourceReceivedBy: 'Vesta', accountId: accountIds.lloyds },
+  { row: 9, date: '2026-09-11', sourceDateLabel: '11th', amountPence: 100000, description: 'Paycheck', categoryId: categoryIds.employment, incomeType: 'Employment', payer: 'Vesta', sourceReceivedBy: 'Vesta', accountId: accountIds.lloydsVesta },
 ];
 
 function expenseTransactionId(row: number): string {
@@ -309,6 +340,7 @@ function sourceTransactions(): Transaction[] {
     createdBy: SOURCE_ACTOR,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceRow: income.row,
       sourceDateLabel: income.sourceDateLabel,
@@ -340,6 +372,7 @@ function sourcePlannedPayments(): PlannedPayment[] {
     createdBy: SOURCE_ACTOR,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceRow: expense.row,
       sourceDateMissing: true,
@@ -367,6 +400,7 @@ function sourcePlannedIncomes(): PlannedIncome[] {
     createdBy: SOURCE_ACTOR,
     metadata: {
       source: SOURCE_BUDGET_NAME,
+      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
       sourceSheet: 'Transactions',
       sourceRow: income.row,
       sourceDateLabel: income.sourceDateLabel,
@@ -493,7 +527,7 @@ export function createSourceBudgetHousehold(existing?: HouseholdData): Household
           name: SOURCE_BUDGET_IMPORT_ID,
           appliedAt: SOURCE_CREATED_AT,
           executionTimeMs: 0,
-          checksum: 'live-2026-september-budget-24-pass',
+          checksum: 'live-2026-september-budget-routing-v2',
         },
       ],
       isUpToDate: true,
