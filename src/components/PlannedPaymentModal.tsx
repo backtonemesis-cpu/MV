@@ -174,7 +174,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                   placeholder="349.79"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="w-full pl-7 pr-3 py-1.5 text-sm font-semibold border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
+                  className="mv-money-input-with-prefix w-full text-sm font-semibold tabular-nums border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                   required
                 />
               </div>
