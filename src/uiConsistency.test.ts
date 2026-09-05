@@ -128,7 +128,9 @@ describe('Global finance UI consistency contract', () => {
     expect(budget).toContain('text-2xl font-black text-success');
     expect(budget).toContain('text-2xl font-black text-danger');
     expect(budget).toContain('text-xs font-extrabold text-main');
-    expect(activity).toContain("isTransfer ? isIncomingTransfer");
+    expect(activity).toContain('const isIncomingTransfer =');
+    expect(activity).toContain("? '← '");
+    expect(activity).toContain(": '→ '");
     expect(activity).toContain("'text-danger'");
     expect(savings).toContain('Transferred From Savings');
   });
