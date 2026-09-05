@@ -19,6 +19,7 @@ import {
   updatePlannedPayment,
   deletePlannedPayment,
   markPaymentPaid,
+  undoPaymentPaid,
   createPlannedIncome,
   updatePlannedIncome,
   deletePlannedIncome,
@@ -498,6 +499,21 @@ export default function App() {
     }
   };
 
+  const handleUndoPlannedPaymentPaid = async (id: string) => {
+    if (!household) return;
+    try {
+      await undoPaymentPaid(id, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to undo recorded bill payment');
+      }
+      throw err;
+    }
+  };
+
   const handleBulkTogglePlannedPayments = async (params: {
     month?: string;
     include: boolean;
@@ -834,6 +850,7 @@ export default function App() {
                 onUpdatePlannedPayment={handleUpdatePlannedPayment}
                 onDeletePlannedPayment={handleDeletePlannedPayment}
                 onMarkPaymentPaid={handleMarkPlannedPaymentPaid}
+                onUndoPaymentPaid={handleUndoPlannedPaymentPaid}
                 onBulkTogglePlannedPayments={handleBulkTogglePlannedPayments}
                 onExecuteTransfer={handleExecuteTransferAllocations}
                 onUndoFunding={handleUndoTransferPlanFunding}
