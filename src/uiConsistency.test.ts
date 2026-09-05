@@ -48,7 +48,7 @@ describe('Global finance UI consistency contract', () => {
     expect(plan).not.toContain(
       'This bill has a linked actual expense transaction. Edit or delete that Activity transaction to reverse the recorded payment.'
     );
-    expect(plan).toContain('Paid / Complete');
+    expect(plan).not.toContain('Paid / Complete');
     expect(plan).toContain('totalUnpaidSelectedPaymentsPence');
   });
 
