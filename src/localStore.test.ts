@@ -694,7 +694,7 @@ describe('Penny-style local MV storage', () => {
         },
         state.version
       )
-    ).toThrow('safe to move after its own selected bills');
+    ).toThrow('safe to move after its own selected unpaid bills');
 
     state = loadLocalHousehold();
     expect(
