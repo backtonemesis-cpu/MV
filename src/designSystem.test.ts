@@ -252,7 +252,7 @@ describe('semantic design system enforcement', () => {
     expect(source).toContain('aria-modal="true"');
     expect(source).toContain('Add source');
     expect(source).toContain('Safe to move');
-    expect(source).toContain('Fully allocated');
+    expect(source).toContain('Ready to record');
     expect(source).toContain('Transfer note <span className="mv-funding-optional">(optional)</span>');
     expect(source).toContain('mv-funding-modal-actions');
     expect(source).toContain('Record transfer');
