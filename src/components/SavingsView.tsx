@@ -826,7 +826,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     value={transferAmountStr}
                     onChange={(e) => setTransferAmountStr(e.target.value)}
                     placeholder="250.00"
-                    className="w-full min-w-0 pl-8 pr-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-bold tabular-nums focus:ring-2 focus:ring-accent focus:outline-none"
+                    className="mv-money-input-with-prefix w-full min-w-0 bg-surface border border-muted rounded-xl text-xs text-main font-bold tabular-nums focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
                 </div>
