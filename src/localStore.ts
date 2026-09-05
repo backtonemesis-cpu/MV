@@ -650,13 +650,15 @@ function recoverTransferPlanFundingFromSourceBackup(
     ) ?? false;
   if (alreadyRecovered) return input;
 
+  const rawBackup = storage.getItem(SOURCE_IMPORT_BACKUP_KEY);
+  if (!rawBackup) return input;
+
   const next = clone(input);
   let recoveredTransactions = 0;
   let recoveredBatches = 0;
   let skippedAmbiguousBatches = 0;
-  const rawBackup = storage.getItem(SOURCE_IMPORT_BACKUP_KEY);
 
-  if (rawBackup) {
+  {
     try {
       const parsedBackup = JSON.parse(rawBackup) as unknown;
       assertHouseholdShape(parsedBackup);
