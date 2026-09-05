@@ -1608,6 +1608,7 @@ export function executeLocalTransferAllocations(
           isRefund: false,
           metadata: {
             transferBatchId: batchId,
+            transferPlanMonth: payload.month || date.slice(0, 7),
             allocationIndex: index,
             allocationCount: validated.length,
           },
@@ -1627,18 +1628,30 @@ export function executeLocalTransferAllocations(
 
 export function undoLatestLocalTransferPlanFunding(
   destinationAccountId: string,
-  expectedVersion: number
+  expectedVersion: number,
+  month?: string
 ): {
   undoneTransactions: Transaction[];
   version: number;
 } {
   const current = loadLocalHousehold();
+
+  const transferPlanMonth = (transaction: Transaction): string =>
+    (transaction.metadata?.transferPlanMonth as string | undefined) ||
+    transaction.date.slice(0, 7);
+
+  const isTransferPlanFunding = (transaction: Transaction): boolean =>
+    Boolean(transaction.metadata?.transferBatchId) ||
+    transaction.description.startsWith('Transfer Plan:');
+
   const candidates = current.transactions
     .filter(
       (transaction) =>
         transaction.targetAccountId === destinationAccountId &&
         transaction.type === 'transfer' &&
-        transaction.isTransfer
+        transaction.isTransfer &&
+        isTransferPlanFunding(transaction) &&
+        (!month || transferPlanMonth(transaction) === month)
     )
     .sort((a, b) => {
       const createdCompare = (b.createdAt || '').localeCompare(a.createdAt || '');
@@ -1648,7 +1661,11 @@ export function undoLatestLocalTransferPlanFunding(
 
   const latest = candidates[0];
   if (!latest) {
-    throw new Error('No incoming funding transfer is available to undo for this account.');
+    throw new Error(
+      month
+        ? `No Transfer Plan funding is available to undo for this account in ${month}.`
+        : 'No Transfer Plan funding is available to undo for this account.'
+    );
   }
 
   const latestBatchId = latest.metadata?.transferBatchId as string | undefined;
@@ -1658,7 +1675,8 @@ export function undoLatestLocalTransferPlanFunding(
           transaction.metadata?.transferBatchId === latestBatchId &&
           transaction.targetAccountId === destinationAccountId &&
           transaction.type === 'transfer' &&
-          transaction.isTransfer
+          transaction.isTransfer &&
+          (!month || transferPlanMonth(transaction) === month)
       )
     : [latest];
 
@@ -1668,7 +1686,9 @@ export function undoLatestLocalTransferPlanFunding(
       action: 'transfer_plan_funding_undone',
       entityType: 'account',
       entityId: destinationAccountId,
-      summary: `Undid Transfer Plan funding for destination account`,
+      summary: month
+        ? `Undid Transfer Plan funding for destination account in ${month}`
+        : 'Undid Transfer Plan funding for destination account',
     },
     (state) => {
       const destination = state.accounts.find(
@@ -1691,8 +1711,6 @@ export function undoLatestLocalTransferPlanFunding(
         const source = state.accounts.find((account) => account.id === transaction.accountId);
         if (!source) throw new Error('A funding source account is unavailable.');
 
-        // Reverse the reconciliation-anchor adjustment that was applied when
-        // the funding transfer was created.
         adjustAnchoredBalanceForNewTransfer(source, transaction.amountPence, transaction.date);
         destinationTotalPence += transaction.amountPence;
       }
