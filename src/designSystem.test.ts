@@ -183,6 +183,10 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('.finance-filter-control.finance-filter-control-trailing');
     expect(css).toContain('.mv-layout-pc .finance-ledger-row');
     expect(css).toContain('.mv-layout-phone .finance-filter-grid');
+    expect(css).toContain('PC READABILITY FLOOR — HP OMNIBOOK 7 AT 150% WINDOWS SCALE');
+    expect(css).toContain('.mv-layout-pc .text-\\[10px\\]');
+    expect(css).toContain('.mv-layout-pc .finance-row-title');
+    expect(css).toContain('font-size: 15px !important');
     expect(navigation).toContain('mobile-nav-tab-more');
   });
 
