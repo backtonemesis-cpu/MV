@@ -89,6 +89,33 @@ describe('September source budget snapshot', () => {
     ).toBe(true);
   });
 
+  it('keeps every source account explicitly owned and keeps same-bank Lloyds accounts isolated', () => {
+    const state = createSourceBudgetHousehold();
+
+    expect(state.accounts.every((account) => Boolean(account.ownerPerson))).toBe(true);
+
+    const lloyds = state.accounts.filter((account) => account.name === 'Lloyds');
+    expect(lloyds).toHaveLength(2);
+    expect(lloyds.map((account) => account.ownerPerson).sort()).toEqual([
+      'Marius',
+      'Vesta',
+    ]);
+    expect(new Set(lloyds.map((account) => account.id)).size).toBe(2);
+
+    const mariusPaycheck = state.plannedIncomes?.find(
+      (income) => income.name === 'Paycheck' && income.sourcePerson === 'Marius'
+    );
+    const vestaPaycheck = state.plannedIncomes?.find(
+      (income) => income.name === 'Paycheck' && income.sourcePerson === 'Vesta'
+    );
+    expect(
+      state.accounts.find((account) => account.id === mariusPaycheck?.accountId)?.ownerPerson
+    ).toBe('Marius');
+    expect(
+      state.accounts.find((account) => account.id === vestaPaycheck?.accountId)?.ownerPerson
+    ).toBe('Vesta');
+  });
+
   it('keeps source attribution and the Household-to-Joint compatibility mapping traceable', () => {
     const state = createSourceBudgetHousehold();
 
