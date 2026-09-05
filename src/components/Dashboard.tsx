@@ -22,9 +22,11 @@ import {
   formatPence,
   calculateMonthlySurplus,
   calculateSavingsPosition,
+  calculateTransferredFromSavingsPence,
   calculateLiquidFundsPence,
-  isPlannedPaymentEffectivelyPaid,
 } from '../utils/currency';
+import { generateTransferPlan } from '../utils/transferPlan';
+import { accountIdentityLabel, accountOwnerLabel, accountTypeLabel } from '../utils/accountDisplay';
 
 interface DashboardProps {
   household: HouseholdData;
@@ -116,43 +118,34 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const attributedSpendTotalPence = mariusSpendPence + vestaSpendPence + jointSpendPence;
 
   const transferPlanSnapshot = useMemo(() => {
-    const accountMap = new Map(household.accounts.map((a) => [a.id, a]));
-    const deficits: {
-      accountName: string;
-      owner: string;
-      deficitPence: number;
-      totalCommitmentPence: number;
-    }[] = [];
+    const plan = generateTransferPlan(
+      household.accounts,
+      household.plannedPayments || [],
+      selectedMonth,
+      household.transactions
+    );
 
-    const grouped = new Map<string, number>();
+    return plan.accountsNeedingFunding.map((requirement) => ({
+      accountLabel: accountIdentityLabel(requirement.account),
+      deficitPence: requirement.transferRequiredPence,
+      totalCommitmentPence: requirement.totalSelectedPaymentsPence,
+    }));
+  }, [
+    household.accounts,
+    household.plannedPayments,
+    household.transactions,
+    selectedMonth,
+  ]);
 
-    monthPlannedPayments
-      .filter(
-        (p) =>
-          p.includeInTransferPlan &&
-          !isPlannedPaymentEffectivelyPaid(p, household.transactions)
-      )
-      .forEach((p) => {
-        grouped.set(p.accountId, (grouped.get(p.accountId) || 0) + p.amountPence);
-      });
-
-    grouped.forEach((totalCommitment, accId) => {
-      const acc = accountMap.get(accId);
-      const balance = acc ? acc.currentBalancePence : 0;
-      const deficit = Math.max(0, totalCommitment - balance);
-
-      if (acc && deficit > 0) {
-        deficits.push({
-          accountName: acc.name,
-          owner: acc.ownerPerson || 'Joint',
-          deficitPence: deficit,
-          totalCommitmentPence: totalCommitment,
-        });
-      }
-    });
-
-    return deficits;
-  }, [household.accounts, monthPlannedPayments]);
+  const transferredFromSavingsPence = useMemo(
+    () =>
+      calculateTransferredFromSavingsPence(
+        household.accounts,
+        household.transactions,
+        selectedMonth
+      ),
+    [household.accounts, household.transactions, selectedMonth]
+  );
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
 
@@ -195,9 +188,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
       valueClassName: 'text-danger',
     },
     {
-      label: 'Net Savings Movement',
-      value: savingsPosition.savingsTransfersPence,
-      note: 'Transfers crossing Savings/Cash boundary',
+      label: 'Transferred From Savings',
+      value: transferredFromSavingsPence,
+      note: 'Moved to fund other accounts',
       icon: PiggyBank,
       valueClassName: 'text-main',
     },
@@ -242,7 +235,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
             Available Household Surplus
           </div>
 
-          <div className="mt-3 font-mono text-4xl font-semibold tracking-tight text-main tabular-nums sm:text-5xl">
+          <div
+            className={`mt-3 font-mono text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl ${
+              surplusCalculation.availableSurplusPence > 0
+                ? 'text-success'
+                : surplusCalculation.availableSurplusPence < 0
+                  ? 'text-danger'
+                  : 'text-main'
+            }`}
+          >
             {formatPence(surplusCalculation.availableSurplusPence)}
           </div>
 
@@ -342,7 +343,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <h3 className="text-sm font-semibold text-main">Funding required</h3>
                 <p className="mv-private-value mt-1 text-xs leading-5 text-muted">
                   {transferPlanSnapshot
-                    .map((item) => `${item.accountName} needs ${formatPence(item.deficitPence)}`)
+                    .map((item) => `${item.accountLabel} needs ${formatPence(item.deficitPence)}`)
                     .join(' • ')}
                 </p>
               </div>
@@ -441,7 +442,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-main">{account.name}</div>
                     <div className="mt-0.5 text-[11px] capitalize text-subtle">
-                      {account.ownerPerson || 'Joint'} · {account.type}
+                      {accountTypeLabel(account.type)} · {accountOwnerLabel(account)}
                     </div>
                   </div>
 
