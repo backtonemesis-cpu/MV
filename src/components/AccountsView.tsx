@@ -24,6 +24,7 @@ import {
   parseToPence,
 } from '../utils/currency';
 import { localDateInputValue } from '../utils/dateInput';
+import { accountIdentityLabel } from '../utils/accountDisplay';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -1082,7 +1083,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <div className="mv-modal-header">
               <div>
                 <h3 className="text-base font-bold text-main">
-                  {selectedAccount.name} Activity
+                  {accountIdentityLabel(selectedAccount)} Activity
                 </h3>
                 <p className="text-xs text-muted text-subtle">
                   {formatPence(selectedAccount.currentBalancePence)}
@@ -1103,10 +1104,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
               ) : (
                 accountActivityTxs.map((tx) => {
-                  const isIncoming =
-                    tx.type === 'income' ||
-                    tx.type === 'refund' ||
-                    (tx.type === 'transfer' && tx.targetAccountId === selectedAccount.id);
+                  const isTransfer = tx.type === 'transfer' && tx.isTransfer;
+                  const isPositive = tx.type === 'income' || tx.type === 'refund' || tx.isRefund;
+                  const isNegative = tx.type === 'expense' || tx.type === 'repayment';
+                  const isIncomingTransfer =
+                    isTransfer && tx.targetAccountId === selectedAccount.id;
 
                   return (
                     <div
@@ -1121,7 +1123,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-muted text-muted font-medium">
                             {tx.type}
                           </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-success-soft text-success font-medium">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent-soft text-accent font-medium">
                             {tx.payer}
                           </span>
                         </div>
@@ -1132,12 +1134,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                       <div
                         className={`text-xs font-black ${
-                          isIncoming
+                          isPositive
                             ? 'text-success'
-                            : 'text-main'
+                            : isNegative
+                              ? 'text-danger'
+                              : 'text-main'
                         }`}
                       >
-                        {isIncoming ? '+' : '-'}
+                        {isTransfer
+                          ? isIncomingTransfer
+                            ? '← '
+                            : '→ '
+                          : isPositive
+                            ? '+'
+                            : isNegative
+                              ? '-'
+                              : ''}
                         {formatPence(tx.amountPence)}
                       </div>
                     </div>
