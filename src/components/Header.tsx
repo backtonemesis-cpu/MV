@@ -38,9 +38,9 @@ export const Header: React.FC<HeaderProps> = ({
   onTogglePrivacyMask,
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-surface backdrop-blur border-b border-muted transition-colors">
+    <header className="mv-app-header sticky top-0 z-30 bg-surface backdrop-blur border-b border-muted transition-colors">
       <div className="mv-shell-boundary mx-auto w-full max-w-[1200px] px-4">
-        <div className="flex h-[44px] items-center justify-between gap-2.5">
+        <div className="mv-app-header-row flex h-[44px] items-center justify-between gap-2.5">
           <div className="mv-header-brand flex min-w-0 items-center gap-2.5">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent text-[12px] font-bold text-on-accent">
               MV
