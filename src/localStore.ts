@@ -806,7 +806,7 @@ export function createLocalTransaction(
 
       const tx: Transaction = {
         id: data.id || createId('tx'),
-        date: data.date || new Date().toISOString().slice(0, 10),
+        date: data.date || localTodayDateKey(),
         description: data.description || 'Transaction',
         amountPence: data.amountPence!,
         type: data.type || 'expense',
@@ -1409,7 +1409,7 @@ export function executeLocalTransfer(
   const category = state.categories.find((item) => item.id === 'cat-transfer');
   if (!category) throw new Error('Internal Transfer category is missing.');
 
-  const transferDate = payload.date || new Date().toISOString().slice(0, 10);
+  const transferDate = payload.date || localTodayDateKey();
   const sourceNeedsAnchorAdjustment =
     source.reconciliationDate &&
     Number.isSafeInteger(source.reconciledBalancePence) &&
@@ -1582,7 +1582,7 @@ export function executeLocalTransferAllocations(
 
       const batchId = createId('transfer-batch');
       const createdAt = nowIso();
-      const date = payload.date || new Date().toISOString().slice(0, 10);
+      const date = payload.date || localTodayDateKey();
 
       for (const { source, amountPence } of validated) {
         const draftSource = state.accounts.find((account) => account.id === source.id)!;
