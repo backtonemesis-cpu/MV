@@ -77,12 +77,16 @@ describe('semantic design system enforcement', () => {
       "label: 'Fixed Bills',\n      value: surplusCalculation.fixedBillsUnpaidPence"
     );
 
-    // Plan roster: compact at constrained and desktop widths, while the
-    // account-funding cards remain a separate unchanged workflow.
-    expect(plan).toContain('mv-plan-bill-row');
-    expect(plan).toContain('mv-plan-bill-table-row');
-    expect(css).toContain('.mv-plan-bill-row');
-    expect(css).toContain('max-height: 40px');
+    // Plan roster: preserve the full former-glory interaction model.
+    // Bill inclusion and status stay independent, and explicit Edit/Delete
+    // controls remain visible instead of being collapsed into icon-only rows.
+    expect(plan).toContain('Select Unpaid');
+    expect(plan).toContain('Select Paid');
+    expect(plan).toContain('Select All');
+    expect(plan).toContain('Deselect All');
+    expect(plan).toContain('Edit');
+    expect(plan).toContain('Delete');
+    expect(plan).not.toContain('mv-plan-bill-row');
 
     // Income rows: long semantic strings must be shrinkable/truncatable.
     expect(income).toContain('finance-metadata-token');
