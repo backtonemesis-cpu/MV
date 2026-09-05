@@ -24,7 +24,7 @@ import {
   HouseholdMember,
   Transaction,
 } from '../types';
-import { formatPence, isPlannedPaymentEffectivelyPaid } from '../utils/currency';
+import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
@@ -128,8 +128,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     return plannedPayments.filter((p) => p.month === selectedMonth);
   }, [plannedPayments, selectedMonth]);
 
-  const isPaymentPaid = (payment: PlannedPayment) =>
-    isPlannedPaymentEffectivelyPaid(payment, transactions);
+  // Payment status shown inside Transfer Plan is the explicit Plan status.
+  // A linked Activity transaction must not silently remove a bill from funding.
+  const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
 
   const latestFundingBatchByDestination = useMemo(() => {
     const result = new Map<
@@ -231,16 +232,28 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const handleTogglePaymentStatus = async (payment: PlannedPayment) => {
     if (isViewOnly) return;
 
-    if (isPaymentPaid(payment)) {
+    if (payment.status === 'paid') {
       if (payment.actualTransactionId) {
         window.alert(
-          'This bill is paid because it has a linked actual expense transaction. Edit or delete that Activity transaction to change the payment record.'
+          'This bill has a linked actual expense transaction. Edit or delete that Activity transaction to reverse the recorded payment.'
         );
         return;
       }
 
       try {
         await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
+      } catch (err: any) {
+        window.alert(err.message || 'Failed to update bill status.');
+      }
+      return;
+    }
+
+    // Imported/legacy bills can have actual evidence while their explicit Plan
+    // status is still unpaid. Let the user synchronise that Plan status without
+    // creating a duplicate Activity transaction.
+    if (payment.actualTransactionId) {
+      try {
+        await onUpdatePlannedPayment(payment.id, { status: 'paid' });
       } catch (err: any) {
         window.alert(err.message || 'Failed to update bill status.');
       }
