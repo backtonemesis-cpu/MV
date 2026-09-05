@@ -708,7 +708,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
             <form onSubmit={handleGoalSubmit} className="mv-modal-form">
               {error && (
-                <div className="mv-savings-warning-banner">
+                <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
                   {error}
                 </div>
               )}
@@ -798,7 +798,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
             <form onSubmit={handleTransferSubmit} className="mv-modal-form">
               {error && (
-                <div className="mv-savings-warning-banner">
+                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
