@@ -155,7 +155,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         [...plan.accountsNeedingFunding, ...plan.accountsFullyFunded].map(
           (requirement) => [
             requirement.account.id,
-            requirement.totalSelectedPaymentsPence,
+            requirement.totalUnpaidSelectedPaymentsPence,
           ]
         )
       ) as Record<string, number>,
@@ -184,11 +184,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     [plan.accountsFullyFunded, latestFundingBatchByDestination]
   );
 
+  const completedAccountRequirements = useMemo(
+    () =>
+      plan.accountsFullyFunded.filter(
+        (requirement) =>
+          !latestFundingBatchByDestination.has(requirement.account.id) &&
+          requirement.unpaidPayments.length === 0
+      ),
+    [plan.accountsFullyFunded, latestFundingBatchByDestination]
+  );
+
   const coveredAccountRequirements = useMemo(
     () =>
       plan.accountsFullyFunded.filter(
         (requirement) =>
-          !latestFundingBatchByDestination.has(requirement.account.id)
+          !latestFundingBatchByDestination.has(requirement.account.id) &&
+          requirement.unpaidPayments.length > 0
       ),
     [plan.accountsFullyFunded, latestFundingBatchByDestination]
   );
@@ -243,33 +254,16 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     }
   };
 
-  const handleTogglePaymentStatus = async (payment: PlannedPayment) => {
-    if (isViewOnly) return;
+  const handlePaymentStatusAction = async (payment: PlannedPayment) => {
+    if (isViewOnly || payment.status === 'paid') return;
 
-    if (payment.status === 'paid') {
-      if (payment.actualTransactionId) {
-        window.alert(
-          'This bill has a linked actual expense transaction. Edit or delete that Activity transaction to reverse the recorded payment.'
-        );
-        return;
-      }
-
-      try {
-        await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
-      } catch (err: any) {
-        window.alert(err.message || 'Failed to update bill status.');
-      }
-      return;
-    }
-
-    // Imported/legacy bills can have actual evidence while their explicit Plan
-    // status is still unpaid. Let the user synchronise that Plan status without
-    // creating a duplicate Activity transaction.
+    // If legacy/imported data already has actual evidence, synchronise the
+    // display status without creating a duplicate expense.
     if (payment.actualTransactionId) {
       try {
         await onUpdatePlannedPayment(payment.id, { status: 'paid' });
       } catch (err: any) {
-        window.alert(err.message || 'Failed to update bill status.');
+        window.alert(err.message || 'Failed to synchronise bill status.');
       }
       return;
     }
@@ -354,7 +348,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                 'legacy_incoming'
                                 ? 'Funded · Legacy'
                                 : 'Funded'
-                              : 'Covered'}
+                              : req.unpaidPayments.length === 0
+                                ? 'Paid / Complete'
+                                : 'Covered'}
                           </span>
                           {!isViewOnly && latestFundingBatchByDestination.has(req.account.id) && (
                             <button
@@ -395,13 +391,13 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                           </div>
                           <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
                             <div className="text-[11px] font-medium text-subtle">
-                              Left after selected bills
+                              Left after unpaid bills
                             </div>
                             <div className="mt-0.5 text-[13px] font-bold text-main">
                               {formatPence(
                                 Math.max(
                                   0,
-                                  req.amountAvailablePence - req.totalSelectedPaymentsPence
+                                  req.amountAvailablePence - req.totalUnpaidSelectedPaymentsPence
                                 )
                               )}
                             </div>
@@ -464,7 +460,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                           </div>
                         ) : (
                           <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
-                            Covered by the existing account balance. No Transfer Plan funding transfer was recorded, so there is nothing to undo.
+                            {req.unpaidPayments.length === 0
+                              ? 'All selected bills are already recorded as paid. No new funding transfer is required.'
+                              : 'Covered by the existing account balance. No Transfer Plan funding transfer was recorded, so there is nothing to undo.'}
                           </div>
                         )}
                       </div>
@@ -506,7 +504,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                     >
                                       {latestFundingBatchByDestination.has(req.account.id)
                                         ? 'Funded'
-                                        : 'Covered'}
+                                        : p.status === 'paid'
+                                          ? 'Complete'
+                                          : 'Covered'}
                                     </span>
                                     <span className="font-bold text-main">
                                       {formatPence(p.amountPence)}
@@ -850,6 +850,21 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             </div>
           </div>
         )}
+
+        {completedAccountRequirements.length > 0 && (
+          <div className="space-y-4 pt-2">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-success">
+              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+              <span className="whitespace-nowrap">
+                Paid / Complete ({completedAccountRequirements.length})
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {completedAccountRequirements.map(renderReadyAccountCard)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* SECTION 2: Upcoming Scheduled Payments Roster & Inclusion Controls */}
@@ -941,18 +956,27 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         {payment.responsiblePerson}
                       </span>
 
-                      <button
-                        onClick={() => handleTogglePaymentStatus(payment)}
-                        disabled={isViewOnly}
-                        title="Status"
-                        className={`min-w-0 rounded-xl px-2.5 py-2 text-[12px] font-medium transition-colors capitalize ${
-                          isPaymentPaid(payment)
-                            ? 'bg-success-soft text-success hover:bg-success-soft'
-                            : 'bg-warning-soft text-warning hover:bg-warning-soft'
-                        }`}
-                      >
-                        {isPaymentPaid(payment) ? 'paid' : 'unpaid'}
-                      </button>
+                      {isPaymentPaid(payment) ? (
+                        <span
+                          title={
+                            payment.actualTransactionId
+                              ? 'Payment recorded in Activity'
+                              : 'Paid status recorded'
+                          }
+                          className="min-w-0 rounded-xl bg-success-soft px-2.5 py-2 text-center text-[12px] font-medium text-success capitalize"
+                        >
+                          paid
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handlePaymentStatusAction(payment)}
+                          disabled={isViewOnly}
+                          title="Record payment"
+                          className="min-w-0 rounded-xl bg-warning-soft px-2.5 py-2 text-[12px] font-medium text-warning transition-colors hover:bg-warning-soft capitalize"
+                        >
+                          unpaid
+                        </button>
+                      )}
                     </div>
 
                     {payment.notes && (
@@ -1063,18 +1087,27 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                         {/* Paid / Unpaid Status Toggle */}
                         <td className="py-2.5 px-4 text-center">
-                          <button
-                            onClick={() => handleTogglePaymentStatus(payment)}
-                            disabled={isViewOnly}
-                            title="Status"
-                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                              payment.status === 'paid'
-                                ? 'bg-success-soft text-success hover:bg-success-soft'
-                                : 'bg-warning-soft text-warning hover:bg-warning-soft'
-                            }`}
-                          >
-                            {isPaymentPaid(payment) ? 'paid' : 'unpaid'}
-                          </button>
+                          {isPaymentPaid(payment) ? (
+                            <span
+                              title={
+                                payment.actualTransactionId
+                                  ? 'Payment recorded in Activity'
+                                  : 'Paid status recorded'
+                              }
+                              className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-success-soft text-success"
+                            >
+                              paid
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handlePaymentStatusAction(payment)}
+                              disabled={isViewOnly}
+                              title="Record payment"
+                              className="px-2.5 py-1 rounded-full text-xs font-medium transition-colors bg-warning-soft text-warning hover:bg-warning-soft"
+                            >
+                              unpaid
+                            </button>
+                          )}
                         </td>
 
                         {/* Edit / Delete Actions */}
