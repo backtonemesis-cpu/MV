@@ -26,6 +26,7 @@ import {
 } from '../types';
 import { formatPence } from '../utils/currency';
 import { generateTransferPlan, formatMonthLabel } from '../utils/transferPlan';
+import { getLatestTransferPlanFundingByDestination } from '../utils/transferPlanFunding';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { PlannedPaymentModal } from './PlannedPaymentModal';
 import { MonthPicker } from './MonthPicker';
@@ -148,67 +149,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   // A linked Activity transaction must not silently remove a bill from funding.
   const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
 
-  const latestFundingBatchByDestination = useMemo(() => {
-    const result = new Map<
-      string,
-      {
-        batchKey: string;
-        createdAt: string;
-        totalPence: number;
-        sourceAccountIds: string[];
-        allocations: Array<{
-          sourceAccountId: string;
-          amountPence: number;
-        }>;
-      }
-    >();
-
-    const planTransfers = transactions.filter((transaction) => {
-      const isTransferPlanFunding =
-        Boolean(transaction.metadata?.transferBatchId) ||
-        transaction.description.startsWith('Transfer Plan:');
-      const transferMonth =
-        (transaction.metadata?.transferPlanMonth as string | undefined) ||
-        transaction.date.slice(0, 7);
-
-      return (
-        transaction.type === 'transfer' &&
-        transaction.isTransfer &&
-        Boolean(transaction.targetAccountId) &&
-        isTransferPlanFunding &&
-        transferMonth === selectedMonth
-      );
-    });
-
-    for (const transaction of planTransfers) {
-      const destinationAccountId = transaction.targetAccountId!;
-      const batchKey =
-        (transaction.metadata?.transferBatchId as string | undefined) || transaction.id;
-      const createdAt = transaction.createdAt || transaction.date;
-      const existing = result.get(destinationAccountId);
-
-      if (!existing || createdAt > existing.createdAt) {
-        const sameBatch = planTransfers.filter((candidate) => {
-          const candidateKey =
-            (candidate.metadata?.transferBatchId as string | undefined) || candidate.id;
-          return candidateKey === batchKey && candidate.targetAccountId === destinationAccountId;
-        });
-
-        result.set(destinationAccountId, {
-          batchKey,
-          createdAt,
-          totalPence: sameBatch.reduce((sum, item) => sum + item.amountPence, 0),
-          sourceAccountIds: Array.from(new Set(sameBatch.map((item) => item.accountId))),
-          allocations: sameBatch.map((item) => ({
-            sourceAccountId: item.accountId,
-            amountPence: item.amountPence,
-          })),
-        });
-      }
-    }
-
-    return result;
-  }, [transactions, selectedMonth]);
+  const latestFundingBatchByDestination = useMemo(
+    () => getLatestTransferPlanFundingByDestination(transactions, selectedMonth),
+    [transactions, selectedMonth]
+  );
 
   const handleUndoFunding = async (account: Account) => {
     if (isViewOnly) return;
