@@ -192,5 +192,41 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('font-size: 15px !important');
     expect(navigation).toContain('mobile-nav-tab-more');
   });
+  it('locks the global mathematical design-system contract', () => {
+    const main = fs.readFileSync(path.join(SRC_DIR, 'main.tsx'), 'utf8');
+    const css = fs.readFileSync(path.join(SRC_DIR, 'globalDesignSystem.css'), 'utf8');
+
+    expect(main).toContain("import './index.css';\nimport './globalDesignSystem.css';");
+
+    expect(css).toContain('--mv-ds-canvas-max: 90rem');
+    expect(css).toContain('--mv-ds-reading-max: 68ch');
+    expect(css).toContain('--mv-ds-sidebar-min: 15rem');
+    expect(css).toContain('--mv-ds-sidebar-max: 17.5rem');
+    expect(css).toContain('--mv-ds-top-nav-height: 4rem');
+    expect(css).toContain('--mv-ds-control-compact: 2rem');
+    expect(css).toContain('--mv-ds-control-large: 2.75rem');
+    expect(css).toContain('--mv-ds-click-target: 2.75rem');
+
+    expect(css).toContain('--mv-ds-radius-sm: 0.25rem');
+    expect(css).toContain('--mv-ds-radius-md: 0.5rem');
+    expect(css).toContain('--mv-ds-radius-lg: 0.75rem');
+    expect(css).toContain('--mv-ds-radius-xl: 1rem');
+
+    expect(css).toContain('--mv-ds-text-meta: 0.75rem');
+    expect(css).toContain('--mv-ds-text-compact: 0.875rem');
+    expect(css).toContain('--mv-ds-text-body: 1rem');
+    expect(css).toContain('--mv-ds-text-subhead: 1.125rem');
+    expect(css).toContain('--mv-ds-text-section: 1.5rem');
+    expect(css).toContain('--mv-ds-text-section-lg: 1.875rem');
+    expect(css).toContain('--mv-ds-text-page: 2.25rem');
+
+    expect(css).toContain('.mv-density-root .mv-app-header-row');
+    expect(css).toContain('height: var(--mv-ds-top-nav-height) !important');
+    expect(css).toContain('@media (min-width: 80rem)');
+    expect(css).toContain('max-width: var(--mv-ds-canvas-max) !important');
+
+    expect(css).not.toMatch(/(?:margin|padding|gap)[^;]*:\s*[^;]*(?:5px|10px|15px|25px)/);
+  });
+
 
 });
