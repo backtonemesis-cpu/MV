@@ -29,6 +29,7 @@ import {
   removeLocalHouseholdMember,
 } from './localStore';
 import { generateTransferPlan } from './utils/transferPlan';
+import { getLatestTransferPlanFundingByDestination } from './utils/transferPlanFunding';
 import { SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 class MemoryStorage implements Storage {
@@ -955,6 +956,153 @@ describe('Penny-style local MV storage', () => {
           transaction.description === 'Transfer Plan: Fund Undo Destination'
       )
     ).toBe(false);
+  });
+
+  it('keeps funding and paid state independent through fund, pay, undo payment, and undo funding', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Workflow Savings',
+        type: 'savings',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Workflow Bills',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Workflow bill',
+        amountPence: 40_00,
+        month: '2026-09',
+        responsiblePerson: 'Vesta',
+        accountId: destination.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 40_00,
+        allocations: [{ sourceAccountId: source.account.id, amountPence: 40_00 }],
+        description: 'Transfer Plan: workflow state test',
+        date: '2026-09-04',
+        month: '2026-09',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(true);
+    expect(
+      state.accounts.find((account) => account.id === source.account.id)
+        ?.currentBalancePence
+    ).toBe(60_00);
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(40_00);
+
+    markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 40_00,
+        actualDate: '2026-09-04',
+        accountId: destination.account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.status
+    ).toBe('paid');
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(0);
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(true);
+
+    undoLocalPaymentPaid(bill.payment.id, state.version);
+    state = loadLocalHousehold();
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.status
+    ).toBe('unpaid');
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(40_00);
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(true);
+
+    undoLatestLocalTransferPlanFunding(
+      destination.account.id,
+      state.version,
+      '2026-09'
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.accounts.find((account) => account.id === source.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(0);
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(false);
+
+    const plan = generateTransferPlan(
+      state.accounts,
+      state.plannedPayments,
+      '2026-09',
+      state.transactions
+    );
+    expect(
+      plan.accountsNeedingFunding.find(
+        (requirement) => requirement.account.id === destination.account.id
+      )?.transferRequiredPence
+    ).toBe(40_00);
   });
 
   it('completed Transfer Plan funding clears the requirement even with future reconciliation anchors', () => {
