@@ -520,5 +520,4 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
       </div>
     </div>
   );
-  );
 };
