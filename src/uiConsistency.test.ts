@@ -41,10 +41,10 @@ describe('Global finance UI consistency contract', () => {
     const modal = component('ExecuteTransferModal.tsx');
 
     expect(modal).toContain('Funding sources');
-    expect(modal).toContain('Source account');
+    expect(modal).toContain('Money from');
     expect(modal).toContain('Add source');
     expect(modal).toContain('Record transfer');
-    expect(modal).toContain('Choose source account');
+    expect(modal).toContain('Choose account');
     expect(modal).toContain('accountOptionLabel(account');
     expect(modal).toContain('Safe to move');
     expect(modal).toContain('reservedPlanPenceByAccountId');
@@ -70,6 +70,7 @@ describe('Global finance UI consistency contract', () => {
 
     expect(accounts).toContain("useState<AccountType | ''>('')");
     expect(accounts).toContain('Select account type');
+    expect(accounts).toContain('<option value="cash">Cash</option>');
 
     expect(income).toContain("setSourcePerson('')");
     expect(income).toContain("setAccountId('')");
@@ -109,6 +110,7 @@ describe('Global finance UI consistency contract', () => {
 
     expect(css).toContain('.mv-modal-form input.mv-money-input-with-prefix');
     expect(css).toContain('padding-left: 32px !important');
+    expect(css).toContain('.mv-money-prefix');
   });
 
   it('keeps Dashboard on the same Transfer Plan and savings rules', () => {
