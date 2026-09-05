@@ -149,7 +149,6 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       >
                         <option value="editor">Editor</option>
                         <option value="view_only">View Only</option>
-                        <option value="owner">Co-Owner</option>
                       </select>
 
                       <button
