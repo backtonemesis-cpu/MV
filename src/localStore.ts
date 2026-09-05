@@ -618,6 +618,171 @@ function stripImportedNarrativeNotes(state: HouseholdData): void {
   );
 }
 
+
+function mapRecoveredAccountId(
+  backup: HouseholdData,
+  current: HouseholdData,
+  oldAccountId: string
+): string | undefined {
+  if (current.accounts.some((account) => account.id === oldAccountId)) return oldAccountId;
+  const oldAccount = backup.accounts.find((account) => account.id === oldAccountId);
+  if (!oldAccount) return undefined;
+
+  const sameIdentity = current.accounts.filter(
+    (account) =>
+      account.isActive !== false &&
+      account.name.trim().toLowerCase() === oldAccount.name.trim().toLowerCase() &&
+      account.type === oldAccount.type &&
+      (!oldAccount.ownerPerson ||
+        account.ownerPerson?.trim().toLowerCase() ===
+          oldAccount.ownerPerson.trim().toLowerCase())
+  );
+  return sameIdentity.length === 1 ? sameIdentity[0].id : undefined;
+}
+
+function recoverTransferPlanFundingFromSourceBackup(
+  input: HouseholdData,
+  storage: Storage
+): HouseholdData {
+  const alreadyRecovered =
+    input.schemaStatus?.appliedMigrations?.some(
+      (migration) => migration.name === SOURCE_IMPORT_FUNDING_RECOVERY_ID
+    ) ?? false;
+  if (alreadyRecovered) return input;
+
+  const next = clone(input);
+  let recoveredTransactions = 0;
+  let recoveredBatches = 0;
+  let skippedAmbiguousBatches = 0;
+  const rawBackup = storage.getItem(SOURCE_IMPORT_BACKUP_KEY);
+
+  if (rawBackup) {
+    try {
+      const parsedBackup = JSON.parse(rawBackup) as unknown;
+      assertHouseholdShape(parsedBackup);
+      const backup = parsedBackup as HouseholdData;
+      const historicalBatches = [
+        ...getTransferPlanFundingBatches(backup.transactions),
+        ...getLegacyIncomingFundingBatches(backup.transactions),
+      ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+      for (const batch of historicalBatches) {
+        const mappedDestinationId = mapRecoveredAccountId(
+          backup,
+          next,
+          batch.destinationAccountId
+        );
+        const mappedSources = batch.allocations.map((allocation) =>
+          mapRecoveredAccountId(backup, next, allocation.sourceAccountId)
+        );
+        if (!mappedDestinationId || mappedSources.some((id) => !id)) {
+          skippedAmbiguousBatches += 1;
+          continue;
+        }
+
+        const batchMonth = getTransferPlanFundingMonth(batch.transactions[0]);
+        if (
+          findLatestTransferPlanFundingBatch(
+            next.transactions,
+            mappedDestinationId,
+            batchMonth,
+            true
+          )
+        ) {
+          continue;
+        }
+
+        const destination = next.accounts.find(
+          (account) => account.id === mappedDestinationId
+        );
+        if (!destination) {
+          skippedAmbiguousBatches += 1;
+          continue;
+        }
+
+        const recovered = batch.transactions.map((transaction, index) => ({
+          ...transaction,
+          accountId: mappedSources[index]!,
+          targetAccountId: mappedDestinationId,
+          metadata: {
+            ...(transaction.metadata || {}),
+            recoveredFromSourceImportBackup: true,
+            recoveryId: SOURCE_IMPORT_FUNDING_RECOVERY_ID,
+          },
+        }));
+
+        for (const transaction of recovered) {
+          const source = next.accounts.find(
+            (account) => account.id === transaction.accountId
+          );
+          if (!source) continue;
+          adjustAnchoredBalanceForNewTransfer(
+            source,
+            -transaction.amountPence,
+            transaction.date
+          );
+          adjustAnchoredBalanceForNewTransfer(
+            destination,
+            transaction.amountPence,
+            transaction.date
+          );
+        }
+
+        next.transactions.unshift(...recovered);
+        recoveredTransactions += recovered.length;
+        recoveredBatches += 1;
+      }
+    } catch {
+      // Historical rollback data is recovery-only and must not block valid state.
+    }
+  }
+
+  const schemaStatus = next.schemaStatus || {
+    currentSchemaVersion: 1,
+    minSupportedClientVersion: 1,
+    latestAppliedVersion: 1,
+    appliedMigrations: [],
+    isUpToDate: true,
+  };
+  schemaStatus.appliedMigrations = [
+    ...(schemaStatus.appliedMigrations || []),
+    {
+      version: schemaStatus.latestAppliedVersion || 1,
+      name: SOURCE_IMPORT_FUNDING_RECOVERY_ID,
+      appliedAt: nowIso(),
+      executionTimeMs: 0,
+      checksum: \`recovered-\${recoveredBatches}-batches-\${recoveredTransactions}-transactions\`,
+    },
+  ];
+  next.schemaStatus = schemaStatus;
+  next.version = input.version + 1;
+
+  if (recoveredTransactions > 0 || skippedAmbiguousBatches > 0) {
+    next.auditLogs = [
+      {
+        id: createId('audit'),
+        timestamp: nowIso(),
+        actorEmail: OWNER_EMAIL,
+        action: 'transfer_plan_funding_recovered',
+        entityType: 'transfer_plan',
+        entityId: 'source-import-recovery',
+        summary:
+          recoveredTransactions > 0
+            ? \`Recovered \${recoveredBatches} Transfer Plan funding batch\${recoveredBatches === 1 ? '' : 'es'} from the pre-import rollback copy.\`
+            : 'No unambiguous Transfer Plan funding batch could be recovered from the pre-import rollback copy.',
+        details: {
+          recoveredBatches,
+          recoveredTransactions,
+          skippedAmbiguousBatches,
+        },
+      },
+      ...(next.auditLogs || []),
+    ].slice(0, 500);
+  }
+
+  return normalizeHousehold(next);
+}
+
 function normalizeHousehold(input: HouseholdData): HouseholdData {
   const state = clone(input);
   state.id = 'household-mv-local';
