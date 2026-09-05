@@ -271,7 +271,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(150px,180px)_auto] sm:items-end">
                       <div className="min-w-0">
                         <label className="block text-[11px] font-medium text-muted mb-1">
-                          {index === 0 ? 'Source account' : `Source account ${index + 1}`}
+                          {index === 0 ? 'Money from' : `Money from ${index + 1}`}
                         </label>
                         <select
                           autoFocus={index === 0}
@@ -284,7 +284,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                           className="w-full min-w-0 text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
                           required
                         >
-                          <option value="">Select source account</option>
+                          <option value="">Select account</option>
                           {eligibleSources.map((account) => {
                             const usedElsewhere =
                               usedSourceIds.has(account.id) &&
@@ -309,7 +309,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                           Amount
                         </label>
                         <div className="relative min-w-0">
-                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">
+                          <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">
                             £
                           </span>
                           <input
@@ -401,7 +401,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                   }
                 >
                   {!hasSelectedSources
-                    ? 'Choose source account'
+                    ? 'Choose account'
                     : remainingPence === 0
                       ? 'Ready to record'
                       : remainingPence > 0
