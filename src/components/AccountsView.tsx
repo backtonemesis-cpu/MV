@@ -788,6 +788,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <option value="" disabled>Select account type</option>
                     <option value="current">Current Account</option>
                     <option value="savings">Savings Account</option>
+                    <option value="cash">Cash</option>
                     <option value="credit">Credit Card</option>
                   </select>
                 </div>
