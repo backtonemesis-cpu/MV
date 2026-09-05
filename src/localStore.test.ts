@@ -717,12 +717,14 @@ describe('Penny-style local MV storage', () => {
         (transaction) => transaction.description === 'Transfer Plan: Fund October'
       )
     ).toBe(true);
+    // October's transfer remains in the ledger, but it is future-dated
+    // relative to September 5 and therefore must not alter today's balance.
     expect(
       state.accounts.find((item) => item.id === source.account.id)?.currentBalancePence
-    ).toBe(230_00);
+    ).toBe(300_00);
     expect(
       state.accounts.find((item) => item.id === destination.account.id)?.currentBalancePence
-    ).toBe(70_00);
+    ).toBe(0);
   });
 
   it('undoes the latest Transfer Plan funding batch and restores source and destination balances', () => {
