@@ -15,11 +15,17 @@ import type {
 import { normalizeUserPreferences } from './themeEngine';
 import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 import { calculateAccountFunding } from './utils/transferPlan';
-import { findLatestTransferPlanFundingBatch } from './utils/transferPlanFunding';
+import {
+  findLatestTransferPlanFundingBatch,
+  getLegacyIncomingFundingBatches,
+  getTransferPlanFundingBatches,
+  getTransferPlanFundingMonth,
+} from './utils/transferPlanFunding';
 
 const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
 const SOURCE_IMPORT_BACKUP_KEY = 'mv_local_state_before_source_budget_import_v1';
+const SOURCE_IMPORT_FUNDING_RECOVERY_ID = 'source-import-funding-recovery-v1';
 const PREFS_KEY = 'mv_local_preferences_v1';
 const LOCAL_EVENT = 'mv-local-state-updated';
 const OWNER_EMAIL = 'marius@local.invalid';
@@ -2710,3 +2716,4 @@ export const LOCAL_OWNER = {
 };
 
 export const LOCAL_STORAGE_KEY = STORAGE_KEY;
+export const SOURCE_IMPORT_BACKUP_STORAGE_KEY = SOURCE_IMPORT_BACKUP_KEY;
