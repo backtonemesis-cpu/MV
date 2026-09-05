@@ -166,7 +166,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 Amount *
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-sm text-muted text-subtle font-medium">£</span>
+                <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-subtle font-medium">£</span>
                 <input
                   type="number"
                   step="0.01"
