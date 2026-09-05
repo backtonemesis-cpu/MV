@@ -1535,17 +1535,18 @@ export function executeLocalTransferAllocations(
       if (!destination || destination.isActive === false) {
         throw new Error('Destination account is unavailable.');
       }
+      let planMonthPayments: PlannedPayment[] | undefined;
       if (payload.month !== undefined) {
         if (!/^\d{4}-\d{2}$/.test(payload.month)) {
           throw new Error('Transfer Plan month must use YYYY-MM format.');
         }
 
-        const monthPayments = state.plannedPayments.filter(
+        planMonthPayments = state.plannedPayments.filter(
           (payment) => payment.month === payload.month
         );
         const currentRequirement = calculateAccountFunding(
           destination,
-          monthPayments,
+          planMonthPayments,
           state.transactions
         );
 
@@ -1583,9 +1584,17 @@ export function executeLocalTransferAllocations(
         if (source.type === 'credit') {
           throw new Error('Credit accounts cannot be used as Transfer Plan funding sources.');
         }
-        if (source.currentBalancePence < allocation.amountPence) {
+        const reservedPlanPence = planMonthPayments
+          ? calculateAccountFunding(source, planMonthPayments, state.transactions)
+              .totalSelectedPaymentsPence
+          : 0;
+        const safeToMovePence = Math.max(
+          0,
+          source.currentBalancePence - reservedPlanPence
+        );
+        if (safeToMovePence < allocation.amountPence) {
           throw new Error(
-            `${source.name} does not have enough available balance for its allocation.`
+            `${source.name} has only ${safeToMovePence} pence safe to move after its own selected bills.`
           );
         }
 
