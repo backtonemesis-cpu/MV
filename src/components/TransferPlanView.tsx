@@ -255,13 +255,17 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     }
   };
 
-  const handleBulkSelection = async (include: boolean) => {
+  const handleBulkSelection = async (
+    include: boolean,
+    status?: 'paid' | 'unpaid'
+  ) => {
     if (isViewOnly) return;
     try {
       setBulkSelectionBusy(true);
       await onBulkTogglePlannedPayments({
         month: selectedMonth,
         include,
+        status,
       });
     } catch (error: any) {
       window.alert(error.message || 'Failed to update Transfer Plan selection.');
@@ -823,7 +827,25 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
 
           {!isViewOnly && monthPayments.length > 0 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleBulkSelection(true, 'unpaid')}
+                disabled={bulkSelectionBusy}
+                className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
+              >
+                <CheckSquare className="h-3.5 w-3.5" />
+                Select Unpaid
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkSelection(true, 'paid')}
+                disabled={bulkSelectionBusy}
+                className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
+              >
+                <CheckSquare className="h-3.5 w-3.5" />
+                Select Paid
+              </button>
               <button
                 type="button"
                 onClick={() => handleBulkSelection(true)}
@@ -831,7 +853,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
                 <CheckSquare className="h-3.5 w-3.5" />
-                Select all
+                Select All
               </button>
               <button
                 type="button"
@@ -840,7 +862,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
                 <Square className="h-3.5 w-3.5" />
-                Clear all
+                Deselect All
               </button>
             </div>
           )}
