@@ -5870,10 +5870,10 @@ body,
    full-width information density, but lift every common desktop text/control
    floor so the user never has to pinch/zoom to read financial information.
    ========================================================================== */
-@media (min-width: 900px) {
+@media (min-width: 641px) {
   .mv-layout-pc {
-    font-size: 15px !important;
-    line-height: 1.45;
+    font-size: 16px !important;
+    line-height: 1.46;
   }
 
   .mv-layout-pc header > .mv-shell-boundary > div {
@@ -5917,12 +5917,12 @@ body,
   }
 
   .mv-layout-pc h1 {
-    font-size: 26px !important;
+    font-size: 28px !important;
     line-height: 1.2 !important;
   }
 
   .mv-layout-pc h2 {
-    font-size: 18px !important;
+    font-size: 20px !important;
     line-height: 1.25 !important;
   }
 
@@ -5931,45 +5931,45 @@ body,
     font-size: 16px !important;
   }
 
-  .mv-layout-pc .text-5xl { font-size: 34px !important; }
-  .mv-layout-pc .text-4xl { font-size: 31px !important; }
-  .mv-layout-pc .text-3xl { font-size: 27px !important; }
-  .mv-layout-pc .text-2xl { font-size: 23px !important; }
-  .mv-layout-pc .text-xl { font-size: 20px !important; }
-  .mv-layout-pc .text-lg { font-size: 18px !important; }
-  .mv-layout-pc .text-base { font-size: 16px !important; }
-  .mv-layout-pc .text-sm { font-size: 15px !important; }
-  .mv-layout-pc .text-xs { font-size: 13px !important; }
+  .mv-layout-pc .text-5xl { font-size: 36px !important; }
+  .mv-layout-pc .text-4xl { font-size: 33px !important; }
+  .mv-layout-pc .text-3xl { font-size: 29px !important; }
+  .mv-layout-pc .text-2xl { font-size: 25px !important; }
+  .mv-layout-pc .text-xl { font-size: 21px !important; }
+  .mv-layout-pc .text-lg { font-size: 19px !important; }
+  .mv-layout-pc .text-base { font-size: 17px !important; }
+  .mv-layout-pc .text-sm { font-size: 16px !important; }
+  .mv-layout-pc .text-xs { font-size: 14px !important; }
 
   /* Tailwind arbitrary pixel classes are common throughout MV. These floors
      stop legacy 10–12px labels from becoming unreadable on the 14-inch panel. */
   .mv-layout-pc .text-\[9px\],
   .mv-layout-pc .text-\[10px\] {
-    font-size: 12px !important;
-  }
-
-  .mv-layout-pc .text-\[11px\] {
     font-size: 13px !important;
   }
 
-  .mv-layout-pc .text-\[12px\] {
+  .mv-layout-pc .text-\[11px\] {
     font-size: 14px !important;
   }
 
-  .mv-layout-pc .text-\[13px\] {
+  .mv-layout-pc .text-\[12px\] {
     font-size: 15px !important;
   }
 
-  .mv-layout-pc .text-\[14px\] {
+  .mv-layout-pc .text-\[13px\] {
     font-size: 16px !important;
   }
 
-  .mv-layout-pc .text-\[15px\] {
+  .mv-layout-pc .text-\[14px\] {
     font-size: 17px !important;
   }
 
-  .mv-layout-pc .text-\[16px\] {
+  .mv-layout-pc .text-\[15px\] {
     font-size: 18px !important;
+  }
+
+  .mv-layout-pc .text-\[16px\] {
+    font-size: 19px !important;
   }
 
   .mv-layout-pc :is(
@@ -5979,7 +5979,7 @@ body,
     min-height: 38px !important;
     height: 38px !important;
     padding-block: 7px !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
   }
 
   .mv-layout-pc textarea {
@@ -6000,7 +6000,7 @@ body,
   ) :is(button, a, [role="menuitem"]) {
     min-height: 38px !important;
     padding: 8px 12px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 
   .mv-layout-pc .finance-filter-control {
@@ -6017,25 +6017,25 @@ body,
   }
 
   .mv-layout-pc .finance-row-title {
-    font-size: 15px !important;
-    line-height: 19px !important;
+    font-size: 16px !important;
+    line-height: 20px !important;
   }
 
   .mv-layout-pc .finance-metadata-line {
-    font-size: 13px !important;
-    line-height: 1.3 !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
   }
 
   .mv-layout-pc .finance-amount {
-    font-size: 16px !important;
-    line-height: 19px !important;
+    font-size: 18px !important;
+    line-height: 21px !important;
   }
 
   .mv-layout-pc .finance-status-positive,
   .mv-layout-pc .finance-status-negative,
   .mv-layout-pc .finance-status-neutral {
-    font-size: 12px !important;
-    line-height: 17px;
+    font-size: 13px !important;
+    line-height: 18px;
   }
 
   .mv-layout-pc .finance-leading-icon {
@@ -6050,17 +6050,17 @@ body,
   }
 
   .mv-layout-pc table {
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 
   .mv-layout-pc table th {
     padding: 9px 11px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
   }
 
   .mv-layout-pc table td {
     padding: 10px 11px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 
   .mv-layout-pc .mv-month-picker {
@@ -6070,7 +6070,7 @@ body,
   .mv-layout-pc .mv-month-picker-input {
     min-height: 36px !important;
     height: 36px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 
   .mv-layout-pc .mv-settings-control,
@@ -6079,7 +6079,7 @@ body,
   .mv-layout-pc .mv-settings-danger {
     min-height: 38px !important;
     height: 38px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 
   .mv-layout-pc .mv-settings-tab {
@@ -6110,14 +6110,14 @@ body,
   .mv-layout-pc .mv-rollover-footer button {
     min-height: 38px !important;
     height: 38px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 }
 
 /* The 150% Windows-scale laptop typically exposes roughly 1280 CSS px.
    At that width preserve four-column financial overview cards, but give more
    descriptive areas two-column breathing room so text does not become tiny. */
-@media (min-width: 900px) and (max-width: 1400px) {
+@media (min-width: 641px) and (max-width: 1400px) {
   .mv-layout-pc .mv-workspace {
     padding-inline: 12px !important;
   }
