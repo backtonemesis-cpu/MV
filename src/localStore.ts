@@ -15,6 +15,7 @@ import type {
 import { normalizeUserPreferences } from './themeEngine';
 import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 import { calculateAccountFunding } from './utils/transferPlan';
+import { findLatestTransferPlanFundingBatch } from './utils/transferPlanFunding';
 
 const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
@@ -1635,32 +1636,13 @@ export function undoLatestLocalTransferPlanFunding(
   version: number;
 } {
   const current = loadLocalHousehold();
+  const fundingBatch = findLatestTransferPlanFundingBatch(
+    current.transactions,
+    destinationAccountId,
+    month
+  );
 
-  const transferPlanMonth = (transaction: Transaction): string =>
-    (transaction.metadata?.transferPlanMonth as string | undefined) ||
-    transaction.date.slice(0, 7);
-
-  const isTransferPlanFunding = (transaction: Transaction): boolean =>
-    Boolean(transaction.metadata?.transferBatchId) ||
-    transaction.description.startsWith('Transfer Plan:');
-
-  const candidates = current.transactions
-    .filter(
-      (transaction) =>
-        transaction.targetAccountId === destinationAccountId &&
-        transaction.type === 'transfer' &&
-        transaction.isTransfer &&
-        isTransferPlanFunding(transaction) &&
-        (!month || transferPlanMonth(transaction) === month)
-    )
-    .sort((a, b) => {
-      const createdCompare = (b.createdAt || '').localeCompare(a.createdAt || '');
-      if (createdCompare !== 0) return createdCompare;
-      return b.date.localeCompare(a.date);
-    });
-
-  const latest = candidates[0];
-  if (!latest) {
+  if (!fundingBatch) {
     throw new Error(
       month
         ? `No Transfer Plan funding is available to undo for this account in ${month}.`
@@ -1668,17 +1650,7 @@ export function undoLatestLocalTransferPlanFunding(
     );
   }
 
-  const latestBatchId = latest.metadata?.transferBatchId as string | undefined;
-  const targetTransactions = latestBatchId
-    ? current.transactions.filter(
-        (transaction) =>
-          transaction.metadata?.transferBatchId === latestBatchId &&
-          transaction.targetAccountId === destinationAccountId &&
-          transaction.type === 'transfer' &&
-          transaction.isTransfer &&
-          (!month || transferPlanMonth(transaction) === month)
-      )
-    : [latest];
+  const targetTransactions = fundingBatch.transactions;
 
   const result = mutateLocalHousehold(
     expectedVersion,
@@ -1702,7 +1674,9 @@ export function undoLatestLocalTransferPlanFunding(
       );
 
       if (actualTransactions.length !== targetTransactions.length) {
-        throw new Error('Transfer Plan funding changed before it could be undone. Refresh and try again.');
+        throw new Error(
+          'Transfer Plan funding changed before it could be undone. Refresh and try again.'
+        );
       }
 
       let destinationTotalPence = 0;
@@ -1711,7 +1685,11 @@ export function undoLatestLocalTransferPlanFunding(
         const source = state.accounts.find((account) => account.id === transaction.accountId);
         if (!source) throw new Error('A funding source account is unavailable.');
 
-        adjustAnchoredBalanceForNewTransfer(source, transaction.amountPence, transaction.date);
+        adjustAnchoredBalanceForNewTransfer(
+          source,
+          transaction.amountPence,
+          transaction.date
+        );
         destinationTotalPence += transaction.amountPence;
       }
 
