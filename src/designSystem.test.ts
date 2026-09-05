@@ -134,4 +134,33 @@ describe('semantic design system enforcement', () => {
     expect(savings).not.toContain('recorded allocations exceed');
   });
 
+  it('locks the app-wide PC and Phone layout modes', () => {
+    const app = fs.readFileSync(path.join(SRC_DIR, 'App.tsx'), 'utf8');
+    const header = fs.readFileSync(path.join(COMPONENT_DIR, 'Header.tsx'), 'utf8');
+    const css = fs.readFileSync(path.join(SRC_DIR, 'index.css'), 'utf8');
+
+    expect(app).toContain("type LayoutMode = 'pc' | 'phone'");
+    expect(app).toContain("mv-layout-mode-v1");
+    expect(app).toContain("layoutMode === 'phone' ? 'mv-layout-phone' : 'mv-layout-pc'");
+    expect(app).toContain('onLayoutModeChange={setLayoutMode}');
+    expect(app).not.toContain('isMobilePreview');
+
+    expect(header).toContain('header-layout-pc-btn');
+    expect(header).toContain('header-layout-phone-btn');
+    expect(header).toContain('App display mode');
+    expect(header).toContain("onLayoutModeChange('pc')");
+    expect(header).toContain("onLayoutModeChange('phone')");
+    expect(header).not.toContain('Mobile View');
+
+    expect(css).toContain('DEVICE-OPTIMISED LAYOUT MODES — HP OMNIBOOK 7 + IPHONE 13');
+    expect(css).toContain('.mv-layout-pc .mv-workspace');
+    expect(css).toContain('.mv-layout-phone .mv-workspace');
+    expect(css).toContain('width: 390px');
+    expect(css).toContain('height: min(844px');
+    expect(css).toContain('.mv-layout-phone .mv-settings-tabs');
+    expect(css).toContain('.mv-layout-phone .submenu');
+    expect(css).toContain('.mv-layout-pc .mv-nav-desktop');
+    expect(css).toContain('.mv-layout-phone .mv-nav-mobile');
+  });
+
 });
