@@ -2342,6 +2342,73 @@ export function markLocalPaymentPaid(
   return { ...result.value, version: result.state.version };
 }
 
+export function undoLocalPaymentPaid(
+  id: string,
+  expectedVersion: number
+): { transaction: Transaction; payment: PlannedPayment; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'planned_payment_paid_undone',
+      entityType: 'planned_payment',
+      entityId: id,
+      summary: 'Recorded bill payment undone and linked actual transaction removed',
+    },
+    (state) => {
+      const paymentIndex = state.plannedPayments.findIndex(
+        (payment) => payment.id === id
+      );
+      if (paymentIndex < 0) throw new Error('Planned bill not found.');
+
+      const payment = state.plannedPayments[paymentIndex];
+      if (!payment.actualTransactionId) {
+        throw new Error(
+          'This paid bill has no linked actual payment transaction to undo.'
+        );
+      }
+
+      const linkedTransaction = state.transactions.find(
+        (transaction) =>
+          transaction.id === payment.actualTransactionId &&
+          transaction.plannedPaymentId === payment.id &&
+          transaction.type === 'expense' &&
+          !transaction.isTransfer &&
+          !transaction.isRepayment &&
+          !transaction.isSavings &&
+          !transaction.isRefund
+      );
+
+      if (!linkedTransaction) {
+        throw new Error(
+          'The linked actual payment transaction is missing or no longer matches this bill. Nothing was changed.'
+        );
+      }
+
+      state.transactions = state.transactions.filter(
+        (transaction) => transaction.id !== linkedTransaction.id
+      );
+
+      const nextPayment: PlannedPayment = {
+        ...payment,
+        status: 'unpaid',
+        actualAmountPence: undefined,
+        actualDate: undefined,
+        actualTransactionId: undefined,
+        updatedAt: nowIso(),
+        updatedBy: OWNER_EMAIL,
+      };
+      state.plannedPayments[paymentIndex] = nextPayment;
+
+      return {
+        transaction: linkedTransaction,
+        payment: nextPayment,
+      };
+    }
+  );
+
+  return { ...result.value, version: result.state.version };
+}
+
 export function markLocalIncomeReceived(
   id: string,
   payload: { actualAmountPence?: number; actualDate?: string; accountId?: string },

@@ -31,6 +31,7 @@ import {
   executeLocalTransfer,
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
+  undoLocalPaymentPaid,
   getLocalPreferences,
   importLocalMonth,
   loadLocalHousehold,
@@ -213,6 +214,13 @@ export async function markPaymentPaid(
 ) {
   const { expectedVersion, ...actual } = payload;
   return markLocalPaymentPaid(id, actual, expectedVersion);
+}
+
+export async function undoPaymentPaid(
+  id: string,
+  expectedVersion: number
+) {
+  return undoLocalPaymentPaid(id, expectedVersion);
 }
 
 export async function createPlannedIncome(

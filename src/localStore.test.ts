@@ -12,6 +12,7 @@ import {
   executeLocalTransfer,
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
+  undoLocalPaymentPaid,
   importLocalMonth,
   loadLocalHousehold,
   markLocalIncomeReceived,
@@ -28,6 +29,7 @@ import {
   removeLocalHouseholdMember,
 } from './localStore';
 import { generateTransferPlan } from './utils/transferPlan';
+import { getLatestTransferPlanFundingByDestination } from './utils/transferPlanFunding';
 import { SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 class MemoryStorage implements Storage {
@@ -956,6 +958,153 @@ describe('Penny-style local MV storage', () => {
     ).toBe(false);
   });
 
+  it('keeps funding and paid state independent through fund, pay, undo payment, and undo funding', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Workflow Savings',
+        type: 'savings',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Workflow Bills',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Workflow bill',
+        amountPence: 40_00,
+        month: '2026-09',
+        responsiblePerson: 'Vesta',
+        accountId: destination.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    executeLocalTransferAllocations(
+      {
+        destinationAccountId: destination.account.id,
+        expectedTotalPence: 40_00,
+        allocations: [{ sourceAccountId: source.account.id, amountPence: 40_00 }],
+        description: 'Transfer Plan: workflow state test',
+        date: '2026-09-04',
+        month: '2026-09',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(true);
+    expect(
+      state.accounts.find((account) => account.id === source.account.id)
+        ?.currentBalancePence
+    ).toBe(60_00);
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(40_00);
+
+    markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 40_00,
+        actualDate: '2026-09-04',
+        accountId: destination.account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.status
+    ).toBe('paid');
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(0);
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(true);
+
+    undoLocalPaymentPaid(bill.payment.id, state.version);
+    state = loadLocalHousehold();
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.status
+    ).toBe('unpaid');
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(40_00);
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(true);
+
+    undoLatestLocalTransferPlanFunding(
+      destination.account.id,
+      state.version,
+      '2026-09'
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.accounts.find((account) => account.id === source.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((account) => account.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(0);
+    expect(
+      getLatestTransferPlanFundingByDestination(
+        state.transactions,
+        '2026-09',
+        true
+      ).has(destination.account.id)
+    ).toBe(false);
+
+    const plan = generateTransferPlan(
+      state.accounts,
+      state.plannedPayments,
+      '2026-09',
+      state.transactions
+    );
+    expect(
+      plan.accountsNeedingFunding.find(
+        (requirement) => requirement.account.id === destination.account.id
+      )?.transferRequiredPence
+    ).toBe(40_00);
+  });
+
   it('completed Transfer Plan funding clears the requirement even with future reconciliation anchors', () => {
     let state = loadLocalHousehold();
 
@@ -1267,6 +1416,166 @@ describe('Penny-style local MV storage', () => {
         state.version
       )
     ).toThrow('A bill with a linked actual expense transaction cannot be marked unpaid.');
+  });
+
+  it('records and safely undoes a paid bill without double-counting or crossing same-name accounts', () => {
+    let state = loadLocalHousehold();
+
+    const mariusAccount = createLocalAccount(
+      {
+        name: 'Shared Bank',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const vestaAccount = createLocalAccount(
+      {
+        name: 'Shared Bank',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Vesta payment undo test',
+        amountPence: 25_00,
+        month: '2026-09',
+        responsiblePerson: 'Vesta',
+        accountId: vestaAccount.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const firstPaid = markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 25_00,
+        actualDate: '2026-09-04',
+        accountId: vestaAccount.account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === mariusAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((account) => account.id === vestaAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(75_00);
+    expect(
+      state.transactions.filter(
+        (transaction) => transaction.plannedPaymentId === bill.payment.id
+      )
+    ).toHaveLength(1);
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)
+    ).toEqual(
+      expect.objectContaining({
+        status: 'paid',
+        actualTransactionId: firstPaid.transaction.id,
+      })
+    );
+
+    const undone = undoLocalPaymentPaid(bill.payment.id, state.version);
+    expect(undone.transaction.id).toBe(firstPaid.transaction.id);
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === mariusAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((account) => account.id === vestaAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.transactions.some(
+        (transaction) => transaction.id === firstPaid.transaction.id
+      )
+    ).toBe(false);
+    const resetPayment = state.plannedPayments.find(
+      (payment) => payment.id === bill.payment.id
+    );
+    expect(resetPayment?.status).toBe('unpaid');
+    expect(resetPayment).not.toHaveProperty('actualTransactionId');
+    expect(resetPayment).not.toHaveProperty('actualAmountPence');
+    expect(resetPayment).not.toHaveProperty('actualDate');
+
+    markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 25_00,
+        actualDate: '2026-09-04',
+        accountId: vestaAccount.account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.transactions.filter(
+        (transaction) => transaction.plannedPaymentId === bill.payment.id
+      )
+    ).toHaveLength(1);
+    expect(
+      state.accounts.find((account) => account.id === vestaAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(75_00);
+  });
+
+  it('refuses to invent payment undo when there is no linked actual expense', () => {
+    let state = loadLocalHousehold();
+    const account = createLocalAccount(
+      {
+        name: 'No Evidence Current',
+        type: 'current',
+        startingBalancePence: 50_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'No evidence bill',
+        amountPence: 10_00,
+        month: '2026-09',
+        responsiblePerson: 'Marius',
+        accountId: account.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      undoLocalPaymentPaid(bill.payment.id, state.version)
+    ).toThrow('no linked actual payment transaction to undo');
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((candidate) => candidate.id === account.account.id)
+        ?.currentBalancePence
+    ).toBe(50_00);
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.status
+    ).toBe('unpaid');
   });
 
   it('keeps received income and its linked Activity transaction reconciled when edited', () => {

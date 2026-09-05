@@ -59,6 +59,7 @@ interface TransferPlanViewProps {
       accountId: string;
     }
   ) => Promise<void>;
+  onUndoPaymentPaid: (id: string) => Promise<void>;
   onBulkTogglePlannedPayments: (params: {
     month?: string;
     include: boolean;
@@ -95,6 +96,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onUpdatePlannedPayment,
   onDeletePlannedPayment,
   onMarkPaymentPaid,
+  onUndoPaymentPaid,
   onBulkTogglePlannedPayments,
   onExecuteTransfer,
   onUndoFunding,
@@ -116,6 +118,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const [editingPayment, setEditingPayment] = useState<PlannedPayment | null>(null);
   const [markingPayment, setMarkingPayment] = useState<PlannedPayment | null>(null);
   const [undoingFundingAccountId, setUndoingFundingAccountId] = useState<string | null>(null);
+  const [undoingPaymentId, setUndoingPaymentId] = useState<string | null>(null);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
   const [expandedAccountIds, setExpandedAccountIds] = useState<Record<string, boolean>>({
     'acc-marius-current': true,
@@ -258,20 +261,38 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   };
 
   const handlePaymentStatusAction = async (payment: PlannedPayment) => {
-    if (isViewOnly || payment.status === 'paid') return;
+    if (isViewOnly) return;
 
-    // If legacy/imported data already has actual evidence, synchronise the
-    // display status without creating a duplicate expense.
-    if (payment.actualTransactionId) {
-      try {
-        await onUpdatePlannedPayment(payment.id, { status: 'paid' });
-      } catch (err: any) {
-        window.alert(err.message || 'Failed to synchronise bill status.');
-      }
+    if (payment.status !== 'paid') {
+      // Recording Paid always goes through the actual-payment modal so the
+      // Plan status and Activity evidence are created together exactly once.
+      setMarkingPayment(payment);
       return;
     }
 
-    setMarkingPayment(payment);
+    const account = accounts.find((candidate) => candidate.id === payment.accountId);
+    const accountLabel = account ? accountIdentityLabel(account) : payment.accountId;
+    const evidenceLabel = payment.actualTransactionId
+      ? 'This will remove the linked Activity expense and return the bill to Unpaid.'
+      : 'No linked Activity expense exists; only the legacy Paid status will be returned to Unpaid.';
+
+    const confirmed = window.confirm(
+      `Undo the recorded payment for ${payment.name} (${formatPence(payment.actualAmountPence ?? payment.amountPence)}) from ${accountLabel}? ${evidenceLabel}`
+    );
+    if (!confirmed) return;
+
+    try {
+      setUndoingPaymentId(payment.id);
+      if (payment.actualTransactionId) {
+        await onUndoPaymentPaid(payment.id);
+      } else {
+        await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
+      }
+    } catch (err: any) {
+      window.alert(err.message || 'Failed to undo recorded payment.');
+    } finally {
+      setUndoingPaymentId(null);
+    }
   };
 
   const handleBulkIncludeUnpaid = async () => {
@@ -960,18 +981,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       </span>
 
                       {isPaymentPaid(payment) ? (
-                        <span
-                          title={
-                            payment.actualTransactionId
-                              ? 'Payment recorded in Activity'
-                              : 'Paid status recorded'
-                          }
-                          className="min-w-0 rounded-xl bg-success-soft px-2.5 py-2 text-center text-[12px] font-medium text-success capitalize"
+                        <button
+                          type="button"
+                          onClick={() => handlePaymentStatusAction(payment)}
+                          disabled={isViewOnly || undoingPaymentId === payment.id}
+                          title="Undo recorded payment"
+                          className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-xl bg-success-soft px-2.5 py-2 text-center text-[12px] font-medium text-success transition-colors hover:opacity-80 disabled:opacity-50 capitalize"
                         >
-                          paid
-                        </span>
+                          <RotateCcw className="h-3 w-3" />
+                          {undoingPaymentId === payment.id ? 'undoing…' : 'paid'}
+                        </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => handlePaymentStatusAction(payment)}
                           disabled={isViewOnly}
                           title="Record payment"
@@ -1091,18 +1113,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         {/* Paid / Unpaid Status Toggle */}
                         <td className="py-2.5 px-4 text-center">
                           {isPaymentPaid(payment) ? (
-                            <span
-                              title={
-                                payment.actualTransactionId
-                                  ? 'Payment recorded in Activity'
-                                  : 'Paid status recorded'
-                              }
-                              className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium bg-success-soft text-success"
+                            <button
+                              type="button"
+                              onClick={() => handlePaymentStatusAction(payment)}
+                              disabled={isViewOnly || undoingPaymentId === payment.id}
+                              title="Undo recorded payment"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-success-soft text-success transition-colors hover:opacity-80 disabled:opacity-50"
                             >
-                              paid
-                            </span>
+                              <RotateCcw className="h-3 w-3" />
+                              {undoingPaymentId === payment.id ? 'undoing…' : 'paid'}
+                            </button>
                           ) : (
                             <button
+                              type="button"
                               onClick={() => handlePaymentStatusAction(payment)}
                               disabled={isViewOnly}
                               title="Record payment"
