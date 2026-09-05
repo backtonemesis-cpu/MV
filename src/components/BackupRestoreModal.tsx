@@ -8,6 +8,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { fetchBackup, preflightRestore, restoreBackup } from '../utils/api';
+import { localDateInputValue } from '../utils/dateInput';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mv_household_backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `mv_household_backup_${localDateInputValue()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
