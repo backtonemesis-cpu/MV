@@ -158,7 +158,8 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('width: 390px');
     expect(css).toContain('height: min(844px');
     expect(css).toContain('.mv-layout-phone .mv-settings-tabs');
-    expect(css).toContain('.mv-layout-phone .submenu');
+    expect(css).toContain('.mv-layout-phone :is(');
+    expect(css).toContain('.submenu');
     expect(css).toContain('.mv-layout-pc .mv-nav-desktop');
     expect(css).toContain('.mv-layout-phone .mv-nav-mobile');
   });
