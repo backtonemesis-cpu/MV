@@ -5,7 +5,6 @@ import {
   TransferPlanSummary,
   Transaction,
 } from '../types';
-import { isPlannedPaymentEffectivelyPaid } from './currency';
 
 /**
  * Calculates the exact funding requirement for a single account based on selected upcoming payments.
@@ -32,12 +31,10 @@ export function calculateAccountFunding(
     (p) => p.accountId === account.id && p.includeInTransferPlan === true
   );
 
-  const paidPayments = selectedPayments.filter((p) =>
-    isPlannedPaymentEffectivelyPaid(p, transactions)
-  );
-  const unpaidPayments = selectedPayments.filter(
-    (p) => !isPlannedPaymentEffectivelyPaid(p, transactions)
-  );
+  // Transfer Plan status is intentionally independent from linked Activity evidence.
+  // Funding follows the explicit Plan Paid/Unpaid state chosen for this bill.
+  const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
+  const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
 
   // Sort upcoming unpaid obligations chronologically by due date
   const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
