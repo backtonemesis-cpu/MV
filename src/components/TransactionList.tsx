@@ -124,8 +124,8 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const filterInputClassName = 'finance-filter-control';
 
   return (
-    <div className="finance-workspace space-y-5 pb-16">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="finance-workspace finance-activity-workspace space-y-5 pb-16">
+      <header className="finance-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Activity</h1>
           <p className="mt-0.5 text-[12px] font-normal text-subtle">
@@ -147,10 +147,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </header>
 
       <section
-        className="finance-panel p-3 sm:p-4"
+        className="finance-panel finance-filter-panel p-3 sm:p-4"
         aria-label="Activity filters"
       >
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="finance-filter-grid grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           <label className="relative block min-w-0">
             <span className="sr-only">Search transactions</span>
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
@@ -159,7 +159,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               placeholder="Search transactions"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className={`${filterInputClassName} pl-9`}
+              className={`${filterInputClassName} finance-filter-control-leading`}
             />
           </label>
 
@@ -169,7 +169,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <select
               value={filterBySelectedMonth && selectedMonth ? 'selected-month' : 'all'}
               onChange={(event) => setFilterBySelectedMonth(event.target.value === 'selected-month')}
-              className={`${filterInputClassName} appearance-none pl-9 pr-9`}
+              className={`${filterInputClassName} finance-filter-control-leading finance-filter-control-trailing appearance-none`}
               disabled={!selectedMonth}
             >
               {selectedMonth && (
@@ -185,7 +185,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <select
               value={selectedPayer}
               onChange={(event) => setSelectedPayer(event.target.value)}
-              className={`${filterInputClassName} appearance-none pr-9`}
+              className={`${filterInputClassName} finance-filter-control-trailing appearance-none`}
             >
               <option value="all">All payers</option>
               {payerOptions.map((person) => (
@@ -202,7 +202,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <select
               value={selectedType}
               onChange={(event) => setSelectedType(event.target.value)}
-              className={`${filterInputClassName} appearance-none pr-9`}
+              className={`${filterInputClassName} finance-filter-control-trailing appearance-none`}
             >
               <option value="all">All classifications</option>
               <option value="expense">Expenses</option>
@@ -220,7 +220,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <select
               value={selectedCategory}
               onChange={(event) => setSelectedCategory(event.target.value)}
-              className={`${filterInputClassName} appearance-none pr-9`}
+              className={`${filterInputClassName} finance-filter-control-trailing appearance-none`}
             >
               <option value="all">All categories</option>
               {categories.map((category) => (
@@ -235,7 +235,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
       </section>
 
       <section
-        className="finance-panel overflow-hidden"
+        className="finance-panel finance-ledger-panel overflow-hidden"
         aria-label="Activity transactions"
       >
         <div className="hidden items-center justify-between border-b border-muted px-4 py-2.5 sm:flex">
