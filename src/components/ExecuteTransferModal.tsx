@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { X, ArrowRight, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { X, ArrowRight, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react';
 import { Account, AccountFundingRequirement, HouseholdMember } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 import {
   accountIdentityLabel,
-  accountOptionLabel,
   accountOwnerLabel,
   accountTypeLabel,
 } from '../utils/accountDisplay';
@@ -51,12 +50,15 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
       account.currentBalancePence - (reservedPlanPenceByAccountId[account.id] || 0)
     );
 
-  const eligibleSources = availableSourceAccounts.filter(
-    (account) =>
-      account.isActive !== false &&
-      account.type !== 'credit' &&
-      account.id !== targetAccount.id &&
-      safeToMovePence(account) > 0
+  // Show every active household account except the destination so the user can
+  // understand the whole funding picture. Accounts that are not valid cash
+  // sources remain visible with a reason instead of silently disappearing.
+  const sourceAccounts = availableSourceAccounts.filter(
+    (account) => account.isActive !== false && account.id !== targetAccount.id
+  );
+
+  const selectableSourceAccounts = sourceAccounts.filter(
+    (account) => account.type !== 'credit' && safeToMovePence(account) > 0
   );
 
   // A funding source is a deliberate user choice. Do not preselect one.
@@ -74,17 +76,35 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   const [description, setDescription] = useState<string>(defaultDescription);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [openSourcePickerId, setOpenSourcePickerId] = useState<string | null>(null);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+
+      if (openSourcePickerId) {
+        setOpenSourcePickerId(null);
+        return;
+      }
+
+      onClose();
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) return;
+      if (!event.target.closest('[data-funding-source-picker]')) {
+        setOpenSourcePickerId(null);
       }
     };
+
     document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [onClose, openSourcePickerId]);
 
   const allocatedTotalPence = allocations.reduce(
     (sum, allocation) => sum + parseToPence(allocation.amountStr || '0'),
@@ -97,6 +117,34 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
 
   const usedSourceIds = new Set(
     allocations.map((allocation) => allocation.sourceAccountId).filter(Boolean)
+  );
+
+  const sourceDisabledReason = (account: Account, currentAllocationId: string): string | null => {
+    if (account.type === 'credit') {
+      return 'Credit/liability account — not a cash funding source';
+    }
+
+    const safePence = safeToMovePence(account);
+    if (safePence <= 0) {
+      return 'No safe-to-move balance';
+    }
+
+    const currentAllocation = allocations.find(
+      (allocation) => allocation.id === currentAllocationId
+    );
+    const usedElsewhere =
+      usedSourceIds.has(account.id) &&
+      currentAllocation?.sourceAccountId !== account.id;
+
+    if (usedElsewhere) {
+      return 'Already selected in another source row';
+    }
+
+    return null;
+  };
+
+  const canAddAnotherSource = selectableSourceAccounts.some(
+    (account) => !usedSourceIds.has(account.id)
   );
 
   const updateAllocation = (
@@ -164,7 +212,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
     }
 
     for (const allocation of parsedAllocations) {
-      const source = eligibleSources.find(
+      const source = selectableSourceAccounts.find(
         (account) => account.id === allocation.sourceAccountId
       );
       if (!source) {
@@ -224,7 +272,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               Record funding transfer
             </h3>
             <p className="mv-funding-modal-kicker">
-              Move money into the account that will pay these selected bills.
+              Choose the source account and record the exact transfer.
             </p>
           </div>
           <button
@@ -290,23 +338,19 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                     Choose where the money comes from. Safe-to-move balances already protect other selected bills.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={addAllocation}
-                  disabled={allocations.length >= eligibleSources.length}
-                  className="mv-funding-add-source"
-                  title={
-                    allocations.length >= eligibleSources.length
-                      ? 'No additional eligible funding sources are available'
-                      : 'Add another funding source'
-                  }
-                >
-                  <Plus className="w-4 h-4" />
-                  Add source
-                </button>
+                {canAddAnotherSource && (
+                  <button
+                    type="button"
+                    onClick={addAllocation}
+                    className="mv-funding-add-source"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add another source
+                  </button>
+                )}
               </div>
 
-              {eligibleSources.length === 0 && (
+              {selectableSourceAccounts.length === 0 && (
                 <div className="mv-funding-empty-state">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>No eligible account currently has money that is safe to move.</span>
@@ -315,7 +359,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
 
               <div className="mv-funding-allocation-list">
                 {allocations.map((allocation, index) => {
-                  const source = eligibleSources.find(
+                  const source = sourceAccounts.find(
                     (account) => account.id === allocation.sourceAccountId
                   );
                   const allocationPence = parseToPence(allocation.amountStr || '0');
@@ -327,34 +371,88 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                           <label htmlFor={`funding-source-${allocation.id}`}>
                             {index === 0 ? 'Money from' : `Money from ${index + 1}`}
                           </label>
-                          <select
-                            id={`funding-source-${allocation.id}`}
-                            autoFocus={index === 0}
-                            value={allocation.sourceAccountId}
-                            onChange={(e) =>
-                              updateAllocation(allocation.id, {
-                                sourceAccountId: e.target.value,
-                              })
-                            }
-                            required
+                          <div
+                            className="mv-funding-source-picker"
+                            data-funding-source-picker
                           >
-                            <option value="">Choose account</option>
-                            {eligibleSources.map((account) => {
-                              const usedElsewhere =
-                                usedSourceIds.has(account.id) &&
-                                account.id !== allocation.sourceAccountId;
-                              return (
-                                <option
-                                  key={account.id}
-                                  value={account.id}
-                                  disabled={usedElsewhere}
-                                >
-                                  {accountOptionLabel(account, { includeBalance: false })} · Safe{' '}
-                                  {formatPence(safeToMovePence(account))}
-                                </option>
-                              );
-                            })}
-                          </select>
+                            <button
+                              id={`funding-source-${allocation.id}`}
+                              type="button"
+                              autoFocus={index === 0}
+                              className="mv-funding-source-trigger"
+                              aria-haspopup="listbox"
+                              aria-expanded={openSourcePickerId === allocation.id}
+                              onClick={() =>
+                                setOpenSourcePickerId((current) =>
+                                  current === allocation.id ? null : allocation.id
+                                )
+                              }
+                            >
+                              <span className="mv-funding-source-trigger-copy">
+                                <strong>
+                                  {source ? accountIdentityLabel(source) : 'Choose account'}
+                                </strong>
+                                <span>
+                                  {source
+                                    ? `Safe to move ${formatPence(safeToMovePence(source))}`
+                                    : `${sourceAccounts.length} account${sourceAccounts.length === 1 ? '' : 's'} available`}
+                                </span>
+                              </span>
+                              <ChevronDown className="h-4 w-4 shrink-0" />
+                            </button>
+
+                            {openSourcePickerId === allocation.id && (
+                              <div
+                                className="mv-funding-source-menu"
+                                role="listbox"
+                                aria-labelledby={`funding-source-${allocation.id}`}
+                              >
+                                {sourceAccounts.map((account) => {
+                                  const disabledReason = sourceDisabledReason(
+                                    account,
+                                    allocation.id
+                                  );
+                                  const isSelected =
+                                    allocation.sourceAccountId === account.id;
+
+                                  return (
+                                    <button
+                                      key={account.id}
+                                      type="button"
+                                      role="option"
+                                      aria-selected={isSelected}
+                                      disabled={Boolean(disabledReason)}
+                                      className="mv-funding-source-option"
+                                      onClick={() => {
+                                        updateAllocation(allocation.id, {
+                                          sourceAccountId: account.id,
+                                        });
+                                        setOpenSourcePickerId(null);
+                                        setError(null);
+                                      }}
+                                    >
+                                      <span className="mv-funding-source-option-copy">
+                                        <strong>{accountIdentityLabel(account)}</strong>
+                                        <span
+                                          className={
+                                            disabledReason
+                                              ? 'text-subtle'
+                                              : 'finance-semantic-positive'
+                                          }
+                                        >
+                                          {disabledReason ||
+                                            `Safe to move ${formatPence(safeToMovePence(account))}`}
+                                        </span>
+                                      </span>
+                                      {isSelected && (
+                                        <span className="mv-funding-source-selected">Selected</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <div className="min-w-0">
@@ -393,48 +491,32 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                       </div>
 
                       {source ? (
-                        <div className="mv-funding-source-detail">
-                          <div className="mv-funding-source-route">
-                            <span>{accountIdentityLabel(source)}</span>
-                            <ArrowRight className="h-4 w-4 shrink-0 text-subtle" />
-                            <span>{accountIdentityLabel(targetAccount)}</span>
-                          </div>
-                          <div className="mv-private-value mv-funding-safe-balance">
-                            <strong>Safe to move {formatPence(safeToMovePence(source))}</strong>
-                            {(reservedPlanPenceByAccountId[source.id] || 0) > 0 && (
-                              <span>
-                                Balance {formatPence(source.currentBalancePence)} · Reserved{' '}
-                                {formatPence(reservedPlanPenceByAccountId[source.id] || 0)}
-                              </span>
-                            )}
-                            {allocationPence > safeToMovePence(source) && (
-                              <span className="text-danger font-semibold">Exceeds safe amount</span>
-                            )}
-                          </div>
+                        <div className="mv-private-value mv-funding-source-detail">
+                          <span>
+                            Safe to move <strong>{formatPence(safeToMovePence(source))}</strong>
+                          </span>
+                          {(reservedPlanPenceByAccountId[source.id] || 0) > 0 && (
+                            <span>
+                              Balance {formatPence(source.currentBalancePence)} · Reserved{' '}
+                              {formatPence(reservedPlanPenceByAccountId[source.id] || 0)}
+                            </span>
+                          )}
+                          {allocationPence > safeToMovePence(source) && (
+                            <span className="text-danger font-semibold">Exceeds safe amount</span>
+                          )}
                         </div>
-                      ) : (
-                        <div className="mv-funding-source-placeholder">
-                          Select an account to see its safe-to-move balance.
-                        </div>
-                      )}
+                      ) : null}
                     </div>
                   );
                 })}
               </div>
 
               <div className="mv-funding-allocation-summary">
-                <div className="min-w-0">
-                  <span className="mv-funding-summary-label">Destination</span>
-                  <div className="mv-funding-destination">
-                    <ArrowRight className="h-4 w-4 shrink-0 text-subtle" />
-                    <strong>{accountIdentityLabel(targetAccount)}</strong>
-                  </div>
-                </div>
-
+                <span className="mv-funding-summary-label">Allocation</span>
                 <div className="mv-private-value mv-funding-allocation-status">
                   <span>
                     {hasSelectedSources
-                      ? `Allocated ${formatPence(allocatedTotalPence)} of ${formatPence(requiredPence)}`
+                      ? `${formatPence(allocatedTotalPence)} of ${formatPence(requiredPence)}`
                       : `Required ${formatPence(requiredPence)}`}
                   </span>
                   <strong

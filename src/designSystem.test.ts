@@ -235,6 +235,9 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('.mv-layout-phone .mv-settings-tabs');
     expect(css).toContain('.mv-layout-phone .mv-modal-card');
     expect(css).toContain('FUNDING TRANSFER MODAL — INDUSTRY-STANDARD WORKFLOW SHELL');
+    expect(css).toContain('FUNDING MODAL COMPACT PASS — NO ROUTINE SCROLL + ALL ACCOUNTS');
+    expect(css).toContain('.mv-funding-source-menu');
+    expect(css).toContain('.mv-funding-source-option');
     expect(css).toContain('.mv-funding-modal-scroll');
     expect(css).toContain('.mv-funding-modal-actions');
     expect(css).toContain('max-height: calc(100dvh - var(--mv-ds-space-8)) !important');
@@ -250,13 +253,19 @@ describe('semantic design system enforcement', () => {
 
     expect(source).toContain('role="dialog"');
     expect(source).toContain('aria-modal="true"');
-    expect(source).toContain('Add source');
+    expect(source).toContain('Add another source');
     expect(source).toContain('Safe to move');
     expect(source).toContain('Ready to record');
     expect(source).toContain('Transfer note <span className="mv-funding-optional">(optional)</span>');
     expect(source).toContain('mv-funding-modal-actions');
     expect(source).toContain('Record transfer');
     expect(source).toContain('description: description.trim() || defaultDescription');
+    expect(source).toContain('const sourceAccounts = availableSourceAccounts.filter');
+    expect(source).toContain("account.id !== targetAccount.id");
+    expect(source).toContain("Credit/liability account — not a cash funding source");
+    expect(source).toContain("No safe-to-move balance");
+    expect(source).toContain('role="listbox"');
+    expect(source).not.toContain('<select');
   });
 
 

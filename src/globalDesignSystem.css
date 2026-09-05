@@ -1715,3 +1715,316 @@ body,
     width: 100%;
   }
 }
+
+
+/* ==========================================================================
+   FUNDING MODAL COMPACT PASS — NO ROUTINE SCROLL + ALL ACCOUNTS
+   Desktop common case fits in one view. All active non-destination accounts
+   appear in the source picker; invalid sources stay visible with a reason.
+   ========================================================================== */
+
+.mv-funding-modal {
+  width: min(52rem, calc(100vw - var(--mv-ds-space-8))) !important;
+  max-width: 52rem !important;
+}
+
+.mv-funding-modal-header {
+  min-height: 3.5rem !important;
+  padding: var(--mv-ds-space-2) var(--mv-ds-space-4) !important;
+}
+
+.mv-funding-modal-kicker {
+  margin-top: 0;
+}
+
+.mv-funding-modal-form {
+  overflow: visible !important;
+}
+
+.mv-funding-modal-scroll {
+  overflow: visible !important;
+  padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+  scrollbar-gutter: auto;
+}
+
+.mv-funding-modal-scroll > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-3) !important;
+}
+
+.mv-funding-modal-summary,
+.mv-funding-sources-section {
+  padding: var(--mv-ds-space-3) !important;
+}
+
+.mv-funding-summary-grid {
+  gap: var(--mv-ds-space-3) !important;
+}
+
+.mv-funding-summary-stat {
+  min-width: 7rem;
+}
+
+.mv-funding-section-header {
+  align-items: center;
+  gap: var(--mv-ds-space-3);
+}
+
+.mv-funding-section-help {
+  margin-top: 0;
+}
+
+.mv-funding-allocation-list {
+  gap: var(--mv-ds-space-2);
+  margin-top: var(--mv-ds-space-2);
+}
+
+.mv-funding-allocation-card {
+  position: relative;
+  padding: var(--mv-ds-space-2) !important;
+}
+
+.mv-funding-allocation-grid {
+  grid-template-columns: minmax(0, 1fr) 12rem var(--mv-ds-control-large);
+  gap: var(--mv-ds-space-2) !important;
+}
+
+.mv-funding-modal-form label {
+  margin-bottom: var(--mv-ds-space-1) !important;
+}
+
+.mv-funding-source-detail {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-1) var(--mv-ds-space-3);
+  margin-top: var(--mv-ds-space-2) !important;
+  padding-top: var(--mv-ds-space-2) !important;
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-allocation-summary {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-3) !important;
+  margin-top: var(--mv-ds-space-2) !important;
+  padding-top: var(--mv-ds-space-2) !important;
+}
+
+.mv-funding-allocation-status {
+  flex-direction: row !important;
+  align-items: center;
+  gap: var(--mv-ds-space-2) !important;
+  text-align: right;
+}
+
+.mv-funding-details-grid {
+  grid-template-columns: 12rem minmax(0, 1fr) !important;
+  gap: var(--mv-ds-space-3) !important;
+}
+
+.mv-funding-modal-actions {
+  position: relative !important;
+  padding: var(--mv-ds-space-2) var(--mv-ds-space-4) !important;
+  box-shadow: none !important;
+}
+
+/* Dark, structured account picker replaces the browser-native white menu. */
+.mv-funding-source-picker {
+  position: relative;
+  min-width: 0;
+}
+
+.mv-funding-source-trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--mv-ds-control-large) !important;
+  height: var(--mv-ds-control-large) !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-2);
+  padding: 0 var(--mv-ds-space-3) !important;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--mv-ds-radius-md) !important;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+
+.mv-funding-source-trigger:focus-visible {
+  outline: 2px solid rgb(var(--accent-rgb));
+  outline-offset: 2px;
+}
+
+.mv-funding-source-trigger-copy,
+.mv-funding-source-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.mv-funding-source-trigger-copy strong,
+.mv-funding-source-option-copy strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--mv-ds-text-compact);
+  line-height: var(--mv-ds-leading-compact);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-funding-source-trigger-copy > span,
+.mv-funding-source-option-copy > span {
+  color: var(--text-subtle);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-funding-source-menu {
+  position: absolute;
+  top: calc(100% + var(--mv-ds-space-1));
+  left: 0;
+  z-index: 120;
+  display: grid;
+  width: min(30rem, calc(100vw - var(--mv-ds-space-12)));
+  max-height: 18rem;
+  gap: var(--mv-ds-space-1);
+  overflow-y: auto;
+  padding: var(--mv-ds-space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--mv-ds-radius-lg);
+  background: var(--surface-elevated, var(--surface));
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.28);
+}
+
+.mv-funding-source-option {
+  display: flex;
+  width: 100%;
+  min-height: var(--mv-ds-click-target) !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-3);
+  padding: var(--mv-ds-space-2) var(--mv-ds-space-3) !important;
+  border: 1px solid transparent;
+  border-radius: var(--mv-ds-radius-md) !important;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.mv-funding-source-option:hover:not(:disabled),
+.mv-funding-source-option[aria-selected="true"] {
+  border-color: var(--border);
+  background: var(--surface-hover);
+}
+
+.mv-funding-source-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.mv-funding-source-selected {
+  flex: 0 0 auto;
+  padding: var(--mv-ds-space-1) var(--mv-ds-space-2);
+  border-radius: var(--mv-ds-radius-sm);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: var(--mv-ds-text-meta);
+  font-weight: 700;
+  line-height: var(--mv-ds-leading-meta);
+}
+
+@media (min-width: 40.0625rem) and (min-height: 42rem) {
+  .mv-funding-modal {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+/* Only unusually short screens fall back to body scrolling. The common
+   one-source desktop workflow remains fully visible without a scrollbar. */
+@media (min-width: 40.0625rem) and (max-height: 41.9375rem) {
+  .mv-funding-modal {
+    max-height: calc(100dvh - var(--mv-ds-space-8)) !important;
+    overflow: hidden !important;
+  }
+
+  .mv-funding-modal-scroll {
+    overflow-y: auto !important;
+  }
+}
+
+@media (max-width: 40rem) {
+  .mv-funding-modal {
+    width: calc(100vw - var(--mv-ds-space-4)) !important;
+    max-width: calc(100vw - var(--mv-ds-space-4)) !important;
+    max-height: calc(100dvh - var(--mv-ds-space-4) - env(safe-area-inset-top)) !important;
+    margin: var(--mv-ds-space-2) !important;
+    border-radius: var(--mv-ds-radius-xl) !important;
+    overflow: hidden !important;
+  }
+
+  .mv-funding-modal-scroll {
+    overflow-y: auto !important;
+    padding: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-funding-summary-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  .mv-funding-summary-grid > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .mv-funding-section-header {
+    align-items: center;
+  }
+
+  .mv-funding-section-help {
+    display: none;
+  }
+
+  .mv-funding-add-source {
+    min-height: var(--mv-ds-control-large) !important;
+    height: var(--mv-ds-control-large) !important;
+    padding-inline: var(--mv-ds-space-2) !important;
+    font-size: var(--mv-ds-text-meta) !important;
+  }
+
+  .mv-funding-allocation-grid {
+    grid-template-columns: minmax(0, 1fr) 8rem var(--mv-ds-control-large) !important;
+    align-items: end;
+  }
+
+  .mv-funding-source-menu {
+    width: min(22rem, calc(100vw - var(--mv-ds-space-8)));
+    max-height: 20rem;
+  }
+
+  .mv-funding-source-detail {
+    display: none !important;
+  }
+
+  .mv-funding-details-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .mv-funding-modal-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding:
+      var(--mv-ds-space-2)
+      var(--mv-ds-space-3)
+      calc(var(--mv-ds-space-2) + env(safe-area-inset-bottom))
+      !important;
+  }
+
+  .mv-funding-footer-buttons {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
