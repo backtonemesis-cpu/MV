@@ -76,6 +76,9 @@ describe('Global finance UI consistency contract', () => {
     expect(income).toContain("setAccountId('')");
     expect(income).toContain("setCategoryId('')");
     expect(income).toContain("setExpectedDate('')");
+    expect(income).toContain('Select account');
+    expect(income).toContain('Category (optional)');
+    expect(income).not.toContain('Select receiving account');
 
     expect(bill).toContain("payment?.accountId || ''");
     expect(bill).toContain("payment?.responsiblePerson || ''");
@@ -103,10 +106,14 @@ describe('Global finance UI consistency contract', () => {
 
   it('keeps financial date fallbacks local and protects currency-prefix spacing', () => {
     const store = read(path.join(SRC_DIR, 'localStore.ts'));
+    const app = read(path.join(SRC_DIR, 'App.tsx'));
     const css = read(path.join(SRC_DIR, 'index.css'));
 
     expect(store).not.toContain("new Date().toISOString().slice(0, 10)");
     expect(store).toContain('localTodayDateKey()');
+    expect(app).not.toContain("new Date().toISOString().substring(0, 10)");
+    expect(app).not.toContain("new Date().toISOString().slice(0, 10)");
+    expect(app).toContain('localDateInputValue()');
 
     expect(css).toContain('.mv-modal-form input.mv-money-input-with-prefix');
     expect(css).toContain('padding-left: 32px !important');
