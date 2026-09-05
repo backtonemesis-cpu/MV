@@ -557,12 +557,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                     className="px-3.5 py-3"
                                   >
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                      <div className="min-w-0">
-                                        <div className="font-semibold text-main text-xs">
-                                          {p.name}
-                                        </div>
-                                        <div className="mt-0.5 text-[11px] text-subtle">
-                                          Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
+                                      <div className="flex min-w-0 items-start gap-2.5">
+                                        <input
+                                          type="checkbox"
+                                          checked={p.includeInTransferPlan}
+                                          onChange={() => handleTogglePaymentInPlan(p)}
+                                          disabled={isViewOnly}
+                                          title="In plan"
+                                          className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-muted text-main focus:ring-muted cursor-pointer"
+                                        />
+                                        <div className="min-w-0">
+                                          <div className="font-semibold text-main text-xs">
+                                            {p.name}
+                                          </div>
+                                          <div className="mt-0.5 text-[11px] text-subtle">
+                                            Due: {p.dueDate || 'Flexible'} · Responsible: {p.responsiblePerson}
+                                          </div>
                                         </div>
                                       </div>
 
@@ -584,7 +594,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                           }
                                         >
                                           {latestFundingBatchByDestination.has(req.account.id)
-                                            ? 'Funded by card'
+                                            ? 'Funding recorded'
                                             : p.status === 'paid'
                                               ? 'Complete'
                                               : 'Covered'}
@@ -852,7 +862,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       {req.selectedPayments.map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between px-3 py-2 bg-surface rounded-lg border border-muted text-xs hover:border-muted transition-colors"
+                          className="flex flex-col gap-2 px-3 py-2 bg-surface rounded-lg border border-muted text-xs hover:border-muted transition-colors sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="flex items-center gap-2.5">
                             <input
