@@ -797,7 +797,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="mv-workspace flex-1 min-w-0 w-full max-w-[1200px] mx-auto px-4 py-3 pb-20 sm:pb-4">
+      <main className="mv-workspace mv-app-workspace flex-1 min-w-0 w-full max-w-[1200px] mx-auto px-4 py-3 pb-20 sm:pb-4">
         {/* Error notification banner if any */}
         {error && (
           <div className="mb-6 p-4 rounded-2xl bg-danger-soft border border-danger text-danger text-xs flex items-center justify-between">
