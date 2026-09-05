@@ -120,6 +120,19 @@ describe('Global finance UI consistency contract', () => {
     expect(dashboard).toContain('calculateTransferredFromSavingsPence');
   });
 
+  it('keeps financial amount colors semantic rather than decorative', () => {
+    const budget = component('BudgetView.tsx');
+    const activity = component('AccountsView.tsx');
+    const savings = component('SavingsView.tsx');
+
+    expect(budget).toContain('text-2xl font-black text-success');
+    expect(budget).toContain('text-2xl font-black text-danger');
+    expect(budget).toContain('text-xs font-extrabold text-main');
+    expect(activity).toContain("isTransfer ? isIncomingTransfer");
+    expect(activity).toContain("'text-danger'");
+    expect(savings).toContain('Transferred From Savings');
+  });
+
   it('uses arrows for movement and neutral account identity in transfer displays', () => {
     const activity = component('TransactionList.tsx');
     const savings = component('SavingsView.tsx');
