@@ -451,7 +451,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                     {!hasSelectedSources
                       ? 'Choose a source account'
                       : remainingPence === 0
-                        ? 'Fully allocated'
+                        ? 'Ready to record'
                         : remainingPence > 0
                           ? `${formatPence(remainingPence)} remaining`
                           : `${formatPence(Math.abs(remainingPence))} over allocated`}
