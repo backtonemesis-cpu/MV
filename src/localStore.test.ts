@@ -555,6 +555,84 @@ describe('Penny-style local MV storage', () => {
     ).toBe(200_00);
   });
 
+  it('prevents Transfer Plan funding from draining a source account below its own selected bills', () => {
+    let state = loadLocalHousehold();
+
+    const source = createLocalAccount(
+      {
+        name: 'Reserved Source Current',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const destination = createLocalAccount(
+      {
+        name: 'Reserved Destination Current',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalPlannedPayment(
+      {
+        name: 'Source account bill',
+        amountPence: 80_00,
+        month: '2026-10',
+        accountId: source.account.id,
+        responsiblePerson: 'Marius',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalPlannedPayment(
+      {
+        name: 'Destination bill',
+        amountPence: 50_00,
+        month: '2026-10',
+        accountId: destination.account.id,
+        responsiblePerson: 'Vesta',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      executeLocalTransferAllocations(
+        {
+          destinationAccountId: destination.account.id,
+          expectedTotalPence: 50_00,
+          allocations: [
+            { sourceAccountId: source.account.id, amountPence: 50_00 },
+          ],
+          description: 'Transfer Plan: unsafe source test',
+          date: '2026-09-05',
+          month: '2026-10',
+        },
+        state.version
+      )
+    ).toThrow('safe to move after its own selected bills');
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((item) => item.id === source.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((item) => item.id === destination.account.id)
+        ?.currentBalancePence
+    ).toBe(0);
+  });
+
   it('does not let Transfer Plan Undo reverse an unrelated incoming transfer', () => {
     let state = loadLocalHousehold();
 
