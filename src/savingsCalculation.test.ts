@@ -4,6 +4,7 @@ import {
   calculateFinancialSummary,
   calculateMonthlySurplus,
   calculateNetSavingsMovementPence,
+  calculateTransferredFromSavingsPence,
   calculateSavingsPosition,
   calculateLiquidFundsPence,
 } from './utils/currency';
@@ -329,6 +330,9 @@ describe('savings calculation reconciliation', () => {
     ];
 
     expect(calculateNetSavingsMovementPence(accounts, transfers, '2026-09')).toBe(250_00);
+    expect(calculateTransferredFromSavingsPence(accounts, transfers, '2026-09')).toBe(
+      50_00
+    );
 
     const position = calculateSavingsPosition(accounts, transfers, [], '2026-09', []);
     expect(position.savingsTransfersPence).toBe(250_00);
