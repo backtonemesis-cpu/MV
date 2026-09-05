@@ -766,7 +766,7 @@ function recoverTransferPlanFundingFromSourceBackup(
         timestamp: nowIso(),
         actorEmail: OWNER_EMAIL,
         action: 'transfer_plan_funding_recovered',
-        entityType: 'transfer_plan',
+        entityType: 'transfer_plan' as const,
         entityId: 'source-import-recovery',
         summary:
           recoveredTransactions > 0
