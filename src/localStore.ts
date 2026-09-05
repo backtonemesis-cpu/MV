@@ -793,6 +793,11 @@ export function createLocalTransaction(
     },
     (state) => {
       if (!data.accountId) throw new Error('Account is required.');
+      if (!data.type) throw new Error('Transaction type is required.');
+      const isInternalTransfer = Boolean(data.isTransfer || data.type === 'transfer');
+      if (!isInternalTransfer && !data.payer) {
+        throw new Error('Transaction person is required.');
+      }
       const categoryId =
         data.categoryId ||
         (data.isTransfer || data.type === 'transfer' ? 'cat-transfer' : '');
@@ -809,11 +814,17 @@ export function createLocalTransaction(
         date: data.date || localTodayDateKey(),
         description: data.description || 'Transaction',
         amountPence: data.amountPence!,
-        type: data.type || 'expense',
+        type: data.type,
         categoryId,
         accountId: data.accountId,
         targetAccountId: data.targetAccountId,
-        payer: data.payer || 'Marius',
+        payer:
+          data.payer ||
+          (isInternalTransfer
+            ? state.accounts.find((account) => account.id === data.accountId)?.ownerPerson || 'Joint'
+            : (() => {
+                throw new Error('Transaction person is required.');
+              })()),
         notes: data.notes,
         isTransfer: Boolean(data.isTransfer || data.type === 'transfer'),
         isRepayment: Boolean(data.isRepayment || data.type === 'repayment'),
@@ -1018,6 +1029,7 @@ export function createLocalAccount(
     },
     (state) => {
       if (!data.name?.trim()) throw new Error('Account name is required.');
+      if (!data.type) throw new Error('Account type is required.');
       const starting = data.startingBalancePence ?? data.currentBalancePence ?? 0;
       if (!isSafePence(starting)) throw new Error('Starting balance must be exact integer pence.');
       const owner = resolveAccountOwnerForWrite(
@@ -1028,7 +1040,7 @@ export function createLocalAccount(
       const account: Account = {
         id: data.id || createId('account'),
         name: data.name.trim(),
-        type: data.type || 'current',
+        type: data.type,
         currency: 'GBP',
         startingBalancePence: starting,
         currentBalancePence: starting,
@@ -1195,6 +1207,9 @@ export function createLocalPlannedPayment(
       summary: data.name || 'Planned bill created',
     },
     (state) => {
+      if (!data.responsiblePerson?.trim()) {
+        throw new Error('Responsible person is required.');
+      }
       if (
         data.status === 'paid' ||
         data.actualTransactionId !== undefined ||
@@ -1206,7 +1221,11 @@ export function createLocalPlannedPayment(
         );
       }
 
-      const payment = plannedPaymentFromPartial({ ...data, status: 'unpaid' });
+      const payment = plannedPaymentFromPartial({
+        ...data,
+        status: 'unpaid',
+        includeInTransferPlan: data.includeInTransferPlan === true,
+      });
       assertAccountExists(state, payment.accountId);
       if (payment.categoryId) assertCategoryExists(state, payment.categoryId);
       state.plannedPayments.push(payment);
@@ -1764,6 +1783,9 @@ export function createLocalPlannedIncome(
       summary: data.name || 'Planned income created',
     },
     (state) => {
+      if (!data.sourcePerson?.trim()) {
+        throw new Error('Income person is required.');
+      }
       const income = plannedIncomeFromPartial(data);
       assertAccountExists(state, income.accountId);
       if (income.categoryId) assertCategoryExists(state, income.categoryId);
