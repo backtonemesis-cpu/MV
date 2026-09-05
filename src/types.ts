@@ -146,6 +146,8 @@ export interface AccountFundingRequirement {
   fundedPayments: PlannedPayment[];
   unfundedPayments: PlannedPayment[];
   totalSelectedPaymentsPence: number;
+  /** Selected unpaid bills that still require funding. */
+  totalUnpaidSelectedPaymentsPence: number;
   amountAvailablePence: number;
   transferRequiredPence: number;
   isFullyFunded: boolean;
@@ -156,9 +158,9 @@ export interface TransferPlanSummary {
   accountsNeedingFunding: AccountFundingRequirement[];
   accountsFullyFunded: AccountFundingRequirement[];
   totalTransferRequiredPence: number;
-  /** Unpaid selected bills only: this is the amount the plan is actually funding. */
+  /** All selected bills, including paid rows retained for audit/reference. */
   totalSelectedPaymentsPence: number;
-  /** Unpaid selected bills only: kept aligned with totalSelectedPaymentsPence. */
+  /** All selected bills, including paid rows retained for audit/reference. */
   totalSelectedPaymentsCount: number;
   /** Paid/recorded bills may remain selected for audit/reference but never require funding. */
   totalPaidSelectedPaymentsCount: number;
