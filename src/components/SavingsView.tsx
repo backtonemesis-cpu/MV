@@ -12,6 +12,7 @@ import {
 } from '../types';
 import {
   calculateSavingsPosition,
+  calculateTransferredFromSavingsPence,
   formatPence,
   parseToPence,
 } from '../utils/currency';
@@ -101,11 +102,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     [accounts]
   );
 
-  const savingsAccountIds = useMemo(
-    () => new Set(savingsAccounts.map((account) => account.id)),
-    [savingsAccounts]
-  );
-
   // Authoritative savings position. Goals are allocations only; they do not define total savings.
   const savingsPosition = useMemo(
     () =>
@@ -119,33 +115,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     [accounts, transactions, plannedPayments, plannedIncomes, selectedMonth]
   );
 
-  const monthSavingsTxs = useMemo(() => {
-    return transactions.filter((tx) => {
-      if (
-        !tx.date.startsWith(selectedMonth) ||
-        tx.type !== 'transfer' ||
-        !tx.isTransfer ||
-        !tx.targetAccountId
-      ) {
-        return false;
-      }
-
-      const sourceIsSavings = savingsAccountIds.has(tx.accountId);
-      const targetIsSavings = savingsAccountIds.has(tx.targetAccountId);
-      return sourceIsSavings !== targetIsSavings;
-    });
-  }, [transactions, selectedMonth, savingsAccountIds]);
-
   const transferredFromSavingsPence = useMemo(
-    () =>
-      monthSavingsTxs.reduce((sum, tx) => {
-        const sourceIsSavings = savingsAccountIds.has(tx.accountId);
-        const targetIsSavings = tx.targetAccountId
-          ? savingsAccountIds.has(tx.targetAccountId)
-          : false;
-        return sourceIsSavings && !targetIsSavings ? sum + tx.amountPence : sum;
-      }, 0),
-    [monthSavingsTxs, savingsAccountIds]
+    () => calculateTransferredFromSavingsPence(accounts, transactions, selectedMonth),
+    [accounts, transactions, selectedMonth]
   );
 
   // Household savings goals are targets only. Progress is derived from all
@@ -392,7 +364,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                         {account.name}
                       </span>
                       <span className="mt-0.5 block text-[10px] uppercase tracking-wider text-subtle">
-                        {account.type === 'cash' ? 'Cash' : 'Savings account'}
+                        {account.type === 'cash' ? 'Cash' : 'Savings'} · {account.ownerPerson || 'Owner not set'}
                       </span>
                     </div>
                     <span className="shrink-0 font-mono text-sm font-semibold tracking-tight tabular-nums text-main">
