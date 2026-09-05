@@ -473,23 +473,23 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
                           <div className="finance-row-copy">
                             <div className="finance-row-titleline">
-                              <h3 className="finance-row-title" title={income.name}>
+                              <h3 className="finance-row-title">
                                 {income.name}
                               </h3>
 
                               <span
-                                className={`${statusClassName} finance-income-status`}
+                                className={statusClassName}
                               >
                                 {statusLabel}
                               </span>
                             </div>
 
                             <div className="finance-metadata-line">
-                              <span className="finance-metadata-token">{income.sourcePerson}</span>
-                              <span className="finance-metadata-separator text-subtle" aria-hidden="true">·</span>
-                              <span className="finance-metadata-token">{categoryName}</span>
-                              <span className="finance-metadata-separator text-subtle" aria-hidden="true">·</span>
-                              <span className="finance-metadata-token is-account">{accountName}</span>
+                              <span>{income.sourcePerson}</span>
+                              <span className="text-subtle" aria-hidden="true">·</span>
+                              <span>{categoryName}</span>
+                              <span className="text-subtle" aria-hidden="true">·</span>
+                              <span>{accountName}</span>
                             </div>
 
                           </div>
