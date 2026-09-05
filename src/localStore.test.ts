@@ -526,7 +526,7 @@ describe('Penny-style local MV storage', () => {
     // Simulates an older funding transfer created before transferBatchId existed.
     createLocalTransaction(
       {
-        description: 'Transfer Plan: Fund Vesta current',
+        description: 'Fund Vesta current',
         amountPence: 100_00,
         type: 'transfer',
         categoryId: 'cat-transfer',
