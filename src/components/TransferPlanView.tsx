@@ -311,7 +311,211 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   };
 
   const renderReadyAccountCard = (req: AccountFundingRequirement) => (
+    <article
+                    key={req.account.id}
+                    id={`funding-card-${req.account.id}`}
+                    className="mv-card bg-surface rounded-2xl border border-muted shadow-[0_4px_6px_-1px_rgba(0,0,0,0.03)] overflow-hidden"
+                  >
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
+                            Bills paid from
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-bold tracking-tight text-main">
+                              {req.account.name}
+                            </h3>
+                            {req.account.ownerPerson && (
+                              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-accent-soft text-accent">
+                                {req.account.ownerPerson}
+                              </span>
+                            )}
+                            <span className="px-3 py-1 text-xs font-medium rounded-full bg-surface-muted text-muted capitalize">
+                              {req.account.type}
+                            </span>
+                          </div>
+                        </div>
     
+                        <div className="shrink-0 flex items-center gap-2">
+                          <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-success-soft text-success">
+                            {latestFundingBatchByDestination.has(req.account.id)
+                              ? latestFundingBatchByDestination.get(req.account.id)!.kind ===
+                                'legacy_incoming'
+                                ? 'Funded · Legacy'
+                                : 'Funded'
+                              : 'Covered'}
+                          </span>
+                          {!isViewOnly && latestFundingBatchByDestination.has(req.account.id) && (
+                            <button
+                              type="button"
+                              onClick={() => handleUndoFunding(req.account)}
+                              disabled={undoingFundingAccountId === req.account.id}
+                              title="Undo the latest incoming funding transfer and return the money to the original source account(s)"
+                              className="inline-flex items-center gap-1 rounded-lg border border-muted bg-surface-muted px-2.5 py-1 text-[11px] font-semibold text-muted transition hover:border-strong hover:text-main disabled:opacity-50"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              {undoingFundingAccountId === req.account.id ? 'Undoing...' : 'Undo Funding'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+    
+                      <div className="mt-5">
+                        <div className="text-xs font-medium text-subtle">
+                          {latestFundingBatchByDestination.has(req.account.id)
+                            ? 'Balance after funding'
+                            : 'Current balance'}
+                        </div>
+                        <div className="mt-1 text-2xl font-extrabold tracking-tight text-main">
+                          {formatPence(req.currentBalancePence)}
+                        </div>
+    
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
+                            <div className="text-[11px] font-medium text-subtle">Selected bills</div>
+                            <div className="mt-0.5 text-[13px] font-bold text-main">
+                              {formatPence(
+                                req.selectedPayments.reduce(
+                                  (sum, payment) => sum + payment.amountPence,
+                                  0
+                                )
+                              )}
+                            </div>
+                          </div>
+                          <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
+                            <div className="text-[11px] font-medium text-subtle">
+                              Left after selected bills
+                            </div>
+                            <div className="mt-0.5 text-[13px] font-bold text-main">
+                              {formatPence(
+                                Math.max(
+                                  0,
+                                  req.amountAvailablePence - req.totalSelectedPaymentsPence
+                                )
+                              )}
+                            </div>
+                          </div>
+                          <div className="col-span-2 sm:col-span-1 rounded-xl bg-surface-muted px-3.5 py-2.5">
+                            <div className="text-[11px] font-medium text-subtle">Bills selected</div>
+                            <div className="mt-0.5 text-[13px] font-bold text-main">
+                              {req.selectedPayments.length}
+                            </div>
+                          </div>
+                        </div>
+    
+                        {latestFundingBatchByDestination.has(req.account.id) ? (
+                          <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5">
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-subtle">
+                              {latestFundingBatchByDestination.get(req.account.id)!.kind ===
+                              'legacy_incoming'
+                                ? 'Legacy funding received'
+                                : 'Funding received'}
+                            </div>
+                            <div className="mt-1.5 divide-y divide-muted">
+                              {latestFundingBatchByDestination
+                                .get(req.account.id)!
+                                .allocations.map((allocation, index) => {
+                                  const sourceAccount = accounts.find(
+                                    (account) => account.id === allocation.sourceAccountId
+                                  );
+                                  const sourceName = sourceAccount?.name || 'Unknown account';
+                                  const fundingBatch = latestFundingBatchByDestination.get(
+                                    req.account.id
+                                  )!;
+                                  const sourceOwner =
+                                    sourceAccount?.ownerPerson ||
+                                    fundingBatch.transactions[index]?.payer ||
+                                    'Owner not recorded';
+                                  const sourceType = sourceAccount
+                                    ? `${sourceAccount.type.charAt(0).toUpperCase()}${sourceAccount.type.slice(1)} account`
+                                    : '';
+    
+                                  return (
+                                    <div
+                                      key={`${allocation.sourceAccountId}-${index}`}
+                                      className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                                    >
+                                      <div className="min-w-0">
+                                        <div className="text-[12px] font-semibold text-main">
+                                          From {sourceName}
+                                        </div>
+                                        <div className="text-[11px] text-subtle">
+                                          {sourceOwner}{sourceType ? ` · ${sourceType}` : ''}
+                                        </div>
+                                      </div>
+                                      <div className="shrink-0 text-[13px] font-bold text-main">
+                                        {formatPence(allocation.amountPence)}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
+                            Covered by the existing account balance. No Transfer Plan funding transfer was recorded, so there is nothing to undo.
+                          </div>
+                        )}
+                      </div>
+    
+                      <div className="mt-5">
+                        {req.selectedPayments.length > 0 ? (
+                          <div className="rounded-xl border border-muted bg-surface-muted px-4 py-2">
+                            <div className="divide-y divide-muted">
+                              {req.selectedPayments.map((p) => (
+                                <div key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-xs">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={p.includeInTransferPlan}
+                                      onChange={() => handleTogglePaymentInPlan(p)}
+                                      disabled={isViewOnly}
+                                      className="w-3.5 h-3.5 text-main rounded border-muted focus:ring-muted cursor-pointer"
+                                    />
+                                    <span className="font-semibold text-main truncate">
+                                      {p.name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span
+                                      className={
+                                        p.status === 'paid'
+                                          ? 'text-[10px] font-semibold uppercase tracking-wider text-success'
+                                          : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
+                                      }
+                                    >
+                                      {p.status === 'paid' ? 'Paid' : 'Unpaid'}
+                                    </span>
+                                    <span
+                                      className={
+                                        latestFundingBatchByDestination.has(req.account.id)
+                                          ? 'text-[10px] font-semibold uppercase tracking-wider text-accent'
+                                          : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
+                                      }
+                                    >
+                                      {latestFundingBatchByDestination.has(req.account.id)
+                                        ? 'Funded'
+                                        : 'Covered'}
+                                    </span>
+                                    <span className="font-bold text-main">
+                                      {formatPence(p.amountPence)}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-dashed border-muted bg-surface-muted px-4 py-4 text-center">
+                            <span className="text-[13px] font-medium text-muted">
+                              No payments selected for this account
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
   );
 
   return (
