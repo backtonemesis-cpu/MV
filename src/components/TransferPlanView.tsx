@@ -71,7 +71,7 @@ interface TransferPlanViewProps {
     date: string;
     month: string;
   }) => Promise<void>;
-  onUndoFunding: (destinationAccountId: string) => Promise<void>;
+  onUndoFunding: (destinationAccountId: string, month: string) => Promise<void>;
 }
 
 export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
@@ -128,6 +128,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     return plannedPayments.filter((p) => p.month === selectedMonth);
   }, [plannedPayments, selectedMonth]);
 
+  const selectedPlanPayments = useMemo(
+    () => monthPayments.filter((payment) => payment.includeInTransferPlan),
+    [monthPayments]
+  );
+  const selectedPlanTotalPence = useMemo(
+    () => selectedPlanPayments.reduce((sum, payment) => sum + payment.amountPence, 0),
+    [selectedPlanPayments]
+  );
+  const selectedPlanPaidCount = useMemo(
+    () => selectedPlanPayments.filter((payment) => payment.status === 'paid').length,
+    [selectedPlanPayments]
+  );
+  const selectedPlanUnpaidCount = selectedPlanPayments.length - selectedPlanPaidCount;
+  const planAccountCount =
+    plan.accountsNeedingFunding.length + plan.accountsFullyFunded.length;
+
   // Payment status shown inside Transfer Plan is the explicit Plan status.
   // A linked Activity transaction must not silently remove a bill from funding.
   const isPaymentPaid = (payment: PlannedPayment) => payment.status === 'paid';
@@ -147,12 +163,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       }
     >();
 
-    const planTransfers = transactions.filter(
-      (transaction) =>
+    const planTransfers = transactions.filter((transaction) => {
+      const isTransferPlanFunding =
+        Boolean(transaction.metadata?.transferBatchId) ||
+        transaction.description.startsWith('Transfer Plan:');
+      const transferMonth =
+        (transaction.metadata?.transferPlanMonth as string | undefined) ||
+        transaction.date.slice(0, 7);
+
+      return (
         transaction.type === 'transfer' &&
         transaction.isTransfer &&
-        Boolean(transaction.targetAccountId)
-    );
+        Boolean(transaction.targetAccountId) &&
+        isTransferPlanFunding &&
+        transferMonth === selectedMonth
+      );
+    });
 
     for (const transaction of planTransfers) {
       const destinationAccountId = transaction.targetAccountId!;
@@ -182,7 +208,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     }
 
     return result;
-  }, [transactions]);
+  }, [transactions, selectedMonth]);
 
   const handleUndoFunding = async (account: Account) => {
     if (isViewOnly) return;
@@ -203,7 +229,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
     try {
       setUndoingFundingAccountId(account.id);
-      await onUndoFunding(account.id);
+      await onUndoFunding(account.id, selectedMonth);
     } catch (err: any) {
       window.alert(err.message || 'Failed to undo Transfer Plan funding.');
     } finally {
@@ -392,7 +418,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               ? `${plan.accountsNeedingFunding.length} account${
                   plan.accountsNeedingFunding.length !== 1 ? 's' : ''
                 } need funding`
-              : 'All accounts sufficiently funded'}
+              : planAccountCount > 0
+                ? 'No new funding required'
+                : 'No selected accounts to fund'}
           </p>
         </article>
 
@@ -404,11 +432,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             <Layers className="w-4 h-4 shrink-0 text-subtle" />
           </div>
           <div className="mv-private-value mt-2 text-2xl font-bold tracking-tight text-main">
-            {formatPence(plan.totalSelectedPaymentsPence)}
+            {formatPence(selectedPlanTotalPence)}
           </div>
           <p className="mt-1 text-sm leading-5 text-muted">
-            {plan.totalSelectedPaymentsCount} unpaid payment
-            {plan.totalSelectedPaymentsCount !== 1 ? 's' : ''} selected
+            {selectedPlanPayments.length} selected · {selectedPlanUnpaidCount} unpaid · {selectedPlanPaidCount} paid
           </p>
         </article>
 
@@ -424,10 +451,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             />
           </div>
           <div className="mv-private-value mt-2 text-2xl font-bold tracking-tight text-main">
-            {plan.accountsNeedingFunding.length}
+            {planAccountCount}
           </div>
           <p className="mt-1 text-sm leading-5 text-muted">
-            {plan.accountsFullyFunded.length} fully funded
+            {plan.accountsNeedingFunding.length} need funding · {plan.accountsFullyFunded.length} ready / complete
           </p>
         </article>
 
@@ -644,7 +671,11 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
                     <div className="shrink-0 flex items-center gap-2">
                       <span className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-success-soft text-success">
-                        {latestFundingBatchByDestination.has(req.account.id) ? 'Funded' : 'Covered'}
+                        {latestFundingBatchByDestination.has(req.account.id)
+                          ? 'Funded'
+                          : req.unpaidPayments.length === 0
+                            ? 'Paid / Complete'
+                            : 'Covered'}
                       </span>
                       {!isViewOnly && latestFundingBatchByDestination.has(req.account.id) && (
                         <button
@@ -675,18 +706,27 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
                         <div className="text-[11px] font-medium text-subtle">Selected bills</div>
                         <div className="mt-0.5 text-[13px] font-bold text-main">
-                          {formatPence(req.totalSelectedPaymentsPence)}
+                          {formatPence(
+                            req.selectedPayments.reduce(
+                              (sum, payment) => sum + payment.amountPence,
+                              0
+                            )
+                          )}
                         </div>
                       </div>
                       <div className="rounded-xl bg-surface-muted px-3.5 py-2.5">
-                        <div className="text-[11px] font-medium text-subtle">Left after bills</div>
+                        <div className="text-[11px] font-medium text-subtle">
+                          {req.unpaidPayments.length === 0 ? 'Unpaid selected' : 'Left after bills'}
+                        </div>
                         <div className="mt-0.5 text-[13px] font-bold text-main">
-                          {formatPence(
-                            Math.max(
-                              0,
-                              req.amountAvailablePence - req.totalSelectedPaymentsPence
-                            )
-                          )}
+                          {req.unpaidPayments.length === 0
+                            ? formatPence(0)
+                            : formatPence(
+                                Math.max(
+                                  0,
+                                  req.amountAvailablePence - req.totalSelectedPaymentsPence
+                                )
+                              )}
                         </div>
                       </div>
                       <div className="col-span-2 sm:col-span-1 rounded-xl bg-surface-muted px-3.5 py-2.5">
@@ -738,7 +778,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       </div>
                     ) : (
                       <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
-                        No transfer needed — the existing account balance already covers the selected bills.
+                        {req.unpaidPayments.length === 0
+                          ? 'All selected bills are paid. No new transfer is required.'
+                          : 'No transfer needed — the existing account balance already covers the selected unpaid bills.'}
                       </div>
                     )}
                   </div>
@@ -761,9 +803,24 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                   {p.name}
                                 </span>
                               </div>
-                              <span className="font-bold text-main shrink-0">
-                                {formatPence(p.amountPence)}
-                              </span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={
+                                  p.status === 'paid'
+                                    ? 'text-[10px] font-semibold uppercase tracking-wider text-success'
+                                    : latestFundingBatchByDestination.has(req.account.id)
+                                      ? 'text-[10px] font-semibold uppercase tracking-wider text-accent'
+                                      : 'text-[10px] font-semibold uppercase tracking-wider text-muted'
+                                }>
+                                  {p.status === 'paid'
+                                    ? 'Paid'
+                                    : latestFundingBatchByDestination.has(req.account.id)
+                                      ? 'Funded'
+                                      : 'Covered'}
+                                </span>
+                                <span className="font-bold text-main">
+                                  {formatPence(p.amountPence)}
+                                </span>
+                              </div>
                             </div>
                           ))}
                         </div>
