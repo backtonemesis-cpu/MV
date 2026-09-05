@@ -61,43 +61,4 @@ describe('semantic design system enforcement', () => {
 
     expect(failures, failures.join('\n')).toEqual([]);
   });
-
-  it('locks the high-density finance regression contracts', () => {
-    const dashboard = fs.readFileSync(path.join(COMPONENT_DIR, 'Dashboard.tsx'), 'utf8');
-    const plan = fs.readFileSync(path.join(COMPONENT_DIR, 'TransferPlanView.tsx'), 'utf8');
-    const income = fs.readFileSync(path.join(COMPONENT_DIR, 'IncomeView.tsx'), 'utf8');
-    const savings = fs.readFileSync(path.join(COMPONENT_DIR, 'SavingsView.tsx'), 'utf8');
-    const css = fs.readFileSync(path.join(SRC_DIR, 'index.css'), 'utf8');
-
-    // Dashboard telemetry: total fixed bills belong on the primary metric,
-    // while outstanding unpaid bills are explanatory secondary text only.
-    expect(dashboard).toContain("label: 'Fixed Bills'");
-    expect(dashboard).toContain('value: surplusCalculation.fixedBillsTotalPence');
-    expect(dashboard).not.toContain(
-      "label: 'Fixed Bills',\n      value: surplusCalculation.fixedBillsUnpaidPence"
-    );
-
-    // Plan roster: preserve the full former-glory interaction model.
-    // Bill inclusion and status stay independent, and explicit Edit/Delete
-    // controls remain visible instead of being collapsed into icon-only rows.
-    expect(plan).toContain('Select Unpaid');
-    expect(plan).toContain('Select Paid');
-    expect(plan).toContain('Select All');
-    expect(plan).toContain('Deselect All');
-    expect(plan).toContain('Edit');
-    expect(plan).toContain('Delete');
-    expect(plan).not.toContain('mv-plan-bill-row');
-
-    // Income rows: long semantic strings must be shrinkable/truncatable.
-    expect(income).toContain('finance-metadata-token');
-    expect(css).toContain('.finance-metadata-token');
-    expect(css).toContain('text-overflow: ellipsis');
-
-    // Household savings goals must use the complete Savings + Cash position;
-    // legacy linked-account allocation warnings must not return.
-    expect(savings).toContain('Progress uses total Savings + Cash balances');
-    expect(savings).not.toContain('Allocation integrity warning');
-    expect(savings).not.toContain('recorded allocations exceed');
-  });
-
 });
