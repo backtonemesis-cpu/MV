@@ -5087,3 +5087,345 @@ html[data-theme] button.bg-white:hover {
     min-height: 38px !important;
   }
 }
+
+
+/* ==========================================================================
+   DEVICE MODE CORRECTION PASS — FULL PC + USABLE PHONE
+   Corrects the production screenshots: PC mode uses the whole laptop viewport,
+   Phone mode scales up on desktop, and real iPhone navigation stays uncluttered.
+   ========================================================================== */
+
+/* PC means a true full-width application workspace, not a centred web page. */
+.mv-layout-pc .mv-shell-boundary,
+.mv-layout-pc .mv-workspace,
+.mv-layout-pc main {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box;
+}
+
+.mv-layout-pc .mv-shell-boundary {
+  padding-inline: clamp(16px, 1.5vw, 28px) !important;
+}
+
+.mv-layout-pc .mv-workspace {
+  padding: 16px clamp(16px, 1.5vw, 28px) 24px !important;
+}
+
+.mv-layout-pc .mv-desktop-nav-rail {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Phone mode on a laptop is a usable large phone-style workspace, not a tiny
+   390px simulator floating in empty desktop space. */
+@media (min-width: 431px) {
+  .mv-layout-phone {
+    display: flex;
+    min-height: 100dvh;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+  }
+
+  .mv-layout-phone .mv-device-frame {
+    width: min(760px, calc(100vw - 32px)) !important;
+    height: min(900px, calc(100dvh - 24px)) !important;
+    min-height: min(620px, calc(100dvh - 24px)) !important;
+    margin: 0 !important;
+    border-radius: 18px;
+  }
+}
+
+/* Global header hooks keep both forced modes usable even on the narrow phone. */
+.mv-header-brand {
+  flex: 0 1 auto;
+}
+
+.mv-header-brand-copy {
+  min-width: 0;
+}
+
+.mv-header-brand-title {
+  white-space: nowrap;
+}
+
+.mv-header-actions {
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+/* Phone header: one-line identity, compact controls, no accidental wrapping. */
+.mv-layout-phone header > .mv-shell-boundary > div {
+  height: 52px !important;
+}
+
+.mv-layout-phone .mv-header-brand {
+  min-width: 0;
+  gap: 8px !important;
+}
+
+.mv-layout-phone .mv-header-brand-title {
+  display: block;
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+.mv-layout-phone .mv-header-actions {
+  gap: 5px !important;
+}
+
+.mv-layout-phone #header-refresh-btn,
+.mv-layout-phone #header-privacy-mask-btn {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+}
+
+.mv-layout-phone .mv-layout-switcher {
+  padding: 2px;
+}
+
+.mv-layout-phone .mv-layout-switcher-option {
+  min-height: 30px !important;
+  height: 30px !important;
+  padding-inline: 7px !important;
+  gap: 4px;
+}
+
+/* Five phone navigation positions: Home, Activity, Accounts, Plan, More.
+   Income, Savings and Settings live in the More submenu with full labels. */
+.mv-layout-phone .mv-mobile-nav-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  height: 64px !important;
+}
+
+.mv-layout-phone .mv-nav-mobile button {
+  font-size: 11px !important;
+  padding-inline: 4px !important;
+}
+
+.mv-layout-phone .mv-nav-mobile button > span:not(.mv-mobile-nav-badge) {
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.mv-mobile-nav-badge {
+  position: absolute;
+  top: 7px;
+  right: calc(50% - 18px);
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--danger-text);
+}
+
+.mv-mobile-more-menu {
+  position: absolute !important;
+  inset: auto 10px calc(100% + 8px) 10px !important;
+  z-index: 95 !important;
+  display: grid !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  grid-template-columns: 1fr !important;
+  gap: 4px;
+  overflow: visible !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 6px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 18px 42px var(--shadow) !important;
+}
+
+.mv-mobile-more-item {
+  display: grid !important;
+  width: 100%;
+  min-height: 44px !important;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  color: var(--text-muted);
+  font-size: 14px !important;
+  font-weight: 600;
+  text-align: left;
+}
+
+.mv-mobile-more-item:hover,
+.mv-mobile-more-item:focus-visible,
+.mv-mobile-more-item.is-active {
+  background: var(--surface-hover) !important;
+  color: var(--text) !important;
+  outline: none;
+}
+
+.mv-mobile-more-item.is-active svg {
+  color: rgb(var(--accent-rgb));
+}
+
+.mv-mobile-more-badge {
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding-inline: 6px;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Phone dashboard: reduce vertical waste without sacrificing touch size. */
+.mv-layout-phone .mv-dashboard-period-card {
+  padding: 10px 12px !important;
+}
+
+.mv-layout-phone .mv-dashboard-period-card > div {
+  gap: 8px !important;
+}
+
+.mv-layout-phone .mv-dashboard-surplus-card {
+  padding: 16px !important;
+}
+
+.mv-layout-phone .mv-dashboard-surplus-card .mt-3 {
+  margin-top: 10px !important;
+}
+
+.mv-layout-phone .mv-dashboard-surplus-card .mt-4 {
+  margin-top: 10px !important;
+}
+
+.mv-layout-phone .mv-dashboard-actions {
+  gap: 10px !important;
+}
+
+.mv-layout-phone .mv-dashboard-actions > button {
+  min-height: 62px !important;
+  padding: 9px 10px !important;
+  line-height: 1.15 !important;
+  text-align: center;
+}
+
+.mv-layout-phone .mv-dashboard-metrics {
+  gap: 10px !important;
+}
+
+.mv-layout-phone .mv-dashboard-metric-card {
+  padding: 12px !important;
+}
+
+/* Forced PC mode on an iPhone must still remain operational: remove header
+   crowding and make all seven desktop tabs reachable by horizontal scrolling. */
+@media (max-width: 640px) {
+  .mv-layout-pc header [title="Application version"],
+  .mv-layout-pc header [title="Local financial dataset revision"],
+  .mv-layout-pc .mv-header-user,
+  .mv-layout-pc #header-backup-btn {
+    display: none !important;
+  }
+
+  .mv-layout-pc header > .mv-shell-boundary {
+    padding-inline: 8px !important;
+  }
+
+  .mv-layout-pc header > .mv-shell-boundary > div {
+    height: 48px !important;
+    gap: 5px !important;
+  }
+
+  .mv-layout-pc .mv-header-brand {
+    min-width: 0;
+    gap: 6px !important;
+  }
+
+  .mv-layout-pc .mv-header-brand-title {
+    font-size: 13px !important;
+    line-height: 1 !important;
+  }
+
+  .mv-layout-pc .mv-header-actions {
+    gap: 4px !important;
+  }
+
+  .mv-layout-pc #header-refresh-btn,
+  .mv-layout-pc #header-privacy-mask-btn {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+  }
+
+  .mv-layout-pc .mv-privacy-label {
+    display: none !important;
+  }
+
+  .mv-layout-pc .mv-layout-switcher {
+    padding: 2px;
+  }
+
+  .mv-layout-pc .mv-layout-switcher-option {
+    min-height: 28px !important;
+    height: 28px !important;
+    padding-inline: 6px !important;
+    gap: 3px;
+    font-size: 11px !important;
+  }
+
+  .mv-layout-pc .mv-layout-switcher-option svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .mv-layout-pc .mv-nav-desktop .mv-shell-boundary {
+    padding-inline: 0 !important;
+  }
+
+  .mv-layout-pc .mv-desktop-nav-rail {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-inline: 8px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mv-layout-pc .mv-desktop-nav-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mv-layout-pc .mv-desktop-nav-rail > button {
+    scroll-snap-align: start;
+    min-height: 38px !important;
+    padding-inline: 12px !important;
+  }
+}
+
+/* Actual iPhone 13 keeps the phone layout edge-to-edge. */
+@media (max-width: 430px) {
+  .mv-layout-phone {
+    display: block;
+    padding: 0;
+  }
+
+  .mv-layout-phone .mv-device-frame {
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+
+  .mv-layout-phone .mv-workspace {
+    padding: 10px 12px calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+}
