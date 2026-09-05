@@ -1,6 +1,7 @@
 import type { Transaction } from '../types';
 
 export interface TransferPlanFundingBatch {
+  kind: 'transfer_plan' | 'legacy_incoming';
   batchKey: string;
   destinationAccountId: string;
   createdAt: string;
@@ -69,6 +70,7 @@ export function getTransferPlanFundingBatches(
       );
 
       return {
+        kind: 'transfer_plan' as const,
         batchKey,
         destinationAccountId,
         createdAt,
@@ -89,9 +91,45 @@ export function getTransferPlanFundingBatches(
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function getLatestTransferPlanFundingByDestination(
+export function getLegacyIncomingFundingBatches(
   transactions: Transaction[],
   month?: string
+): TransferPlanFundingBatch[] {
+  return transactions
+    .filter((transaction) => {
+      if (
+        transaction.type !== 'transfer' ||
+        !transaction.isTransfer ||
+        !transaction.targetAccountId ||
+        isTransferPlanFundingTransaction(transaction)
+      ) {
+        return false;
+      }
+
+      return !month || transaction.date.slice(0, 7) === month;
+    })
+    .map((transaction) => ({
+      kind: 'legacy_incoming' as const,
+      batchKey: transaction.id,
+      destinationAccountId: transaction.targetAccountId!,
+      createdAt: transaction.createdAt || transaction.date,
+      totalPence: transaction.amountPence,
+      sourceAccountIds: [transaction.accountId],
+      allocations: [
+        {
+          sourceAccountId: transaction.accountId,
+          amountPence: transaction.amountPence,
+        },
+      ],
+      transactions: [transaction],
+    }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getLatestTransferPlanFundingByDestination(
+  transactions: Transaction[],
+  month?: string,
+  includeLegacyIncoming = false
 ): Map<string, TransferPlanFundingBatch> {
   const result = new Map<string, TransferPlanFundingBatch>();
 
@@ -101,15 +139,28 @@ export function getLatestTransferPlanFundingByDestination(
     }
   }
 
+  if (includeLegacyIncoming) {
+    for (const batch of getLegacyIncomingFundingBatches(transactions, month)) {
+      // A tagged/recognised Transfer Plan batch always wins. Legacy incoming
+      // transfers are only a compatibility fallback for older test data.
+      if (!result.has(batch.destinationAccountId)) {
+        result.set(batch.destinationAccountId, batch);
+      }
+    }
+  }
+
   return result;
 }
 
 export function findLatestTransferPlanFundingBatch(
   transactions: Transaction[],
   destinationAccountId: string,
-  month?: string
+  month?: string,
+  includeLegacyIncoming = false
 ): TransferPlanFundingBatch | undefined {
-  return getTransferPlanFundingBatches(transactions, month).find(
-    (batch) => batch.destinationAccountId === destinationAccountId
-  );
+  return getLatestTransferPlanFundingByDestination(
+    transactions,
+    month,
+    includeLegacyIncoming
+  ).get(destinationAccountId);
 }
