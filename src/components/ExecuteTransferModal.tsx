@@ -385,7 +385,9 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
               </div>
               <div className="mv-private-value text-left sm:text-right">
                 <div className="font-semibold text-main">
-                  Allocated {formatPence(allocatedTotalPence)} of {formatPence(requiredPence)}
+                  {hasSelectedSources
+                    ? `Allocated ${formatPence(allocatedTotalPence)} of ${formatPence(requiredPence)}`
+                    : `Required ${formatPence(requiredPence)}`}
                 </div>
                 <div
                   className={
