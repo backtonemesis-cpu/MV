@@ -638,18 +638,25 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                     </div>
                   </div>
                   {(() => {
-                    const sourceIsSavings = savingsAccountIds.has(tx.accountId);
-                    const targetIsSavings = tx.targetAccountId
-                      ? savingsAccountIds.has(tx.targetAccountId)
-                      : false;
-                    const isIncoming = !sourceIsSavings && targetIsSavings;
-                    const isOutgoing = sourceIsSavings && !targetIsSavings;
-                    const tone = isIncoming ? 'text-success' : 'text-muted';
-                    const direction = isIncoming ? 'in' : isOutgoing ? 'out' : '';
+                    const sourceAccount = accounts.find(
+                      (account) => account.id === tx.accountId
+                    );
+                    const targetAccount = tx.targetAccountId
+                      ? accounts.find((account) => account.id === tx.targetAccountId)
+                      : undefined;
 
                     return (
-                      <div className={`shrink-0 font-semibold whitespace-nowrap ${tone}`}>
-                        {formatPence(tx.amountPence)}{direction ? ` ${direction}` : ''}
+                      <div className="shrink-0 text-right">
+                        <div className="font-mono font-semibold whitespace-nowrap tabular-nums text-main">
+                          {formatPence(tx.amountPence)}
+                        </div>
+                        {sourceAccount && targetAccount && (
+                          <div className="mt-0.5 max-w-[420px] truncate text-[10px] text-subtle">
+                            {accountIdentityLabel(sourceAccount)}
+                            <span className="mx-1.5" aria-hidden="true">→</span>
+                            {accountIdentityLabel(targetAccount)}
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
