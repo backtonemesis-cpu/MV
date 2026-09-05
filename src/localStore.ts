@@ -877,16 +877,27 @@ export function loadLocalHousehold(): HouseholdData {
     ) ?? false;
 
   if (!hasSourceBudget) {
-    // Keep a one-time local rollback copy before replacing old/test finance data.
-    // App-only savings goals are preserved across the source-budget migration.
-    // Legacy account links are retained only when compatible for backup/audit history.
+    // Keep the exact pre-import state so operational Transfer Plan funding can
+    // be recovered instead of silently disappearing during source-fixture upgrades.
     storage.setItem(SOURCE_IMPORT_BACKUP_KEY, raw);
-    const sourceHousehold = createSourceBudgetHousehold(parsed);
-    saveLocalHousehold(sourceHousehold);
-    return normalizeHousehold(sourceHousehold);
+    const sourceHousehold = normalizeHousehold(createSourceBudgetHousehold(parsed));
+    const recovered = recoverTransferPlanFundingFromSourceBackup(
+      sourceHousehold,
+      storage
+    );
+    storage.setItem(STORAGE_KEY, JSON.stringify(recovered));
+    return recovered;
   }
 
-  return normalizeHousehold(parsed);
+  const normalized = normalizeHousehold(parsed);
+  const recovered = recoverTransferPlanFundingFromSourceBackup(
+    normalized,
+    storage
+  );
+  if (recovered.version !== normalized.version) {
+    storage.setItem(STORAGE_KEY, JSON.stringify(recovered));
+  }
+  return recovered;
 }
 
 export function saveLocalHousehold(state: HouseholdData): void {
