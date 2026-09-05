@@ -333,7 +333,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   placeholder="0.00"
                   value={amountStr}
                   onChange={(e) => setAmountStr(e.target.value)}
-                  className="mv-transaction-control w-full pl-7 font-semibold"
+                  className="mv-money-input-with-prefix mv-transaction-control w-full font-semibold tabular-nums"
                   required
                 />
               </div>
@@ -517,14 +517,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         ))}
                       </select>
 
-                      <div className="relative w-28">
+                      <div className="relative w-36">
                         <span className="absolute left-2 top-1.5 text-xs text-muted text-subtle">£</span>
                         <input
                           type="text"
                           placeholder="0.00"
                           value={splitRow.amountStr}
                           onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)}
-                          className="mv-transaction-control w-full pl-5 font-semibold"
+                          className="mv-money-input-with-prefix mv-transaction-control w-full font-semibold tabular-nums"
                         />
                       </div>
 
