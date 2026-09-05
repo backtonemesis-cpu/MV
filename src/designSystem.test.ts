@@ -137,6 +137,7 @@ describe('semantic design system enforcement', () => {
   it('locks the app-wide PC and Phone layout modes', () => {
     const app = fs.readFileSync(path.join(SRC_DIR, 'App.tsx'), 'utf8');
     const header = fs.readFileSync(path.join(COMPONENT_DIR, 'Header.tsx'), 'utf8');
+    const navigation = fs.readFileSync(path.join(COMPONENT_DIR, 'Navigation.tsx'), 'utf8');
     const css = fs.readFileSync(path.join(SRC_DIR, 'index.css'), 'utf8');
 
     expect(app).toContain("type LayoutMode = 'pc' | 'phone'");
@@ -155,13 +156,22 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('DEVICE-OPTIMISED LAYOUT MODES — HP OMNIBOOK 7 + IPHONE 13');
     expect(css).toContain('.mv-layout-pc .mv-workspace');
     expect(css).toContain('.mv-layout-phone .mv-workspace');
-    expect(css).toContain('width: 390px');
-    expect(css).toContain('height: min(844px');
+    expect(css).toContain('DEVICE MODE CORRECTION PASS — FULL PC + USABLE PHONE');
+    expect(css).toContain('max-width: none !important');
+    expect(css).toContain('width: min(760px, calc(100vw - 32px))');
     expect(css).toContain('.mv-layout-phone .mv-settings-tabs');
     expect(css).toContain('.mv-layout-phone :is(');
     expect(css).toContain('.submenu');
     expect(css).toContain('.mv-layout-pc .mv-nav-desktop');
     expect(css).toContain('.mv-layout-phone .mv-nav-mobile');
+    expect(navigation).toContain("const mobilePrimaryIds: NavTab[] = ['dashboard', 'activity', 'accounts', 'transfer_plan']");
+    expect(navigation).toContain('mobile-nav-tab-more');
+    expect(navigation).toContain('mv-mobile-more-menu');
+    expect(navigation).toContain('Income');
+    expect(navigation).toContain('Savings');
+    expect(navigation).toContain('Settings');
+    expect(css).toContain('grid-template-columns: repeat(5, minmax(0, 1fr))');
+    expect(css).toContain('.mv-mobile-more-menu');
   });
 
 });
