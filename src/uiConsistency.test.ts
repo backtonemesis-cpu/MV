@@ -89,7 +89,7 @@ describe('Global finance UI consistency contract', () => {
     expect(modal).toContain('Add another source');
     expect(modal).toContain('Record transfer');
     expect(modal).toContain('Choose account');
-    expect(modal).toContain('accountOptionLabel(account');
+    expect(modal).toContain('accountIdentityLabel(account)');
     expect(modal).toContain('Safe to move');
     expect(modal).toContain('reservedPlanPenceByAccountId');
     expect(modal).toContain("sourceAccountId: ''");
