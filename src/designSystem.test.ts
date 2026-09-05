@@ -67,6 +67,10 @@ describe('semantic design system enforcement', () => {
     const plan = fs.readFileSync(path.join(COMPONENT_DIR, 'TransferPlanView.tsx'), 'utf8');
     const income = fs.readFileSync(path.join(COMPONENT_DIR, 'IncomeView.tsx'), 'utf8');
     const savings = fs.readFileSync(path.join(COMPONENT_DIR, 'SavingsView.tsx'), 'utf8');
+    const fundingHistory = fs.readFileSync(
+      path.join(SRC_DIR, 'utils', 'transferPlanFunding.ts'),
+      'utf8'
+    );
     const css = fs.readFileSync(path.join(SRC_DIR, 'index.css'), 'utf8');
 
     // Dashboard telemetry: total fixed bills belong on the primary metric,
@@ -91,7 +95,9 @@ describe('semantic design system enforcement', () => {
     expect(plan).toContain('Undo Funding');
     expect(plan).toContain('Paid / Complete');
     expect(plan).toContain('selectedPlanTotalPence');
-    expect(plan).toContain('transferPlanMonth');
+    expect(plan).toContain('getLatestTransferPlanFundingByDestination');
+    expect(fundingHistory).toContain('transferPlanMonth');
+    expect(fundingHistory).toContain('Transfer Plan:');
 
     // Income rows: long semantic strings must be shrinkable/truncatable.
     expect(income).toContain('finance-metadata-token');
