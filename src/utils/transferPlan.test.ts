@@ -84,7 +84,7 @@ describe('Transfer Plan account identity and funding calculations', () => {
     expect(plan.accountsFullyFunded.some((item) => item.account.id === chase.id)).toBe(false);
   });
 
-  it('treats a valid linked actual expense as paid even when the stored legacy status is stale unpaid', () => {
+  it('keeps Transfer Plan funding independent from linked actual evidence', () => {
     const current = account('current', 'Current', 'Marius', 0);
     const linkedUnpaid = payment('recorded-bill', current.id, 12_000, 'unpaid', 'actual-1');
     const actual: Transaction = {
@@ -106,13 +106,13 @@ describe('Transfer Plan account identity and funding calculations', () => {
     };
 
     const funding = calculateAccountFunding(current, [linkedUnpaid], [actual]);
-    expect(funding.paidPayments).toHaveLength(1);
-    expect(funding.unpaidPayments).toHaveLength(0);
-    expect(funding.transferRequiredPence).toBe(0);
+    expect(funding.paidPayments).toHaveLength(0);
+    expect(funding.unpaidPayments).toHaveLength(1);
+    expect(funding.transferRequiredPence).toBe(12_000);
 
     const plan = generateTransferPlan([current], [linkedUnpaid], '2026-10', [actual]);
-    expect(plan.accountsNeedingFunding).toHaveLength(0);
-    expect(plan.totalSelectedPaymentsCount).toBe(0);
-    expect(plan.totalPaidSelectedPaymentsCount).toBe(1);
+    expect(plan.accountsNeedingFunding).toHaveLength(1);
+    expect(plan.totalSelectedPaymentsCount).toBe(1);
+    expect(plan.totalPaidSelectedPaymentsCount).toBe(0);
   });
 });
