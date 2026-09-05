@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import './globalDesignSystem.css';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 // Apply the saved token set before React paints to prevent theme flash.
