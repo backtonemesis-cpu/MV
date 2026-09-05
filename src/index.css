@@ -4211,3 +4211,9 @@ html[data-theme] button.bg-white:hover {
 .finance-amount-block {
   flex-shrink: 0;
 }
+
+.mv-money-prefix {
+  z-index: 1;
+  color: var(--text-muted) !important;
+  font-variant-numeric: tabular-nums lining-nums;
+}
