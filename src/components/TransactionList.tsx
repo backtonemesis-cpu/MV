@@ -14,6 +14,7 @@ import {
 import { Account, Category, Transaction, UserRole, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence } from '../utils/currency';
+import { accountIdentityLabel } from '../utils/accountDisplay';
 import { formatMonthLabel } from '../utils/transferPlan';
 
 interface TransactionListProps {
@@ -48,7 +49,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const canEdit = userRole === 'owner' || userRole === 'editor';
 
   const accountsMap = useMemo(
-    () => new Map(accounts.map((account) => [account.id, account.name])),
+    () => new Map(accounts.map((account) => [account.id, accountIdentityLabel(account)])),
     [accounts]
   );
 
