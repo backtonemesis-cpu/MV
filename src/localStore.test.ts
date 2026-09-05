@@ -1507,16 +1507,13 @@ describe('Penny-style local MV storage', () => {
         (transaction) => transaction.id === firstPaid.transaction.id
       )
     ).toBe(false);
-    expect(
-      state.plannedPayments.find((payment) => payment.id === bill.payment.id)
-    ).toEqual(
-      expect.objectContaining({
-        status: 'unpaid',
-        actualTransactionId: undefined,
-        actualAmountPence: undefined,
-        actualDate: undefined,
-      })
+    const resetPayment = state.plannedPayments.find(
+      (payment) => payment.id === bill.payment.id
     );
+    expect(resetPayment?.status).toBe('unpaid');
+    expect(resetPayment).not.toHaveProperty('actualTransactionId');
+    expect(resetPayment).not.toHaveProperty('actualAmountPence');
+    expect(resetPayment).not.toHaveProperty('actualDate');
 
     markLocalPaymentPaid(
       bill.payment.id,
