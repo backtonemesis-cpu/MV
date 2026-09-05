@@ -75,6 +75,16 @@ import { CommandPalette } from './components/CommandPalette';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
+type LayoutMode = 'pc' | 'phone';
+
+const LAYOUT_MODE_STORAGE_KEY = 'mv-layout-mode-v1';
+
+function readInitialLayoutMode(): LayoutMode {
+  const stored = window.localStorage.getItem(LAYOUT_MODE_STORAGE_KEY);
+  if (stored === 'pc' || stored === 'phone') return stored;
+  return window.matchMedia('(max-width: 640px)').matches ? 'phone' : 'pc';
+}
+
 export default function App() {
   const [session, setSession] = useState<UserSession | null>(null);
   const [availableIdentities, setAvailableIdentities] = useState<
@@ -97,7 +107,7 @@ export default function App() {
   const [showTestsModal, setShowTestsModal] = useState(false);
   const [conflictServerVersion, setConflictServerVersion] = useState<number | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>(readStoredUserPreferences);
-  const [isMobilePreview, setIsMobilePreview] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(readInitialLayoutMode);
   const [isPrivacyMasked, setIsPrivacyMasked] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
 
@@ -105,6 +115,11 @@ export default function App() {
   useEffect(() => {
     applyThemePreferences(userPreferences);
   }, [userPreferences]);
+
+  useEffect(() => {
+    window.localStorage.setItem(LAYOUT_MODE_STORAGE_KEY, layoutMode);
+    document.documentElement.dataset.layoutMode = layoutMode;
+  }, [layoutMode]);
 
   useEffect(() => {
     const handleCommandShortcut = (event: KeyboardEvent) => {
@@ -138,8 +153,6 @@ export default function App() {
       } else if (showTxModal) {
         setShowTxModal(false);
         setEditingTx(null);
-      } else if (isMobilePreview) {
-        setIsMobilePreview(false);
       }
     };
 
@@ -153,7 +166,6 @@ export default function App() {
     showMonthImportModal,
     showPlannedPaymentModal,
     showTxModal,
-    isMobilePreview,
   ]);
 
   // Load Session & Household Data
@@ -755,7 +767,7 @@ export default function App() {
   return (
     <div
       className={`mv-density-root min-h-screen bg-app text-main flex flex-col font-sans transition-colors ${
-        isMobilePreview ? 'mv-device-simulator' : ''
+        layoutMode === 'phone' ? 'mv-layout-phone' : 'mv-layout-pc'
       } ${isPrivacyMasked ? 'mv-privacy-mask' : ''}`}
     >
       <div className="mv-device-frame">
@@ -769,8 +781,8 @@ export default function App() {
         onOpenTestsModal={() => setShowTestsModal(true)}
         isLoading={isLoading}
         availableIdentities={availableIdentities}
-        isMobilePreview={isMobilePreview}
-        onToggleMobilePreview={() => setIsMobilePreview((current) => !current)}
+        layoutMode={layoutMode}
+        onLayoutModeChange={setLayoutMode}
         isPrivacyMasked={isPrivacyMasked}
         onTogglePrivacyMask={() => setIsPrivacyMasked((current) => !current)}
       />

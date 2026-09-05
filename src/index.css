@@ -4217,3 +4217,873 @@ html[data-theme] button.bg-white:hover {
   color: var(--text-muted) !important;
   font-variant-numeric: tabular-nums lining-nums;
 }
+
+
+/* ==========================================================================
+   DEVICE-OPTIMISED LAYOUT MODES — HP OMNIBOOK 7 + IPHONE 13
+   PC mode targets the 14-inch 1920x1200 laptop at 150% Windows scaling.
+   Phone mode targets the iPhone 13 390x844 CSS viewport and can be previewed
+   faithfully on desktop. These rules are presentation-only and sit after all
+   legacy density rules so one shared responsive system wins app-wide.
+   ========================================================================== */
+
+.mv-density-root {
+  --device-shell-max: 1680px;
+  --device-page-gutter: clamp(14px, 1.35vw, 24px);
+}
+
+/* Persistent mode switcher in the global header. */
+.mv-layout-switcher {
+  display: inline-grid;
+  grid-template-columns: repeat(2, max-content);
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  background: var(--field);
+}
+
+.mv-layout-switcher-option {
+  display: inline-flex;
+  min-height: 30px !important;
+  height: 30px !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 5px;
+  padding: 0 9px !important;
+  color: var(--text-muted);
+  font-size: 12px !important;
+  font-weight: 700;
+  line-height: 1 !important;
+  transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+.mv-layout-switcher-option:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.mv-layout-switcher-option.is-active {
+  background: var(--surface-hover);
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 rgb(var(--accent-rgb));
+}
+
+.mv-layout-switcher-option.is-active svg {
+  color: rgb(var(--accent-rgb));
+}
+
+/* ------------------------------ PC MODE ---------------------------------- */
+.mv-layout-pc {
+  --card-padding: 12px 14px;
+  --card-gap: 10px;
+  --card-font-scale: 14px;
+  --card-radius: 8px;
+  --density-control-height: 34px;
+  --density-page-pad: 16px;
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.mv-layout-pc .mv-device-frame {
+  display: contents;
+}
+
+.mv-layout-pc .mv-shell-boundary,
+.mv-layout-pc .mv-workspace,
+.mv-layout-pc main {
+  width: 100%;
+  max-width: var(--device-shell-max) !important;
+  margin-inline: auto;
+}
+
+.mv-layout-pc .mv-shell-boundary {
+  padding-inline: var(--device-page-gutter) !important;
+}
+
+.mv-layout-pc .mv-workspace {
+  padding: 16px var(--device-page-gutter) 24px !important;
+}
+
+.mv-layout-pc header > .mv-shell-boundary > div {
+  height: 52px !important;
+}
+
+.mv-layout-pc header :is(
+  #header-backup-btn,
+  #header-refresh-btn,
+  #header-privacy-mask-btn
+) {
+  min-height: 34px !important;
+  height: 34px !important;
+}
+
+.mv-layout-pc #header-refresh-btn {
+  width: 34px !important;
+}
+
+.mv-layout-pc .mv-header-user {
+  height: 34px !important;
+}
+
+.mv-layout-pc .mv-layout-switcher-option {
+  min-height: 30px !important;
+  height: 30px !important;
+}
+
+.mv-layout-pc .mv-nav-desktop {
+  display: block !important;
+}
+
+.mv-layout-pc .mv-nav-mobile {
+  display: none !important;
+}
+
+.mv-layout-pc .mv-nav-desktop .mv-shell-boundary > div {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.mv-layout-pc .mv-nav-desktop .mv-shell-boundary > div::-webkit-scrollbar {
+  display: none;
+}
+
+.mv-layout-pc .mv-nav-desktop button {
+  min-height: 38px !important;
+  flex: 0 0 auto;
+  padding: 8px 14px !important;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+
+.mv-layout-pc h1 {
+  font-size: 22px !important;
+  line-height: 1.2 !important;
+}
+
+.mv-layout-pc h2 {
+  font-size: 16px !important;
+  line-height: 1.25 !important;
+}
+
+.mv-layout-pc h3,
+.mv-layout-pc h4 {
+  font-size: 14px !important;
+}
+
+.mv-layout-pc .text-5xl {
+  font-size: 30px !important;
+}
+
+.mv-layout-pc .text-4xl {
+  font-size: 28px !important;
+}
+
+.mv-layout-pc .text-3xl {
+  font-size: 24px !important;
+}
+
+.mv-layout-pc .text-2xl {
+  font-size: 21px !important;
+}
+
+.mv-layout-pc .text-xl {
+  font-size: 18px !important;
+}
+
+.mv-layout-pc .text-lg {
+  font-size: 17px !important;
+}
+
+.mv-layout-pc .text-base {
+  font-size: 15px !important;
+}
+
+.mv-layout-pc .text-sm {
+  font-size: 14px !important;
+}
+
+.mv-layout-pc .text-xs {
+  font-size: 12px !important;
+}
+
+.mv-layout-pc :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select
+) {
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 6px 11px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc textarea {
+  min-height: 72px !important;
+  padding: 8px 11px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc button {
+  min-height: 32px !important;
+}
+
+.mv-layout-pc :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) {
+  min-width: 170px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.mv-layout-pc :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) :is(button, a, [role="menuitem"]) {
+  min-height: 34px !important;
+  padding: 7px 11px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc table {
+  font-size: 13px;
+}
+
+.mv-layout-pc table th {
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+}
+
+.mv-layout-pc table td {
+  padding: 9px 10px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc .finance-ledger-row {
+  min-height: 58px !important;
+  height: 58px;
+  max-height: 58px;
+  padding: 10px 14px !important;
+}
+
+.mv-layout-pc .finance-row-title {
+  font-size: 14px !important;
+  line-height: 18px !important;
+}
+
+.mv-layout-pc .finance-metadata-line {
+  font-size: 12px !important;
+}
+
+.mv-layout-pc .finance-amount {
+  font-size: 15px !important;
+}
+
+.mv-layout-pc .finance-leading-icon {
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+}
+
+.mv-layout-pc .finance-action-button {
+  width: 32px;
+  height: 32px;
+}
+
+.mv-layout-pc .finance-filter-control {
+  height: 36px;
+  font-size: 13px;
+}
+
+.mv-layout-pc .mv-month-picker {
+  height: 36px;
+}
+
+.mv-layout-pc .mv-month-picker-input {
+  min-height: 34px !important;
+  height: 34px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc .mv-modal-card,
+.mv-layout-pc .mv-modal-card.mv-modal-wide,
+.mv-layout-pc :is(
+  .mv-income-modal,
+  .mv-account-modal,
+  .mv-transaction-modal,
+  .mv-rollover-modal,
+  .mv-backup-modal
+) {
+  width: min(100%, 540px);
+  max-width: 540px !important;
+  max-height: 88vh !important;
+}
+
+.mv-layout-pc .mv-modal-header {
+  min-height: 48px;
+  padding: 11px 14px !important;
+}
+
+.mv-layout-pc .mv-modal-form,
+.mv-layout-pc .mv-modal-body,
+.mv-layout-pc .mv-modal-scroll-body {
+  padding: 14px !important;
+}
+
+.mv-layout-pc .mv-modal-actions button,
+.mv-layout-pc .mv-modal-fixed-actions button,
+.mv-layout-pc .mv-rollover-footer button {
+  min-height: 34px !important;
+  height: 34px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc .mv-settings-control {
+  min-height: 34px !important;
+  height: 34px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc .mv-settings-primary,
+.mv-layout-pc .mv-settings-secondary,
+.mv-layout-pc .mv-settings-danger {
+  min-height: 34px !important;
+  height: 34px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-pc .mv-settings-tab {
+  min-height: 34px !important;
+  padding: 7px 16px !important;
+  font-size: 13px !important;
+}
+
+/* Reverse the old extreme compression without making the desktop bloated. */
+.mv-layout-pc .p-8 { padding: 18px !important; }
+.mv-layout-pc .p-7,
+.mv-layout-pc .p-6 { padding: 16px !important; }
+.mv-layout-pc .p-5,
+.mv-layout-pc .p-4 { padding: 14px !important; }
+.mv-layout-pc .p-3 { padding: 12px !important; }
+
+.mv-layout-pc :is(.px-8, .px-7, .px-6) { padding-inline: 16px !important; }
+.mv-layout-pc :is(.px-5, .px-4) { padding-inline: 14px !important; }
+.mv-layout-pc .px-3 { padding-inline: 12px !important; }
+
+.mv-layout-pc :is(.py-8, .py-7, .py-6) { padding-block: 14px !important; }
+.mv-layout-pc :is(.py-5, .py-4) { padding-block: 12px !important; }
+.mv-layout-pc .py-3 { padding-block: 10px !important; }
+
+.mv-layout-pc :is(.space-y-7, .space-y-6) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 16px !important;
+}
+
+.mv-layout-pc :is(.space-y-5, .space-y-4) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 12px !important;
+}
+
+.mv-layout-pc .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 9px !important;
+}
+
+.mv-layout-pc :is(.gap-6, .gap-5) {
+  gap: 16px !important;
+}
+
+.mv-layout-pc .gap-4 {
+  gap: 14px !important;
+}
+
+.mv-layout-pc .gap-3 {
+  gap: 12px !important;
+}
+
+/* ----------------------------- PHONE MODE -------------------------------- */
+.mv-layout-phone {
+  --card-padding: 12px;
+  --card-gap: 10px;
+  --card-font-scale: 14px;
+  --card-radius: 10px;
+  --density-control-height: 44px;
+  display: block;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: var(--background);
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.mv-layout-phone .mv-device-frame {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100dvh;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.mv-layout-phone .mv-shell-boundary,
+.mv-layout-phone .mv-workspace,
+.mv-layout-phone main {
+  width: 100%;
+  max-width: 100% !important;
+  margin-inline: 0;
+}
+
+.mv-layout-phone header {
+  position: relative !important;
+  top: auto !important;
+  flex: 0 0 auto;
+  z-index: 60;
+}
+
+.mv-layout-phone header > .mv-shell-boundary {
+  padding-inline: 10px !important;
+}
+
+.mv-layout-phone header > .mv-shell-boundary > div {
+  height: 56px !important;
+  gap: 8px;
+}
+
+.mv-layout-phone header [title="Application version"],
+.mv-layout-phone header [title="Local financial dataset revision"],
+.mv-layout-phone .mv-header-user,
+.mv-layout-phone #header-backup-btn {
+  display: none !important;
+}
+
+.mv-layout-phone #header-refresh-btn,
+.mv-layout-phone #header-privacy-mask-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  justify-content: center;
+}
+
+.mv-layout-phone .mv-privacy-label {
+  display: none !important;
+}
+
+.mv-layout-phone .mv-layout-switcher {
+  gap: 1px;
+  padding: 2px;
+  border-radius: 7px;
+}
+
+.mv-layout-phone .mv-layout-switcher-option {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 7px !important;
+  font-size: 11px !important;
+}
+
+.mv-layout-phone .mv-layout-switcher-option svg {
+  width: 14px;
+  height: 14px;
+}
+
+.mv-layout-phone .mv-nav-desktop {
+  display: none !important;
+}
+
+.mv-layout-phone .mv-nav-mobile {
+  position: absolute !important;
+  inset: auto 0 0 0 !important;
+  display: block !important;
+  z-index: 80;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+
+.mv-layout-phone .mv-mobile-nav-grid {
+  height: 62px !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+}
+
+.mv-layout-phone .mv-nav-mobile button {
+  min-width: 0;
+  min-height: 52px !important;
+  padding: 5px 1px !important;
+  font-size: 10px !important;
+  line-height: 1.05 !important;
+}
+
+.mv-layout-phone .mv-nav-mobile button svg {
+  width: 17px !important;
+  height: 17px !important;
+  margin-bottom: 3px;
+}
+
+.mv-layout-phone .mv-workspace {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 12px 12px calc(78px + env(safe-area-inset-bottom)) !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mv-layout-phone h1 {
+  font-size: 20px !important;
+}
+
+.mv-layout-phone h2 {
+  font-size: 15px !important;
+}
+
+.mv-layout-phone h3,
+.mv-layout-phone h4 {
+  font-size: 14px !important;
+}
+
+.mv-layout-phone .text-5xl,
+.mv-layout-phone .text-4xl {
+  font-size: 28px !important;
+}
+
+.mv-layout-phone .text-3xl {
+  font-size: 24px !important;
+}
+
+.mv-layout-phone .text-2xl {
+  font-size: 21px !important;
+}
+
+.mv-layout-phone .text-xl {
+  font-size: 18px !important;
+}
+
+.mv-layout-phone .text-lg {
+  font-size: 16px !important;
+}
+
+.mv-layout-phone .text-base {
+  font-size: 15px !important;
+}
+
+.mv-layout-phone .text-sm {
+  font-size: 14px !important;
+}
+
+.mv-layout-phone .text-xs {
+  font-size: 12px !important;
+}
+
+/* Single-column content is the safe default. Financial metrics and the four
+   primary Dashboard actions deliberately retain a compact 2-column rhythm. */
+.mv-layout-phone .mv-workspace .grid:not(.mv-mobile-nav-grid) {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.mv-layout-phone .mv-workspace section.grid:has(> .mv-dashboard-metric-card) {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.mv-layout-phone .mv-workspace section.grid:has(> #dashboard-open-transfer-plan-btn) {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.mv-layout-phone .mv-dashboard-metric-card {
+  min-width: 0;
+}
+
+.mv-layout-phone :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select
+) {
+  min-height: 44px !important;
+  height: 44px !important;
+  padding: 9px 12px !important;
+  font-size: 16px !important;
+}
+
+.mv-layout-phone textarea {
+  min-height: 88px !important;
+  padding: 10px 12px !important;
+  font-size: 16px !important;
+}
+
+.mv-layout-phone button {
+  min-height: 44px !important;
+}
+
+.mv-layout-phone .mv-month-picker {
+  width: 100%;
+  height: 44px;
+}
+
+.mv-layout-phone .mv-month-picker-input {
+  min-height: 42px !important;
+  height: 42px !important;
+  font-size: 15px !important;
+}
+
+.mv-layout-phone :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) {
+  width: max-content;
+  min-width: 190px;
+  max-width: min(340px, calc(100vw - 24px));
+  max-height: min(420px, calc(100dvh - 32px));
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.mv-layout-phone :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) :is(button, a, [role="menuitem"]) {
+  min-height: 44px !important;
+  padding: 9px 12px !important;
+  font-size: 14px !important;
+  white-space: normal;
+}
+
+.mv-layout-phone .finance-ledger-row {
+  height: auto !important;
+  min-height: 68px !important;
+  max-height: none !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  padding: 11px 12px !important;
+}
+
+.mv-layout-phone .finance-row-left {
+  align-items: start;
+}
+
+.mv-layout-phone .finance-row-title {
+  font-size: 14px !important;
+  white-space: normal !important;
+}
+
+.mv-layout-phone .finance-metadata-line {
+  flex-wrap: wrap;
+  font-size: 12px !important;
+  white-space: normal !important;
+}
+
+.mv-layout-phone .finance-metadata-line > span {
+  white-space: normal !important;
+}
+
+.mv-layout-phone .finance-row-side {
+  width: 100%;
+  justify-content: flex-end !important;
+  padding-top: 5px;
+}
+
+.mv-layout-phone .finance-amount-block {
+  width: auto;
+  min-width: 96px;
+}
+
+.mv-layout-phone .finance-amount {
+  font-size: 15px !important;
+}
+
+.mv-layout-phone .finance-action-button {
+  width: 40px;
+  height: 40px;
+}
+
+.mv-layout-phone .finance-receive-button {
+  min-height: 40px !important;
+  height: 40px;
+  padding-inline: 12px;
+  font-size: 11px;
+}
+
+.mv-layout-phone .mv-settings-tabs {
+  display: flex;
+  max-width: 100%;
+  gap: 3px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mv-layout-phone .mv-settings-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mv-layout-phone .mv-settings-tab {
+  min-width: max-content;
+  min-height: 40px !important;
+  padding: 8px 13px !important;
+  font-size: 13px !important;
+}
+
+.mv-layout-phone .mv-card-customization-row,
+.mv-layout-phone .mv-rollover-scopes,
+.mv-layout-phone .mv-modal-grid-2 {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.mv-layout-phone .mv-modal-backdrop,
+.mv-layout-phone .fixed.inset-0.z-50 {
+  position: absolute !important;
+  inset: 0 !important;
+  align-items: flex-end;
+  padding: 8px !important;
+}
+
+.mv-layout-phone .mv-modal-card,
+.mv-layout-phone .mv-modal-card.mv-modal-wide,
+.mv-layout-phone :is(
+  .mv-income-modal,
+  .mv-account-modal,
+  .mv-transaction-modal,
+  .mv-rollover-modal,
+  .mv-backup-modal
+) {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: calc(100% - 8px) !important;
+  border-radius: 14px 14px 6px 6px !important;
+}
+
+.mv-layout-phone .mv-modal-header {
+  min-height: 52px;
+  padding: 12px 14px !important;
+}
+
+.mv-layout-phone .mv-modal-form,
+.mv-layout-phone .mv-modal-body,
+.mv-layout-phone .mv-modal-scroll-body {
+  padding: 14px !important;
+}
+
+.mv-layout-phone .mv-modal-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px !important;
+  background: var(--surface);
+}
+
+.mv-layout-phone .mv-modal-actions button,
+.mv-layout-phone .mv-modal-fixed-actions button,
+.mv-layout-phone .mv-rollover-footer button {
+  min-height: 44px !important;
+  height: 44px !important;
+  font-size: 14px !important;
+}
+
+.mv-layout-phone .mv-settings-control,
+.mv-layout-phone .mv-settings-primary,
+.mv-layout-phone .mv-settings-secondary,
+.mv-layout-phone .mv-settings-danger {
+  min-height: 44px !important;
+  height: 44px !important;
+  font-size: 14px !important;
+}
+
+.mv-layout-phone table {
+  font-size: 12px;
+}
+
+.mv-layout-phone table th {
+  padding: 8px !important;
+  font-size: 11px !important;
+}
+
+.mv-layout-phone table td {
+  padding: 9px 8px !important;
+  font-size: 12px !important;
+}
+
+/* Desktop phone preview: exact iPhone 13 logical width with a contained frame. */
+@media (min-width: 431px) {
+  .mv-layout-phone {
+    padding: 12px 0;
+    background: #0B0F19 !important;
+  }
+
+  .mv-layout-phone .mv-device-frame {
+    width: 390px;
+    height: min(844px, calc(100dvh - 24px));
+    min-height: 620px;
+    margin: 0 auto;
+    border: 4px solid #26314D;
+    border-radius: 16px;
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.62);
+  }
+}
+
+/* Real iPhone 13 / narrow handset: the frame becomes the actual viewport. */
+@media (max-width: 430px) {
+  html[data-layout-mode="phone"],
+  html[data-layout-mode="phone"] body,
+  html[data-layout-mode="phone"] #root {
+    width: 100%;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .mv-layout-phone {
+    width: 100%;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  .mv-layout-phone .mv-device-frame {
+    width: 100%;
+    height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* PC mode remains usable on a narrow viewport if manually forced. It keeps
+   desktop navigation but makes the tab rail scroll instead of crushing tabs. */
+@media (max-width: 640px) {
+  .mv-layout-pc .mv-nav-desktop {
+    display: block !important;
+  }
+
+  .mv-layout-pc .mv-nav-mobile {
+    display: none !important;
+  }
+
+  .mv-layout-pc .mv-shell-boundary,
+  .mv-layout-pc .mv-workspace {
+    min-width: 0;
+  }
+
+  .mv-layout-pc .mv-workspace {
+    padding: 12px !important;
+  }
+
+  .mv-layout-pc .mv-nav-desktop button {
+    min-height: 38px !important;
+  }
+}
