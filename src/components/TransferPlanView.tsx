@@ -191,10 +191,21 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     [plan.accountsFullyFunded, latestFundingBatchByDestination]
   );
 
+  const completedAccountRequirements = useMemo(
+    () =>
+      plan.accountsFullyFunded.filter(
+        (requirement) =>
+          !latestFundingBatchByDestination.has(requirement.account.id) &&
+          requirement.unpaidPayments.length === 0
+      ),
+    [plan.accountsFullyFunded, latestFundingBatchByDestination]
+  );
+
   const planAccountCount =
     plan.accountsNeedingFunding.length +
     fundedAccountRequirements.length +
-    coveredAccountRequirements.length;
+    coveredAccountRequirements.length +
+    completedAccountRequirements.length;
 
   const handleUndoFunding = async (account: Account) => {
     if (isViewOnly) return;
@@ -340,7 +351,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                 'legacy_incoming'
                                 ? 'Funded · Legacy'
                                 : 'Funded'
-                              : 'Covered'}
+                              : req.unpaidPayments.length === 0
+                                ? 'Paid / Complete'
+                                : 'Covered'}
                           </span>
                           {!isViewOnly && latestFundingBatchByDestination.has(req.account.id) && (
                             <button
@@ -450,7 +463,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                           </div>
                         ) : (
                           <div className="mt-3 rounded-xl border border-muted bg-surface px-3.5 py-2.5 text-[12px] text-muted">
-                            Covered by the existing account balance. No Transfer Plan funding transfer was recorded, so there is nothing to undo.
+                            {req.unpaidPayments.length === 0
+                              ? 'All selected bills are recorded as paid. No new Transfer Plan funding is required.'
+                              : 'Covered by the existing account balance. No Transfer Plan funding transfer was recorded, so there is nothing to undo.'}
                           </div>
                         )}
                       </div>
@@ -492,7 +507,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                                     >
                                       {latestFundingBatchByDestination.has(req.account.id)
                                         ? 'Funded'
-                                        : 'Covered'}
+                                        : p.status === 'paid'
+                                          ? 'Complete'
+                                          : 'Covered'}
                                     </span>
                                     <span className="font-bold text-main">
                                       {formatPence(p.amountPence)}
@@ -629,7 +646,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             {planAccountCount}
           </div>
           <p className="mt-1 text-sm leading-5 text-muted">
-            {plan.accountsNeedingFunding.length} need funding · {fundedAccountRequirements.length} funded · {coveredAccountRequirements.length} covered
+            {plan.accountsNeedingFunding.length} need funding · {fundedAccountRequirements.length} funded · {coveredAccountRequirements.length} covered · {completedAccountRequirements.length} complete
           </p>
         </article>
 
@@ -833,6 +850,21 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {coveredAccountRequirements.map(renderReadyAccountCard)}
+            </div>
+          </div>
+        )}
+
+        {completedAccountRequirements.length > 0 && (
+          <div className="space-y-4 pt-2">
+            <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-[14px] font-semibold leading-5 text-success">
+              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+              <span className="whitespace-nowrap">
+                Paid / Complete ({completedAccountRequirements.length})
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {completedAccountRequirements.map(renderReadyAccountCard)}
             </div>
           </div>
         )}
