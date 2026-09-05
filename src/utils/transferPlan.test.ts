@@ -84,21 +84,22 @@ describe('Transfer Plan account identity and funding calculations', () => {
     expect(plan.accountsFullyFunded.some((item) => item.account.id === chase.id)).toBe(false);
   });
 
-  it('keeps a selected paid-only destination visible without funding it again', () => {
-    const current = account('current-paid', 'Paid Bills Current', 'Marius', 25_000);
+  it('keeps paid status separate from In Plan funding requirements', () => {
+    const current = account('current-paid', 'Paid Bills Current', 'Marius', 5_000);
     const paidBill = payment('paid-bill', current.id, 12_000, 'paid');
 
     const plan = generateTransferPlan([current], [paidBill], '2026-10');
 
-    expect(plan.accountsNeedingFunding).toHaveLength(0);
-    expect(plan.accountsFullyFunded).toHaveLength(1);
-    expect(plan.accountsFullyFunded[0].account.id).toBe(current.id);
-    expect(plan.accountsFullyFunded[0].selectedPayments).toHaveLength(1);
-    expect(plan.accountsFullyFunded[0].paidPayments).toHaveLength(1);
-    expect(plan.accountsFullyFunded[0].unpaidPayments).toHaveLength(0);
-    expect(plan.accountsFullyFunded[0].transferRequiredPence).toBe(0);
+    expect(plan.accountsNeedingFunding).toHaveLength(1);
+    expect(plan.accountsFullyFunded).toHaveLength(0);
+    expect(plan.accountsNeedingFunding[0].account.id).toBe(current.id);
+    expect(plan.accountsNeedingFunding[0].selectedPayments).toHaveLength(1);
+    expect(plan.accountsNeedingFunding[0].paidPayments).toHaveLength(1);
+    expect(plan.accountsNeedingFunding[0].unpaidPayments).toHaveLength(0);
+    expect(plan.accountsNeedingFunding[0].transferRequiredPence).toBe(7_000);
+    expect(plan.totalSelectedPaymentsCount).toBe(1);
     expect(plan.totalPaidSelectedPaymentsCount).toBe(1);
-    expect(plan.totalTransferRequiredPence).toBe(0);
+    expect(plan.totalTransferRequiredPence).toBe(7_000);
   });
 
   it('keeps Transfer Plan funding independent from linked actual evidence', () => {
