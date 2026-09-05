@@ -115,6 +115,34 @@ body,
   max-height: var(--mv-ds-top-nav-height) !important;
 }
 
+/* Header controls are standard 44px interactive elements. */
+.mv-density-root :is(
+  #header-backup-btn,
+  #header-refresh-btn,
+  #header-privacy-mask-btn,
+  .mv-layout-switcher-option
+) {
+  height: var(--mv-ds-control-large) !important;
+  min-height: var(--mv-ds-control-large) !important;
+}
+
+.mv-density-root #header-refresh-btn {
+  width: var(--mv-ds-control-large) !important;
+  min-width: var(--mv-ds-control-large) !important;
+}
+
+.mv-density-root .mv-layout-switcher {
+  padding: var(--mv-ds-space-1) !important;
+  gap: var(--mv-ds-space-1) !important;
+  border-radius: var(--mv-ds-radius-lg) !important;
+}
+
+.mv-density-root .mv-layout-switcher-option {
+  padding-inline: var(--mv-ds-space-3) !important;
+  font-size: var(--mv-ds-text-compact) !important;
+  line-height: var(--mv-ds-leading-compact) !important;
+}
+
 /* Desktop secondary navigation stays compact but with a 44px target. */
 .mv-layout-pc .mv-nav-desktop button {
   min-height: var(--mv-ds-click-target) !important;
