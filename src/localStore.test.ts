@@ -12,6 +12,7 @@ import {
   executeLocalTransfer,
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
+  undoLocalPaymentPaid,
   importLocalMonth,
   loadLocalHousehold,
   markLocalIncomeReceived,
@@ -1267,6 +1268,169 @@ describe('Penny-style local MV storage', () => {
         state.version
       )
     ).toThrow('A bill with a linked actual expense transaction cannot be marked unpaid.');
+  });
+
+  it('records and safely undoes a paid bill without double-counting or crossing same-name accounts', () => {
+    let state = loadLocalHousehold();
+
+    const mariusAccount = createLocalAccount(
+      {
+        name: 'Shared Bank',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const vestaAccount = createLocalAccount(
+      {
+        name: 'Shared Bank',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Vesta',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Vesta payment undo test',
+        amountPence: 25_00,
+        month: '2026-09',
+        responsiblePerson: 'Vesta',
+        accountId: vestaAccount.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const firstPaid = markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 25_00,
+        actualDate: '2026-09-04',
+        accountId: vestaAccount.account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === mariusAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((account) => account.id === vestaAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(75_00);
+    expect(
+      state.transactions.filter(
+        (transaction) => transaction.plannedPaymentId === bill.payment.id
+      )
+    ).toHaveLength(1);
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)
+    ).toEqual(
+      expect.objectContaining({
+        status: 'paid',
+        actualTransactionId: firstPaid.transaction.id,
+      })
+    );
+
+    const undone = undoLocalPaymentPaid(bill.payment.id, state.version);
+    expect(undone.transaction.id).toBe(firstPaid.transaction.id);
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === mariusAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.accounts.find((account) => account.id === vestaAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(100_00);
+    expect(
+      state.transactions.some(
+        (transaction) => transaction.id === firstPaid.transaction.id
+      )
+    ).toBe(false);
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)
+    ).toEqual(
+      expect.objectContaining({
+        status: 'unpaid',
+        actualTransactionId: undefined,
+        actualAmountPence: undefined,
+        actualDate: undefined,
+      })
+    );
+
+    markLocalPaymentPaid(
+      bill.payment.id,
+      {
+        actualAmountPence: 25_00,
+        actualDate: '2026-09-04',
+        accountId: vestaAccount.account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(
+      state.transactions.filter(
+        (transaction) => transaction.plannedPaymentId === bill.payment.id
+      )
+    ).toHaveLength(1);
+    expect(
+      state.accounts.find((account) => account.id === vestaAccount.account.id)
+        ?.currentBalancePence
+    ).toBe(75_00);
+  });
+
+  it('refuses to invent payment undo when there is no linked actual expense', () => {
+    let state = loadLocalHousehold();
+    const account = createLocalAccount(
+      {
+        name: 'No Evidence Current',
+        type: 'current',
+        startingBalancePence: 50_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'No evidence bill',
+        amountPence: 10_00,
+        month: '2026-09',
+        responsiblePerson: 'Marius',
+        accountId: account.account.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      undoLocalPaymentPaid(bill.payment.id, state.version)
+    ).toThrow('no linked actual payment transaction to undo');
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((candidate) => candidate.id === account.account.id)
+        ?.currentBalancePence
+    ).toBe(50_00);
+    expect(
+      state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.status
+    ).toBe('unpaid');
   });
 
   it('keeps received income and its linked Activity transaction reconciled when edited', () => {
