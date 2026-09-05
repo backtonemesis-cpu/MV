@@ -68,11 +68,10 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
     },
   ]);
   const [date, setDate] = useState<string>(localDateInputValue());
-  const [description, setDescription] = useState<string>(
-    `Fund ${targetAccount.name} ${accountTypeLabel(targetAccount.type)} · ${accountOwnerLabel(
-      targetAccount
-    )}`
-  );
+  const defaultDescription = `Fund ${targetAccount.name} ${accountTypeLabel(
+    targetAccount.type
+  )} · ${accountOwnerLabel(targetAccount)}`;
+  const [description, setDescription] = useState<string>(defaultDescription);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -112,14 +111,23 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   };
 
   const addAllocation = () => {
-    setAllocations((current) => [
-      ...current,
-      {
-        id: `allocation-${Date.now()}-${current.length + 1}`,
-        sourceAccountId: '',
-        amountStr: '',
-      },
-    ]);
+    setAllocations((current) => {
+      const currentTotalPence = current.reduce(
+        (sum, allocation) => sum + parseToPence(allocation.amountStr || '0'),
+        0
+      );
+      const amountRemainingPence = Math.max(0, requiredPence - currentTotalPence);
+
+      return [
+        ...current,
+        {
+          id: `allocation-${Date.now()}-${current.length + 1}`,
+          sourceAccountId: '',
+          amountStr:
+            amountRemainingPence > 0 ? (amountRemainingPence / 100).toFixed(2) : '',
+        },
+      ];
+    });
   };
 
   const removeAllocation = (id: string) => {
@@ -190,7 +198,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
         destinationAccountId: targetAccount.id,
         expectedTotalPence: requiredPence,
         allocations: parsedAllocations,
-        description: description.trim(),
+        description: description.trim() || defaultDescription,
         date,
       });
       onClose();
@@ -202,254 +210,311 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   };
 
   return (
-    <div className="mv-modal-backdrop">
-      <div className="mv-modal-card">
-        <div className="mv-modal-header">
-          <div>
-            <h3 className="text-base font-semibold text-main">Record Funding Transfer</h3>
+    <div className="mv-modal-backdrop mv-funding-modal-backdrop">
+      <div
+        className="mv-modal-card mv-modal-wide mv-funding-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="funding-modal-title"
+        aria-describedby="funding-modal-summary"
+      >
+        <div className="mv-modal-header mv-funding-modal-header">
+          <div className="min-w-0">
+            <h3 id="funding-modal-title" className="text-base font-semibold text-main">
+              Record funding transfer
+            </h3>
+            <p className="mv-funding-modal-kicker">
+              Move money into the account that will pay these selected bills.
+            </p>
           </div>
-          <button onClick={onClose} className="mv-modal-close">
+          <button
+            type="button"
+            onClick={onClose}
+            className="mv-modal-close"
+            aria-label="Close funding transfer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="mv-modal-section mx-3 mt-3 bg-warning-soft border-warning">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <span className="text-xs font-medium text-warning uppercase tracking-wide">
-                Needs funding
-              </span>
-              <div className="mt-0.5 text-sm font-semibold text-main">
-                {accountIdentityLabel(targetAccount)}
-              </div>
-              <div className="mv-private-value mt-0.5 text-xs text-muted">
-                Balance {formatPence(targetAccount.currentBalancePence)} · Selected bills{' '}
-                {formatPence(fundingRequirement.totalSelectedPaymentsPence)}
-              </div>
-            </div>
-            <div className="shrink-0 text-right">
-              <span className="text-xs font-medium text-warning">Required</span>
-              <div className="mv-private-value text-lg font-bold text-warning">
-                {formatPence(requiredPence)}
-              </div>
-            </div>
-          </div>
-        </div>
+        <form onSubmit={handleSubmit} className="mv-modal-form mv-funding-modal-form">
+          <div className="mv-funding-modal-scroll">
+            <div
+              id="funding-modal-summary"
+              className="mv-modal-section mv-funding-modal-summary bg-warning-soft border-warning"
+            >
+              <div className="mv-funding-summary-grid">
+                <div className="min-w-0">
+                  <span className="text-xs font-medium text-warning uppercase tracking-wide">
+                    Needs funding
+                  </span>
+                  <div className="mt-1 text-base font-semibold text-main">
+                    {accountIdentityLabel(targetAccount)}
+                  </div>
+                  <div className="mv-private-value mt-1 text-sm text-muted">
+                    Current balance {formatPence(targetAccount.currentBalancePence)}
+                  </div>
+                </div>
 
-        <form onSubmit={handleSubmit} className="mv-modal-form">
-          {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs">
-              <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
+                <div className="mv-funding-summary-stat">
+                  <span className="text-xs font-medium text-muted">Selected bills</span>
+                  <strong className="mv-private-value">
+                    {formatPence(fundingRequirement.totalSelectedPaymentsPence)}
+                  </strong>
+                </div>
 
-          <div className="mv-modal-section space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-xs font-semibold text-main">Funding sources</div>
-              {allocations.length < eligibleSources.length && (
+                <div className="mv-funding-summary-stat is-required">
+                  <span className="text-xs font-medium text-warning">Transfer required</span>
+                  <strong className="mv-private-value text-warning">
+                    {formatPence(requiredPence)}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div
+                className="mv-funding-modal-error bg-danger-soft border border-danger text-danger"
+                role="alert"
+              >
+                <AlertCircle className="w-4 h-4 text-danger shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <section className="mv-modal-section mv-funding-sources-section">
+              <div className="mv-funding-section-header">
+                <div>
+                  <h4 className="mv-funding-section-title">Funding sources</h4>
+                  <p className="mv-funding-section-help">
+                    Choose where the money comes from. Safe-to-move balances already protect other selected bills.
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={addAllocation}
-                  className="shrink-0 px-2.5 py-1.5 text-[11px] font-semibold text-muted bg-surface border border-muted rounded-lg hover:bg-surface-muted transition-colors flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" />
-                  Add source
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {allocations.map((allocation, index) => {
-                const source = eligibleSources.find(
-                  (account) => account.id === allocation.sourceAccountId
-                );
-                const allocationPence = parseToPence(allocation.amountStr || '0');
-
-                return (
-                  <div key={allocation.id} className="rounded-lg border border-muted bg-surface p-2.5">
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(150px,180px)_auto] sm:items-end">
-                      <div className="min-w-0">
-                        <label className="block text-[11px] font-medium text-muted mb-1">
-                          {index === 0 ? 'Money from' : `Money from ${index + 1}`}
-                        </label>
-                        <select
-                          autoFocus={index === 0}
-                          value={allocation.sourceAccountId}
-                          onChange={(e) =>
-                            updateAllocation(allocation.id, {
-                              sourceAccountId: e.target.value,
-                            })
-                          }
-                          className="w-full min-w-0 text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
-                          required
-                        >
-                          <option value="">Select account</option>
-                          {eligibleSources.map((account) => {
-                            const usedElsewhere =
-                              usedSourceIds.has(account.id) &&
-                              account.id !== allocation.sourceAccountId;
-                            return (
-                              <option
-                                key={account.id}
-                                value={account.id}
-                                disabled={usedElsewhere}
-                              >
-                                {accountOptionLabel(account, { includeBalance: false })} · Safe {formatPence(
-                                  safeToMovePence(account)
-                                )}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-
-                      <div className="min-w-0">
-                        <label className="block text-[11px] font-medium text-muted mb-1">
-                          Amount
-                        </label>
-                        <div className="relative min-w-0">
-                          <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">
-                            £
-                          </span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={allocation.amountStr}
-                            onChange={(e) =>
-                              updateAllocation(allocation.id, {
-                                amountStr: e.target.value,
-                              })
-                            }
-                            className="mv-money-input-with-prefix w-full min-w-0 text-xs font-semibold tabular-nums border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-                            aria-label={`Funding amount from source account ${index + 1}`}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-end justify-end sm:pb-0.5">
-                        {allocations.length > 1 ? (
-                          <button
-                            type="button"
-                            onClick={() => removeAllocation(allocation.id)}
-                            className="p-2 rounded-md text-subtle hover:text-danger hover:bg-danger-soft transition-colors"
-                            title="Remove source"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        ) : (
-                          <div className="hidden w-[30px] sm:block" />
-                        )}
-                      </div>
-                    </div>
-
-                    {source ? (
-                      <div className="mt-2 flex flex-col gap-1 text-[10px] text-subtle sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0">
-                          <span className="font-medium text-main">{accountIdentityLabel(source)}</span>
-                          <span className="mx-1.5">→</span>
-                          <span className="font-medium text-main">{accountIdentityLabel(targetAccount)}</span>
-                        </div>
-                        <div className="mv-private-value shrink-0 text-right">
-                          <div>
-                            Safe to move {formatPence(safeToMovePence(source))}
-                          </div>
-                          {(reservedPlanPenceByAccountId[source.id] || 0) > 0 && (
-                            <div className="text-subtle">
-                              Balance {formatPence(source.currentBalancePence)} · Reserved{' '}
-                              {formatPence(reservedPlanPenceByAccountId[source.id] || 0)}
-                            </div>
-                          )}
-                          {allocationPence > safeToMovePence(source) && (
-                            <span className="text-danger font-medium">Exceeds safe amount</span>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-2 text-[10px] text-subtle">
-                        Choose the account the money will come from.
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-col gap-2 pt-1 text-xs sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-1.5 text-muted">
-                <span>To</span>
-                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-subtle" />
-                <span className="font-semibold text-main">
-                  {accountIdentityLabel(targetAccount)}
-                </span>
-              </div>
-              <div className="mv-private-value text-left sm:text-right">
-                <div className="font-semibold text-main">
-                  {hasSelectedSources
-                    ? `Allocated ${formatPence(allocatedTotalPence)} of ${formatPence(requiredPence)}`
-                    : `Required ${formatPence(requiredPence)}`}
-                </div>
-                <div
-                  className={
-                    !hasSelectedSources
-                      ? 'text-muted'
-                      : remainingPence === 0
-                        ? 'text-success'
-                        : remainingPence > 0
-                          ? 'text-warning'
-                          : 'text-danger'
+                  disabled={allocations.length >= eligibleSources.length}
+                  className="mv-funding-add-source"
+                  title={
+                    allocations.length >= eligibleSources.length
+                      ? 'No additional eligible funding sources are available'
+                      : 'Add another funding source'
                   }
                 >
-                  {!hasSelectedSources
-                    ? 'Choose account'
-                    : remainingPence === 0
-                      ? 'Ready to record'
-                      : remainingPence > 0
-                        ? `${formatPence(remainingPence)} remaining`
-                        : `${formatPence(Math.abs(remainingPence))} over`}
+                  <Plus className="w-4 h-4" />
+                  Add source
+                </button>
+              </div>
+
+              {eligibleSources.length === 0 && (
+                <div className="mv-funding-empty-state">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>No eligible account currently has money that is safe to move.</span>
+                </div>
+              )}
+
+              <div className="mv-funding-allocation-list">
+                {allocations.map((allocation, index) => {
+                  const source = eligibleSources.find(
+                    (account) => account.id === allocation.sourceAccountId
+                  );
+                  const allocationPence = parseToPence(allocation.amountStr || '0');
+
+                  return (
+                    <div key={allocation.id} className="mv-funding-allocation-card">
+                      <div className="mv-funding-allocation-grid">
+                        <div className="min-w-0">
+                          <label htmlFor={`funding-source-${allocation.id}`}>
+                            {index === 0 ? 'Money from' : `Money from ${index + 1}`}
+                          </label>
+                          <select
+                            id={`funding-source-${allocation.id}`}
+                            autoFocus={index === 0}
+                            value={allocation.sourceAccountId}
+                            onChange={(e) =>
+                              updateAllocation(allocation.id, {
+                                sourceAccountId: e.target.value,
+                              })
+                            }
+                            required
+                          >
+                            <option value="">Choose account</option>
+                            {eligibleSources.map((account) => {
+                              const usedElsewhere =
+                                usedSourceIds.has(account.id) &&
+                                account.id !== allocation.sourceAccountId;
+                              return (
+                                <option
+                                  key={account.id}
+                                  value={account.id}
+                                  disabled={usedElsewhere}
+                                >
+                                  {accountOptionLabel(account, { includeBalance: false })} · Safe{' '}
+                                  {formatPence(safeToMovePence(account))}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+
+                        <div className="min-w-0">
+                          <label htmlFor={`funding-amount-${allocation.id}`}>Amount</label>
+                          <div className="mv-funding-money-field">
+                            <span className="mv-money-prefix">£</span>
+                            <input
+                              id={`funding-amount-${allocation.id}`}
+                              type="text"
+                              inputMode="decimal"
+                              value={allocation.amountStr}
+                              onChange={(e) =>
+                                updateAllocation(allocation.id, {
+                                  amountStr: e.target.value,
+                                })
+                              }
+                              className="mv-money-input-with-prefix"
+                              aria-label={`Funding amount from source account ${index + 1}`}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mv-funding-allocation-actions">
+                          {allocations.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeAllocation(allocation.id)}
+                              className="mv-funding-remove-source"
+                              title="Remove source"
+                              aria-label={`Remove funding source ${index + 1}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {source ? (
+                        <div className="mv-funding-source-detail">
+                          <div className="mv-funding-source-route">
+                            <span>{accountIdentityLabel(source)}</span>
+                            <ArrowRight className="h-4 w-4 shrink-0 text-subtle" />
+                            <span>{accountIdentityLabel(targetAccount)}</span>
+                          </div>
+                          <div className="mv-private-value mv-funding-safe-balance">
+                            <strong>Safe to move {formatPence(safeToMovePence(source))}</strong>
+                            {(reservedPlanPenceByAccountId[source.id] || 0) > 0 && (
+                              <span>
+                                Balance {formatPence(source.currentBalancePence)} · Reserved{' '}
+                                {formatPence(reservedPlanPenceByAccountId[source.id] || 0)}
+                              </span>
+                            )}
+                            {allocationPence > safeToMovePence(source) && (
+                              <span className="text-danger font-semibold">Exceeds safe amount</span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mv-funding-source-placeholder">
+                          Select an account to see its safe-to-move balance.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mv-funding-allocation-summary">
+                <div className="min-w-0">
+                  <span className="mv-funding-summary-label">Destination</span>
+                  <div className="mv-funding-destination">
+                    <ArrowRight className="h-4 w-4 shrink-0 text-subtle" />
+                    <strong>{accountIdentityLabel(targetAccount)}</strong>
+                  </div>
+                </div>
+
+                <div className="mv-private-value mv-funding-allocation-status">
+                  <span>
+                    {hasSelectedSources
+                      ? `Allocated ${formatPence(allocatedTotalPence)} of ${formatPence(requiredPence)}`
+                      : `Required ${formatPence(requiredPence)}`}
+                  </span>
+                  <strong
+                    className={
+                      !hasSelectedSources
+                        ? 'text-muted'
+                        : remainingPence === 0
+                          ? 'text-success'
+                          : remainingPence > 0
+                            ? 'text-warning'
+                            : 'text-danger'
+                    }
+                  >
+                    {!hasSelectedSources
+                      ? 'Choose a source account'
+                      : remainingPence === 0
+                        ? 'Ready to record'
+                        : remainingPence > 0
+                          ? `${formatPence(remainingPence)} remaining`
+                          : `${formatPence(Math.abs(remainingPence))} over allocated`}
+                  </strong>
                 </div>
               </div>
+            </section>
+
+            <section className="mv-funding-details-grid" aria-label="Transfer details">
+              <div>
+                <label htmlFor="funding-transfer-date">Transfer date</label>
+                <input
+                  id="funding-transfer-date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="funding-transfer-note">
+                  Transfer note <span className="mv-funding-optional">(optional)</span>
+                </label>
+                <input
+                  id="funding-transfer-note"
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={defaultDescription}
+                />
+              </div>
+            </section>
+          </div>
+
+          <div className="mv-modal-actions mv-funding-modal-actions">
+            <div className="mv-funding-footer-status" aria-live="polite">
+              {!hasSelectedSources
+                ? 'Choose a funding source'
+                : remainingPence === 0
+                  ? 'Ready to record'
+                  : remainingPence > 0
+                    ? `${formatPence(remainingPence)} left to allocate`
+                    : `${formatPence(Math.abs(remainingPence))} over allocated`}
             </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1">Transfer date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full px-3 py-1.5 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-muted mb-1">Transfer note</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-              required
-            />
-          </div>
-
-          <div className="mv-modal-actions">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-muted hover:bg-surface-muted rounded-md transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !isFullyAllocated}
-              className="inline-flex items-center gap-1.5 bg-accent text-on-accent font-semibold disabled:opacity-50"
-            >
-              {isSubmitting ? 'Recording...' : 'Record transfer'}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="mv-funding-footer-buttons">
+              <button
+                type="button"
+                onClick={onClose}
+                className="mv-funding-cancel"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || !isFullyAllocated}
+                className="mv-funding-submit"
+              >
+                {isSubmitting ? 'Recording…' : 'Record transfer'}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </form>
       </div>
