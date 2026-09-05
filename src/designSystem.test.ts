@@ -93,7 +93,8 @@ describe('semantic design system enforcement', () => {
     expect(plan).not.toContain('mv-plan-bill-row');
     expect(plan).toContain('Funding received');
     expect(plan).toContain('Undo Funding');
-    expect(plan).not.toContain('Paid / Complete');
+    expect(plan).toContain('Paid / Complete');
+    expect(plan).toContain('completedAccountRequirements');
     expect(plan).not.toContain('Accounts Covered / Funded');
     expect(plan).toContain('Funded by Transfer');
     expect(plan).toContain('Covered by Existing Balance');
