@@ -27,6 +27,7 @@ import {
   removeLocalHouseholdMember,
 } from './localStore';
 import { generateTransferPlan } from './utils/transferPlan';
+import { SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -92,7 +93,7 @@ describe('Penny-style local MV storage', () => {
     );
     expect(
       state.schemaStatus?.appliedMigrations.some(
-        (migration) => migration.name === 'source-budget-2026-09-v1'
+        (migration) => migration.name === SOURCE_BUDGET_IMPORT_ID
       )
     ).toBe(true);
     expect(storage.getItem(LOCAL_STORAGE_KEY)).toBeTruthy();
@@ -1071,7 +1072,7 @@ describe('Penny-style local MV storage', () => {
     const vestaImportedBills = state.plannedPayments.filter(
       (payment) =>
         payment.responsiblePerson === 'Vesta' &&
-        payment.metadata?.sourceImportId === 'source-budget-2026-09-v1' &&
+        payment.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID &&
         ['Council tax', 'Internet - Vodafone', 'Phone', 'Lloyds'].includes(payment.name)
     );
     expect(vestaImportedBills).toHaveLength(4);
@@ -1080,7 +1081,7 @@ describe('Penny-style local MV storage', () => {
     const mariusImportedLloydsBills = state.plannedPayments.filter(
       (payment) =>
         payment.responsiblePerson === 'Marius' &&
-        payment.metadata?.sourceImportId === 'source-budget-2026-09-v1' &&
+        payment.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID &&
         ['Child Maintenance', 'National Trust'].includes(payment.name)
     );
     expect(mariusImportedLloydsBills).toHaveLength(2);
@@ -1092,7 +1093,7 @@ describe('Penny-style local MV storage', () => {
       (income) =>
         income.name === 'Paycheck' &&
         income.sourcePerson === 'Vesta' &&
-        income.metadata?.sourceImportId === 'source-budget-2026-09-v1'
+        income.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID
     );
     expect(vestaLloydsIncome?.accountId).toBe(vestaLloyds.account.id);
 
@@ -1100,7 +1101,7 @@ describe('Penny-style local MV storage', () => {
       (income) =>
         income.name === 'Paycheck' &&
         income.sourcePerson === 'Marius' &&
-        income.metadata?.sourceImportId === 'source-budget-2026-09-v1'
+        income.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID
     );
     expect(mariusLloydsIncome?.accountId).toBe(originalLloyds!.id);
   });
