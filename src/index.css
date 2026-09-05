@@ -1289,6 +1289,15 @@ html[data-theme] button.bg-white:hover {
   resize: vertical;
 }
 
+/* Money fields with an in-field currency prefix need protected left padding.
+   This must outrank the compact modal padding rule above. */
+.mv-modal-form input.mv-money-input-with-prefix,
+.mv-modal-body input.mv-money-input-with-prefix {
+  padding-left: 32px !important;
+  padding-right: 12px !important;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
 .mv-modal-form input:focus,
 .mv-modal-form select:focus,
 .mv-modal-form textarea:focus,
