@@ -337,9 +337,10 @@ export async function executeTransferPlanAllocations(payload: {
 
 export async function undoTransferPlanFunding(
   destinationAccountId: string,
+  month: string,
   expectedVersion: number
 ) {
-  return undoLatestLocalTransferPlanFunding(destinationAccountId, expectedVersion);
+  return undoLatestLocalTransferPlanFunding(destinationAccountId, expectedVersion, month);
 }
 
 export async function switchSession(email: string): Promise<void> {
