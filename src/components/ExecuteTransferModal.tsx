@@ -338,7 +338,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                             }
                             required
                           >
-                            <option value="">Select account</option>
+                            <option value="">Choose account</option>
                             {eligibleSources.map((account) => {
                               const usedElsewhere =
                                 usedSourceIds.has(account.id) &&
