@@ -234,8 +234,29 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('.mv-layout-phone .finance-ledger-row');
     expect(css).toContain('.mv-layout-phone .mv-settings-tabs');
     expect(css).toContain('.mv-layout-phone .mv-modal-card');
+    expect(css).toContain('FUNDING TRANSFER MODAL — INDUSTRY-STANDARD WORKFLOW SHELL');
+    expect(css).toContain('.mv-funding-modal-scroll');
+    expect(css).toContain('.mv-funding-modal-actions');
+    expect(css).toContain('max-height: calc(100dvh - var(--mv-ds-space-8)) !important');
 
     expect(css).not.toMatch(/(?:margin|padding|gap)[^;]*:\s*[^;]*(?:5px|10px|15px|25px)/);
+  });
+
+  it('keeps the funding workflow complete and the action footer persistent', () => {
+    const source = fs.readFileSync(
+      path.join(SRC_DIR, 'components', 'ExecuteTransferModal.tsx'),
+      'utf8'
+    );
+
+    expect(source).toContain('role="dialog"');
+    expect(source).toContain('aria-modal="true"');
+    expect(source).toContain('Add source');
+    expect(source).toContain('Safe to move');
+    expect(source).toContain('Fully allocated');
+    expect(source).toContain('Transfer note <span className="mv-funding-optional">(optional)</span>');
+    expect(source).toContain('mv-funding-modal-actions');
+    expect(source).toContain('Record transfer');
+    expect(source).toContain('description: description.trim() || defaultDescription');
   });
 
 
