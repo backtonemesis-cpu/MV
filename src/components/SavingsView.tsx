@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { PiggyBank, Plus, ArrowUpRight, Calendar, X, Trash2 } from 'lucide-react';
+import { PiggyBank, Plus, ArrowUpRight, ArrowRight, Calendar, X, Trash2 } from 'lucide-react';
 import {
   SavingsGoal,
   Account,
@@ -15,7 +15,7 @@ import {
   formatPence,
   parseToPence,
 } from '../utils/currency';
-import { householdPersonOptions } from '../utils/householdPeople';
+import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 
 interface SavingsViewProps {
   savingsGoals: SavingsGoal[];
@@ -63,19 +63,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const [goalDate, setGoalDate] = useState('');
   const [goalMonthlyPlanStr, setGoalMonthlyPlanStr] = useState('');
 
-  // Quick savings transfer state
-  const [sourceAccountId, setSourceAccountId] = useState(
-    accounts.find((a) => a.isActive !== false && a.type === 'current')?.id ||
-      accounts.find((a) => a.isActive !== false && a.type !== 'credit')?.id ||
-      ''
-  );
-  const [destinationAccountId, setDestinationAccountId] = useState(
-    accounts.find(
-      (a) => a.isActive !== false && (a.type === 'savings' || a.type === 'cash')
-    )?.id || ''
-  );
+  // Quick savings transfer state. Source and destination are deliberate choices.
+  const [sourceAccountId, setSourceAccountId] = useState('');
+  const [destinationAccountId, setDestinationAccountId] = useState('');
   const [transferAmountStr, setTransferAmountStr] = useState('');
-  const [transferPayer, setTransferPayer] = useState<Payer>('Joint');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,10 +90,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   }, [showEditGoalModal, showGoalModal, showTransferModal]);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
-  const personOptions = useMemo(
-    () => householdPersonOptions(members, [transferPayer]),
-    [members, transferPayer]
-  );
 
   const savingsAccounts = useMemo(
     () =>
@@ -243,23 +230,8 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const openTransferModal = (goal: SavingsGoal) => {
     setSelectedGoal(goal);
     setTransferAmountStr('');
-    const firstDestination = savingsAccounts[0]?.id || '';
-    setDestinationAccountId(firstDestination);
-    const preferredSource =
-      accounts.find(
-        (account) =>
-          account.isActive !== false &&
-          account.type !== 'credit' &&
-          account.id !== firstDestination &&
-          (account.type === 'current' || account.type === 'joint')
-      ) ||
-      accounts.find(
-        (account) =>
-          account.isActive !== false &&
-          account.type !== 'credit' &&
-          account.id !== firstDestination
-      );
-    setSourceAccountId(preferredSource?.id || '');
+    setSourceAccountId('');
+    setDestinationAccountId('');
     setError(null);
     setShowTransferModal(true);
   };
@@ -272,8 +244,12 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       setError('Please enter a valid transfer amount greater than £0.00');
       return;
     }
+    if (!sourceAccountId) {
+      setError('Choose the account the money will come from.');
+      return;
+    }
     if (!destinationAccountId) {
-      setError('Choose a Savings or Cash account to receive the transfer.');
+      setError('Choose a Savings or Cash account to receive the money.');
       return;
     }
     if (sourceAccountId === destinationAccountId) {
@@ -289,7 +265,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         sourceAccountId,
         destinationAccountId,
         amountPence: pence,
-        payer: transferPayer,
       });
 
       setShowTransferModal(false);
@@ -797,39 +772,41 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
             </div>
 
             <form onSubmit={handleTransferSubmit} className="mv-modal-form">
-              {error && (
-                <div className="mv-savings-warning-banner">
-                  {error}
-                </div>
-              )}
+              {error && <div className="mv-savings-warning-banner">{error}</div>}
 
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  From Account
+                  Source account
                 </label>
                 <select
                   value={sourceAccountId}
                   onChange={(e) => setSourceAccountId(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  required
                 >
+                  <option value="">Select source account</option>
                   {accounts
                     .filter(
-                      (a) =>
-                        a.isActive !== false &&
-                        a.type !== 'credit' &&
-                        a.id !== destinationAccountId
+                      (account) =>
+                        account.isActive !== false &&
+                        account.type !== 'credit' &&
+                        account.id !== destinationAccountId
                     )
-                    .map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name} ({formatPence(acc.currentBalancePence)})
+                    .map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {accountOptionLabel(account)}
                       </option>
                     ))}
                 </select>
               </div>
 
+              <div className="flex items-center justify-center text-subtle" aria-hidden="true">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  To Savings Account
+                  Savings destination
                 </label>
                 <select
                   value={destinationAccountId}
@@ -837,45 +814,49 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   required
                 >
+                  <option value="">Select Savings or Cash account</option>
                   {savingsAccounts.map((account) => (
                     <option key={account.id} value={account.id}>
-                      {account.name} ({formatPence(account.currentBalancePence)})
+                      {accountOptionLabel(account)}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Amount (£)
-                  </label>
+              {sourceAccountId && destinationAccountId && (
+                <div className="rounded-xl border border-muted bg-surface-muted px-3 py-2 text-[11px] text-muted">
+                  <span className="font-semibold text-main">
+                    {accountIdentityLabel(
+                      accounts.find((account) => account.id === sourceAccountId)!
+                    )}
+                  </span>
+                  <span className="mx-2 text-subtle">→</span>
+                  <span className="font-semibold text-main">
+                    {accountIdentityLabel(
+                      accounts.find((account) => account.id === destinationAccountId)!
+                    )}
+                  </span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-muted mb-1">
+                  Amount
+                </label>
+                <div className="relative min-w-0">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">
+                    £
+                  </span>
                   <input
                     autoFocus
                     type="text"
+                    inputMode="decimal"
                     value={transferAmountStr}
                     onChange={(e) => setTransferAmountStr(e.target.value)}
-                    placeholder="e.g. 250.00"
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-bold focus:ring-2 focus:ring-accent focus:outline-none"
+                    placeholder="250.00"
+                    className="w-full min-w-0 pl-8 pr-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main font-bold tabular-nums focus:ring-2 focus:ring-accent focus:outline-none"
                     required
                   />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    By
-                  </label>
-                  <select
-                    value={transferPayer}
-                    onChange={(e) => setTransferPayer(e.target.value as Payer)}
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
-                  >
-                    {personOptions.map((person) => (
-                      <option key={person} value={person}>
-                        {person}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
@@ -892,7 +873,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                   disabled={isSubmitting || !sourceAccountId || !destinationAccountId}
                   className="px-4 py-2 bg-accent hover:bg-success-soft text-on-accent rounded-xl text-xs font-semibold shadow-xs disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Transferring...' : 'Transfer'}
+                  {isSubmitting ? 'Recording...' : 'Record transfer'}
                 </button>
               </div>
             </form>
