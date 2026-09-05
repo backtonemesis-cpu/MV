@@ -11,12 +11,13 @@ import {
  * 
  * Strict integer-pence calculations:
  * - payments: only payments where includeInTransferPlan is true and accountId matches
- * - totalSelectedPaymentsPence: sum of selected payments
+ * - totalSelectedPaymentsPence: sum of all selected payments for display/audit
+ * - totalUnpaidSelectedPaymentsPence: selected unpaid bills that still need funding
  * - currentBalancePence: authoritative reconciled balance of the account
  * - amountAvailablePence: non-negative available funds (Math.max(0, currentBalancePence))
  * - transferRequiredPence:
  *     Exact formula handling both positive balances and overdrawn/negative balances:
- *     transferRequired = Math.max(0, totalSelectedPaymentsPence - currentBalancePence)
+ *     transferRequired = Math.max(0, totalUnpaidSelectedPaymentsPence - currentBalancePence)
  *     
  *     Positive balance example: balance £300 (30,000p), bills £379.79 (37,979p) -> requires £79.79 (7,979p)
  *     Funded balance example: balance £2,450 (245,000p), bills £1,588.50 (158,850p) -> requires £0.00 (0p)
