@@ -39,10 +39,13 @@ describe('Global finance UI consistency contract', () => {
 
   it('keeps Edit Bill currency prefixes protected and payment reversal out of the status chip', () => {
     const billModal = component('PlannedPaymentModal.tsx');
+    const transactionModal = component('TransactionModal.tsx');
     const plan = component('TransferPlanView.tsx');
 
     expect(billModal).toContain('mv-money-input-with-prefix');
     expect(billModal).toContain('mv-money-prefix');
+    expect(transactionModal.match(/mv-money-input-with-prefix/g)?.length).toBe(2);
+    expect(transactionModal.match(/mv-money-prefix/g)?.length).toBe(2);
     expect(plan).toContain('Payment recorded in Activity');
     expect(plan).toContain('title="Record payment"');
     expect(plan).not.toContain(
