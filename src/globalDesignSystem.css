@@ -752,3 +752,503 @@ body,
     width: 100%;
   }
 }
+
+
+/* ==========================================================================
+   MOBILE POLISH PASS — IPHONE 13 + PHONE MODE
+   Applies the same easy-scan principles as the desktop polish to Phone mode.
+   Target: iPhone 13 / ~390 CSS px, with safe-area support and no loss of
+   functionality. Presentation only: no finance or workflow logic changes.
+   ========================================================================== */
+
+@media (max-width: 40rem) {
+  /* Edge-to-edge app shell with consistent 16px working gutters. */
+  .mv-layout-phone {
+    width: 100vw !important;
+    min-height: 100dvh !important;
+    font-size: var(--mv-ds-text-body) !important;
+    line-height: var(--mv-ds-leading-body) !important;
+  }
+
+  .mv-layout-phone .mv-device-frame,
+  .mv-layout-phone .mv-shell-boundary,
+  .mv-layout-phone .mv-app-workspace,
+  .mv-layout-phone .mv-workspace,
+  .mv-layout-phone main {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+
+  .mv-layout-phone .mv-app-workspace,
+  .mv-layout-phone .mv-workspace {
+    padding:
+      var(--mv-ds-space-3)
+      var(--mv-ds-space-4)
+      calc(var(--mv-ds-top-nav-height) + var(--mv-ds-space-4) + env(safe-area-inset-bottom))
+      !important;
+  }
+
+  /* Header: retain the 64px system bar, but remove duplication and reserve
+     proper 44px touch targets for refresh/privacy/mode controls. */
+  .mv-layout-phone .mv-header-brand-copy {
+    display: none !important;
+  }
+
+  .mv-layout-phone .mv-app-header-row {
+    height: var(--mv-ds-top-nav-height) !important;
+    min-height: var(--mv-ds-top-nav-height) !important;
+    max-height: var(--mv-ds-top-nav-height) !important;
+    gap: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .mv-header-brand {
+    min-width: 0 !important;
+    flex: 0 0 auto;
+  }
+
+  .mv-layout-phone .mv-header-actions {
+    margin-left: auto;
+    gap: var(--mv-ds-space-1) !important;
+  }
+
+  .mv-layout-phone #header-refresh-btn,
+  .mv-layout-phone #header-privacy-mask-btn,
+  .mv-layout-phone .mv-layout-switcher-option {
+    width: var(--mv-ds-control-large) !important;
+    min-width: var(--mv-ds-control-large) !important;
+    height: var(--mv-ds-control-large) !important;
+    min-height: var(--mv-ds-control-large) !important;
+    padding: 0 !important;
+  }
+
+  .mv-layout-phone .mv-layout-switcher {
+    flex: 0 0 auto;
+    padding: var(--mv-ds-space-1) !important;
+    gap: var(--mv-ds-space-1) !important;
+    border-radius: var(--mv-ds-radius-lg) !important;
+  }
+
+  .mv-layout-phone .mv-layout-switcher-option {
+    width: auto !important;
+    padding-inline: var(--mv-ds-space-2) !important;
+    font-size: var(--mv-ds-text-compact) !important;
+    line-height: var(--mv-ds-leading-compact) !important;
+  }
+
+  .mv-layout-phone .mv-layout-switcher-option svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* Bottom navigation: five clear destinations with safe-area support. */
+  .mv-layout-phone .mv-nav-mobile {
+    position: absolute !important;
+    inset: auto 0 0 0 !important;
+    z-index: 80;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+
+  .mv-layout-phone .mv-mobile-nav-grid {
+    height: var(--mv-ds-top-nav-height) !important;
+    min-height: var(--mv-ds-top-nav-height) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .mv-layout-phone .mv-nav-mobile button {
+    min-width: 0;
+    min-height: var(--mv-ds-click-target) !important;
+    padding: var(--mv-ds-space-2) var(--mv-ds-space-1) !important;
+    font-size: var(--mv-ds-text-meta) !important;
+    line-height: var(--mv-ds-leading-meta) !important;
+  }
+
+  .mv-layout-phone .mv-nav-mobile button svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    margin-bottom: var(--mv-ds-space-1) !important;
+  }
+
+  /* Global mobile page hierarchy. */
+  .mv-layout-phone h1,
+  .mv-layout-phone .mv-page-title,
+  .mv-layout-phone .finance-page-header h1 {
+    font-size: var(--mv-ds-text-section-lg) !important;
+    line-height: var(--mv-ds-leading-section-lg) !important;
+    letter-spacing: -0.02em;
+  }
+
+  .mv-layout-phone h2 {
+    font-size: var(--mv-ds-text-card) !important;
+    line-height: var(--mv-ds-leading-heading) !important;
+  }
+
+  .mv-layout-phone h3,
+  .mv-layout-phone h4 {
+    font-size: var(--mv-ds-text-subhead) !important;
+    line-height: var(--mv-ds-leading-heading) !important;
+  }
+
+  .mv-layout-phone .finance-page-header {
+    gap: var(--mv-ds-space-2) !important;
+    margin-bottom: 0 !important;
+  }
+
+  .mv-layout-phone .finance-page-header p {
+    margin-top: var(--mv-ds-space-1) !important;
+    font-size: var(--mv-ds-text-compact) !important;
+    line-height: var(--mv-ds-leading-compact) !important;
+  }
+
+  /* Panels/cards: consistent density and no oversized empty shells. */
+  .mv-layout-phone .finance-workspace,
+  .mv-layout-phone .mv-settings-stack {
+    gap: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .finance-panel,
+  .mv-layout-phone .mv-settings-panel,
+  .mv-layout-phone .mv-card,
+  .mv-layout-phone .finance-summary-card {
+    padding: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-workspace > :not([hidden]) ~ :not([hidden]) {
+    margin-top: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-period-card {
+    padding: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-period-card > div {
+    min-height: var(--mv-ds-control-large) !important;
+    gap: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-surplus-card {
+    padding: var(--mv-ds-space-4) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-surplus-card .mt-3 {
+    margin-top: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-surplus-card .mt-4 {
+    margin-top: var(--mv-ds-space-2) !important;
+  }
+
+  /* Dashboard actions and metrics: two-column, 44px actions, easy scanning. */
+  .mv-layout-phone .mv-dashboard-actions,
+  .mv-layout-phone .mv-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-actions > button {
+    min-height: var(--mv-ds-control-large) !important;
+    height: auto !important;
+    padding: var(--mv-ds-space-2) var(--mv-ds-space-3) !important;
+    font-size: var(--mv-ds-text-compact) !important;
+    line-height: var(--mv-ds-leading-compact) !important;
+    text-align: center;
+  }
+
+  .mv-layout-phone .mv-dashboard-metric-card {
+    min-height: 7.5rem !important;
+    padding: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-metric-value {
+    margin-top: var(--mv-ds-space-2) !important;
+    font-size: var(--mv-ds-text-card) !important;
+    line-height: var(--mv-ds-leading-heading) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-metric-note {
+    margin-top: var(--mv-ds-space-1) !important;
+    font-size: var(--mv-ds-text-meta) !important;
+    line-height: var(--mv-ds-leading-meta) !important;
+    white-space: normal !important;
+  }
+
+  /* Month picker: the v214 single-icon fix also applies cleanly on iPhone. */
+  .mv-layout-phone .mv-month-picker {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: var(--mv-ds-control-large) !important;
+  }
+
+  .mv-layout-phone .mv-month-picker-input {
+    height: var(--mv-ds-control-large) !important;
+    min-height: var(--mv-ds-control-large) !important;
+    padding-left: var(--mv-ds-space-10) !important;
+    padding-right: var(--mv-ds-space-3) !important;
+    font-size: var(--mv-ds-text-body) !important;
+  }
+
+  /* Activity: keep search prominent and collapse the four selectors into a
+     2-column grid, cutting the filter panel from five rows to three. */
+  .mv-layout-phone .finance-filter-panel {
+    padding: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .finance-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .finance-filter-grid > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .mv-layout-phone .finance-filter-control {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: var(--mv-ds-control-large) !important;
+    min-height: var(--mv-ds-control-large) !important;
+    font-size: var(--mv-ds-text-compact) !important;
+  }
+
+  .mv-layout-phone .finance-filter-control.finance-filter-control-leading {
+    padding-left: var(--mv-ds-space-10) !important;
+  }
+
+  .mv-layout-phone .finance-filter-control.finance-filter-control-trailing {
+    padding-right: var(--mv-ds-space-10) !important;
+  }
+
+  /* Activity rows: readable card hierarchy with flexible metadata and a clear
+     bottom amount/action row. */
+  .mv-layout-phone .finance-ledger-panel {
+    padding: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .finance-ledger-panel > div:first-child {
+    display: none !important;
+  }
+
+  .mv-layout-phone .finance-ledger-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    gap: var(--mv-ds-space-2) !important;
+    padding: var(--mv-ds-space-3) !important;
+    overflow: visible !important;
+    border-radius: var(--mv-ds-radius-md) !important;
+  }
+
+  .mv-layout-phone .finance-row-left {
+    grid-template-columns: var(--mv-ds-control-compact) minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone .finance-leading-icon {
+    width: var(--mv-ds-control-compact) !important;
+    height: var(--mv-ds-control-compact) !important;
+    flex-basis: var(--mv-ds-control-compact) !important;
+  }
+
+  .mv-layout-phone .finance-row-copy,
+  .mv-layout-phone .finance-row-titleline,
+  .mv-layout-phone .finance-metadata-line {
+    overflow: visible !important;
+  }
+
+  .mv-layout-phone .finance-row-titleline {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    gap: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .finance-row-title {
+    flex: 1 1 10rem;
+    font-size: var(--mv-ds-text-body) !important;
+    line-height: var(--mv-ds-leading-body) !important;
+    white-space: normal !important;
+  }
+
+  .mv-layout-phone .finance-metadata-line {
+    flex-wrap: wrap !important;
+    gap: var(--mv-ds-space-1) var(--mv-ds-space-2) !important;
+    margin-top: var(--mv-ds-space-1) !important;
+    font-size: var(--mv-ds-text-meta) !important;
+    line-height: var(--mv-ds-leading-meta) !important;
+    white-space: normal !important;
+  }
+
+  .mv-layout-phone .finance-metadata-line > span {
+    white-space: normal !important;
+  }
+
+  .mv-layout-phone .finance-row-side {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    gap: var(--mv-ds-space-2) !important;
+    padding-top: var(--mv-ds-space-1) !important;
+  }
+
+  .mv-layout-phone .finance-amount-block {
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 1 1 auto;
+    text-align: left !important;
+  }
+
+  .mv-layout-phone .finance-amount {
+    font-size: var(--mv-ds-text-subhead) !important;
+    line-height: var(--mv-ds-leading-heading) !important;
+  }
+
+  .mv-layout-phone .finance-action-button {
+    width: var(--mv-ds-control-compact) !important;
+    height: var(--mv-ds-control-compact) !important;
+  }
+
+  /* Settings tabs and other horizontal tab bars: scroll rather than squeeze. */
+  .mv-layout-phone .mv-settings-tabs,
+  .mv-layout-phone [role="tablist"] {
+    display: flex !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: var(--mv-ds-space-1) !important;
+    padding-bottom: var(--mv-ds-space-1) !important;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mv-layout-phone .mv-settings-tabs::-webkit-scrollbar,
+  .mv-layout-phone [role="tablist"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mv-layout-phone .mv-settings-tab,
+  .mv-layout-phone [role="tab"] {
+    flex: 0 0 auto;
+    min-height: var(--mv-ds-click-target) !important;
+    padding-inline: var(--mv-ds-space-3) !important;
+    scroll-snap-align: start;
+  }
+
+  /* Menus/submenus: viewport-safe and touch-friendly. */
+  .mv-layout-phone :is(
+    [role="menu"],
+    [data-menu],
+    [data-dropdown-menu],
+    .dropdown-menu,
+    .submenu,
+    .mv-mobile-more-menu
+  ) {
+    width: min(22rem, calc(100vw - var(--mv-ds-space-6))) !important;
+    max-width: calc(100vw - var(--mv-ds-space-6)) !important;
+    max-height: calc(100dvh - var(--mv-ds-space-12) - env(safe-area-inset-bottom)) !important;
+    padding: var(--mv-ds-space-2) !important;
+    border-radius: var(--mv-ds-radius-lg) !important;
+    overflow-y: auto !important;
+  }
+
+  .mv-layout-phone :is(
+    [role="menu"],
+    [data-menu],
+    [data-dropdown-menu],
+    .dropdown-menu,
+    .submenu,
+    .mv-mobile-more-menu
+  ) :is(button, a, [role="menuitem"]) {
+    min-height: var(--mv-ds-click-target) !important;
+    padding: 0 var(--mv-ds-space-3) !important;
+    font-size: var(--mv-ds-text-compact) !important;
+    line-height: var(--mv-ds-leading-compact) !important;
+  }
+
+  /* Modals become compact mobile sheets: nearly full-width, scroll-safe,
+     readable, and never hidden behind the iOS home indicator. */
+  .mv-layout-phone .mv-modal-card,
+  .mv-layout-phone .mv-modal-card.mv-modal-wide,
+  .mv-layout-phone :is(
+    .mv-income-modal,
+    .mv-account-modal,
+    .mv-transaction-modal,
+    .mv-rollover-modal,
+    .mv-backup-modal
+  ) {
+    width: calc(100vw - var(--mv-ds-space-6)) !important;
+    max-width: calc(100vw - var(--mv-ds-space-6)) !important;
+    max-height: calc(100dvh - var(--mv-ds-space-6) - env(safe-area-inset-bottom)) !important;
+    margin: var(--mv-ds-space-3) !important;
+    border-radius: var(--mv-ds-radius-xl) !important;
+  }
+
+  .mv-layout-phone .mv-modal-header {
+    min-height: var(--mv-ds-top-nav-height) !important;
+    padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+  }
+
+  .mv-layout-phone :is(
+    .mv-modal-form,
+    .mv-modal-body,
+    .mv-modal-scroll-body
+  ) {
+    padding: var(--mv-ds-space-4) !important;
+  }
+
+  .mv-layout-phone :is(
+    .mv-modal-actions,
+    .mv-modal-fixed-actions,
+    .mv-rollover-footer
+  ) {
+    gap: var(--mv-ds-space-2) !important;
+    padding:
+      var(--mv-ds-space-3)
+      var(--mv-ds-space-4)
+      calc(var(--mv-ds-space-3) + env(safe-area-inset-bottom))
+      !important;
+  }
+
+  .mv-layout-phone :is(
+    .mv-modal-actions,
+    .mv-modal-fixed-actions,
+    .mv-rollover-footer
+  ) > button {
+    flex: 1 1 0;
+    min-height: var(--mv-ds-control-large) !important;
+  }
+
+  /* Tables and dense lists stay contained in the viewport. */
+  .mv-layout-phone table {
+    font-size: var(--mv-ds-text-compact) !important;
+  }
+
+  .mv-layout-phone table th,
+  .mv-layout-phone table td {
+    padding: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-layout-phone .overflow-x-auto,
+  .mv-layout-phone [data-horizontal-scroll] {
+    max-width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent long account/bill labels and monetary values from breaking cards. */
+  .mv-layout-phone :is(
+    .finance-row-title,
+    .finance-metadata-line,
+    .mv-card,
+    .finance-panel,
+    .finance-summary-card
+  ) {
+    min-width: 0;
+  }
+
+  .mv-layout-phone .font-mono,
+  .mv-layout-phone .tabular-nums {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
