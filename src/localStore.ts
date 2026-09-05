@@ -14,7 +14,6 @@ import type {
 } from './types';
 import { normalizeUserPreferences } from './themeEngine';
 import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
-import { isPlannedPaymentEffectivelyPaid } from './utils/currency';
 import { calculateAccountFunding } from './utils/transferPlan';
 
 const STORAGE_KEY = 'mv_local_state_v1';
