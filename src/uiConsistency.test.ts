@@ -46,8 +46,10 @@ describe('Global finance UI consistency contract', () => {
     expect(billModal).toContain('mv-money-prefix');
     expect(transactionModal.match(/mv-money-input-with-prefix/g)?.length).toBe(2);
     expect(transactionModal.match(/mv-money-prefix/g)?.length).toBe(2);
-    expect(plan).toContain('title="Record payment"');
-    expect(plan).toContain('title="Undo recorded payment"');
+    expect(plan).toContain("'Undo payment'");
+    expect(plan).toContain("'Record paid'");
+    expect(plan).toContain("'Undo recorded payment'");
+    expect(plan).toContain("'Record payment'");
     expect(plan).toContain('onUndoPaymentPaid');
     expect(plan).toContain('remove the linked Activity expense');
     expect(plan).toContain('Paid / Complete');
