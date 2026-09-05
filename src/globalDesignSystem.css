@@ -1,0 +1,620 @@
+/*
+ * MV GLOBAL DESIGN SYSTEM
+ * Authoritative presentation layer loaded after legacy/Tailwind styles.
+ *
+ * Desktop baseline: 1440px
+ * Desktop lower bound: 1280px
+ * Root typography: 16px / 1rem
+ * Spacing: 4px-based scale only
+ */
+
+:root {
+  --mv-ds-canvas-max: 90rem;          /* 1440px */
+  --mv-ds-reading-max: 68ch;
+  --mv-ds-sidebar-min: 15rem;         /* 240px */
+  --mv-ds-sidebar-max: 17.5rem;       /* 280px */
+
+  --mv-ds-space-1: 0.25rem;           /* 4px */
+  --mv-ds-space-2: 0.5rem;            /* 8px */
+  --mv-ds-space-3: 0.75rem;           /* 12px */
+  --mv-ds-space-4: 1rem;              /* 16px */
+  --mv-ds-space-6: 1.5rem;            /* 24px */
+  --mv-ds-space-8: 2rem;              /* 32px */
+  --mv-ds-space-10: 2.5rem;           /* 40px */
+  --mv-ds-space-12: 3rem;             /* 48px */
+
+  --mv-ds-control-compact: 2rem;       /* 32px */
+  --mv-ds-control: 2.5rem;             /* 40px */
+  --mv-ds-control-large: 2.75rem;      /* 44px */
+  --mv-ds-click-target: 2.75rem;       /* 44px */
+  --mv-ds-top-nav-height: 4rem;        /* 64px */
+
+  --mv-ds-radius-sm: 0.25rem;          /* 4px */
+  --mv-ds-radius-md: 0.5rem;           /* 8px */
+  --mv-ds-radius-lg: 0.75rem;          /* 12px */
+  --mv-ds-radius-xl: 1rem;             /* 16px */
+
+  --mv-ds-text-meta: 0.75rem;          /* 12px */
+  --mv-ds-text-compact: 0.875rem;      /* 14px */
+  --mv-ds-text-body: 1rem;             /* 16px */
+  --mv-ds-text-subhead: 1.125rem;      /* 18px */
+  --mv-ds-text-card: 1.25rem;          /* 20px */
+  --mv-ds-text-section: 1.5rem;        /* 24px */
+  --mv-ds-text-section-lg: 1.875rem;   /* 30px */
+  --mv-ds-text-page: 2.25rem;          /* 36px */
+
+  --mv-ds-leading-meta: 1rem;          /* 16px */
+  --mv-ds-leading-compact: 1.25rem;    /* 20px */
+  --mv-ds-leading-body: 1.5rem;        /* 24px */
+  --mv-ds-leading-heading: 1.75rem;     /* 28px */
+  --mv-ds-leading-section: 2rem;       /* 32px */
+  --mv-ds-leading-section-lg: 2.25rem; /* 36px */
+  --mv-ds-leading-page: 2.5rem;        /* 40px */
+}
+
+html {
+  font-size: 100%;
+}
+
+body,
+#root,
+.mv-density-root {
+  min-width: 0;
+  width: 100%;
+  font-size: var(--mv-ds-text-body);
+  line-height: var(--mv-ds-leading-body);
+}
+
+/* ==========================================================================
+   1. OUTER STRUCTURE
+   ========================================================================== */
+
+.mv-density-root .mv-shell-boundary,
+.mv-density-root .mv-app-workspace,
+.mv-density-root .mv-workspace {
+  width: min(100%, var(--mv-ds-canvas-max)) !important;
+  max-width: var(--mv-ds-canvas-max) !important;
+  margin-inline: auto !important;
+  box-sizing: border-box;
+}
+
+.mv-layout-pc .mv-device-frame {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.mv-layout-pc .mv-app-workspace {
+  padding: var(--mv-ds-space-6) !important;
+}
+
+.mv-layout-phone .mv-app-workspace {
+  padding: var(--mv-ds-space-4) var(--mv-ds-space-4)
+    calc(var(--mv-ds-top-nav-height) + var(--mv-ds-space-4) + env(safe-area-inset-bottom)) !important;
+}
+
+.mv-reading-container,
+.mv-documentation,
+.mv-long-form,
+.prose {
+  width: 100%;
+  max-width: var(--mv-ds-reading-max) !important;
+}
+
+.mv-sidebar,
+[data-sidebar],
+.mv-settings-sidebar {
+  width: clamp(var(--mv-ds-sidebar-min), 18vw, var(--mv-ds-sidebar-max)) !important;
+  min-width: var(--mv-ds-sidebar-min) !important;
+  max-width: var(--mv-ds-sidebar-max) !important;
+}
+
+/* App top bar: exact 64px. */
+.mv-density-root .mv-app-header-row {
+  height: var(--mv-ds-top-nav-height) !important;
+  min-height: var(--mv-ds-top-nav-height) !important;
+  max-height: var(--mv-ds-top-nav-height) !important;
+}
+
+/* Desktop secondary navigation stays compact but with a 44px target. */
+.mv-layout-pc .mv-nav-desktop button {
+  min-height: var(--mv-ds-click-target) !important;
+  padding: 0 var(--mv-ds-space-4) !important;
+}
+
+/* At 1280px and above, primary dashboard structures retain full information density. */
+@media (min-width: 80rem) {
+  .mv-layout-pc .mv-dashboard-actions,
+  .mv-layout-pc .mv-dashboard-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .mv-layout-pc .finance-filter-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ==========================================================================
+   2. STRICT 4px / 8px SPACING SYSTEM
+   Map existing utility classes onto approved design-system values.
+   ========================================================================== */
+
+/* Gap scale */
+.mv-density-root :is(.gap-0\.5, .gap-1, .gap-1\.5) { gap: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.gap-2, .gap-2\.5) { gap: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.gap-3, .gap-3\.5) { gap: var(--mv-ds-space-3) !important; }
+.mv-density-root .gap-4 { gap: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.gap-5, .gap-6) { gap: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.gap-7, .gap-8) { gap: var(--mv-ds-space-8) !important; }
+.mv-density-root .gap-10 { gap: var(--mv-ds-space-10) !important; }
+.mv-density-root .gap-12 { gap: var(--mv-ds-space-12) !important; }
+
+.mv-density-root :is(.gap-x-0\.5, .gap-x-1, .gap-x-1\.5) { column-gap: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.gap-x-2, .gap-x-2\.5) { column-gap: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.gap-x-3, .gap-x-3\.5) { column-gap: var(--mv-ds-space-3) !important; }
+.mv-density-root .gap-x-4 { column-gap: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.gap-x-5, .gap-x-6) { column-gap: var(--mv-ds-space-6) !important; }
+
+.mv-density-root :is(.gap-y-0\.5, .gap-y-1, .gap-y-1\.5) { row-gap: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.gap-y-2, .gap-y-2\.5) { row-gap: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.gap-y-3, .gap-y-3\.5) { row-gap: var(--mv-ds-space-3) !important; }
+.mv-density-root .gap-y-4 { row-gap: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.gap-y-5, .gap-y-6) { row-gap: var(--mv-ds-space-6) !important; }
+
+/* Padding scale */
+.mv-density-root :is(.p-0\.5, .p-1, .p-1\.5) { padding: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.p-2, .p-2\.5) { padding: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.p-3, .p-3\.5) { padding: var(--mv-ds-space-3) !important; }
+.mv-density-root .p-4 { padding: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.p-5, .p-6) { padding: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.p-7, .p-8) { padding: var(--mv-ds-space-8) !important; }
+.mv-density-root .p-10 { padding: var(--mv-ds-space-10) !important; }
+.mv-density-root .p-12 { padding: var(--mv-ds-space-12) !important; }
+
+.mv-density-root :is(.px-0\.5, .px-1, .px-1\.5) { padding-inline: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.px-2, .px-2\.5) { padding-inline: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.px-3, .px-3\.5) { padding-inline: var(--mv-ds-space-3) !important; }
+.mv-density-root .px-4 { padding-inline: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.px-5, .px-6) { padding-inline: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.px-7, .px-8) { padding-inline: var(--mv-ds-space-8) !important; }
+
+.mv-density-root :is(.py-0\.5, .py-1, .py-1\.5) { padding-block: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.py-2, .py-2\.5) { padding-block: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.py-3, .py-3\.5) { padding-block: var(--mv-ds-space-3) !important; }
+.mv-density-root .py-4 { padding-block: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.py-5, .py-6) { padding-block: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.py-7, .py-8) { padding-block: var(--mv-ds-space-8) !important; }
+
+/* Margin scale */
+.mv-density-root :is(.m-0\.5, .m-1, .m-1\.5) { margin: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.m-2, .m-2\.5) { margin: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.m-3, .m-3\.5) { margin: var(--mv-ds-space-3) !important; }
+.mv-density-root .m-4 { margin: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.m-5, .m-6) { margin: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.m-7, .m-8) { margin: var(--mv-ds-space-8) !important; }
+
+.mv-density-root :is(.mt-0\.5, .mt-1, .mt-1\.5) { margin-top: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.mt-2, .mt-2\.5) { margin-top: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.mt-3, .mt-3\.5) { margin-top: var(--mv-ds-space-3) !important; }
+.mv-density-root .mt-4 { margin-top: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.mt-5, .mt-6) { margin-top: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.mt-7, .mt-8) { margin-top: var(--mv-ds-space-8) !important; }
+.mv-density-root .mt-10 { margin-top: var(--mv-ds-space-10) !important; }
+.mv-density-root .mt-12 { margin-top: var(--mv-ds-space-12) !important; }
+
+.mv-density-root :is(.mb-0\.5, .mb-1, .mb-1\.5) { margin-bottom: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.mb-2, .mb-2\.5) { margin-bottom: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.mb-3, .mb-3\.5) { margin-bottom: var(--mv-ds-space-3) !important; }
+.mv-density-root .mb-4 { margin-bottom: var(--mv-ds-space-4) !important; }
+.mv-density-root :is(.mb-5, .mb-6) { margin-bottom: var(--mv-ds-space-6) !important; }
+.mv-density-root :is(.mb-7, .mb-8) { margin-bottom: var(--mv-ds-space-8) !important; }
+
+.mv-density-root :is(.ml-0\.5, .ml-1, .ml-1\.5) { margin-left: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.ml-2, .ml-2\.5) { margin-left: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.ml-3, .ml-3\.5) { margin-left: var(--mv-ds-space-3) !important; }
+.mv-density-root .ml-4 { margin-left: var(--mv-ds-space-4) !important; }
+
+.mv-density-root :is(.mr-0\.5, .mr-1, .mr-1\.5) { margin-right: var(--mv-ds-space-1) !important; }
+.mv-density-root :is(.mr-2, .mr-2\.5) { margin-right: var(--mv-ds-space-2) !important; }
+.mv-density-root :is(.mr-3, .mr-3\.5) { margin-right: var(--mv-ds-space-3) !important; }
+.mv-density-root .mr-4 { margin-right: var(--mv-ds-space-4) !important; }
+
+/* Vertical rhythm */
+.mv-density-root :is(.space-y-0\.5, .space-y-1, .space-y-1\.5) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-1) !important;
+}
+.mv-density-root :is(.space-y-2, .space-y-2\.5) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-2) !important;
+}
+.mv-density-root :is(.space-y-3, .space-y-3\.5) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-3) !important;
+}
+.mv-density-root .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-4) !important;
+}
+.mv-density-root :is(.space-y-5, .space-y-6) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-6) !important;
+}
+.mv-density-root :is(.space-y-7, .space-y-8) > :not([hidden]) ~ :not([hidden]) {
+  margin-top: var(--mv-ds-space-8) !important;
+}
+
+/* Structural panel rhythm */
+.mv-density-root .finance-workspace,
+.mv-density-root .mv-settings-stack {
+  gap: var(--mv-ds-space-6) !important;
+}
+
+.mv-density-root .finance-panel,
+.mv-density-root .mv-settings-panel {
+  padding: var(--mv-ds-space-6) !important;
+}
+
+/* ==========================================================================
+   3. COMPONENT HEIGHTS + CLICK TARGETS
+   ========================================================================== */
+
+.mv-density-root :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select
+) {
+  height: var(--mv-ds-control-large) !important;
+  min-height: var(--mv-ds-control-large) !important;
+  padding: 0 var(--mv-ds-space-3) !important;
+  border-radius: var(--mv-ds-radius-md) !important;
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root textarea {
+  min-height: calc(var(--mv-ds-control-large) * 2) !important;
+  padding: var(--mv-ds-space-3) !important;
+  border-radius: var(--mv-ds-radius-md) !important;
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root button,
+.mv-density-root [role="button"],
+.mv-density-root [role="menuitem"] {
+  min-height: var(--mv-ds-click-target) !important;
+}
+
+.mv-density-root button {
+  border-radius: var(--mv-ds-radius-md) !important;
+}
+
+/* Compact visual controls remain 32px, with a 44px physical target via pseudo-area. */
+.mv-density-root :is(
+  .finance-action-button,
+  .mv-compact-control,
+  .table-utility-action
+) {
+  position: relative;
+  width: var(--mv-ds-control-compact) !important;
+  height: var(--mv-ds-control-compact) !important;
+  min-width: var(--mv-ds-control-compact) !important;
+  min-height: var(--mv-ds-control-compact) !important;
+}
+
+.mv-density-root :is(
+  .finance-action-button,
+  .mv-compact-control,
+  .table-utility-action
+)::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--mv-ds-click-target) - var(--mv-ds-control-compact)) / -2);
+}
+
+/* Search/date fields with icons reserve 40px while staying on the spacing grid. */
+.mv-density-root .finance-filter-control.finance-filter-control-leading {
+  padding-left: var(--mv-ds-space-10) !important;
+}
+
+.mv-density-root .finance-filter-control.finance-filter-control-trailing {
+  padding-right: var(--mv-ds-space-10) !important;
+}
+
+/* ==========================================================================
+   4. BORDER-RADIUS SYSTEM
+   ========================================================================== */
+
+.mv-density-root :is(
+  input,
+  select,
+  textarea,
+  button,
+  .mv-card,
+  .finance-summary-card
+) {
+  border-radius: var(--mv-ds-radius-md) !important;
+}
+
+.mv-density-root :is(
+  .finance-panel,
+  .mv-settings-panel,
+  .mv-dashboard-surplus-card,
+  .mv-modal-card,
+  .mv-mobile-more-menu,
+  [role="dialog"],
+  [role="menu"]
+) {
+  border-radius: var(--mv-ds-radius-lg) !important;
+}
+
+.mv-density-root :is(
+  .mv-modal-card.mv-modal-wide,
+  .mv-income-modal,
+  .mv-account-modal,
+  .mv-transaction-modal,
+  .mv-rollover-modal,
+  .mv-backup-modal
+) {
+  border-radius: var(--mv-ds-radius-xl) !important;
+}
+
+.mv-density-root :is(
+  .finance-status-positive,
+  .finance-status-negative,
+  .finance-status-neutral,
+  .mv-status-pill,
+  .mv-badge,
+  [role="tooltip"]
+) {
+  border-radius: var(--mv-ds-radius-sm) !important;
+}
+
+/* ==========================================================================
+   5. TYPOGRAPHY SCALE
+   ========================================================================== */
+
+.mv-density-root {
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root h1,
+.mv-density-root .mv-page-title {
+  font-size: var(--mv-ds-text-page) !important;
+  line-height: var(--mv-ds-leading-page) !important;
+}
+
+.mv-density-root h2 {
+  font-size: var(--mv-ds-text-section-lg) !important;
+  line-height: var(--mv-ds-leading-section-lg) !important;
+}
+
+.mv-density-root h3 {
+  font-size: var(--mv-ds-text-section) !important;
+  line-height: var(--mv-ds-leading-section) !important;
+}
+
+.mv-density-root h4,
+.mv-density-root .mv-card-title {
+  font-size: var(--mv-ds-text-subhead) !important;
+  line-height: var(--mv-ds-leading-heading) !important;
+}
+
+.mv-density-root :is(.text-xs, .text-\[9px\], .text-\[10px\], .text-\[11px\], .text-\[12px\]) {
+  font-size: var(--mv-ds-text-meta) !important;
+  line-height: var(--mv-ds-leading-meta) !important;
+}
+
+.mv-density-root :is(.text-sm, .text-\[13px\], .text-\[14px\]) {
+  font-size: var(--mv-ds-text-compact) !important;
+  line-height: var(--mv-ds-leading-compact) !important;
+}
+
+.mv-density-root :is(.text-base, .text-\[15px\], .text-\[16px\]) {
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root :is(.text-lg, .text-\[17px\], .text-\[18px\]) {
+  font-size: var(--mv-ds-text-subhead) !important;
+  line-height: var(--mv-ds-leading-heading) !important;
+}
+
+.mv-density-root .text-xl {
+  font-size: var(--mv-ds-text-card) !important;
+  line-height: var(--mv-ds-leading-heading) !important;
+}
+
+.mv-density-root .text-2xl {
+  font-size: var(--mv-ds-text-section) !important;
+  line-height: var(--mv-ds-leading-section) !important;
+}
+
+.mv-density-root .text-3xl {
+  font-size: var(--mv-ds-text-section-lg) !important;
+  line-height: var(--mv-ds-leading-section-lg) !important;
+}
+
+.mv-density-root :is(.text-4xl, .text-5xl) {
+  font-size: var(--mv-ds-text-page) !important;
+  line-height: var(--mv-ds-leading-page) !important;
+}
+
+/* Financial and tabular information gets readable 16px defaults. */
+.mv-density-root :is(
+  .finance-row-title,
+  .finance-amount,
+  .mv-dashboard-metric-value,
+  table td
+) {
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root :is(
+  .finance-metadata-line,
+  .mv-dashboard-metric-note,
+  table th
+) {
+  font-size: var(--mv-ds-text-compact) !important;
+  line-height: var(--mv-ds-leading-compact) !important;
+}
+
+/* ==========================================================================
+   6. CARDS, TABLES, MENUS, MODALS
+   ========================================================================== */
+
+.mv-density-root .mv-card,
+.mv-density-root .finance-summary-card {
+  padding: var(--mv-ds-space-4) !important;
+}
+
+.mv-density-root .mv-dashboard-actions {
+  gap: var(--mv-ds-space-6) !important;
+}
+
+.mv-density-root .mv-dashboard-actions > button {
+  height: var(--mv-ds-control-large) !important;
+  min-height: var(--mv-ds-control-large) !important;
+  padding: 0 var(--mv-ds-space-4) !important;
+  font-size: var(--mv-ds-text-body) !important;
+  line-height: var(--mv-ds-leading-body) !important;
+}
+
+.mv-density-root .mv-dashboard-metrics {
+  gap: var(--mv-ds-space-6) !important;
+}
+
+.mv-density-root .mv-dashboard-metric-card {
+  min-height: 0 !important;
+  padding: var(--mv-ds-space-4) !important;
+}
+
+.mv-density-root table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--mv-ds-text-compact) !important;
+  line-height: var(--mv-ds-leading-compact) !important;
+}
+
+.mv-density-root table th,
+.mv-density-root table td {
+  padding: var(--mv-ds-space-3) !important;
+}
+
+.mv-density-root table th {
+  font-weight: 600;
+}
+
+.mv-density-root :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) {
+  padding: var(--mv-ds-space-3) !important;
+  gap: var(--mv-ds-space-1) !important;
+}
+
+.mv-density-root :is(
+  [role="menu"],
+  [data-menu],
+  [data-dropdown-menu],
+  .dropdown-menu,
+  .submenu
+) :is(button, a, [role="menuitem"]) {
+  min-height: var(--mv-ds-click-target) !important;
+  padding: 0 var(--mv-ds-space-3) !important;
+  font-size: var(--mv-ds-text-compact) !important;
+  line-height: var(--mv-ds-leading-compact) !important;
+}
+
+.mv-density-root .mv-modal-header {
+  min-height: var(--mv-ds-top-nav-height) !important;
+  padding: var(--mv-ds-space-4) var(--mv-ds-space-6) !important;
+}
+
+.mv-density-root :is(
+  .mv-modal-form,
+  .mv-modal-body,
+  .mv-modal-scroll-body
+) {
+  padding: var(--mv-ds-space-6) !important;
+}
+
+.mv-density-root :is(
+  .mv-modal-actions,
+  .mv-modal-fixed-actions,
+  .mv-rollover-footer
+) {
+  gap: var(--mv-ds-space-2) !important;
+  padding: var(--mv-ds-space-4) var(--mv-ds-space-6) !important;
+}
+
+/* ==========================================================================
+   7. DESKTOP / PHONE MODE BEHAVIOUR
+   ========================================================================== */
+
+.mv-layout-pc {
+  min-width: 0 !important;
+}
+
+.mv-layout-pc .mv-app-workspace {
+  width: min(100%, var(--mv-ds-canvas-max)) !important;
+  max-width: var(--mv-ds-canvas-max) !important;
+}
+
+.mv-layout-pc .finance-ledger-row {
+  min-height: var(--mv-ds-top-nav-height) !important;
+  height: auto !important;
+  max-height: none !important;
+  padding: var(--mv-ds-space-3) var(--mv-ds-space-4) !important;
+  gap: var(--mv-ds-space-3) !important;
+}
+
+.mv-layout-pc .finance-leading-icon {
+  width: var(--mv-ds-control-compact) !important;
+  height: var(--mv-ds-control-compact) !important;
+  flex-basis: var(--mv-ds-control-compact) !important;
+}
+
+.mv-layout-pc .finance-filter-grid {
+  gap: var(--mv-ds-space-3) !important;
+}
+
+.mv-layout-phone .mv-app-header-row {
+  height: var(--mv-ds-top-nav-height) !important;
+}
+
+.mv-layout-phone .mv-mobile-nav-grid {
+  height: var(--mv-ds-top-nav-height) !important;
+}
+
+.mv-layout-phone .mv-nav-mobile button {
+  min-height: var(--mv-ds-click-target) !important;
+  font-size: var(--mv-ds-text-meta) !important;
+  line-height: var(--mv-ds-leading-meta) !important;
+}
+
+/* Mobile preserves the same system but uses 16px page gutters and tighter grid gaps. */
+@media (max-width: 40rem) {
+  .mv-layout-phone .mv-app-workspace {
+    padding-inline: var(--mv-ds-space-4) !important;
+  }
+
+  .mv-layout-phone .mv-dashboard-actions,
+  .mv-layout-phone .mv-dashboard-metrics {
+    gap: var(--mv-ds-space-3) !important;
+  }
+
+  .mv-layout-phone h1 {
+    font-size: var(--mv-ds-text-section-lg) !important;
+    line-height: var(--mv-ds-leading-section-lg) !important;
+  }
+
+  .mv-layout-phone h2 {
+    font-size: var(--mv-ds-text-section) !important;
+    line-height: var(--mv-ds-leading-section) !important;
+  }
+
+  .mv-layout-phone h3 {
+    font-size: var(--mv-ds-text-card) !important;
+    line-height: var(--mv-ds-leading-heading) !important;
+  }
+}
