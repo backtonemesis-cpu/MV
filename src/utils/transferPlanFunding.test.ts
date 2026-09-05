@@ -96,6 +96,31 @@ describe('Transfer Plan funding history recognition', () => {
     ).toBe(75_00);
   });
 
+  it('exposes funding-like untagged transfers only through the legacy fallback', () => {
+    const legacy = transfer(
+      'legacy-untagged',
+      'source',
+      'destination',
+      80_00,
+      '2026-09-04',
+      'Fund Vesta current'
+    );
+
+    expect(isTransferPlanFundingTransaction(legacy)).toBe(false);
+    expect(
+      getLatestTransferPlanFundingByDestination([legacy], '2026-09').size
+    ).toBe(0);
+
+    const compatible = getLatestTransferPlanFundingByDestination(
+      [legacy],
+      '2026-09',
+      true
+    );
+
+    expect(compatible.get('destination')?.kind).toBe('legacy_incoming');
+    expect(compatible.get('destination')?.totalPence).toBe(80_00);
+  });
+
   it('never treats an ordinary incoming transfer as Transfer Plan funding', () => {
     const ordinary = transfer(
       'ordinary-1',
@@ -108,6 +133,9 @@ describe('Transfer Plan funding history recognition', () => {
 
     expect(isTransferPlanFundingTransaction(ordinary)).toBe(false);
     expect(getTransferPlanFundingBatches([ordinary], '2026-09')).toHaveLength(0);
+    expect(
+      getLatestTransferPlanFundingByDestination([ordinary], '2026-09', true).size
+    ).toBe(0);
   });
 
   it('uses the explicit planning month instead of the transfer date when present', () => {
