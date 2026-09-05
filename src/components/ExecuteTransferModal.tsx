@@ -310,7 +310,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                                 amountStr: e.target.value,
                               })
                             }
-                            className="w-full min-w-0 pl-8 pr-3 py-2 text-xs font-semibold tabular-nums border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
+                            className="mv-money-input-with-prefix w-full min-w-0 text-xs font-semibold tabular-nums border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
                             aria-label={`Funding amount from source account ${index + 1}`}
                           />
                         </div>
