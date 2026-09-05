@@ -87,6 +87,11 @@ describe('semantic design system enforcement', () => {
     expect(plan).toContain('Edit');
     expect(plan).toContain('Delete');
     expect(plan).not.toContain('mv-plan-bill-row');
+    expect(plan).toContain('Funding received');
+    expect(plan).toContain('Undo Funding');
+    expect(plan).toContain('Paid / Complete');
+    expect(plan).toContain('selectedPlanTotalPence');
+    expect(plan).toContain('transferPlanMonth');
 
     // Income rows: long semantic strings must be shrinkable/truncatable.
     expect(income).toContain('finance-metadata-token');
