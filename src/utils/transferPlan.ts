@@ -31,15 +31,13 @@ export function calculateAccountFunding(
     (p) => p.accountId === account.id && p.includeInTransferPlan === true
   );
 
-  // Transfer Plan status is intentionally independent from linked Activity evidence.
-  // Funding follows the explicit Plan Paid/Unpaid state chosen for this bill.
+  // Transfer Plan inclusion and payment status are separate dimensions.
+  // Selected paid rows stay visible for audit/reference, but only selected
+  // unpaid bills can create a new funding requirement.
   const paidPayments = selectedPayments.filter((p) => p.status === 'paid');
   const unpaidPayments = selectedPayments.filter((p) => p.status !== 'paid');
 
-  // Funding is driven by explicit Transfer Plan inclusion. Paid/Unpaid is a
-  // separate payment-status dimension and must not remove a selected bill from
-  // the funding requirement.
-  const sortedSelected = [...selectedPayments].sort((a, b) => {
+  const sortedUnpaid = [...unpaidPayments].sort((a, b) => {
     const dateA = a.dueDate || '9999-99-99';
     const dateB = b.dueDate || '9999-99-99';
     return dateA.localeCompare(dateB);
@@ -54,7 +52,7 @@ export function calculateAccountFunding(
   const fundedPayments: PlannedPayment[] = [];
   const unfundedPayments: PlannedPayment[] = [];
 
-  for (const p of sortedSelected) {
+  for (const p of sortedUnpaid) {
     if (runningBalance >= p.amountPence) {
       fundedPayments.push(p);
       runningBalance -= p.amountPence;
@@ -63,16 +61,22 @@ export function calculateAccountFunding(
     }
   }
 
-  // Exact Transfer Required formula:
-  // selected In-Plan bills - current destination-account balance.
-  // Payment status remains visible separately and does not change this amount.
   const totalSelectedPaymentsPence = selectedPayments.reduce(
     (sum, p) => sum + p.amountPence,
     0
   );
+  const totalUnpaidSelectedPaymentsPence = unpaidPayments.reduce(
+    (sum, p) => sum + p.amountPence,
+    0
+  );
+
+  // Exact Transfer Required formula:
+  // selected UNPAID In-Plan bills - current destination-account balance.
+  // Paid bills remain visible, but their actual expense has already affected
+  // the current balance and must never be funded a second time.
   const transferRequiredPence = Math.max(
     0,
-    totalSelectedPaymentsPence - currentBalancePence
+    totalUnpaidSelectedPaymentsPence - currentBalancePence
   );
   const isFullyFunded = transferRequiredPence === 0;
 
@@ -85,6 +89,7 @@ export function calculateAccountFunding(
     fundedPayments,
     unfundedPayments,
     totalSelectedPaymentsPence,
+    totalUnpaidSelectedPaymentsPence,
     amountAvailablePence,
     transferRequiredPence,
     isFullyFunded,
