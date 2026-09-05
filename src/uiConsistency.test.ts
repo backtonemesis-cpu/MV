@@ -90,6 +90,14 @@ describe('Global finance UI consistency contract', () => {
     expect(paid).toContain('Select payment account');
   });
 
+  it('keeps household role choices inside the approved permission model', () => {
+    const members = component('MembersView.tsx');
+
+    expect(members).toContain('<option value="editor">Editor</option>');
+    expect(members).toContain('<option value="view_only">View Only</option>');
+    expect(members).not.toContain('<option value="owner">Co-Owner</option>');
+  });
+
   it('keeps financial date fallbacks local and protects currency-prefix spacing', () => {
     const store = read(path.join(SRC_DIR, 'localStore.ts'));
     const css = read(path.join(SRC_DIR, 'index.css'));
