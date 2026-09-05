@@ -346,7 +346,6 @@ function sourceTransactions(): Transaction[] {
       sourceDateLabel: income.sourceDateLabel,
       sourceReceivedBy: income.sourceReceivedBy,
       sourceIncomeType: income.incomeType,
-      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
     },
   }));
 
@@ -377,7 +376,6 @@ function sourcePlannedPayments(): PlannedPayment[] {
       sourceRow: expense.row,
       sourceDateMissing: true,
       sourcePaidBy: expense.sourcePaidBy,
-      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
     },
   }));
 }
@@ -406,7 +404,6 @@ function sourcePlannedIncomes(): PlannedIncome[] {
       sourceDateLabel: income.sourceDateLabel,
       sourceReceivedBy: income.sourceReceivedBy,
       sourceIncomeType: income.incomeType,
-      sourceImportId: SOURCE_BUDGET_IMPORT_ID,
     },
   }));
 }
