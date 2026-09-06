@@ -1,4 +1,7 @@
-const MODAL_SELECTOR = '.mv-modal-backdrop .mv-modal-card';
+const MODAL_SELECTOR = [
+  '.mv-modal-backdrop .mv-modal-card',
+  '.mv-command-backdrop .mv-command-palette',
+].join(',');
 const FOCUSABLE_SELECTOR = [
   'a[href]',
   'button:not([disabled])',
