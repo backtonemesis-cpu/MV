@@ -41,6 +41,7 @@ interface AccountsViewProps {
   onReconcileAccount: (id: string, reconciledBalancePence: number, reconciliationDate: string) => Promise<void>;
   accountDeleteEligibility: Record<string, AccountPermanentDeleteEligibility>;
   onArchiveAccount: (id: string) => Promise<void>;
+  onReactivateAccount: (id: string) => Promise<void>;
   onPermanentDeleteAccount: (id: string) => Promise<void>;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
   onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
@@ -58,6 +59,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   onReconcileAccount,
   accountDeleteEligibility,
   onArchiveAccount,
+  onReactivateAccount,
   onPermanentDeleteAccount,
   onCreateSavingsGoal,
   onUpdateSavingsGoal,
@@ -70,9 +72,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showEditGoalModal, setShowEditGoalModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showArchiveAccountModal, setShowArchiveAccountModal] = useState(false);
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [deleteAccountTarget, setDeleteAccountTarget] = useState<Account | null>(null);
+  const [archiveAccountTarget, setArchiveAccountTarget] = useState<Account | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -88,7 +92,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [editType, setEditType] = useState<AccountType>('current');
   const [editOwnerMemberId, setEditOwnerMemberId] = useState('');
   const [editNotes, setEditNotes] = useState('');
-  const [editIsActive, setEditIsActive] = useState(true);
 
   // Reconcile form state
   const [reconcileBalanceStr, setReconcileBalanceStr] = useState('');
@@ -110,9 +113,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     showActivityModal ||
     showGoalModal ||
     showEditGoalModal ||
-    showDeleteAccountModal;
+    showDeleteAccountModal ||
+    showArchiveAccountModal;
   const closeActiveModal = () => {
-    if (showDeleteAccountModal) {
+    if (showArchiveAccountModal) {
+      setShowArchiveAccountModal(false);
+      setArchiveAccountTarget(null);
+    } else if (showDeleteAccountModal) {
       setShowDeleteAccountModal(false);
       setDeleteAccountTarget(null);
     } else if (showActivityModal) setShowActivityModal(false);
@@ -126,7 +133,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       setSelectedAccount(null);
     } else if (showAccModal) setShowAccModal(false);
   };
-  const dialogLabel = showDeleteAccountModal
+  const dialogLabel = showArchiveAccountModal
+    ? 'Archive account'
+    : showDeleteAccountModal
     ? 'Permanently delete account'
     : showActivityModal
     ? 'Account activity'
@@ -263,7 +272,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       '';
     setEditOwnerMemberId(resolvedOwnerId);
     setEditNotes(acc.notes || '');
-    setEditIsActive(acc.isActive !== false);
     setError(null);
     setShowEditModal(true);
   };
@@ -288,7 +296,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         type: editType,
         ownerMemberId: editOwnerMemberId,
         notes: editNotes.trim() || undefined,
-        isActive: editIsActive,
       });
       setShowEditModal(false);
     } catch (err: any) {
@@ -350,14 +357,38 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setShowActivityModal(true);
   };
 
-  // Archive preserves the account record and every historical reference.
-  const handleArchive = async (acc: Account) => {
-    if (!confirm(`Archive "${acc.name}"? Financial history will be preserved.`)) return;
+  // Archive is a dedicated audited status transition; generic Edit cannot bypass it.
+  const openArchiveDialog = (acc: Account) => {
+    setArchiveAccountTarget(acc);
+    setError(null);
+    setShowArchiveAccountModal(true);
+  };
+
+  const handleArchiveConfirmed = async () => {
+    if (!archiveAccountTarget || isSubmitting) return;
     try {
+      setIsSubmitting(true);
       setError(null);
-      await onArchiveAccount(acc.id);
+      await onArchiveAccount(archiveAccountTarget.id);
+      setShowArchiveAccountModal(false);
+      setArchiveAccountTarget(null);
     } catch (err: any) {
       setError(err.message || 'Failed to archive account');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReactivate = async (acc: Account) => {
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await onReactivateAccount(acc.id);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reactivate account');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -584,10 +615,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <Edit2 className="h-3.5 w-3.5 text-accent" />
                   Edit
                 </button>
-                {!isArchived && (
+                {isArchived ? (
                   <button
                     type="button"
-                    onClick={() => handleArchive(acc)}
+                    onClick={() => handleReactivate(acc)}
+                    disabled={isSubmitting}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-success bg-success-soft px-2.5 text-[11px] font-semibold text-success transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Reactivate
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => openArchiveDialog(acc)}
                     className="inline-flex h-8 items-center gap-1 rounded-lg border border-danger bg-danger-soft px-2.5 text-[11px] font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.97]"
                   >
                     <Archive className="h-3.5 w-3.5" />
