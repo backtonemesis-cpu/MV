@@ -1344,56 +1344,29 @@ describe('Penny-style local MV storage', () => {
     expect(state.members.filter((member) => member.role === 'owner')).toHaveLength(1);
   });
 
-  it('keeps imported same-name Lloyds routing isolated by explicit owner', () => {
-    const state = loadLocalHousehold();
-    const mariusLloyds = state.accounts.find(
+  it('keeps same-name accounts isolated by stable owner identity without source fixtures', () => {
+    let state = loadLocalHousehold();
+    const primary = state.accounts.find(
       (account) => account.name === 'Lloyds' && account.ownerPerson === 'Marius'
     );
-    const vestaLloyds = state.accounts.find(
-      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Vesta'
-    );
+    expect(primary).toBeTruthy();
 
-    expect(mariusLloyds).toBeTruthy();
-    expect(vestaLloyds).toBeTruthy();
-    expect(mariusLloyds!.id).not.toBe(vestaLloyds!.id);
+    const secondMember = createLocalHouseholdMember({ name: 'Vesta' }, state.version);
+    state = loadLocalHousehold();
 
-    const vestaImportedBills = state.plannedPayments.filter(
-      (payment) =>
-        payment.responsiblePerson === 'Vesta' &&
-        payment.metadata?.sourceImportId === LEGACY_SOURCE_SEED_MIGRATION_ID &&
-        ['Council tax', 'Internet - Vodafone', 'Phone', 'Lloyds'].includes(payment.name)
-    );
-    expect(vestaImportedBills).toHaveLength(4);
-    expect(
-      vestaImportedBills.every((payment) => payment.accountId === vestaLloyds!.id)
-    ).toBe(true);
+    const second = createLocalAccount(
+      {
+        name: 'Lloyds',
+        type: 'current',
+        startingBalancePence: 200_00,
+        ownerMemberId: secondMember.member.id,
+      },
+      state.version
+    ).account;
 
-    const mariusImportedLloydsBills = state.plannedPayments.filter(
-      (payment) =>
-        payment.responsiblePerson === 'Marius' &&
-        payment.metadata?.sourceImportId === LEGACY_SOURCE_SEED_MIGRATION_ID &&
-        ['Child Maintenance', 'National Trust'].includes(payment.name)
-    );
-    expect(mariusImportedLloydsBills).toHaveLength(2);
-    expect(
-      mariusImportedLloydsBills.every((payment) => payment.accountId === mariusLloyds!.id)
-    ).toBe(true);
-
-    const vestaLloydsIncome = state.plannedIncomes?.find(
-      (income) =>
-        income.name === 'Paycheck' &&
-        income.sourcePerson === 'Vesta' &&
-        income.metadata?.sourceImportId === LEGACY_SOURCE_SEED_MIGRATION_ID
-    );
-    expect(vestaLloydsIncome?.accountId).toBe(vestaLloyds!.id);
-
-    const mariusLloydsIncome = state.plannedIncomes?.find(
-      (income) =>
-        income.name === 'Paycheck' &&
-        income.sourcePerson === 'Marius' &&
-        income.metadata?.sourceImportId === LEGACY_SOURCE_SEED_MIGRATION_ID
-    );
-    expect(mariusLloydsIncome?.accountId).toBe(mariusLloyds!.id);
+    expect(primary!.id).not.toBe(second.id);
+    expect(primary!.ownerMemberId).toBe('local-marius');
+    expect(second.ownerMemberId).toBe(secondMember.member.id);
   });
 
   it('repairs manually-created same-name bills to the matching household owner account', () => {
