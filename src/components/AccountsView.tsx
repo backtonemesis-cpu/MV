@@ -201,12 +201,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
-      const pence = parseToPence(accBalanceStr);
+      const enteredPence = parseToPence(accBalanceStr);
+      const startingBalancePence =
+        accType === 'credit' ? -Math.abs(enteredPence) : enteredPence;
       await onCreateAccount({
         name: accName.trim(),
         type: accType as AccountType,
         ownerMemberId: accOwnerMemberId,
-        startingBalancePence: pence,
+        startingBalancePence,
         notes: accNotes.trim() || undefined,
       });
       setAccName('');
@@ -272,7 +274,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   // Open Reconcile Modal
   const openReconcileModal = (acc: Account) => {
     setSelectedAccount(acc);
-    setReconcileBalanceStr((acc.currentBalancePence / 100).toFixed(2));
+    const shownBalancePence =
+      acc.type === 'credit'
+        ? Math.max(0, -acc.currentBalancePence)
+        : acc.currentBalancePence;
+    setReconcileBalanceStr((shownBalancePence / 100).toFixed(2));
     setReconcileDate(acc.reconciliationDate || localDateInputValue());
     setError(null);
     setShowReconcileModal(true);
@@ -285,8 +291,16 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     try {
       setIsSubmitting(true);
       setError(null);
-      const pence = parseToPence(reconcileBalanceStr);
-      await onReconcileAccount(selectedAccount.id, pence, reconcileDate);
+      const enteredPence = parseToPence(reconcileBalanceStr);
+      const reconciledBalancePence =
+        selectedAccount.type === 'credit'
+          ? -Math.abs(enteredPence)
+          : enteredPence;
+      await onReconcileAccount(
+        selectedAccount.id,
+        reconciledBalancePence,
+        reconcileDate
+      );
       setShowReconcileModal(false);
     } catch (err: any) {
       setError(err.message || 'Failed to reconcile balance');
@@ -796,7 +810,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  Starting Balance
+                  {accType === 'credit' ? 'Starting balance owed' : 'Starting Balance'}
                 </label>
                 <input
                   type="text"
@@ -1007,7 +1021,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
-                    Statement Balance
+                    {selectedAccount.type === 'credit' ? 'Statement balance owed' : 'Statement Balance'}
                   </label>
                   <input
                     type="text"
@@ -1022,20 +1036,28 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               {/* Real-time Discrepancy Card */}
               {(() => {
-                const targetPence = parseToPence(reconcileBalanceStr);
-                const diffPence = targetPence - selectedAccount.currentBalancePence;
+                const enteredPence = parseToPence(reconcileBalanceStr);
+                const currentShownPence =
+                  selectedAccount.type === 'credit'
+                    ? Math.max(0, -selectedAccount.currentBalancePence)
+                    : selectedAccount.currentBalancePence;
+                const targetShownPence =
+                  selectedAccount.type === 'credit'
+                    ? Math.abs(enteredPence)
+                    : enteredPence;
+                const diffPence = targetShownPence - currentShownPence;
                 return (
                   <div className="p-3 bg-surface-muted rounded-xl border border-muted text-xs space-y-1.5">
                     <div className="flex justify-between text-muted text-subtle">
-                      <span>Current</span>
+                      <span>{selectedAccount.type === 'credit' ? 'Current owed' : 'Current'}</span>
                       <span className="font-semibold text-main">
-                        {formatPence(selectedAccount.currentBalancePence)}
+                        {formatPence(currentShownPence)}
                       </span>
                     </div>
                     <div className="flex justify-between text-muted text-subtle">
-                      <span>Statement</span>
+                      <span>{selectedAccount.type === 'credit' ? 'Statement owed' : 'Statement'}</span>
                       <span className="font-semibold text-main">
-                        {formatPence(targetPence)}
+                        {formatPence(targetShownPence)}
                       </span>
                     </div>
                     <div className="flex justify-between pt-1 border-t border-muted font-bold">
