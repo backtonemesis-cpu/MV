@@ -147,10 +147,11 @@ describe('Global finance UI consistency contract', () => {
     expect(members).not.toContain('<option value="owner">Co-Owner</option>');
   });
 
-  it('keeps financial date fallbacks local and protects currency-prefix spacing', () => {
+  it('keeps financial date fallbacks local and shared GBP inputs numeric-only', () => {
     const store = read(path.join(SRC_DIR, 'localStore.ts'));
     const app = read(path.join(SRC_DIR, 'App.tsx'));
     const css = read(path.join(SRC_DIR, 'index.css'));
+    const moneyInput = component('MoneyInput.tsx');
 
     expect(store).not.toContain("new Date().toISOString().slice(0, 10)");
     expect(store).toContain('localTodayDateKey()');
@@ -158,12 +159,11 @@ describe('Global finance UI consistency contract', () => {
     expect(app).not.toContain("new Date().toISOString().slice(0, 10)");
     expect(app).toContain('localDateInputValue()');
 
-    // Shared GBP inputs keep the non-editable prefix close to the value while
-    // preserving protected spacing and a single implementation contract.
     expect(css).toContain('.mv-density-root input.mv-money-input-control');
-    expect(css).toContain('padding-left: 23px !important');
+    expect(css).toContain('padding-left: 12px !important');
     expect(css).toContain('.mv-money-input-shell');
-    expect(css).toContain('.mv-money-prefix');
+    expect(css).not.toContain('.mv-money-prefix');
+    expect(moneyInput).not.toMatch(/>\s*£\s*</);
   });
 
   it('keeps Dashboard on the same Transfer Plan and savings rules', () => {
