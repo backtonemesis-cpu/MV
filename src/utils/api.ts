@@ -32,6 +32,7 @@ import {
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
   undoLocalPaymentPaid,
+  undoLocalTransferTransaction,
   getLocalPreferences,
   importLocalMonth,
   loadLocalHousehold,
@@ -139,7 +140,30 @@ export async function createTransaction(
   data: Partial<Transaction>,
   expectedVersion: number
 ) {
-  return createLocalTransaction(data, expectedVersion);
+  const isTransfer = Boolean(data.isTransfer || data.type === 'transfer' || data.targetAccountId);
+  if (!isTransfer) {
+    return createLocalTransaction(data, expectedVersion);
+  }
+
+  if (!data.accountId || !data.targetAccountId) {
+    throw new Error('Internal transfers require both a source and destination account.');
+  }
+  if (!Number.isSafeInteger(data.amountPence) || (data.amountPence ?? 0) <= 0) {
+    throw new Error('Transfer amount must be exact positive integer pence.');
+  }
+
+  return executeLocalTransfer(
+    {
+      sourceAccountId: data.accountId,
+      destinationAccountId: data.targetAccountId,
+      amountPence: data.amountPence!,
+      description: data.description,
+      date: data.date,
+      payer: data.payer,
+      idempotencyKey: data.idempotencyKey,
+    },
+    expectedVersion
+  );
 }
 
 export async function updateTransaction(
@@ -151,6 +175,14 @@ export async function updateTransaction(
 }
 
 export async function deleteTransaction(id: string, expectedVersion: number) {
+  const state = loadLocalHousehold();
+  const transaction = state.transactions.find((candidate) => candidate.id === id);
+  if (!transaction) throw new Error('Transaction not found.');
+
+  if (transaction.isTransfer || transaction.type === 'transfer' || transaction.targetAccountId) {
+    return undoLocalTransferTransaction(id, expectedVersion);
+  }
+
   return deleteLocalTransaction(id, expectedVersion);
 }
 
