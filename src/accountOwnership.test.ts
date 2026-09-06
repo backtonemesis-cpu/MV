@@ -11,8 +11,9 @@ import {
   saveLocalHousehold,
   updateLocalAccount,
   updateLocalHouseholdMember,
+  LEGACY_SOURCE_SEED_MIGRATION_ID,
 } from './localStore';
-import { resolveCompatibleAccount, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
+import { resolveCompatibleAccount } from './utils/accountCompatibility';
 
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();
@@ -52,11 +53,11 @@ function markSourceBudgetHandledForTest(state: ReturnType<typeof createBlankLoca
   };
   state.schemaStatus.appliedMigrations = [
     ...state.schemaStatus.appliedMigrations.filter(
-      (migration) => migration.name !== SOURCE_BUDGET_IMPORT_ID
+      (migration) => migration.name !== LEGACY_SOURCE_SEED_MIGRATION_ID
     ),
     {
       version: 1,
-      name: SOURCE_BUDGET_IMPORT_ID,
+      name: LEGACY_SOURCE_SEED_MIGRATION_ID,
       appliedAt: '2026-09-04T00:00:00.000Z',
       executionTimeMs: 0,
       checksum: 'test-account-ownership',
