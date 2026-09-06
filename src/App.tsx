@@ -10,7 +10,8 @@ import {
   createAccount,
   updateAccount,
   reconcileAccount,
-  deleteAccount,
+  archiveAccount,
+  permanentlyDeleteAccount,
   createSavingsGoal,
   contributeSavingsGoal,
   updateSavingsGoal,
@@ -74,6 +75,7 @@ import { ConflictResolutionModal } from './components/ConflictResolutionModal';
 import { CommandPalette } from './components/CommandPalette';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
+import { getAccountPermanentDeleteEligibility } from './utils/accountDeletion';
 
 type LayoutMode = 'pc' | 'phone';
 
@@ -317,18 +319,35 @@ export default function App() {
     }
   };
 
-  // Delete / Archive Account
-  const handleDeleteAccount = async (id: string) => {
+  // Account removal is intentionally split: archive preserves history;
+  // permanent deletion is guarded again inside the storage mutation.
+  const handleArchiveAccount = async (id: string) => {
     if (!household) return;
     try {
-      await deleteAccount(id, household.version);
+      await archiveAccount(id, household.version);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
         setConflictServerVersion(err.serverVersion || household.version + 1);
       } else {
-        setError(err.message || 'Failed to delete account');
+        setError(err.message || 'Failed to archive account');
       }
+      throw err;
+    }
+  };
+
+  const handlePermanentDeleteAccount = async (id: string) => {
+    if (!household) return;
+    try {
+      await permanentlyDeleteAccount(id, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to permanently delete account');
+      }
+      throw err;
     }
   };
 
@@ -894,10 +913,17 @@ export default function App() {
                 transactions={household.transactions}
                 members={household.members}
                 userRole={session.role}
+                accountDeleteEligibility={Object.fromEntries(
+                  household.accounts.map((account) => [
+                    account.id,
+                    getAccountPermanentDeleteEligibility(household, account.id),
+                  ])
+                )}
                 onCreateAccount={handleCreateAccount}
                 onUpdateAccount={handleUpdateAccount}
                 onReconcileAccount={handleReconcileAccount}
-                onDeleteAccount={handleDeleteAccount}
+                onArchiveAccount={handleArchiveAccount}
+                onPermanentDeleteAccount={handlePermanentDeleteAccount}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
                 onUpdateSavingsGoal={handleUpdateSavingsGoal}
                 onDeleteSavingsGoal={handleDeleteSavingsGoal}
