@@ -1,0 +1,34 @@
+/* Stage 4 accessibility guardrails.
+   Loaded after the visual design system so these rules only correct
+   accessibility failures without changing financial amount semantics. */
+
+[data-theme="light"] {
+  /* #64748b falls below 4.5:1 on the light muted surface; keep the same slate family, slightly darker. */
+  --text-muted: #5f6f85;
+  --text-subtle: #5f6f85;
+  --mv-focus-ring: #1d4ed8;
+}
+
+[data-theme="dark"] {
+  /* Legacy #64748b subtle text is below 4.5:1 on #181f32 surfaces. */
+  --text-subtle: #94a3b8;
+  --mv-focus-ring: #93c5fd;
+}
+
+[data-theme="slate"] {
+  /* Legacy #94a3b8 subtle text is below 4.5:1 on #334155 surfaces. */
+  --text-subtle: #cbd5e1;
+  --mv-focus-ring: #bfdbfe;
+}
+
+.mv-density-root :where(
+  a[href],
+  button,
+  input,
+  select,
+  textarea,
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 2px solid var(--mv-focus-ring) !important;
+  outline-offset: 2px !important;
+}
