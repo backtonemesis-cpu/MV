@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Calendar, User, Landmark, Tag, CheckSquare, AlertCircle } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
@@ -120,16 +120,23 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card">
+      <div
+        className="mv-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="planned-payment-modal-title"
+      >
         <div className="mv-modal-header">
           <div>
-            <h3 className="text-base font-semibold text-main">
+            <h3 id="planned-payment-modal-title" className="text-base font-semibold text-main">
               {isEditing ? 'Edit Bill' : 'Add Bill'}
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label={isEditing ? 'Close edit bill' : 'Close add bill'}
           >
             <X className="w-5 h-5" />
           </button>
@@ -137,18 +144,21 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
         <form onSubmit={handleSubmit} className="mv-modal-form">
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs">
+            <div
+              className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs"
+              role="alert"
+            >
               <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Payment Name */}
           <div>
-            <label className="block text-xs font-medium text-muted mb-1">
+            <label htmlFor="planned-payment-name" className="block text-xs font-medium text-muted mb-1">
               Name *
             </label>
             <input
+              id="planned-payment-name"
               ref={nameInputRef}
               type="text"
               placeholder="Bill name"
@@ -159,15 +169,15 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             />
           </div>
 
-          {/* Amount & Month */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-amount" className="block text-xs font-medium text-muted mb-1">
                 Amount *
               </label>
               <div className="relative">
                 <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-subtle font-medium">£</span>
                 <input
+                  id="planned-payment-amount"
                   type="number"
                   step="0.01"
                   min="0.01"
@@ -181,9 +191,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
-                Month *
-              </label>
+              <span className="block text-xs font-medium text-muted mb-1">Month *</span>
               <MonthPicker
                 value={month}
                 onChange={setMonth}
@@ -193,13 +201,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Payment Account & Responsible */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">
                 Payment Account *
               </label>
               <select
+                id="planned-payment-account"
                 value={accountId}
                 onChange={(e) => handleAccountChange(e.target.value)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
@@ -215,10 +223,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-person" className="block text-xs font-medium text-muted mb-1">
                 Responsible Person
               </label>
               <select
+                id="planned-payment-person"
                 value={responsiblePerson}
                 onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
@@ -234,13 +243,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Due Date & Category */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-due-date" className="block text-xs font-medium text-muted mb-1">
                 Due Date
               </label>
               <input
+                id="planned-payment-due-date"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
@@ -249,8 +258,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Category</label>
+              <label htmlFor="planned-payment-category" className="block text-xs font-medium text-muted mb-1">Category</label>
               <select
+                id="planned-payment-category"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
@@ -265,15 +275,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Transfer-plan and recurrence settings. Paid state is derived from linked actual payment evidence. */}
           <div className="mv-modal-section space-y-2">
             <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-medium text-main">Include in Transfer Plan</span>
-              </div>
+              <span className="text-xs font-medium text-main">Include in Transfer Plan</span>
               <input
                 type="checkbox"
                 id="modal-include-plan-toggle"
+                aria-label="Include in Transfer Plan"
                 checked={includeInTransferPlan}
                 onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
                 className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
@@ -281,24 +289,22 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-muted">
-              <div>
-                <span className="text-xs font-medium text-main">Recurring Monthly</span>
-              </div>
+              <span className="text-xs font-medium text-main">Recurring Monthly</span>
               <input
                 type="checkbox"
                 id="modal-recurring-toggle"
+                aria-label="Recurring Monthly"
                 checked={isRecurring}
                 onChange={(e) => setIsRecurring(e.target.checked)}
                 className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
               />
             </div>
-
           </div>
 
-          {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-muted mb-1">Notes</label>
+            <label htmlFor="planned-payment-notes" className="block text-xs font-medium text-muted mb-1">Notes</label>
             <textarea
+              id="planned-payment-notes"
               rows={2}
               placeholder="Notes"
               value={notes}
@@ -307,7 +313,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             />
           </div>
 
-          {/* Actions */}
           <div className="mv-modal-actions">
             <button
               type="button"
