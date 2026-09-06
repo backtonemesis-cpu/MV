@@ -970,11 +970,17 @@ export function createLocalTransaction(
       if (!data.accountId) throw new Error('Account is required.');
       if (!data.type) throw new Error('Transaction type is required.');
       const isInternalTransfer = Boolean(
-        data.isTransfer || data.type === 'transfer' || data.targetAccountId
+        data.isTransfer || data.type === 'transfer'
       );
       if (isInternalTransfer) {
         throw new Error(
           'Internal transfers must be recorded through the transfer workflow so both account balances stay traceable.'
+        );
+      }
+      const isRepayment = Boolean(data.isRepayment || data.type === 'repayment');
+      if (data.targetAccountId && !isRepayment) {
+        throw new Error(
+          'A destination account is only valid for an internal transfer or card repayment.'
         );
       }
       if (!data.payer) {
@@ -1013,13 +1019,7 @@ export function createLocalTransaction(
         categoryId,
         accountId: data.accountId,
         targetAccountId: data.targetAccountId,
-        payer:
-          data.payer ||
-          (isInternalTransfer
-            ? state.accounts.find((account) => account.id === data.accountId)?.ownerPerson || 'Joint'
-            : (() => {
-                throw new Error('Transaction person is required.');
-              })()),
+        payer: data.payer,
         notes: data.notes,
         isTransfer: Boolean(data.isTransfer || data.type === 'transfer'),
         isRepayment: Boolean(data.isRepayment || data.type === 'repayment'),
@@ -1071,16 +1071,22 @@ export function updateLocalTransaction(
       if (existing.metadata?.savingsGoalId) {
         throw new Error('Savings goal contributions must be managed from the Savings view.');
       }
-      if (existing.isTransfer || existing.type === 'transfer' || existing.targetAccountId) {
+      if (existing.isTransfer || existing.type === 'transfer') {
         throw new Error(
           'Internal transfers cannot be edited in place. Undo the exact transfer and record a corrected transfer instead.'
         );
       }
 
       const next = { ...existing, ...data, id, updatedAt: nowIso(), updatedBy: OWNER_EMAIL };
-      if (next.isTransfer || next.type === 'transfer' || next.targetAccountId) {
+      if (next.isTransfer || next.type === 'transfer') {
         throw new Error(
           'A normal Activity transaction cannot be converted into an internal transfer. Use the transfer workflow.'
+        );
+      }
+      const nextIsRepayment = Boolean(next.isRepayment || next.type === 'repayment');
+      if (next.targetAccountId && !nextIsRepayment) {
+        throw new Error(
+          'A destination account is only valid for an internal transfer or card repayment.'
         );
       }
       if (!isSafePence(next.amountPence) || next.amountPence < 0) {
@@ -1175,7 +1181,7 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
       if (existing.metadata?.savingsGoalId) {
         throw new Error('Savings goal contributions must be managed from the Savings view.');
       }
-      if (existing.isTransfer || existing.type === 'transfer' || existing.targetAccountId) {
+      if (existing.isTransfer || existing.type === 'transfer') {
         throw new Error(
           'Internal transfers cannot be deleted directly. Use the exact transfer undo workflow.'
         );
