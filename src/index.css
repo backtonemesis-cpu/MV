@@ -4211,7 +4211,28 @@ html[data-theme] button.bg-white:hover {
 .mv-money-prefix {
   z-index: 1;
   color: var(--text-muted) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Standard GBP entry fields must read as one coherent monetary value while
+   keeping the currency symbol non-editable. Placeholder state is muted as a
+   unit; entered values bring the prefix up to the same text tone as the input. */
+.mv-density-root input.mv-money-input-with-prefix::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1;
+}
+
+.mv-money-prefix:has(+ input.mv-money-input-with-prefix:not(:placeholder-shown)) {
+  color: var(--text) !important;
+}
+
+.mv-money-prefix:has(+ input.mv-money-input-with-prefix:disabled) {
+  color: var(--text-subtle) !important;
+  opacity: 0.72;
 }
 
 
@@ -4809,6 +4830,11 @@ html[data-theme] button.bg-white:hover {
   height: 44px !important;
   padding: 9px 12px !important;
   font-size: 16px !important;
+}
+
+.mv-layout-phone .mv-money-prefix {
+  font-size: 16px !important;
+  font-weight: 600 !important;
 }
 
 .mv-layout-phone textarea {
