@@ -532,7 +532,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                         </div>
 
                         <div className="min-w-0">
-                          <label htmlFor={`funding-amount-${allocation.id}`}>Amount</label>
+                          <label htmlFor={`funding-amount-${allocation.id}`}>Amount (£)</label>
                           <MoneyInput
                             wrapperClassName="mv-funding-money-field"
                             id={`funding-amount-${allocation.id}`}

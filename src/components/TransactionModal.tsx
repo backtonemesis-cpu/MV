@@ -343,7 +343,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-semibold text-muted mb-1">
-                Amount
+                Amount (£)
               </label>
               <MoneyInput
                 type="text"
@@ -533,6 +533,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
               {isSplitEnabled && (
                 <div className="mv-transaction-splits space-y-2">
+                  <div className="flex justify-end pr-7 text-[10px] font-semibold text-muted">
+                    <span className="w-36">Amount (£)</span>
+                  </div>
                   {splits.map((splitRow, idx) => (
                     <div key={idx} className="mv-hscroll items-center">
                       <select

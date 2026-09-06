@@ -863,7 +863,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  Amount
+                  Amount (£)
                 </label>
                 <MoneyInput
                   wrapperClassName="min-w-0"

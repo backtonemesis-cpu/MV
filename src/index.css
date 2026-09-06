@@ -1289,16 +1289,15 @@ html[data-theme] button.bg-white:hover {
   resize: vertical;
 }
 
-/* Shared GBP entry primitive. The prefix stays non-editable while the
-   symbol and numeric text are visually coupled as one monetary value. */
+/* Shared GBP entry primitive. Currency meaning lives in the field label and
+   accessible name; the editable box contains numeric text only. */
 .mv-money-input-shell {
-  position: relative;
   display: block;
   min-width: 0;
 }
 
 .mv-density-root input.mv-money-input-control {
-  padding-left: 23px !important;
+  padding-left: 12px !important;
   padding-right: 12px !important;
   font-size: 13px !important;
   font-weight: 600 !important;
@@ -4217,36 +4216,11 @@ html[data-theme] button.bg-white:hover {
   flex-shrink: 0;
 }
 
-.mv-money-prefix {
-  pointer-events: none;
-  position: absolute;
-  z-index: 1;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted) !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0;
-  font-variant-numeric: tabular-nums lining-nums;
-}
-
-/* Placeholder, entered, focus and disabled states keep GBP semantics
-   visually connected without making the currency symbol editable. */
+/* Standard money inputs use ordinary numeric-field placeholder behaviour.
+   The shared component forwards focus, disabled, required and aria-* states. */
 .mv-density-root input.mv-money-input-control::placeholder {
   color: var(--text-muted) !important;
   opacity: 1;
-}
-
-.mv-money-input-shell:has(input.mv-money-input-control:not(:placeholder-shown)) .mv-money-prefix,
-.mv-money-input-shell:focus-within .mv-money-prefix {
-  color: var(--text) !important;
-}
-
-.mv-money-input-shell:has(input.mv-money-input-control:disabled) .mv-money-prefix {
-  color: var(--text-subtle) !important;
-  opacity: 0.72;
 }
 
 
@@ -4846,14 +4820,8 @@ html[data-theme] button.bg-white:hover {
   font-size: 16px !important;
 }
 
-.mv-layout-phone .mv-money-prefix {
-  left: 11px;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-}
-
 .mv-layout-phone input.mv-money-input-control {
-  padding-left: 26px !important;
+  padding-left: 12px !important;
   padding-right: 12px !important;
   font-size: 16px !important;
 }
