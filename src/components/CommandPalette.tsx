@@ -144,13 +144,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             className="mv-command-close"
             aria-label="Close command palette"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mv-command-list" role="listbox" aria-label="Available commands">
+        <div className="mv-command-list" aria-label="Available commands">
           {filteredCommands.length === 0 ? (
-            <div className="mv-command-empty">No matching command</div>
+            <div className="mv-command-empty" role="status">No matching command</div>
           ) : (
             filteredCommands.map((item) => (
               <button
