@@ -170,7 +170,7 @@ describe('Cross-view financial reconciliation', () => {
 
     const paid = markLocalPaymentPaid(bill.id, {
       actualAmountPence: 300_00,
-      actualDate: '2026-09-15',
+      actualDate: '2026-09-05',
       accountId: current.id,
     }, state.version);
     state = loadLocalHousehold();
