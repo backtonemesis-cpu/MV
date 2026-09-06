@@ -75,8 +75,8 @@ describe('Global money-input audit contract', () => {
     expect(surfaces.income).toContain('Actual amount (£)');
     expect(surfaces.accounts).toContain("'Starting balance owed (£) *'");
     expect(surfaces.accounts).toContain("'Starting balance (£) *'");
-    expect(surfaces.accounts).toContain("'Statement balance owed (£)'");
-    expect(surfaces.accounts).toContain("'Statement balance (£)'");
+    expect(surfaces.accounts).toContain("'Statement balance owed (£) *'");
+    expect(surfaces.accounts).toContain("'Statement balance (£) *'");
     expect(surfaces.accounts).toContain('Target (£)');
     expect(surfaces.accounts).toContain('Monthly Saving Plan (£)');
     expect(surfaces.savings).toContain('Target (£)');
