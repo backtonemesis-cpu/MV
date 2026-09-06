@@ -1451,20 +1451,12 @@ body,
   position: relative;
 }
 
-.mv-funding-money-field .mv-money-prefix {
-  pointer-events: none;
-  position: absolute;
-  left: var(--mv-ds-space-3);
-  top: 50%;
-  z-index: 1;
-  transform: translateY(-50%);
-  color: var(--text-subtle);
-  font-size: var(--mv-ds-text-body);
-}
-
-.mv-funding-modal-form input.mv-money-input-with-prefix {
-  padding-left: var(--mv-ds-space-8) !important;
+/* Funding amounts use the same shared GBP primitive as every other money
+   entry surface. Do not reintroduce local prefix typography or wide padding. */
+.mv-funding-modal-form input.mv-money-input-control {
+  padding-left: 23px !important;
   padding-right: var(--mv-ds-space-3) !important;
+  font-weight: 600 !important;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
