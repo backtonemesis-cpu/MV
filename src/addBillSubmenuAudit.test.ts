@@ -66,4 +66,28 @@ describe('Add Bill submenu audit contract', () => {
     expect(blocks).toHaveLength(1);
     expect(blocks[0]).not.toContain('autoFocus');
   });
+
+  it('uses spinner-free decimal text entry for the bill amount', () => {
+    const blocks = source.match(/<MoneyInput[\s\S]*?\/>/g) ?? [];
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toContain('type="text"');
+    expect(blocks[0]).toContain('inputMode="decimal"');
+    expect(blocks[0]).not.toContain('type="number"');
+    expect(blocks[0]).not.toContain('step=');
+    expect(blocks[0]).not.toContain('min=');
+  });
+
+  it('filters new bill categories by authoritative category group metadata', () => {
+    expect(source).toContain('getBillCategoryOptions(');
+    expect(source).toContain('{billCategoryOptions.map((c) => (');
+    expect(source).toContain('isBillCategorySelectionAllowed(');
+    expect(source).not.toContain('{categories.map((c) => (');
+  });
+
+  it('preserves only the currently linked excluded category during historical edits', () => {
+    expect(source).toContain('payment?.categoryId');
+    expect(source).toContain('getBillCategoryOptions(');
+    expect(source).toContain('isBillCategorySelectionAllowed(');
+  });
+
 });
