@@ -408,9 +408,10 @@ describe('Safe conditional permanent account deletion', () => {
     expect(JSON.stringify(backup.state.plannedPayments)).not.toContain(created.account.id);
     expect(JSON.stringify(backup.state.plannedIncomes || [])).not.toContain(created.account.id);
     expect(JSON.stringify(backup.state.savingsGoals)).not.toContain(created.account.id);
+    expect(JSON.stringify(backup.state.auditLogs)).not.toContain(created.account.id);
   });
 
-  it('blocks deletion when retained financial audit history references the account after an undo', () => {
+  it('blocks deletion when retained audit history references the account after an undo', () => {
     let state = loadLocalHousehold();
     const created = createLocalAccount(
       { name: 'Undo-audited account', type: 'current', startingBalancePence: 0, ownerMemberId: state.members[0].id },
@@ -430,7 +431,7 @@ describe('Safe conditional permanent account deletion', () => {
     state = loadLocalHousehold();
 
     expect(getAccountPermanentDeleteEligibility(state, created.account.id).reasons.join(' '))
-      .toMatch(/retained financial audit history/i);
+      .toMatch(/retained audit history/i);
     expect(() => permanentlyDeleteLocalAccount(created.account.id, state.version)).toThrow();
   });
 
