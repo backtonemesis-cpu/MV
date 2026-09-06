@@ -44,9 +44,6 @@ function hasOwnFinancialHistory(account: Account): string[] {
   return reasons;
 }
 
-const FINANCIAL_AUDIT_ACTION_PATTERN =
-  /(transfer|fund|payment|income|saving|transaction|reconcil|repayment|refund)/i;
-
 /**
  * One authoritative decision for both UI presentation and the final mutation guard.
  *
@@ -88,11 +85,10 @@ export function getAccountPermanentDeleteEligibility(
   if (
     state.auditLogs.some(
       (entry) =>
-        FINANCIAL_AUDIT_ACTION_PATTERN.test(entry.action) &&
-        (entry.entityId === accountId || containsExactId(entry.details, accountId))
+        entry.entityId === accountId || containsExactId(entry.details, accountId)
     )
   ) {
-    reasons.push('The account is referenced by retained financial audit history.');
+    reasons.push('The account is referenced by retained audit history.');
   }
 
   // Future-proof the current schema: if new top-level persisted financial
