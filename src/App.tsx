@@ -549,12 +549,12 @@ export default function App() {
   };
 
   const handleMarkPlannedPaymentsPaid = async (
-    ids: string[],
+    payments: PlannedPayment[],
     actualDate: string
   ) => {
     if (!household) return;
     try {
-      await markPaymentsPaid(ids, actualDate, household.version);
+      await markPaymentsPaid(payments, actualDate, household.version);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
@@ -566,10 +566,10 @@ export default function App() {
     }
   };
 
-  const handleUndoPlannedPaymentsPaid = async (ids: string[]) => {
+  const handleUndoPlannedPaymentsPaid = async (payments: PlannedPayment[]) => {
     if (!household) return;
     try {
-      await undoPaymentsPaid(ids, household.version);
+      await undoPaymentsPaid(payments, household.version);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
