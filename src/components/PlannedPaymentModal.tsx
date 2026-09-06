@@ -52,6 +52,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     members,
     responsiblePerson ? [responsiblePerson] : []
   );
+  const paymentAccountOptions = accounts.filter(
+    (account) => account.isActive !== false || account.id === payment?.accountId
+  );
 
   const dialogRef = useModalAccessibility<HTMLDivElement>(true, onClose);
 
@@ -67,7 +70,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     }
     const pence = parseToPence(amountStr);
     if (pence <= 0) {
-      setError('Please enter a valid amount in pounds and pence (e.g. 349.79).');
+      setError('Please enter a valid amount in pounds and pence.');
       return;
     }
     if (!accountId) {
@@ -142,11 +145,12 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
           {/* Payment Name */}
           <div>
-            <label className="block text-xs font-medium text-muted mb-1">
+            <label htmlFor="planned-payment-name" className="block text-xs font-medium text-muted mb-1">
               Name *
             </label>
             <input
               ref={nameInputRef}
+              id="planned-payment-name"
               type="text"
               placeholder="Bill name"
               value={name}
@@ -159,14 +163,15 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Amount & Month */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-amount" className="block text-xs font-medium text-muted mb-1">
                 Amount (£) *
               </label>
               <MoneyInput
+                id="planned-payment-amount"
                 type="number"
                 step="0.01"
                 min="0.01"
-                placeholder="349.79"
+                placeholder="0.00"
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
                 className="w-full text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
@@ -176,10 +181,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-month" className="block text-xs font-medium text-muted mb-1">
                 Month *
               </label>
               <MonthPicker
+                id="planned-payment-month"
                 value={month}
                 onChange={setMonth}
                 ariaLabel="Billing month"
@@ -191,17 +197,18 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Payment Account & Responsible */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">
                 Payment Account *
               </label>
               <select
+                id="planned-payment-account"
                 value={accountId}
                 onChange={(e) => handleAccountChange(e.target.value)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
                 required
               >
                 <option value="">Select payment account</option>
-                {accounts.map((acc) => (
+                {paymentAccountOptions.map((acc) => (
                   <option key={acc.id} value={acc.id}>
                     {accountOptionLabel(acc)}
                   </option>
@@ -210,10 +217,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
-                Responsible Person
+              <label htmlFor="planned-payment-person" className="block text-xs font-medium text-muted mb-1">
+                Responsible Person *
               </label>
               <select
+                id="planned-payment-person"
                 value={responsiblePerson}
                 onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
@@ -232,10 +240,11 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           {/* Due Date & Category */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">
+              <label htmlFor="planned-payment-due-date" className="block text-xs font-medium text-muted mb-1">
                 Due Date
               </label>
               <input
+                id="planned-payment-due-date"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
@@ -244,8 +253,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-muted mb-1">Category</label>
+              <label htmlFor="planned-payment-category" className="block text-xs font-medium text-muted mb-1">Category</label>
               <select
+                id="planned-payment-category"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
@@ -264,7 +274,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           <div className="mv-modal-section space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-medium text-main">Include in Transfer Plan</span>
+                <label htmlFor="modal-include-plan-toggle" className="text-xs font-medium text-main cursor-pointer">Include in Transfer Plan</label>
               </div>
               <input
                 type="checkbox"
@@ -277,7 +287,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
             <div className="flex items-center justify-between pt-2 border-t border-muted">
               <div>
-                <span className="text-xs font-medium text-main">Recurring Monthly</span>
+                <label htmlFor="modal-recurring-toggle" className="text-xs font-medium text-main cursor-pointer">Recurring Monthly</label>
               </div>
               <input
                 type="checkbox"
@@ -292,8 +302,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-muted mb-1">Notes</label>
+            <label htmlFor="planned-payment-notes" className="block text-xs font-medium text-muted mb-1">Notes</label>
             <textarea
+              id="planned-payment-notes"
               rows={2}
               placeholder="Notes"
               value={notes}
