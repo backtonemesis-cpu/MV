@@ -1038,6 +1038,11 @@ export function createLocalTransaction(
       if (!data.payer) {
         throw new Error('Transaction person is required.');
       }
+      if (data.isSavings) {
+        throw new Error(
+          'Savings classification is reserved for internal transfers and cannot hide ordinary income or spending.'
+        );
+      }
       const categoryId =
         data.categoryId ||
         (data.isTransfer || data.type === 'transfer' ? 'cat-transfer' : '');
@@ -1771,7 +1776,11 @@ export function executeLocalTransfer(
         type: 'transfer',
         isTransfer: true,
         isRepayment: false,
-        isSavings: false,
+        isSavings:
+          source.type === 'savings' ||
+          source.type === 'cash' ||
+          destination.type === 'savings' ||
+          destination.type === 'cash',
         isRefund: false,
         idempotencyKey,
         metadata: {
