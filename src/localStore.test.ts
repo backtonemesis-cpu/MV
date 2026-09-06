@@ -6,6 +6,7 @@ import {
   createBlankLocalHousehold,
   saveLocalHousehold,
   createLocalAccount,
+  archiveLocalAccount,
   createLocalBackupPackage,
   createLocalSavingsGoal,
   contributeLocalSavingsGoal,
@@ -2405,7 +2406,7 @@ describe('Penny-style local MV storage', () => {
     );
     state = loadLocalHousehold();
 
-    updateLocalAccount(account.account.id, { isActive: false }, state.version);
+    archiveLocalAccount(account.account.id, state.version);
     state = loadLocalHousehold();
 
     expect(() =>
