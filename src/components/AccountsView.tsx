@@ -870,6 +870,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             </div>
 
             <div className="mv-modal-body space-y-3">
+              {error && (
+                <div role="alert" className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                  {error}
+                </div>
+              )}
               <p className="text-sm text-main">
                 Archive this account? Existing financial history and references will be preserved.
               </p>
