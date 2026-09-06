@@ -152,6 +152,13 @@ export interface PlannedPaymentMutationExpectation {
   actualTransactionId?: string;
 }
 
+export interface TransferPlanFundingMutationExpectation {
+  batchKey: string;
+  destinationAccountId: string;
+  totalPence: number;
+  transactionIds: string[];
+}
+
 export interface AccountFundingRequirement {
   account: Account;
   currentBalancePence: number;
