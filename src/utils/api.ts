@@ -270,18 +270,18 @@ export async function undoPaymentPaid(
 }
 
 export async function markPaymentsPaid(
-  ids: string[],
+  payments: PlannedPayment[],
   actualDate: string,
   expectedVersion: number
 ) {
-  return markLocalPaymentsPaid(ids, actualDate, expectedVersion);
+  return markLocalPaymentsPaid(payments, actualDate, expectedVersion);
 }
 
 export async function undoPaymentsPaid(
-  ids: string[],
+  payments: PlannedPayment[],
   expectedVersion: number
 ) {
-  return undoLocalPaymentsPaid(ids, expectedVersion);
+  return undoLocalPaymentsPaid(payments, expectedVersion);
 }
 
 export async function createPlannedIncome(
