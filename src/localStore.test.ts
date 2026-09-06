@@ -7,14 +7,19 @@ import {
   saveLocalHousehold,
   createLocalAccount,
   createLocalBackupPackage,
+  createLocalSavingsGoal,
+  contributeLocalSavingsGoal,
   createLocalHouseholdMember,
   createLocalPlannedIncome,
   createLocalPlannedPayment,
   createLocalTransaction,
+  updateLocalTransaction,
+  deleteLocalTransaction,
   bulkToggleLocalPlannedPayments,
   executeLocalTransfer,
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
+  undoLocalTransferTransaction,
   undoLocalPaymentPaid,
   importLocalMonth,
   loadLocalHousehold,
@@ -32,6 +37,7 @@ import {
   removeLocalHouseholdMember,
 } from './localStore';
 import { generateTransferPlan } from './utils/transferPlan';
+import { calculateFinancialSummary } from './utils/currency';
 import { getLatestTransferPlanFundingByDestination } from './utils/transferPlanFunding';
 
 class MemoryStorage implements Storage {
@@ -604,17 +610,14 @@ describe('Penny-style local MV storage', () => {
     );
     state = loadLocalHousehold();
 
-    // Simulates an older funding transfer created before transferBatchId existed.
-    createLocalTransaction(
+    // Simulates an older untagged funding transfer created before transferBatchId existed.
+    executeLocalTransfer(
       {
         description: 'Fund Vesta current',
         amountPence: 100_00,
-        type: 'transfer',
-        categoryId: 'cat-transfer',
-        accountId: source.account.id,
-        targetAccountId: destination.account.id,
+        sourceAccountId: source.account.id,
+        destinationAccountId: destination.account.id,
         payer: 'Marius',
-        isTransfer: true,
         date: '2026-09-04',
       },
       state.version
@@ -1635,18 +1638,17 @@ describe('Penny-style local MV storage', () => {
     ).toBe('unpaid');
   });
 
-  it('keeps received income and its linked Activity transaction reconciled when edited', () => {
+  it('keeps partial income open until cumulative Activity receipts satisfy the expectation', () => {
     let state = loadLocalHousehold();
-    const account = state.accounts.find((item) => item.name === 'Lloyds');
-    expect(account).toBeTruthy();
+    const account = state.accounts.find((item) => item.id === 'test-account-lloyds')!;
 
     const created = createLocalPlannedIncome(
       {
-        name: 'Test Wage',
-        expectedAmountPence: 120000,
+        name: 'Synthetic wage',
+        expectedAmountPence: 1000_00,
         month: '2026-10',
         sourcePerson: 'Marius',
-        accountId: account!.id,
+        accountId: account.id,
         categoryId: 'cat-salary',
         expectedDate: '2026-10-01',
         status: 'expected',
@@ -1655,54 +1657,161 @@ describe('Penny-style local MV storage', () => {
     );
 
     state = loadLocalHousehold();
-    const received = markLocalIncomeReceived(
+    const first = markLocalIncomeReceived(
       created.income.id,
       {
-        actualAmountPence: 119500,
+        actualAmountPence: 400_00,
         actualDate: '2026-10-02',
-        accountId: account!.id,
+        accountId: account.id,
       },
       state.version
     );
 
     state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        actualAmountPence: 400_00,
+      })
+    );
+
+    const second = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 350_00,
+        actualDate: '2026-10-05',
+        accountId: account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        actualAmountPence: 750_00,
+        actualTransactionId: second.transaction.id,
+      })
+    );
+    expect(
+      state.transactions.filter((tx) => tx.plannedIncomeId === created.income.id)
+    ).toHaveLength(2);
+
+    updateLocalTransaction(
+      first.transaction.id,
+      { amountPence: 450_00 },
+      state.version
+    );
+    state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)?.actualAmountPence)
+      .toBe(800_00);
+
+    const finalReceipt = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 200_00,
+        actualDate: '2026-10-10',
+        accountId: account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'received',
+        actualAmountPence: 1000_00,
+        actualTransactionId: finalReceipt.transaction.id,
+      })
+    );
+
+    expect(() =>
+      markLocalIncomeReceived(
+        created.income.id,
+        {
+          actualAmountPence: 1_00,
+          actualDate: '2026-10-11',
+          accountId: account.id,
+        },
+        state.version
+      )
+    ).toThrow('Planned income is already fully received');
+
+    deleteLocalTransaction(second.transaction.id, state.version);
+    state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        actualAmountPence: 650_00,
+      })
+    );
+    expect(
+      state.transactions.filter((tx) => tx.plannedIncomeId === created.income.id)
+    ).toHaveLength(2);
+  });
+
+  it('keeps planned income edits separate from actual Activity evidence', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((item) => item.id === 'test-account-lloyds')!;
+
+    const created = createLocalPlannedIncome(
+      {
+        name: 'Original wage plan',
+        expectedAmountPence: 500_00,
+        month: '2026-10',
+        sourcePerson: 'Marius',
+        accountId: account.id,
+        categoryId: 'cat-salary',
+        status: 'expected',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const receipt = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 200_00,
+        actualDate: '2026-10-03',
+        accountId: account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
     updateLocalPlannedIncome(
       created.income.id,
       {
-        name: 'Corrected Wage',
-        expectedAmountPence: 120500,
-        actualAmountPence: 120000,
-        actualDate: '2026-10-03',
-        sourcePerson: 'Marius',
-        accountId: account!.id,
-        categoryId: 'cat-salary',
-        status: 'partial',
+        name: 'Corrected expected wage',
+        expectedAmountPence: 600_00,
       },
       state.version
     );
-
     state = loadLocalHousehold();
-    const income = state.plannedIncomes?.find((item) => item.id === created.income.id);
-    const linkedTx = state.transactions.find((tx) => tx.id === received.transaction.id);
 
-    expect(income).toEqual(
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
       expect.objectContaining({
-        name: 'Corrected Wage',
-        expectedAmountPence: 120500,
-        actualAmountPence: 120000,
-        actualDate: '2026-10-03',
+        name: 'Corrected expected wage',
+        expectedAmountPence: 600_00,
+        actualAmountPence: 200_00,
+        status: 'partial',
       })
     );
-    expect(linkedTx).toEqual(
+    expect(state.transactions.find((tx) => tx.id === receipt.transaction.id)).toEqual(
       expect.objectContaining({
-        description: 'Corrected Wage',
-        amountPence: 120000,
+        description: 'Original wage plan',
+        amountPence: 200_00,
         date: '2026-10-03',
-        categoryId: 'cat-salary',
-        accountId: account!.id,
-        plannedIncomeId: created.income.id,
       })
     );
+
+    expect(() =>
+      updateLocalPlannedIncome(
+        created.income.id,
+        { actualAmountPence: 250_00 },
+        state.version
+      )
+    ).toThrow('Actual income evidence cannot be edited from the planned-income form');
   });
 
   it('fails stale local writes instead of silently overwriting another tab', () => {
@@ -1833,6 +1942,542 @@ describe('Penny-style local MV storage', () => {
       state.plannedPayments.find((item) => item.id === created.payment.id)
         ?.includeInTransferPlan
     ).toBe(false);
+  });
+
+  it('rejects direct transfer creation so transfer balance logic cannot be bypassed', () => {
+    const state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-santander')!;
+
+    expect(() =>
+      createLocalTransaction(
+        {
+          description: 'Unsafe direct transfer',
+          amountPence: 25_00,
+          type: 'transfer',
+          categoryId: 'cat-transfer',
+          accountId: source.id,
+          targetAccountId: destination.id,
+          payer: 'Marius',
+          isTransfer: true,
+        },
+        state.version
+      )
+    ).toThrow('Internal transfers must be recorded through the transfer workflow');
+  });
+
+  it('allows card repayments to keep a destination account without treating them as transfers', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const credit = createLocalAccount(
+      {
+        name: 'Synthetic Credit',
+        type: 'credit',
+        startingBalancePence: -100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const repayment = createLocalTransaction(
+      {
+        description: 'Card repayment',
+        amountPence: 30_00,
+        type: 'repayment',
+        categoryId: 'cat-transfer',
+        accountId: source.id,
+        targetAccountId: credit.account.id,
+        payer: 'Marius',
+        isRepayment: true,
+      },
+      state.version
+    );
+
+    expect(repayment.transaction.type).toBe('repayment');
+    expect(repayment.transaction.isTransfer).toBe(false);
+    expect(repayment.transaction.targetAccountId).toBe(credit.account.id);
+
+    state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === source.id)?.currentBalancePence
+    ).toBe(970_00);
+    expect(
+      state.accounts.find((account) => account.id === credit.account.id)?.currentBalancePence
+    ).toBe(-70_00);
+    expect(() =>
+      updateLocalTransaction(
+        repayment.transaction.id,
+        { description: 'Corrected card repayment' },
+        state.version
+      )
+    ).not.toThrow();
+
+    state = loadLocalHousehold();
+    expect(() => deleteLocalTransaction(repayment.transaction.id, state.version)).not.toThrow();
+  });
+
+  it('rejects duplicate transaction IDs and duplicate idempotency keys', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((candidate) => candidate.id === 'test-account-lloyds')!;
+
+    createLocalTransaction(
+      {
+        id: 'fixed-transaction-id',
+        description: 'First exact request',
+        amountPence: 10_00,
+        type: 'expense',
+        categoryId: 'cat-groceries',
+        accountId: account.id,
+        payer: 'Marius',
+        idempotencyKey: 'request-123',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(() =>
+      createLocalTransaction(
+        {
+          id: 'fixed-transaction-id',
+          description: 'Duplicate ID',
+          amountPence: 10_00,
+          type: 'expense',
+          categoryId: 'cat-groceries',
+          accountId: account.id,
+          payer: 'Marius',
+        },
+        state.version
+      )
+    ).toThrow('A transaction with this ID already exists');
+
+    expect(() =>
+      createLocalTransaction(
+        {
+          description: 'Duplicate request key',
+          amountPence: 10_00,
+          type: 'expense',
+          categoryId: 'cat-groceries',
+          accountId: account.id,
+          payer: 'Marius',
+          idempotencyKey: 'request-123',
+        },
+        state.version
+      )
+    ).toThrow('Duplicate transaction request rejected');
+  });
+
+  it('records and exactly undoes a generic transfer without leaving balance drift', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-santander')!;
+    const sourceBefore = source.currentBalancePence;
+    const destinationBefore = destination.currentBalancePence;
+
+    const created = executeLocalTransfer(
+      {
+        sourceAccountId: source.id,
+        destinationAccountId: destination.id,
+        amountPence: 75_00,
+        description: 'Exact undo test',
+        date: '2026-09-06',
+        idempotencyKey: 'transfer-request-1',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.transactions.find((tx) => tx.id === created.transaction.id)).toEqual(
+      expect.objectContaining({
+        accountId: source.id,
+        targetAccountId: destination.id,
+        amountPence: 75_00,
+        type: 'transfer',
+        isTransfer: true,
+        idempotencyKey: 'transfer-request-1',
+      })
+    );
+    expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
+      .toBe(sourceBefore - 75_00);
+    expect(state.accounts.find((account) => account.id === destination.id)?.currentBalancePence)
+      .toBe(destinationBefore + 75_00);
+
+    undoLocalTransferTransaction(created.transaction.id, state.version);
+    state = loadLocalHousehold();
+
+    expect(state.transactions.some((tx) => tx.id === created.transaction.id)).toBe(false);
+    expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
+      .toBe(sourceBefore);
+    expect(state.accounts.find((account) => account.id === destination.id)?.currentBalancePence)
+      .toBe(destinationBefore);
+
+    expect(() =>
+      undoLocalTransferTransaction(created.transaction.id, state.version)
+    ).toThrow('Transfer transaction not found');
+  });
+
+  it('protects transfer evidence from generic edit and delete paths', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-santander')!;
+
+    const created = executeLocalTransfer(
+      {
+        sourceAccountId: source.id,
+        destinationAccountId: destination.id,
+        amountPence: 20_00,
+        description: 'Protected transfer',
+        date: '2026-09-06',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      updateLocalTransaction(
+        created.transaction.id,
+        { amountPence: 19_00 },
+        state.version
+      )
+    ).toThrow('Internal transfers cannot be edited in place');
+
+    expect(() =>
+      deleteLocalTransaction(created.transaction.id, state.version)
+    ).toThrow('Internal transfers cannot be deleted directly');
+  });
+
+  it('clamps prepared-month dates at month and leap-year boundaries', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((candidate) => candidate.id === 'test-account-santander')!;
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Month-end bill',
+        amountPence: 10_00,
+        month: '2027-01',
+        dueDate: '2027-01-31',
+        responsiblePerson: 'Marius',
+        accountId: account.id,
+        includeInTransferPlan: true,
+        isRecurring: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    importLocalMonth(
+      {
+        sourceMonth: '2027-01',
+        targetMonth: '2027-02',
+        paymentIds: [bill.payment.id],
+        incomeIds: [],
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.plannedPayments.find(
+        (payment) =>
+          payment.month === '2027-02' &&
+          payment.metadata?.copiedFromId === bill.payment.id
+      )?.dueDate
+    ).toBe('2027-02-28');
+
+    const leapBill = createLocalPlannedPayment(
+      {
+        name: 'Leap month-end bill',
+        amountPence: 10_00,
+        month: '2028-01',
+        dueDate: '2028-01-31',
+        responsiblePerson: 'Marius',
+        accountId: account.id,
+        includeInTransferPlan: true,
+        isRecurring: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    importLocalMonth(
+      {
+        sourceMonth: '2028-01',
+        targetMonth: '2028-02',
+        paymentIds: [leapBill.payment.id],
+        incomeIds: [],
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.plannedPayments.find(
+        (payment) =>
+          payment.month === '2028-02' &&
+          payment.metadata?.copiedFromId === leapBill.payment.id
+      )?.dueDate
+    ).toBe('2028-02-29');
+  });
+
+  it('prevents ordinary transfers from spending money committed to selected bills', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-chase')!;
+
+    createLocalPlannedPayment(
+      {
+        name: 'Committed source bill',
+        amountPence: 800_00,
+        month: '2026-09',
+        responsiblePerson: 'Marius',
+        accountId: source.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      executeLocalTransfer(
+        {
+          sourceAccountId: source.id,
+          destinationAccountId: destination.id,
+          amountPence: 300_00,
+          description: 'Would drain committed money',
+          date: '2026-09-06',
+          commitmentMonth: '2026-09',
+        },
+        state.version
+      )
+    ).toThrow('Transfer exceeds safe-to-move balance');
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
+      .toBe(1000_00);
+  });
+
+  it('prevents savings contributions from draining selected bill commitments', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-chase')!;
+
+    createLocalPlannedPayment(
+      {
+        name: 'Committed before saving',
+        amountPence: 800_00,
+        month: '2026-09',
+        responsiblePerson: 'Marius',
+        accountId: source.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const goal = createLocalSavingsGoal(
+      {
+        name: 'Synthetic goal',
+        targetPence: 1000_00,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      contributeLocalSavingsGoal(
+        {
+          goalId: goal.goal.id,
+          sourceAccountId: source.id,
+          destinationAccountId: destination.id,
+          amountPence: 300_00,
+          date: '2026-09-06',
+          commitmentMonth: '2026-09',
+        },
+        state.version
+      )
+    ).toThrow('Savings transfer exceeds safe-to-move balance');
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
+      .toBe(1000_00);
+  });
+
+  it('keeps credit-card purchases as spending while repayments reduce the liability without double-counting spend', () => {
+    let state = loadLocalHousehold();
+    const current = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const credit = createLocalAccount(
+      {
+        name: 'Liability test card',
+        type: 'credit',
+        startingBalancePence: -100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalTransaction(
+      {
+        description: 'Card purchase',
+        amountPence: 40_00,
+        type: 'expense',
+        categoryId: 'cat-groceries',
+        accountId: credit.account.id,
+        payer: 'Marius',
+        date: '2026-09-06',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.accounts.find((account) => account.id === credit.account.id)?.currentBalancePence
+    ).toBe(-140_00);
+
+    createLocalTransaction(
+      {
+        description: 'Card repayment',
+        amountPence: 30_00,
+        type: 'repayment',
+        categoryId: 'cat-transfer',
+        accountId: current.id,
+        targetAccountId: credit.account.id,
+        payer: 'Marius',
+        isRepayment: true,
+        date: '2026-09-06',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.accounts.find((account) => account.id === credit.account.id)?.currentBalancePence
+    ).toBe(-110_00);
+    expect(
+      state.accounts.find((account) => account.id === current.id)?.currentBalancePence
+    ).toBe(970_00);
+
+    const summary = calculateFinancialSummary(
+      state.transactions.filter((transaction) => transaction.date.startsWith('2026-09'))
+    );
+    expect(summary.grossExpensesPence).toBe(40_00);
+    expect(summary.cardRepaymentsPence).toBe(30_00);
+  });
+
+  it('blocks new financial activity on archived accounts while preserving historical references', () => {
+    let state = loadLocalHousehold();
+    const account = createLocalAccount(
+      {
+        name: 'Archive guard current',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Pre-archive bill',
+        amountPence: 10_00,
+        month: '2026-10',
+        responsiblePerson: 'Marius',
+        accountId: account.account.id,
+        includeInTransferPlan: false,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const income = createLocalPlannedIncome(
+      {
+        name: 'Pre-archive income',
+        expectedAmountPence: 20_00,
+        month: '2026-10',
+        sourcePerson: 'Marius',
+        accountId: account.account.id,
+        categoryId: 'cat-salary',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    updateLocalAccount(account.account.id, { isActive: false }, state.version);
+    state = loadLocalHousehold();
+
+    expect(() =>
+      createLocalTransaction(
+        {
+          description: 'Post-archive expense',
+          amountPence: 1_00,
+          type: 'expense',
+          categoryId: 'cat-groceries',
+          accountId: account.account.id,
+          payer: 'Marius',
+        },
+        state.version
+      )
+    ).toThrow('Archived accounts cannot receive new financial activity');
+
+    expect(() =>
+      markLocalPaymentPaid(
+        bill.payment.id,
+        {
+          actualAmountPence: 10_00,
+          actualDate: '2026-10-02',
+          accountId: account.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Archived accounts cannot receive new financial activity');
+
+    expect(() =>
+      markLocalIncomeReceived(
+        income.income.id,
+        {
+          actualAmountPence: 20_00,
+          actualDate: '2026-10-02',
+          accountId: account.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Archived accounts cannot receive new financial activity');
+
+    state = loadLocalHousehold();
+    expect(state.plannedPayments.some((item) => item.id === bill.payment.id)).toBe(true);
+    expect(state.plannedIncomes?.some((item) => item.id === income.income.id)).toBe(true);
+  });
+
+  it('retains audit history beyond 500 entries', () => {
+    let state = loadLocalHousehold();
+    state.auditLogs = Array.from({ length: 501 }, (_, index) => ({
+      id: `historic-audit-${index}`,
+      timestamp: '2026-01-01T00:00:00.000Z',
+      actorEmail: 'audit@local.invalid',
+      action: 'historic_test',
+      entityType: 'system' as const,
+      entityId: `historic-${index}`,
+      summary: `Historic audit ${index}`,
+    }));
+    saveLocalHousehold(state);
+
+    state = loadLocalHousehold();
+    createLocalAccount(
+      {
+        name: 'Audit retention account',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.auditLogs).toHaveLength(502);
+    expect(state.auditLogs.some((entry) => entry.id === 'historic-audit-500')).toBe(true);
   });
 
   it('locks out malformed stored JSON rather than overwriting it', () => {

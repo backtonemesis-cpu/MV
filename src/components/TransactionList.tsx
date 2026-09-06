@@ -297,23 +297,36 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 ? 'finance-status-negative'
                 : 'finance-status-neutral';
 
+              const isInternalTransfer = Boolean(
+                tx.isTransfer || tx.type === 'transfer'
+              );
+              const transferManagedElsewhere = Boolean(
+                isInternalTransfer &&
+                  (tx.metadata?.transferBatchId ||
+                    tx.metadata?.transferPlanMonth ||
+                    tx.metadata?.savingsGoalId)
+              );
+              const canEditRow = canEdit && !isInternalTransfer;
+              const canUndoGenericTransfer =
+                canEdit && isInternalTransfer && !transferManagedElsewhere;
+
               return (
                 <article
                   key={tx.id}
-                  tabIndex={canEdit ? 0 : undefined}
+                  tabIndex={canEditRow ? 0 : undefined}
                   onClick={(event) => {
-                    if (!canEdit) return;
+                    if (!canEditRow) return;
                     if ((event.target as HTMLElement).closest('button, input, a, select, textarea')) return;
                     onEditTransaction(tx);
                   }}
                   onKeyDown={(event) => {
-                    if (!canEdit || event.target !== event.currentTarget) return;
+                    if (!canEditRow || event.target !== event.currentTarget) return;
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       onEditTransaction(tx);
                     }
                   }}
-                  className={`finance-row finance-ledger-row group ${canEdit ? 'is-clickable' : ''}`}
+                  className={`finance-row finance-ledger-row group ${canEditRow ? 'is-clickable' : ''}`}
                 >
                   <div className="finance-row-left">
                     <div
@@ -372,7 +385,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       <div className="finance-amount-detail is-placeholder">Amount</div>
                     </div>
 
-                    {canEdit && (
+                    {canEditRow && (
                       <div className="finance-row-actions flex items-center gap-1">
                         <button
                           type="button"
@@ -398,6 +411,42 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
+                      </div>
+                    )}
+
+                    {canUndoGenericTransfer && (
+                      <div className="finance-row-actions flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (
+                              window.confirm(
+                                `Undo transfer "${tx.description}"? This reverses the exact source and destination movement.`
+                              )
+                            ) {
+                              onDeleteTransaction(tx.id);
+                            }
+                          }}
+                          className="finance-action-button is-danger"
+                          title="Undo transfer"
+                          aria-label={`Undo transfer ${tx.description}`}
+                        >
+                          <Repeat className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+
+                    {canEdit && transferManagedElsewhere && (
+                      <div
+                        className="finance-amount-detail"
+                        title={
+                          tx.metadata?.savingsGoalId
+                            ? 'Manage this transfer from Savings'
+                            : 'Manage this funding transfer from Transfer Plan'
+                        }
+                      >
+                        {tx.metadata?.savingsGoalId ? 'Savings managed' : 'Plan managed'}
                       </div>
                     )}
                   </div>

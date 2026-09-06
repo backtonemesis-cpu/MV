@@ -232,7 +232,7 @@ export default function App() {
       if (editingTx) {
         await updateTransaction(editingTx.id, txData, household.version);
       } else {
-        await createTransaction(txData, household.version);
+        await createTransaction(txData, household.version, selectedMonth);
       }
       setShowTxModal(false);
       setEditingTx(null);
@@ -397,6 +397,7 @@ export default function App() {
           amountPence: payload.amountPence,
           payer: payload.payer,
           date: localDateInputValue(),
+          commitmentMonth: selectedMonth,
         },
         household.version
       );

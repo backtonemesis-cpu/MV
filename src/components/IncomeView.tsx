@@ -20,6 +20,7 @@ import type {
 import { formatPence, parseToPence } from '../utils/currency';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
+import { localDateInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
 
 interface IncomeViewProps {
@@ -124,12 +125,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   const monthOutstandingPence = Math.max(0, monthExpectedPence - monthReceivedPence);
 
   const monthFullyReceivedCount = useMemo(
-    () =>
-      monthIncomes.filter(
-        (income) =>
-          Boolean(income.actualTransactionId || income.linkedTransactionId) ||
-          income.status === 'received'
-      ).length,
+    () => monthIncomes.filter((income) => income.status === 'received').length,
     [monthIncomes]
   );
 
@@ -208,9 +204,18 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
   const openReceive = (income: PlannedIncome) => {
     setSelectedIncome(income);
-    setActualAmount('');
-    setActualDate('');
-    setAccountId('');
+    const remainingPence = Math.max(
+      0,
+      income.expectedAmountPence - (income.actualAmountPence ?? 0)
+    );
+    setActualAmount(
+      remainingPence > 0 ? (remainingPence / 100).toFixed(2) : ''
+    );
+    setActualDate(localDateInputValue());
+    const plannedAccount = accounts.find(
+      (account) => account.id === income.accountId && account.isActive !== false
+    );
+    setAccountId(plannedAccount?.id || '');
     setError(null);
     setShowReceiveModal(true);
   };
@@ -245,14 +250,6 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       expectedDate: expectedDate || undefined,
       notes: notes.trim() || undefined,
     };
-
-    if (selectedIncome?.actualTransactionId || selectedIncome?.linkedTransactionId) {
-      payload.actualAmountPence = parseToPence(actualAmount);
-      payload.actualDate = actualDate || undefined;
-      payload.receivedDate = actualDate || undefined;
-      payload.status =
-        payload.actualAmountPence < expectedAmountPence ? 'partial' : 'received';
-    }
 
     try {
       setIsSubmitting(true);
@@ -434,10 +431,10 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 <div className="mt-2 space-y-px">
                   {group.items.map((income) => {
                     const linkedTx = linkedTransactionFor(income);
-                    const received =
-                      Boolean(income.actualTransactionId || income.linkedTransactionId) ||
-                      income.status === 'received' ||
-                      income.status === 'partial';
+                    const hasReceiptEvidence =
+                      (income.actualAmountPence ?? 0) > 0 ||
+                      Boolean(income.actualTransactionId || income.linkedTransactionId);
+                    const fullyReceived = income.status === 'received';
                     const categoryName =
                       categories.find(
                         (category) => category.id === (income.categoryId || linkedTx?.categoryId)
@@ -447,17 +444,17 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                       ? accountIdentityLabel(targetAccount)
                       : 'Account';
                     const statusLabel =
-                      income.status === 'partial' ? 'Partial' : received ? 'Received' : 'Expected';
+                      income.status === 'partial' ? 'Partial' : fullyReceived ? 'Received' : 'Expected';
                     const statusClassName =
                       income.status === 'partial'
                         ? 'finance-status-neutral'
-                        : received
+                        : fullyReceived
                         ? 'finance-status-positive'
                         : 'finance-status-accent';
                     const shownAmountPence =
                       income.actualAmountPence ?? linkedTx?.amountPence ?? income.expectedAmountPence;
                     const showExpectedComparison =
-                      received && shownAmountPence !== income.expectedAmountPence;
+                      hasReceiptEvidence && shownAmountPence !== income.expectedAmountPence;
 
                     return (
                       <article
@@ -522,7 +519,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
                           {canEdit && (
                             <div className="flex items-center gap-1">
-                              {!received && (
+                              {!fullyReceived && (
                                 <button
                                   type="button"
                                   onClick={(event) => { event.stopPropagation(); openReceive(income); }}
@@ -530,7 +527,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                   title="Mark received"
                                 >
                                   <CheckCircle2 className="h-3.5 w-3.5" />
-                                  Receive
+                                  {income.status === 'partial' ? 'Add receipt' : 'Receive'}
                                 </button>
                               )}
 
@@ -545,7 +542,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                   <Edit2 className="h-3.5 w-3.5" />
                                 </button>
 
-                                {!received && (
+                                {!hasReceiptEvidence && (
                                   <button
                                     type="button"
                                     onClick={(event) => { event.stopPropagation(); removeIncome(income); }}
@@ -683,33 +680,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </div>
               </div>
 
-              {selectedIncome &&
-                (selectedIncome.actualTransactionId || selectedIncome.linkedTransactionId) && (
-                  <div className="mv-modal-section">
-                    <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
-                      Received amount
-                    </div>
-                    <div className="mv-modal-grid-2">
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
-                        <input
-                          value={actualAmount}
-                          onChange={(event) => setActualAmount(event.target.value)}
-                          className={inputClassName}
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-semibold text-muted">Actual date</label>
-                        <input
-                          type="date"
-                          value={actualDate}
-                          onChange={(event) => setActualDate(event.target.value)}
-                          className={inputClassName}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
+              {selectedIncome && (selectedIncome.actualTransactionId || selectedIncome.linkedTransactionId) && (
+                <div className="rounded-lg border border-muted bg-surface-muted px-3 py-2 text-[11px] text-subtle">
+                  Actual receipts are ledger evidence. Correct a receipt from Activity; editing this plan does not rewrite money already recorded.
+                </div>
+              )}
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Notes</label>
@@ -750,7 +725,12 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             <div className="mv-modal-header">
               <div>
                 <h2 className="text-base font-bold text-main">Record Income Received</h2>
-                <p className="mt-0.5 text-xs text-muted">{selectedIncome.name}</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {selectedIncome.name}
+                  {selectedIncome.status === 'partial' && selectedIncome.actualAmountPence !== undefined
+                    ? ` · Received ${formatPence(selectedIncome.actualAmountPence)} of ${formatPence(selectedIncome.expectedAmountPence)}`
+                    : ''}
+                </p>
               </div>
               <button
                 type="button"

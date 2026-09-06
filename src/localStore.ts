@@ -180,6 +180,117 @@ function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
   }
 }
 
+function assertUniqueIds(label: string, ids: string[]): void {
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (!id?.trim()) throw new Error(`${label} contains a blank ID.`);
+    if (seen.has(id)) throw new Error(`${label} contains duplicate ID '${id}'.`);
+    seen.add(id);
+  }
+}
+
+function assertBackupReferentialIntegrity(state: HouseholdData): void {
+  assertUniqueIds('Accounts', state.accounts.map((item) => item.id));
+  assertUniqueIds('Categories', state.categories.map((item) => item.id));
+  assertUniqueIds('Transactions', state.transactions.map((item) => item.id));
+  assertUniqueIds('Planned payments', state.plannedPayments.map((item) => item.id));
+  assertUniqueIds('Planned incomes', (state.plannedIncomes || []).map((item) => item.id));
+  assertUniqueIds('Savings goals', state.savingsGoals.map((item) => item.id));
+  assertUniqueIds('Household members', state.members.map((item) => item.id));
+
+  const accountIds = new Set(state.accounts.map((item) => item.id));
+  const categoryIds = new Set(state.categories.map((item) => item.id));
+  const paymentIds = new Set(state.plannedPayments.map((item) => item.id));
+  const incomeIds = new Set((state.plannedIncomes || []).map((item) => item.id));
+  const transactionsById = new Map(state.transactions.map((item) => [item.id, item]));
+
+  for (const transaction of state.transactions) {
+    if (!accountIds.has(transaction.accountId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing source account.`
+      );
+    }
+    if (transaction.targetAccountId && !accountIds.has(transaction.targetAccountId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing destination account.`
+      );
+    }
+    if (!categoryIds.has(transaction.categoryId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing category.`
+      );
+    }
+    for (const split of transaction.splits || []) {
+      if (!categoryIds.has(split.categoryId)) {
+        throw new Error(
+          `Transaction '${transaction.description}' has a split referencing a missing category.`
+        );
+      }
+    }
+    if (transaction.plannedPaymentId && !paymentIds.has(transaction.plannedPaymentId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing planned payment.`
+      );
+    }
+    if (transaction.plannedIncomeId && !incomeIds.has(transaction.plannedIncomeId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing planned income.`
+      );
+    }
+  }
+
+  for (const payment of state.plannedPayments) {
+    if (!accountIds.has(payment.accountId)) {
+      throw new Error(`Planned payment '${payment.name}' references a missing account.`);
+    }
+    if (payment.categoryId && !categoryIds.has(payment.categoryId)) {
+      throw new Error(`Planned payment '${payment.name}' references a missing category.`);
+    }
+    if (payment.actualTransactionId) {
+      const transaction = transactionsById.get(payment.actualTransactionId);
+      if (
+        !transaction ||
+        transaction.plannedPaymentId !== payment.id ||
+        transaction.type !== 'expense'
+      ) {
+        throw new Error(
+          `Planned payment '${payment.name}' has invalid linked actual payment evidence.`
+        );
+      }
+    }
+  }
+
+  for (const income of state.plannedIncomes || []) {
+    if (!accountIds.has(income.accountId)) {
+      throw new Error(`Planned income '${income.name}' references a missing account.`);
+    }
+    if (income.categoryId && !categoryIds.has(income.categoryId)) {
+      throw new Error(`Planned income '${income.name}' references a missing category.`);
+    }
+    const linkedId = income.actualTransactionId || income.linkedTransactionId;
+    if (linkedId) {
+      const transaction = transactionsById.get(linkedId);
+      if (
+        !transaction ||
+        transaction.plannedIncomeId !== income.id ||
+        transaction.type !== 'income'
+      ) {
+        throw new Error(
+          `Planned income '${income.name}' has invalid linked actual receipt evidence.`
+        );
+      }
+    }
+  }
+
+  for (const goal of state.savingsGoals) {
+    for (const accountId of [goal.accountId, goal.linkedAccountId]) {
+      if (accountId && !accountIds.has(accountId)) {
+        throw new Error(`Savings goal '${goal.name}' references a missing account.`);
+      }
+    }
+  }
+}
+
 function localTodayDateKey(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -195,6 +306,11 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
 
   let balance = hasReconciliation
     ? account.reconciledBalancePence!
+    : account.type === 'credit' &&
+      account.startingBalancePence === 0 &&
+      Number.isSafeInteger(account.balanceOwedPence) &&
+      (account.balanceOwedPence ?? 0) > 0
+    ? -account.balanceOwedPence!
     : account.startingBalancePence;
 
   const today = localTodayDateKey();
@@ -223,6 +339,13 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
     if (tx.targetAccountId === account.id && tx.type === 'transfer' && tx.isTransfer) {
       balance += tx.amountPence;
     }
+
+    if (
+      tx.targetAccountId === account.id &&
+      (tx.type === 'repayment' || tx.isRepayment)
+    ) {
+      balance += tx.amountPence;
+    }
   }
 
   return balance;
@@ -240,6 +363,30 @@ function adjustAnchoredBalanceForNewTransfer(
   ) {
     account.reconciledBalancePence = account.reconciledBalancePence! + deltaPence;
   }
+}
+
+function normalizeCommitmentMonth(month: string | undefined, date: string): string {
+  const resolved = month || date.slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(resolved)) {
+    throw new Error('Commitment month must use YYYY-MM format.');
+  }
+  return resolved;
+}
+
+function calculateSafeToMovePence(
+  state: HouseholdData,
+  account: Account,
+  month: string
+): { safeToMovePence: number; committedPence: number } {
+  const monthPayments = state.plannedPayments.filter(
+    (payment) => payment.month === month
+  );
+  const funding = calculateAccountFunding(account, monthPayments, state.transactions);
+  const committedPence = funding.totalUnpaidSelectedPaymentsPence;
+  return {
+    committedPence,
+    safeToMovePence: Math.max(0, account.currentBalancePence - committedPence),
+  };
 }
 
 function markSourceBudgetHandled(state: HouseholdData): void {
@@ -779,7 +926,7 @@ function recoverTransferPlanFundingFromSourceBackup(
         },
       },
       ...(next.auditLogs || []),
-    ].slice(0, 500);
+    ];
   }
 
   return normalizeHousehold(next);
@@ -922,7 +1069,7 @@ function appendAudit(
       ...entry,
     },
     ...(state.auditLogs || []),
-  ].slice(0, 500);
+  ];
 }
 
 export function mutateLocalHousehold<T>(
@@ -948,6 +1095,91 @@ function assertAccountExists(state: HouseholdData, accountId: string): Account {
   return account;
 }
 
+function assertActiveAccount(state: HouseholdData, accountId: string): Account {
+  const account = assertAccountExists(state, accountId);
+  if (account.isActive === false) {
+    throw new Error('Archived accounts cannot receive new financial activity.');
+  }
+  return account;
+}
+
+function isActualIncomeEvidence(transaction: Transaction, incomeId: string): boolean {
+  return (
+    transaction.plannedIncomeId === incomeId &&
+    transaction.type === 'income' &&
+    !transaction.isTransfer &&
+    !transaction.isRepayment &&
+    !transaction.isSavings &&
+    !transaction.isRefund
+  );
+}
+
+function synchronizePlannedIncomeEvidence(
+  state: HouseholdData,
+  incomeId: string
+): PlannedIncome | undefined {
+  const incomes = state.plannedIncomes || [];
+  const index = incomes.findIndex((income) => income.id === incomeId);
+  if (index < 0) return undefined;
+
+  const income = incomes[index];
+  const receipts = state.transactions
+    .filter((transaction) => isActualIncomeEvidence(transaction, incomeId))
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        (a.createdAt || '').localeCompare(b.createdAt || '') ||
+        a.id.localeCompare(b.id)
+    );
+
+  if (receipts.length === 0) {
+    const metadata = { ...(income.metadata || {}) };
+    delete metadata.actualTransactionIds;
+    delete metadata.actualReceiptCount;
+    const reset: PlannedIncome = {
+      ...income,
+      status: 'expected',
+      actualAmountPence: undefined,
+      actualDate: undefined,
+      actualTransactionId: undefined,
+      linkedTransactionId: undefined,
+      receivedDate: undefined,
+      metadata,
+      updatedAt: nowIso(),
+      updatedBy: OWNER_EMAIL,
+    };
+    incomes[index] = reset;
+    state.plannedIncomes = incomes;
+    return reset;
+  }
+
+  const actualAmountPence = receipts.reduce(
+    (sum, transaction) => sum + transaction.amountPence,
+    0
+  );
+  const latest = receipts[receipts.length - 1];
+  const next: PlannedIncome = {
+    ...income,
+    status:
+      actualAmountPence < income.expectedAmountPence ? 'partial' : 'received',
+    actualAmountPence,
+    actualDate: latest.date,
+    actualTransactionId: latest.id,
+    linkedTransactionId: latest.id,
+    receivedDate: latest.date,
+    metadata: {
+      ...(income.metadata || {}),
+      actualTransactionIds: receipts.map((transaction) => transaction.id),
+      actualReceiptCount: receipts.length,
+    },
+    updatedAt: nowIso(),
+    updatedBy: OWNER_EMAIL,
+  };
+  incomes[index] = next;
+  state.plannedIncomes = incomes;
+  return next;
+}
+
 function assertCategoryExists(state: HouseholdData, categoryId: string): void {
   if (!state.categories.some((item) => item.id === categoryId)) {
     throw new Error('Category not found.');
@@ -969,47 +1201,93 @@ export function createLocalTransaction(
     (state) => {
       if (!data.accountId) throw new Error('Account is required.');
       if (!data.type) throw new Error('Transaction type is required.');
-      const isInternalTransfer = Boolean(data.isTransfer || data.type === 'transfer');
-      if (!isInternalTransfer && !data.payer) {
+      const isInternalTransfer = Boolean(
+        data.isTransfer || data.type === 'transfer'
+      );
+      if (isInternalTransfer) {
+        throw new Error(
+          'Internal transfers must be recorded through the transfer workflow so both account balances stay traceable.'
+        );
+      }
+      const isRepayment = Boolean(data.isRepayment || data.type === 'repayment');
+      if (data.targetAccountId && !isRepayment) {
+        throw new Error(
+          'A destination account is only valid for an internal transfer or card repayment.'
+        );
+      }
+      if (isRepayment) {
+        if (!data.targetAccountId) {
+          throw new Error('Card repayments require the credit account being repaid.');
+        }
+        if (data.targetAccountId === data.accountId) {
+          throw new Error('Card repayment source and credit account must be different.');
+        }
+        const repaymentSource = assertActiveAccount(state, data.accountId);
+        const repaymentTarget = assertActiveAccount(state, data.targetAccountId);
+        if (repaymentSource.type === 'credit') {
+          throw new Error('Card repayments must be funded from a cash-capable account.');
+        }
+        if (repaymentTarget.type !== 'credit') {
+          throw new Error('Card repayment destination must be a credit account.');
+        }
+      }
+      if (!data.payer) {
         throw new Error('Transaction person is required.');
+      }
+      if (data.plannedPaymentId || data.plannedIncomeId) {
+        throw new Error(
+          'Linked actual evidence must be recorded through the planned payment or planned income workflow.'
+        );
+      }
+      if (data.isSavings) {
+        throw new Error(
+          'Savings classification is reserved for internal transfers and cannot hide ordinary income or spending.'
+        );
       }
       const categoryId =
         data.categoryId ||
         (data.isTransfer || data.type === 'transfer' ? 'cat-transfer' : '');
       if (!categoryId) throw new Error('Category is required.');
-      assertAccountExists(state, data.accountId);
+      assertActiveAccount(state, data.accountId);
       assertCategoryExists(state, categoryId);
       if (!isSafePence(data.amountPence) || (data.amountPence ?? -1) < 0) {
         throw new Error('Transaction amount must be exact integer pence.');
       }
-      if (data.targetAccountId) assertAccountExists(state, data.targetAccountId);
+      if (data.targetAccountId) assertActiveAccount(state, data.targetAccountId);
+
+      if (data.id && state.transactions.some((transaction) => transaction.id === data.id)) {
+        throw new Error('A transaction with this ID already exists.');
+      }
+      const idempotencyKey = data.idempotencyKey?.trim();
+      if (
+        idempotencyKey &&
+        state.transactions.some(
+          (transaction) => transaction.idempotencyKey?.trim() === idempotencyKey
+        )
+      ) {
+        throw new Error('Duplicate transaction request rejected.');
+      }
 
       const tx: Transaction = {
         id: data.id || createId('tx'),
         date: data.date || localTodayDateKey(),
         description: data.description || 'Transaction',
         amountPence: data.amountPence!,
-        type: data.type,
+        type: isRepayment ? 'repayment' : data.type,
         categoryId,
         accountId: data.accountId,
         targetAccountId: data.targetAccountId,
-        payer:
-          data.payer ||
-          (isInternalTransfer
-            ? state.accounts.find((account) => account.id === data.accountId)?.ownerPerson || 'Joint'
-            : (() => {
-                throw new Error('Transaction person is required.');
-              })()),
+        payer: data.payer,
         notes: data.notes,
         isTransfer: Boolean(data.isTransfer || data.type === 'transfer'),
-        isRepayment: Boolean(data.isRepayment || data.type === 'repayment'),
+        isRepayment,
         isSavings: Boolean(data.isSavings),
         isRefund: Boolean(data.isRefund || data.type === 'refund'),
         originalTransactionId: data.originalTransactionId,
         splits: data.splits,
         plannedPaymentId: data.plannedPaymentId,
         plannedIncomeId: data.plannedIncomeId,
-        idempotencyKey: data.idempotencyKey,
+        idempotencyKey,
         taxYear: data.taxYear,
         schemaVersion: data.schemaVersion,
         metadata: data.metadata,
@@ -1051,8 +1329,61 @@ export function updateLocalTransaction(
       if (existing.metadata?.savingsGoalId) {
         throw new Error('Savings goal contributions must be managed from the Savings view.');
       }
+      if (existing.isTransfer || existing.type === 'transfer') {
+        throw new Error(
+          'Internal transfers cannot be edited in place. Undo the exact transfer and record a corrected transfer instead.'
+        );
+      }
+
+      if (
+        data.plannedPaymentId !== undefined &&
+        data.plannedPaymentId !== existing.plannedPaymentId
+      ) {
+        throw new Error('Linked planned-payment identity cannot be changed from Activity.');
+      }
+      if (
+        data.plannedIncomeId !== undefined &&
+        data.plannedIncomeId !== existing.plannedIncomeId
+      ) {
+        throw new Error('Linked planned-income identity cannot be changed from Activity.');
+      }
 
       const next = { ...existing, ...data, id, updatedAt: nowIso(), updatedBy: OWNER_EMAIL };
+      if (next.isTransfer || next.type === 'transfer') {
+        throw new Error(
+          'A normal Activity transaction cannot be converted into an internal transfer. Use the transfer workflow.'
+        );
+      }
+      const nextIsRepayment = Boolean(next.isRepayment || next.type === 'repayment');
+      if (next.targetAccountId && !nextIsRepayment) {
+        throw new Error(
+          'A destination account is only valid for an internal transfer or card repayment.'
+        );
+      }
+      if (nextIsRepayment) {
+        if (!next.targetAccountId) {
+          throw new Error('Card repayments require the credit account being repaid.');
+        }
+        if (next.targetAccountId === next.accountId) {
+          throw new Error('Card repayment source and credit account must be different.');
+        }
+        const repaymentSource =
+          next.accountId === existing.accountId
+            ? assertAccountExists(state, next.accountId)
+            : assertActiveAccount(state, next.accountId);
+        const repaymentTarget =
+          next.targetAccountId === existing.targetAccountId
+            ? assertAccountExists(state, next.targetAccountId)
+            : assertActiveAccount(state, next.targetAccountId);
+        if (repaymentSource.type === 'credit') {
+          throw new Error('Card repayments must be funded from a cash-capable account.');
+        }
+        if (repaymentTarget.type !== 'credit') {
+          throw new Error('Card repayment destination must be a credit account.');
+        }
+        next.type = 'repayment';
+        next.isRepayment = true;
+      }
       if (!isSafePence(next.amountPence) || next.amountPence < 0) {
         throw new Error('Transaction amount must be exact integer pence.');
       }
@@ -1069,9 +1400,19 @@ export function updateLocalTransaction(
       ) {
         throw new Error('A transaction linked to received income must remain income.');
       }
-      assertAccountExists(state, next.accountId);
+      if (next.accountId === existing.accountId) {
+        assertAccountExists(state, next.accountId);
+      } else {
+        assertActiveAccount(state, next.accountId);
+      }
       assertCategoryExists(state, next.categoryId);
-      if (next.targetAccountId) assertAccountExists(state, next.targetAccountId);
+      if (next.targetAccountId) {
+        if (next.targetAccountId === existing.targetAccountId) {
+          assertAccountExists(state, next.targetAccountId);
+        } else {
+          assertActiveAccount(state, next.targetAccountId);
+        }
+      }
       if (next.splits?.length) {
         const total = next.splits.reduce((sum, split) => sum + split.amountPence, 0);
         if (total !== next.amountPence) throw new Error('Transaction split total must equal transaction amount.');
@@ -1099,29 +1440,7 @@ export function updateLocalTransaction(
       }
 
       if (next.plannedIncomeId) {
-        const incomes = state.plannedIncomes || [];
-        const incomeIndex = incomes.findIndex(
-          (income) => income.id === next.plannedIncomeId
-        );
-        if (incomeIndex >= 0) {
-          const linkedIncome = incomes[incomeIndex];
-          incomes[incomeIndex] = {
-            ...linkedIncome,
-            actualAmountPence: next.amountPence,
-            actualDate: next.date,
-            actualTransactionId: next.id,
-            linkedTransactionId: next.id,
-            receivedDate: next.date,
-            accountId: next.accountId,
-            categoryId: next.categoryId,
-            sourcePerson: next.payer,
-            status:
-              next.amountPence < linkedIncome.expectedAmountPence ? 'partial' : 'received',
-            updatedAt: nowIso(),
-            updatedBy: OWNER_EMAIL,
-          };
-          state.plannedIncomes = incomes;
-        }
+        synchronizePlannedIncomeEvidence(state, next.plannedIncomeId);
       }
 
       return next;
@@ -1145,6 +1464,11 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
       if (existing.metadata?.savingsGoalId) {
         throw new Error('Savings goal contributions must be managed from the Savings view.');
       }
+      if (existing.isTransfer || existing.type === 'transfer') {
+        throw new Error(
+          'Internal transfers cannot be deleted directly. Use the exact transfer undo workflow.'
+        );
+      }
 
       state.transactions = state.transactions.filter((tx) => tx.id !== id);
 
@@ -1166,24 +1490,7 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
       }
 
       if (existing.plannedIncomeId) {
-        const incomes = state.plannedIncomes || [];
-        const incomeIndex = incomes.findIndex(
-          (income) => income.id === existing.plannedIncomeId
-        );
-        if (incomeIndex >= 0) {
-          incomes[incomeIndex] = {
-            ...incomes[incomeIndex],
-            status: 'expected',
-            actualAmountPence: undefined,
-            actualDate: undefined,
-            actualTransactionId: undefined,
-            linkedTransactionId: undefined,
-            receivedDate: undefined,
-            updatedAt: nowIso(),
-            updatedBy: OWNER_EMAIL,
-          };
-          state.plannedIncomes = incomes;
-        }
+        synchronizePlannedIncomeEvidence(state, existing.plannedIncomeId);
       }
     }
   );
@@ -1212,8 +1519,12 @@ export function createLocalAccount(
         data.ownerMemberId,
         data.ownerPerson
       );
+      const accountId = data.id || createId('account');
+      if (state.accounts.some((account) => account.id === accountId)) {
+        throw new Error('An account with this ID already exists.');
+      }
       const account: Account = {
-        id: data.id || createId('account'),
+        id: accountId,
         name: data.name.trim(),
         type: data.type,
         currency: 'GBP',
@@ -1326,6 +1637,13 @@ export function reconcileLocalAccount(
   reconciliationDate: string,
   expectedVersion: number
 ): { account: Account; version: number } {
+  if (!isSafePence(reconciledBalancePence)) {
+    throw new Error('Reconciled balance must be exact integer pence.');
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(reconciliationDate)) {
+    throw new Error('Reconciliation date must use YYYY-MM-DD format.');
+  }
+
   return updateLocalAccount(
     id,
     {
@@ -1401,8 +1719,11 @@ export function createLocalPlannedPayment(
         status: 'unpaid',
         includeInTransferPlan: data.includeInTransferPlan === true,
       });
-      assertAccountExists(state, payment.accountId);
+      assertActiveAccount(state, payment.accountId);
       if (payment.categoryId) assertCategoryExists(state, payment.categoryId);
+      if (state.plannedPayments.some((item) => item.id === payment.id)) {
+        throw new Error('A planned payment with this ID already exists.');
+      }
       state.plannedPayments.push(payment);
       return payment;
     }
@@ -1485,7 +1806,11 @@ export function updateLocalPlannedPayment(
 
       next.updatedAt = nowIso();
       next.updatedBy = OWNER_EMAIL;
-      assertAccountExists(state, next.accountId);
+      if (next.accountId === existing.accountId) {
+        assertAccountExists(state, next.accountId);
+      } else {
+        assertActiveAccount(state, next.accountId);
+      }
       if (next.categoryId) assertCategoryExists(state, next.categoryId);
       state.plannedPayments[index] = next;
       return next;
@@ -1576,101 +1901,164 @@ export function executeLocalTransfer(
     description?: string;
     date?: string;
     payer?: string;
+    idempotencyKey?: string;
+    commitmentMonth?: string;
   },
   expectedVersion: number
 ): { transaction: Transaction; version: number } {
   if (payload.sourceAccountId === payload.destinationAccountId) {
     throw new Error('Source and destination accounts must be different.');
   }
-  const state = loadLocalHousehold();
-  const source = state.accounts.find((account) => account.id === payload.sourceAccountId);
-  const destination = state.accounts.find(
-    (account) => account.id === payload.destinationAccountId
-  );
-  if (!source || source.isActive === false) throw new Error('Funding source account is unavailable.');
-  if (!destination || destination.isActive === false) {
-    throw new Error('Destination account is unavailable.');
-  }
-  if (source.type === 'credit') {
-    throw new Error('Credit accounts cannot be used as Transfer Plan funding sources.');
-  }
   if (!isSafePence(payload.amountPence) || payload.amountPence <= 0) {
     throw new Error('Transfer amount must be exact positive integer pence.');
   }
-  if (source.currentBalancePence < payload.amountPence) {
-    throw new Error('Funding source does not have enough available balance for this transfer.');
-  }
-  const category = state.categories.find((item) => item.id === 'cat-transfer');
-  if (!category) throw new Error('Internal Transfer category is missing.');
 
   const transferDate = payload.date || localTodayDateKey();
-  const sourceNeedsAnchorAdjustment =
-    source.reconciliationDate &&
-    Number.isSafeInteger(source.reconciledBalancePence) &&
-    transferDate <= source.reconciliationDate;
-  const destinationNeedsAnchorAdjustment =
-    destination.reconciliationDate &&
-    Number.isSafeInteger(destination.reconciledBalancePence) &&
-    transferDate <= destination.reconciliationDate;
-
-  if (sourceNeedsAnchorAdjustment || destinationNeedsAnchorAdjustment) {
-    const result = mutateLocalHousehold(
-      expectedVersion,
-      {
-        action: 'transfer_created',
-        entityType: 'transaction',
-        entityId: '',
-        summary: payload.description || 'Internal transfer',
-      },
-      (draft) => {
-        const draftSource = draft.accounts.find((account) => account.id === payload.sourceAccountId)!;
-        const draftDestination = draft.accounts.find(
-          (account) => account.id === payload.destinationAccountId
-        )!;
-        adjustAnchoredBalanceForNewTransfer(draftSource, -payload.amountPence, transferDate);
-        adjustAnchoredBalanceForNewTransfer(draftDestination, payload.amountPence, transferDate);
-
-        const tx: Transaction = {
-          id: createId('tx'),
-          accountId: payload.sourceAccountId,
-          targetAccountId: payload.destinationAccountId,
-          amountPence: payload.amountPence,
-          description: payload.description || 'Internal transfer',
-          date: transferDate,
-          payer: payload.payer || source.ownerPerson || 'Joint',
-          categoryId: category.id,
-          type: 'transfer',
-          isTransfer: true,
-          isRepayment: false,
-          isSavings: false,
-          isRefund: false,
-          createdAt: nowIso(),
-          createdBy: OWNER_EMAIL,
-        };
-        draft.transactions.unshift(tx);
-        return tx;
-      }
-    );
-    return { transaction: result.value, version: result.state.version };
-  }
-
-  return createLocalTransaction(
-    {
-      accountId: payload.sourceAccountId,
-      targetAccountId: payload.destinationAccountId,
-      amountPence: payload.amountPence,
-      description: payload.description || 'Internal transfer',
-      date: transferDate,
-      payer: payload.payer || source.ownerPerson || 'Joint',
-      categoryId: category.id,
-      type: 'transfer',
-      isTransfer: true,
-      isSavings: false,
-    },
-    expectedVersion
+  const commitmentMonth = normalizeCommitmentMonth(
+    payload.commitmentMonth,
+    transferDate
   );
+  const idempotencyKey = payload.idempotencyKey?.trim();
+
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'transfer_created',
+      entityType: 'transaction',
+      entityId: '',
+      summary: payload.description || 'Internal transfer',
+    },
+    (state) => {
+      const source = assertAccountExists(state, payload.sourceAccountId);
+      const destination = assertAccountExists(state, payload.destinationAccountId);
+
+      if (source.isActive === false) throw new Error('Funding source account is unavailable.');
+      if (destination.isActive === false) throw new Error('Destination account is unavailable.');
+      if (source.type === 'credit') {
+        throw new Error('Credit accounts cannot be used as transfer funding sources.');
+      }
+      const { safeToMovePence, committedPence } = calculateSafeToMovePence(
+        state,
+        source,
+        commitmentMonth
+      );
+      if (safeToMovePence < payload.amountPence) {
+        throw new Error(
+          `Transfer exceeds safe-to-move balance after ${commitmentMonth} selected bill commitments (${committedPence} pence committed; ${safeToMovePence} pence safe to move).`
+        );
+      }
+
+      const category = state.categories.find((item) => item.id === 'cat-transfer');
+      if (!category) throw new Error('Internal Transfer category is missing.');
+
+      if (
+        idempotencyKey &&
+        state.transactions.some(
+          (transaction) => transaction.idempotencyKey?.trim() === idempotencyKey
+        )
+      ) {
+        throw new Error('Duplicate transfer request rejected.');
+      }
+
+      adjustAnchoredBalanceForNewTransfer(source, -payload.amountPence, transferDate);
+      adjustAnchoredBalanceForNewTransfer(destination, payload.amountPence, transferDate);
+
+      const tx: Transaction = {
+        id: createId('tx'),
+        accountId: payload.sourceAccountId,
+        targetAccountId: payload.destinationAccountId,
+        amountPence: payload.amountPence,
+        description: payload.description || 'Internal transfer',
+        date: transferDate,
+        payer: payload.payer || source.ownerPerson || 'Joint',
+        categoryId: category.id,
+        type: 'transfer',
+        isTransfer: true,
+        isRepayment: false,
+        isSavings:
+          source.type === 'savings' ||
+          source.type === 'cash' ||
+          destination.type === 'savings' ||
+          destination.type === 'cash',
+        isRefund: false,
+        idempotencyKey,
+        metadata: {
+          commitmentMonth,
+        },
+        createdAt: nowIso(),
+        createdBy: OWNER_EMAIL,
+      };
+
+      state.transactions.unshift(tx);
+      return tx;
+    }
+  );
+
+  return { transaction: result.value, version: result.state.version };
 }
 
+
+export function undoLocalTransferTransaction(
+  id: string,
+  expectedVersion: number
+): { transaction: Transaction; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'transfer_undone',
+      entityType: 'transaction',
+      entityId: id,
+      summary: 'Internal transfer undone exactly',
+    },
+    (state) => {
+      const transaction = state.transactions.find((candidate) => candidate.id === id);
+      if (!transaction) throw new Error('Transfer transaction not found.');
+      if (
+        !transaction.isTransfer ||
+        transaction.type !== 'transfer' ||
+        !transaction.targetAccountId
+      ) {
+        throw new Error('Only a complete internal transfer can be undone with this workflow.');
+      }
+      if (transaction.metadata?.savingsGoalId) {
+        throw new Error('Savings transfers must be managed from the Savings view.');
+      }
+      if (
+        transaction.metadata?.transferBatchId ||
+        transaction.metadata?.transferPlanMonth
+      ) {
+        throw new Error('Transfer Plan funding must be undone from the Transfer Plan.');
+      }
+      if (!isSafePence(transaction.amountPence) || transaction.amountPence <= 0) {
+        throw new Error('Transfer amount is invalid; nothing was changed.');
+      }
+
+      const source = assertAccountExists(state, transaction.accountId);
+      const destination = assertAccountExists(state, transaction.targetAccountId);
+
+      // Generic transfers at/before a reconciliation anchor were folded into
+      // that anchor when created. Undo must reverse those exact anchor deltas.
+      adjustAnchoredBalanceForNewTransfer(
+        source,
+        transaction.amountPence,
+        transaction.date
+      );
+      adjustAnchoredBalanceForNewTransfer(
+        destination,
+        -transaction.amountPence,
+        transaction.date
+      );
+
+      state.transactions = state.transactions.filter(
+        (candidate) => candidate.id !== transaction.id
+      );
+
+      return transaction;
+    }
+  );
+
+  return { transaction: result.value, version: result.state.version };
+}
 
 export function executeLocalTransferAllocations(
   payload: {
@@ -1971,8 +2359,11 @@ export function createLocalPlannedIncome(
         throw new Error('Income person is required.');
       }
       const income = plannedIncomeFromPartial(data);
-      assertAccountExists(state, income.accountId);
+      assertActiveAccount(state, income.accountId);
       if (income.categoryId) assertCategoryExists(state, income.categoryId);
+      if ((state.plannedIncomes || []).some((item) => item.id === income.id)) {
+        throw new Error('A planned income with this ID already exists.');
+      }
       state.plannedIncomes = [...(state.plannedIncomes || []), income];
       return income;
     }
@@ -1997,40 +2388,38 @@ export function updateLocalPlannedIncome(
       const incomes = state.plannedIncomes || [];
       const index = incomes.findIndex((item) => item.id === id);
       if (index < 0) throw new Error('Planned income not found.');
-      const next = plannedIncomeFromPartial({ ...incomes[index], ...data, id });
-      next.updatedAt = nowIso();
-      next.updatedBy = OWNER_EMAIL;
-      assertAccountExists(state, next.accountId);
-      if (next.categoryId) assertCategoryExists(state, next.categoryId);
+      const existing = incomes[index];
 
-      const linkedTransactionId = next.actualTransactionId || next.linkedTransactionId;
-      if (linkedTransactionId) {
-        const txIndex = state.transactions.findIndex((tx) => tx.id === linkedTransactionId);
-        if (txIndex >= 0) {
-          const linkedTx = state.transactions[txIndex];
-          const syncedAmount = next.actualAmountPence ?? linkedTx.amountPence;
-          const syncedDate = next.actualDate || next.receivedDate || linkedTx.date;
-          const syncedCategoryId = next.categoryId || linkedTx.categoryId;
-
-          assertCategoryExists(state, syncedCategoryId);
-          state.transactions[txIndex] = {
-            ...linkedTx,
-            description: next.name,
-            amountPence: syncedAmount,
-            date: syncedDate,
-            accountId: next.accountId,
-            categoryId: syncedCategoryId,
-            payer: next.sourcePerson,
-            plannedIncomeId: next.id,
-            updatedAt: nowIso(),
-            updatedBy: OWNER_EMAIL,
-          };
+      for (const field of [
+        'actualAmountPence',
+        'actualDate',
+        'actualTransactionId',
+        'linkedTransactionId',
+        'receivedDate',
+        'status',
+      ] as const) {
+        if (Object.prototype.hasOwnProperty.call(data, field)) {
+          throw new Error(
+            'Actual income evidence cannot be edited from the planned-income form. Edit the linked Activity receipt instead.'
+          );
         }
       }
 
+      const next = plannedIncomeFromPartial({ ...existing, ...data, id });
+      next.updatedAt = nowIso();
+      next.updatedBy = OWNER_EMAIL;
+
+      if (next.accountId === existing.accountId) {
+        assertAccountExists(state, next.accountId);
+      } else {
+        assertActiveAccount(state, next.accountId);
+      }
+      if (next.categoryId) assertCategoryExists(state, next.categoryId);
+
       incomes[index] = next;
       state.plannedIncomes = incomes;
-      return next;
+      const reconciled = synchronizePlannedIncomeEvidence(state, id) || next;
+      return reconciled;
     }
   );
   return { income: result.value, version: result.state.version };
@@ -2048,8 +2437,8 @@ export function deleteLocalPlannedIncome(id: string, expectedVersion: number): {
     (state) => {
       const item = (state.plannedIncomes || []).find((income) => income.id === id);
       if (!item) throw new Error('Planned income not found.');
-      if (item.actualTransactionId || item.linkedTransactionId) {
-        throw new Error('Cannot delete planned income already linked to an actual transaction.');
+      if (state.transactions.some((transaction) => isActualIncomeEvidence(transaction, id))) {
+        throw new Error('Cannot delete planned income with actual receipt evidence.');
       }
       state.plannedIncomes = (state.plannedIncomes || []).filter((income) => income.id !== id);
     }
@@ -2065,6 +2454,7 @@ export function contributeLocalSavingsGoal(
     amountPence: number;
     payer?: string;
     date?: string;
+    commitmentMonth?: string;
   },
   expectedVersion: number
 ): { transaction: Transaction; goal: SavingsGoal; version: number } {
@@ -2103,14 +2493,24 @@ export function contributeLocalSavingsGoal(
       if (!isSafePence(payload.amountPence) || payload.amountPence <= 0) {
         throw new Error('Savings contribution must be exact positive integer pence.');
       }
-      if (source.currentBalancePence < payload.amountPence) {
-        throw new Error('Savings funding source does not have enough available balance.');
+      const date = payload.date || localTodayDateKey();
+      const commitmentMonth = normalizeCommitmentMonth(
+        payload.commitmentMonth,
+        date
+      );
+      const { safeToMovePence, committedPence } = calculateSafeToMovePence(
+        state,
+        source,
+        commitmentMonth
+      );
+      if (safeToMovePence < payload.amountPence) {
+        throw new Error(
+          `Savings transfer exceeds safe-to-move balance after ${commitmentMonth} selected bill commitments (${committedPence} pence committed; ${safeToMovePence} pence safe to move).`
+        );
       }
 
       const category = state.categories.find((item) => item.id === 'cat-transfer');
       if (!category) throw new Error('Internal Transfer category is missing.');
-
-      const date = payload.date || localTodayDateKey();
 
       adjustAnchoredBalanceForNewTransfer(source, -payload.amountPence, date);
       adjustAnchoredBalanceForNewTransfer(destination, payload.amountPence, date);
@@ -2132,6 +2532,7 @@ export function contributeLocalSavingsGoal(
         isRefund: false,
         metadata: {
           savingsGoalId: goal.id,
+          commitmentMonth,
         },
         createdAt: nowIso(),
         createdBy: OWNER_EMAIL,
@@ -2179,8 +2580,12 @@ export function createLocalSavingsGoal(
         throw new Error('Monthly saving plan must be non-negative exact integer pence.');
       }
 
+      const goalId = data.id || createId('goal');
+      if (state.savingsGoals.some((goal) => goal.id === goalId)) {
+        throw new Error('A savings goal with this ID already exists.');
+      }
       const goal: SavingsGoal = {
-        id: data.id || createId('goal'),
+        id: goalId,
         name: data.name.trim(),
         targetPence,
         currentPence: 0,
@@ -2267,8 +2672,29 @@ export function deleteLocalSavingsGoal(id: string, expectedVersion: number): { v
 
 function shiftDateToMonth(date: string | undefined, targetMonth: string): string | undefined {
   if (!date || date.length < 10) return date;
-  const day = date.slice(8, 10);
-  return `${targetMonth}-${day}`;
+  if (!/^\d{4}-\d{2}$/.test(targetMonth)) {
+    throw new Error('Target month must use YYYY-MM format.');
+  }
+
+  const [yearText, monthText] = targetMonth.split('-');
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const sourceDay = Number(date.slice(8, 10));
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    month < 1 ||
+    month > 12 ||
+    !Number.isInteger(sourceDay) ||
+    sourceDay < 1
+  ) {
+    throw new Error('Cannot shift an invalid calendar date.');
+  }
+
+  const lastDay = new Date(year, month, 0).getDate();
+  const day = Math.min(sourceDay, lastDay);
+  return `${targetMonth}-${String(day).padStart(2, '0')}`;
 }
 
 export function markLocalPaymentPaid(
@@ -2291,7 +2717,7 @@ export function markLocalPaymentPaid(
       if (payment.actualTransactionId) throw new Error('Planned bill is already linked to an actual transaction.');
 
       const accountId = payload.accountId || payment.accountId;
-      assertAccountExists(state, accountId);
+      assertActiveAccount(state, accountId);
       const categoryId = payment.categoryId || 'cat-housing';
       assertCategoryExists(state, categoryId);
       const amountPence = payload.actualAmountPence ?? payment.amountPence;
@@ -2411,26 +2837,41 @@ export function markLocalIncomeReceived(
       action: 'planned_income_received',
       entityType: 'planned_income',
       entityId: id,
-      summary: 'Planned income marked received with linked actual transaction',
+      summary: 'Actual income receipt recorded and linked to planned income',
     },
     (state) => {
       const incomes = state.plannedIncomes || [];
       const index = incomes.findIndex((income) => income.id === id);
       if (index < 0) throw new Error('Planned income not found.');
       const income = incomes[index];
-      if (income.actualTransactionId || income.linkedTransactionId) {
-        throw new Error('Planned income is already linked to an actual transaction.');
+
+      const existingReceipts = state.transactions.filter((transaction) =>
+        isActualIncomeEvidence(transaction, income.id)
+      );
+      const receivedSoFarPence = existingReceipts.reduce(
+        (sum, transaction) => sum + transaction.amountPence,
+        0
+      );
+      if (
+        existingReceipts.length > 0 &&
+        receivedSoFarPence >= income.expectedAmountPence
+      ) {
+        throw new Error('Planned income is already fully received.');
       }
 
       const accountId = payload.accountId || income.accountId;
-      assertAccountExists(state, accountId);
+      assertActiveAccount(state, accountId);
       const categoryId = income.categoryId || 'cat-salary';
       assertCategoryExists(state, categoryId);
-      const amountPence = payload.actualAmountPence ?? income.expectedAmountPence;
-      if (!isSafePence(amountPence) || amountPence < 0) {
-        throw new Error('Actual income amount must be exact integer pence.');
+      const amountPence =
+        payload.actualAmountPence ??
+        Math.max(0, income.expectedAmountPence - receivedSoFarPence);
+      if (!isSafePence(amountPence) || amountPence <= 0) {
+        throw new Error('Actual income receipt must be exact positive integer pence.');
       }
-      const actualDate = payload.actualDate || income.expectedDate || `${income.month}-01`;
+      const actualDate =
+        payload.actualDate || income.expectedDate || `${income.month}-01`;
+
       const tx: Transaction = {
         id: createId('tx'),
         date: actualDate,
@@ -2449,19 +2890,9 @@ export function markLocalIncomeReceived(
         createdBy: OWNER_EMAIL,
       };
       state.transactions.unshift(tx);
-      const nextIncome: PlannedIncome = {
-        ...income,
-        status: amountPence < income.expectedAmountPence ? 'partial' : 'received',
-        actualAmountPence: amountPence,
-        actualDate,
-        actualTransactionId: tx.id,
-        linkedTransactionId: tx.id,
-        receivedDate: actualDate,
-        updatedAt: nowIso(),
-        updatedBy: OWNER_EMAIL,
-      };
-      incomes[index] = nextIncome;
-      state.plannedIncomes = incomes;
+      const nextIncome = synchronizePlannedIncomeEvidence(state, income.id);
+      if (!nextIncome) throw new Error('Planned income could not be reconciled.');
+
       return { transaction: tx, income: nextIncome };
     }
   );
@@ -2855,6 +3286,7 @@ function extractBackupState(payload: any): HouseholdData {
   }
   if (payload?.app && payload.app !== 'MV') throw new Error('This backup belongs to a different app.');
   assertHouseholdShape(candidate);
+  assertBackupReferentialIntegrity(candidate);
   return normalizeHousehold(candidate);
 }
 
