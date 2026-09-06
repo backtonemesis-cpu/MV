@@ -45,7 +45,7 @@ class MemoryStorage implements Storage {
 }
 
 const month = '2026-09';
-const paymentDate = '2026-09-07';
+const paymentDate = '2026-09-06';
 
 function member(id: string, name: string): HouseholdMember {
   return {
@@ -156,7 +156,7 @@ describe('Final post-PR #114 financial safety audit', () => {
       expectedTotalPence: 349_79,
       allocations: [{ sourceAccountId: 'savings', amountPence: 349_79 }],
       description: 'Transfer Plan: fund Rent',
-      date: '2026-09-06',
+      date: '2026-09-05',
       month,
     }, state.version);
     state = loadLocalHousehold();
@@ -205,7 +205,7 @@ describe('Final post-PR #114 financial safety audit', () => {
       destinationAccountId: 'lloyds-marius',
       expectedTotalPence: exactTotal,
       allocations: [{ sourceAccountId: 'savings', amountPence: exactTotal }],
-      date: '2026-09-06',
+      date: '2026-09-05',
       month,
     }, state.version);
     state = loadLocalHousehold();
@@ -507,14 +507,14 @@ describe('Final post-PR #114 financial safety audit', () => {
 
     const result = markLocalPaymentPaid('electric', {
       actualAmountPence: 125_67,
-      actualDate: '2026-09-06',
+      actualDate: '2026-09-05',
       accountId: 'lloyds-vesta',
     }, state.version);
     state = loadLocalHousehold();
 
     expect(result.transaction).toMatchObject({
       amountPence: 125_67,
-      date: '2026-09-06',
+      date: '2026-09-05',
       accountId: 'lloyds-vesta',
       plannedPaymentId: 'electric',
     });
@@ -638,7 +638,7 @@ describe('Final post-PR #114 financial safety audit', () => {
 
   it('respects account reconciliation anchors and Undo restores the exact reconciled position', () => {
     let state = installBase([payment('rent', 'Rent', 100_00, 'lloyds-marius')]);
-    reconcileLocalAccount('lloyds-marius', 500_00, '2026-09-05', state.version);
+    reconcileLocalAccount('lloyds-marius', 500_00, '2026-09-04', state.version);
     state = loadLocalHousehold();
     expect(state.accounts.find((a) => a.id === 'lloyds-marius')?.currentBalancePence).toBe(500_00);
 
