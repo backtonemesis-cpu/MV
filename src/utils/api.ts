@@ -138,7 +138,8 @@ export async function fetchHousehold(): Promise<HouseholdData> {
 
 export async function createTransaction(
   data: Partial<Transaction>,
-  expectedVersion: number
+  expectedVersion: number,
+  commitmentMonth?: string
 ) {
   const isTransfer = Boolean(data.isTransfer || data.type === 'transfer');
   if (!isTransfer) {
@@ -161,6 +162,7 @@ export async function createTransaction(
       date: data.date,
       payer: data.payer,
       idempotencyKey: data.idempotencyKey,
+      commitmentMonth,
     },
     expectedVersion
   );
@@ -313,6 +315,7 @@ export async function contributeSavingsGoal(
     amountPence: number;
     payer?: string;
     date?: string;
+    commitmentMonth?: string;
   },
   expectedVersion: number
 ) {
