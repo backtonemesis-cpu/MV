@@ -94,7 +94,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     <>
       {/* Desktop / PC Navigation Bar */}
       <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors">
-        <div className="mv-shell-boundary mx-auto w-full max-w-[1200px] px-4">
+        <div className="mv-shell-boundary mx-auto w-full max-w-[1440px] px-4">
           <div className="mv-desktop-nav-rail flex gap-0.5">
             {tabs.map((tab) => {
               const Icon = tab.icon;
