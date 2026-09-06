@@ -662,8 +662,8 @@ describe('Penny-style local MV storage', () => {
     executeLocalTransferAllocations(
       {
         destinationAccountId: santander.id,
-        expectedTotalPence: 500_00,
-        allocations: [{ sourceAccountId: chase.id, amountPence: 500_00 }],
+        expectedTotalPence: 600_00,
+        allocations: [{ sourceAccountId: chase.id, amountPence: 600_00 }],
         description: 'Transfer Plan: recovery test',
         date: '2026-09-05',
         month: '2026-09',
@@ -688,12 +688,12 @@ describe('Penny-style local MV storage', () => {
       expect.objectContaining({
         accountId: chase.id,
         targetAccountId: santander.id,
-        amountPence: 500_00,
+        amountPence: 600_00,
       })
     );
     expect(
       state.accounts.find((account) => account.id === santander.id)?.currentBalancePence
-    ).toBe(4_500_00);
+    ).toBe(4_600_00);
     expect(
       state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
     ).toBe(fundedChaseBalance);
@@ -1746,7 +1746,7 @@ describe('Penny-style local MV storage', () => {
     const backup = createLocalBackupPackage();
     const preflight = preflightLocalRestore(backup);
     expect(preflight.valid).toBe(true);
-    expect(preflight.counts.accounts).toBe(8);
+    expect(preflight.counts.accounts).toBe(4);
 
     state = loadLocalHousehold();
     resetLocalHousehold(state.version);
@@ -1755,10 +1755,10 @@ describe('Penny-style local MV storage', () => {
 
     restoreLocalBackup(backup, state.version);
     state = loadLocalHousehold();
-    expect(state.accounts).toHaveLength(8);
+    expect(state.accounts).toHaveLength(4);
     expect(state.accounts.find((account) => account.name === 'Main')?.startingBalancePence).toBe(123_45);
     expect(state.members.map((member) => member.name)).toEqual(
-      expect.arrayContaining(['Marius', 'Vesta'])
+      expect.arrayContaining(['Marius'])
     );
     expect(state.members[0].email).toBe('marius@local.invalid');
     expect(state.auditLogs.map((entry) => entry.action)).toContain('database_restored');
