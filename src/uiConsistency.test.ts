@@ -42,10 +42,9 @@ describe('Global finance UI consistency contract', () => {
     const transactionModal = component('TransactionModal.tsx');
     const plan = component('TransferPlanView.tsx');
 
-    expect(billModal).toContain('mv-money-input-with-prefix');
-    expect(billModal).toContain('mv-money-prefix');
-    expect(transactionModal.match(/mv-money-input-with-prefix/g)?.length).toBe(2);
-    expect(transactionModal.match(/mv-money-prefix/g)?.length).toBe(2);
+    expect(billModal).toContain('<MoneyInput');
+    expect(transactionModal.match(/<MoneyInput/g)?.length).toBe(2);
+    expect(transactionModal).toContain('Split ${idx + 1} amount in pounds sterling');
 
     expect(plan).toContain("'Undo payment'");
     expect(plan).toContain("'Record paid'");
@@ -93,7 +92,7 @@ describe('Global finance UI consistency contract', () => {
     expect(modal).toContain('Safe to move');
     expect(modal).toContain('reservedPlanPenceByAccountId');
     expect(modal).toContain("sourceAccountId: ''");
-    expect(modal).toContain('mv-money-input-with-prefix');
+    expect(modal).toContain('<MoneyInput');
     expect(modal).not.toContain('>By</label>');
     expect(modal).not.toContain('rememberedSource');
     expect(modal).not.toContain('Fully allocated');
@@ -159,10 +158,11 @@ describe('Global finance UI consistency contract', () => {
     expect(app).not.toContain("new Date().toISOString().slice(0, 10)");
     expect(app).toContain('localDateInputValue()');
 
-    // Prefix protection is intentionally global so Transaction splits and any future
-    // standard prefixed-money fields cannot bypass the spacing contract.
-    expect(css).toContain('.mv-density-root input.mv-money-input-with-prefix');
-    expect(css).toContain('padding-left: 32px !important');
+    // Shared GBP inputs keep the non-editable prefix close to the value while
+    // preserving protected spacing and a single implementation contract.
+    expect(css).toContain('.mv-density-root input.mv-money-input-control');
+    expect(css).toContain('padding-left: 23px !important');
+    expect(css).toContain('.mv-money-input-shell');
     expect(css).toContain('.mv-money-prefix');
   });
 

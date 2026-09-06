@@ -6,6 +6,7 @@ import { formatPence, parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MoneyInput } from './MoneyInput';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -344,19 +345,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <label className="block text-xs font-semibold text-muted mb-1">
                 Amount
               </label>
-              <div className="relative">
-                <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-subtle">
-                  £
-                </span>
-                <input
-                  type="text"
-                  placeholder="0.00"
-                  value={amountStr}
-                  onChange={(e) => setAmountStr(e.target.value)}
-                  className="mv-money-input-with-prefix mv-transaction-control w-full font-semibold tabular-nums"
-                  required
-                />
-              </div>
+              <MoneyInput
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={amountStr}
+                onChange={(e) => setAmountStr(e.target.value)}
+                className="mv-transaction-control w-full"
+                aria-label="Transaction amount in pounds sterling"
+                required
+              />
             </div>
 
             <div>
@@ -551,16 +549,16 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         ))}
                       </select>
 
-                      <div className="relative w-36">
-                        <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">£</span>
-                        <input
-                          type="text"
-                          placeholder="0.00"
-                          value={splitRow.amountStr}
-                          onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)}
-                          className="mv-money-input-with-prefix mv-transaction-control w-full font-semibold tabular-nums"
-                        />
-                      </div>
+                      <MoneyInput
+                        wrapperClassName="w-36"
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={splitRow.amountStr}
+                        onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)}
+                        className="mv-transaction-control w-full"
+                        aria-label={`Split ${idx + 1} amount in pounds sterling`}
+                      />
 
                       <button
                         type="button"

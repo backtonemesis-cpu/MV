@@ -1289,11 +1289,20 @@ html[data-theme] button.bg-white:hover {
   resize: vertical;
 }
 
-/* Money fields with an in-field currency prefix need protected left padding.
-   This must outrank the compact modal padding rule above. */
-.mv-density-root input.mv-money-input-with-prefix {
-  padding-left: 32px !important;
+/* Shared GBP entry primitive. The prefix stays non-editable while the
+   symbol and numeric text are visually coupled as one monetary value. */
+.mv-money-input-shell {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.mv-density-root input.mv-money-input-control {
+  padding-left: 23px !important;
   padding-right: 12px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
   font-variant-numeric: tabular-nums lining-nums;
 }
 
@@ -4209,7 +4218,12 @@ html[data-theme] button.bg-white:hover {
 }
 
 .mv-money-prefix {
+  pointer-events: none;
+  position: absolute;
   z-index: 1;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--text-muted) !important;
   font-size: 13px !important;
   font-weight: 600 !important;
@@ -4218,19 +4232,19 @@ html[data-theme] button.bg-white:hover {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* Standard GBP entry fields must read as one coherent monetary value while
-   keeping the currency symbol non-editable. Placeholder state is muted as a
-   unit; entered values bring the prefix up to the same text tone as the input. */
-.mv-density-root input.mv-money-input-with-prefix::placeholder {
+/* Placeholder, entered, focus and disabled states keep GBP semantics
+   visually connected without making the currency symbol editable. */
+.mv-density-root input.mv-money-input-control::placeholder {
   color: var(--text-muted) !important;
   opacity: 1;
 }
 
-.mv-money-prefix:has(+ input.mv-money-input-with-prefix:not(:placeholder-shown)) {
+.mv-money-input-shell:has(input.mv-money-input-control:not(:placeholder-shown)) .mv-money-prefix,
+.mv-money-input-shell:focus-within .mv-money-prefix {
   color: var(--text) !important;
 }
 
-.mv-money-prefix:has(+ input.mv-money-input-with-prefix:disabled) {
+.mv-money-input-shell:has(input.mv-money-input-control:disabled) .mv-money-prefix {
   color: var(--text-subtle) !important;
   opacity: 0.72;
 }
@@ -4833,8 +4847,15 @@ html[data-theme] button.bg-white:hover {
 }
 
 .mv-layout-phone .mv-money-prefix {
+  left: 11px;
   font-size: 16px !important;
   font-weight: 600 !important;
+}
+
+.mv-layout-phone input.mv-money-input-control {
+  padding-left: 26px !important;
+  padding-right: 12px !important;
+  font-size: 16px !important;
 }
 
 .mv-layout-phone textarea {

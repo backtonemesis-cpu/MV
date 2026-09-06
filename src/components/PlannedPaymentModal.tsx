@@ -6,6 +6,7 @@ import { parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MoneyInput } from './MoneyInput';
 
 interface PlannedPaymentModalProps {
   payment?: PlannedPayment | null;
@@ -161,19 +162,17 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <label className="block text-xs font-medium text-muted mb-1">
                 Amount *
               </label>
-              <div className="relative">
-                <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-subtle font-medium">£</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="349.79"
-                  value={amountStr}
-                  onChange={(e) => setAmountStr(e.target.value)}
-                  className="mv-money-input-with-prefix w-full text-sm font-semibold tabular-nums border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-                  required
-                />
-              </div>
+              <MoneyInput
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="349.79"
+                value={amountStr}
+                onChange={(e) => setAmountStr(e.target.value)}
+                className="w-full text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
+                aria-label="Bill amount in pounds sterling"
+                required
+              />
             </div>
 
             <div>

@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { CheckCircle2, X } from 'lucide-react';
 import type { Account, PlannedPayment } from '../types';
 import { formatPence, formatPenceToPoundsInput, parseToPence } from '../utils/currency';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MoneyInput } from './MoneyInput';
 
 interface MarkPaymentPaidModalProps {
   payment: PlannedPayment;
@@ -22,7 +23,6 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const amountRef = useRef<HTMLInputElement>(null);
   const [amount, setAmount] = useState(
     payment.actualAmountPence !== undefined
       ? formatPenceToPoundsInput(payment.actualAmountPence)
@@ -33,11 +33,6 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const plannedAccount = accounts.find((account) => account.id === payment.accountId);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => amountRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
-  }, []);
 
   const dialogRef = useModalAccessibility<HTMLElement>(true, onClose);
 
@@ -108,12 +103,12 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
           <div className="mv-modal-grid-2">
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
-              <input
-                ref={amountRef}
+              <MoneyInput
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-xs text-main"
                 inputMode="decimal"
+                aria-label="Actual payment amount in pounds sterling"
                 required
               />
             </div>

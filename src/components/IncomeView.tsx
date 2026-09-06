@@ -22,6 +22,7 @@ import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDispla
 import { localDateInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MoneyInput } from './MoneyInput';
 
 interface IncomeViewProps {
   incomes: PlannedIncome[];
@@ -610,11 +611,13 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               <div className="mv-modal-grid-2">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-muted">Expected amount (£)</label>
-                  <input
+                  <MoneyInput
                     value={expectedAmount}
                     onChange={(event) => setExpectedAmount(event.target.value)}
                     className={inputClassName}
                     placeholder="0.00"
+                    inputMode="decimal"
+                    aria-label="Expected income amount in pounds sterling"
                     required
                   />
                 </div>
@@ -763,11 +766,12 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
-                <input
-                  autoFocus
+                <MoneyInput
                   value={actualAmount}
                   onChange={(event) => setActualAmount(event.target.value)}
                   className={inputClassName}
+                  inputMode="decimal"
+                  aria-label="Actual income amount received in pounds sterling"
                   required
                 />
               </div>
