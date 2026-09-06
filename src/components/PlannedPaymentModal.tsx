@@ -4,7 +4,10 @@ import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../ty
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
-import { isBillEligibleCategory } from '../utils/categoryEligibility';
+import {
+  getBillCategoryOptions,
+  isBillCategorySelectionAllowed,
+} from '../utils/categoryEligibility';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
@@ -56,9 +59,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const paymentAccountOptions = accounts.filter(
     (account) => account.isActive !== false || account.id === payment?.accountId
   );
-  const billCategoryOptions = categories.filter(
-    (category) =>
-      isBillEligibleCategory(category) || category.id === payment?.categoryId
+  const billCategoryOptions = getBillCategoryOptions(
+    categories,
+    payment?.categoryId
   );
 
   const dialogRef = useModalAccessibility<HTMLDivElement>(true, onClose);
@@ -90,16 +93,15 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
       setError('Billing month is required.');
       return;
     }
-    if (categoryId) {
-      const selectedCategory = categories.find((category) => category.id === categoryId);
-      const preservesHistoricalCategory = categoryId === payment?.categoryId;
-      if (
-        !selectedCategory ||
-        (!isBillEligibleCategory(selectedCategory) && !preservesHistoricalCategory)
-      ) {
-        setError('Choose a spending category that is valid for bills.');
-        return;
-      }
+    if (
+      !isBillCategorySelectionAllowed(
+        categories,
+        categoryId,
+        payment?.categoryId
+      )
+    ) {
+      setError('Choose a spending category that is valid for bills.');
+      return;
     }
 
     try {
