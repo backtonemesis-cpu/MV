@@ -54,7 +54,7 @@ describe('Stage 6 mobile and iPhone regression contract', () => {
     expect(navigation).toContain('aria-label="Primary navigation"');
     expect(navigation).toContain('aria-label="Mobile navigation"');
     expect(navigation).toContain("aria-current={isActive ? 'page' : undefined}");
-    expect(navigation).toContain("aria-controls={isMoreOpen ? 'mobile-more-navigation' : undefined}");
+    expect(navigation).toContain('aria-controls="mobile-more-navigation"');
   });
 
   it('uses the shared modal accessibility contract for the command palette', () => {
