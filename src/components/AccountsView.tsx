@@ -271,7 +271,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   // Handle Edit Submit
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedAccount || !editName.trim()) return;
+    if (!selectedAccount) return;
+    if (!editName.trim()) {
+      setError('Enter an account name.');
+      return;
+    }
     if (!editOwnerMemberId) {
       setError('Account owner is required. Choose a household member or Joint.');
       return;
@@ -1043,17 +1047,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <form onSubmit={handleEditSubmit} className="flex min-h-0 flex-1 flex-col">
               <div className="mv-modal-scroll-body space-y-3">
               {error && (
-                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                <div role="alert" className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
-                  Account Name
+                <label htmlFor="account-edit-name" className="block text-xs font-semibold text-muted mb-1">
+                  Account Name *
                 </label>
                 <input
-                  autoFocus
+                  id="account-edit-name"
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -1064,10 +1068,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div className="mv-modal-grid-2">
                 <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Owner
+                  <label htmlFor="account-edit-owner" className="block text-xs font-semibold text-muted mb-1">
+                    Owner *
                   </label>
                   <select
+                    id="account-edit-owner"
                     value={editOwnerMemberId}
                     onChange={(e) => setEditOwnerMemberId(e.target.value)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
@@ -1085,41 +1090,49 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Type
+                  <label htmlFor="account-edit-type" className="block text-xs font-semibold text-muted mb-1">
+                    Type *
                   </label>
                   <select
+                    id="account-edit-type"
                     value={editType}
                     onChange={(e) => setEditType(e.target.value as AccountType)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    required
                   >
                     <option value="current">Current Account</option>
                     <option value="savings">Savings Account</option>
+                    <option value="cash">Cash</option>
                     <option value="credit">Credit Card</option>
+                    {selectedAccount.type === 'joint' && (
+                      <option value="joint">Joint Current (legacy)</option>
+                    )}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <div id="account-edit-status-label" className="block text-xs font-semibold text-muted mb-1">
                   Status
-                </label>
+                </div>
                 <label className="mv-account-toggle">
                   <input
+                    aria-labelledby="account-edit-status-label account-edit-status-text"
                     type="checkbox"
                     checked={editIsActive}
                     onChange={(e) => setEditIsActive(e.target.checked)}
                     className="w-4 h-4 rounded text-success focus:ring-accent border-muted"
                   />
-                  <span>Active</span>
+                  <span id="account-edit-status-text">Active</span>
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="account-edit-notes" className="block text-xs font-semibold text-muted mb-1">
                   Notes
                 </label>
                 <textarea
+                  id="account-edit-notes"
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
                   rows={2}
