@@ -608,7 +608,7 @@ describe('Final post-PR #114 financial safety audit', () => {
     expect(state.plannedPayments[0]).toMatchObject({
       status: 'paid',
       actualAmountPence: 125_67,
-      actualDate: '2026-09-06',
+      actualDate: '2026-09-05',
       actualTransactionId: result.transaction.id,
     });
 
@@ -644,10 +644,10 @@ describe('Final post-PR #114 financial safety audit', () => {
 
     expect(() =>
       undoLocalPaymentsPaid(currentPayments(['legacy']), state.version)
-    ).toThrow(/missing, duplicated, or mismatched/);
+    ).toThrow(/no linked actual payment transaction/);
     expect(() =>
       markLocalPaymentsPaid(currentPayments(['legacy']), paymentDate, state.version)
-    ).toThrow(/missing, duplicated, or mismatched/);
+    ).toThrow(/no linked actual payment transaction/);
     expect(loadLocalHousehold().plannedPayments[0].status).toBe('paid');
   });
 
