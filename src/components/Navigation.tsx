@@ -62,7 +62,10 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* Desktop / PC Navigation Bar */}
-      <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors">
+      <nav
+        className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors"
+        aria-label="Primary navigation"
+      >
         <div className="mv-shell-boundary mx-auto w-full max-w-[1200px] px-4">
           <div className="mv-desktop-nav-rail flex gap-0.5">
             {tabs.map((tab) => {
@@ -73,6 +76,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
                   onClick={() => navigate(tab.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-1.5 border-b-2 px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                     isActive
                       ? 'border-accent text-accent bg-accent-soft text-accent'
@@ -93,10 +97,13 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       </nav>
 
-      {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
-      <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors">
+      {/* Phone navigation: four primary destinations plus an uncluttered More disclosure. */}
+      <nav
+        className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors"
+        aria-label="Mobile navigation"
+      >
         {isMoreOpen && (
-          <div className="mv-mobile-more-menu" role="menu" aria-label="More navigation">
+          <div id="mobile-more-navigation" className="mv-mobile-more-menu" aria-label="More navigation">
             {mobileMoreTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -104,8 +111,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <button
                   key={tab.id}
                   type="button"
-                  role="menuitem"
                   onClick={() => navigate(tab.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`mv-mobile-more-item ${isActive ? 'is-active' : ''}`}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -130,6 +137,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 key={tab.id}
                 id={`mobile-nav-tab-${tab.id}`}
                 onClick={() => navigate(tab.id)}
+                aria-current={isActive ? 'page' : undefined}
                 className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
                   isActive ? 'text-accent font-bold' : 'text-muted'
                 }`}
@@ -145,7 +153,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             type="button"
             onClick={() => setIsMoreOpen((current) => !current)}
             aria-expanded={isMoreOpen}
-            aria-haspopup="menu"
+            aria-controls="mobile-more-navigation"
             className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
               isMoreActive || isMoreOpen ? 'text-accent font-bold' : 'text-muted'
             }`}
