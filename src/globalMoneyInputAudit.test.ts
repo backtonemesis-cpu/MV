@@ -38,7 +38,7 @@ describe('Global money-input audit contract', () => {
     expect(moneyInputComponent).toContain('type="text"');
     expect(moneyInputComponent).toContain('inputMode="decimal"');
     for (const source of Object.values(surfaces)) {
-      const blocks = source.match(/<MoneyInput[\\s\\S]*?\\/>/g) ?? [];
+      const blocks = source.match(/<MoneyInput[\s\S]*?\/>/g) ?? [];
       expect(blocks.every((block) => !block.includes('type="number"'))).toBe(true);
     }
   });
