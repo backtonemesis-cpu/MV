@@ -140,7 +140,7 @@ export async function createTransaction(
   data: Partial<Transaction>,
   expectedVersion: number
 ) {
-  const isTransfer = Boolean(data.isTransfer || data.type === 'transfer' || data.targetAccountId);
+  const isTransfer = Boolean(data.isTransfer || data.type === 'transfer');
   if (!isTransfer) {
     return createLocalTransaction(data, expectedVersion);
   }
@@ -179,7 +179,7 @@ export async function deleteTransaction(id: string, expectedVersion: number) {
   const transaction = state.transactions.find((candidate) => candidate.id === id);
   if (!transaction) throw new Error('Transaction not found.');
 
-  if (transaction.isTransfer || transaction.type === 'transfer' || transaction.targetAccountId) {
+  if (transaction.isTransfer || transaction.type === 'transfer') {
     return undoLocalTransferTransaction(id, expectedVersion);
   }
 
