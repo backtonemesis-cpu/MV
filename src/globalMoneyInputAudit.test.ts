@@ -32,6 +32,17 @@ describe('Global money-input audit contract', () => {
     expect(surfaces.paid.match(/<MoneyInput/g)?.length).toBe(1);
   });
 
+  it('enforces spinner-free decimal text entry across the shared MoneyInput contract', () => {
+    expect(moneyInputComponent).toContain("type?: 'text'");
+    expect(moneyInputComponent).toContain("inputMode?: 'decimal'");
+    expect(moneyInputComponent).toContain('type="text"');
+    expect(moneyInputComponent).toContain('inputMode="decimal"');
+    for (const source of Object.values(surfaces)) {
+      const blocks = source.match(/<MoneyInput[\\s\\S]*?\\/>/g) ?? [];
+      expect(blocks.every((block) => !block.includes('type="number"'))).toBe(true);
+    }
+  });
+
   it('renders numeric values only inside standard money input boxes', () => {
     expect(moneyInputComponent).not.toMatch(/>\s*£\s*</);
     expect(moneyInputComponent).not.toContain('mv-money-prefix');
