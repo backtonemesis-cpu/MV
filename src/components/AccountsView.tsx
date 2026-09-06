@@ -25,6 +25,7 @@ import {
 } from '../utils/currency';
 import { localDateInputValue } from '../utils/dateInput';
 import { accountIdentityLabel } from '../utils/accountDisplay';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -93,37 +94,37 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-
-      if (showActivityModal) {
-        setShowActivityModal(false);
-      } else if (showReconcileModal) {
-        setShowReconcileModal(false);
-      } else if (showEditGoalModal) {
-        setShowEditGoalModal(false);
-        setSelectedGoal(null);
-      } else if (showGoalModal) {
-        setShowGoalModal(false);
-      } else if (showEditModal) {
-        setShowEditModal(false);
-        setSelectedAccount(null);
-      } else if (showAccModal) {
-        setShowAccModal(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [
-    showAccModal,
-    showActivityModal,
-    showEditGoalModal,
-    showEditModal,
-    showGoalModal,
-    showReconcileModal,
-  ]);
+  const anyModalOpen =
+    showAccModal ||
+    showEditModal ||
+    showReconcileModal ||
+    showActivityModal ||
+    showGoalModal ||
+    showEditGoalModal;
+  const closeActiveModal = () => {
+    if (showActivityModal) setShowActivityModal(false);
+    else if (showReconcileModal) setShowReconcileModal(false);
+    else if (showEditGoalModal) {
+      setShowEditGoalModal(false);
+      setSelectedGoal(null);
+    } else if (showGoalModal) setShowGoalModal(false);
+    else if (showEditModal) {
+      setShowEditModal(false);
+      setSelectedAccount(null);
+    } else if (showAccModal) setShowAccModal(false);
+  };
+  const dialogLabel = showActivityModal
+    ? 'Account activity'
+    : showReconcileModal
+    ? 'Reconcile account'
+    : showEditGoalModal
+    ? 'Edit savings goal'
+    : showGoalModal
+    ? 'Add savings goal'
+    : showEditModal
+    ? 'Edit account'
+    : 'Add account';
+  const dialogRef = useModalAccessibility<HTMLDivElement>(anyModalOpen, closeActiveModal);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
   const ownerOptions = useMemo(
@@ -731,14 +732,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Add Account */}
       {showAccModal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card mv-account-modal">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-account-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Add Account
               </h3>
               <button
+                type="button"
                 onClick={() => setShowAccModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -860,14 +870,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Edit Account */}
       {showEditModal && selectedAccount && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card mv-account-modal">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-account-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Edit {selectedAccount.name}
               </h3>
               <button
+                type="button"
                 onClick={() => setShowEditModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -985,14 +1004,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Reconcile Balance */}
       {showReconcileModal && selectedAccount && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Reconcile
               </h3>
               <button
+                type="button"
                 onClick={() => setShowReconcileModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1102,7 +1130,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Account Activity Ledger */}
       {showActivityModal && selectedAccount && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card mv-modal-wide flex flex-col">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-modal-wide flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <div>
                 <h3 className="text-base font-bold text-main">
@@ -1113,8 +1148,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowActivityModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1196,14 +1233,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Add Savings Goal */}
       {showGoalModal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Create Savings Goal
               </h3>
               <button
+                type="button"
                 onClick={() => setShowGoalModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1288,7 +1334,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* MODAL: Edit Savings Goal */}
       {showEditGoalModal && selectedGoal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">Edit Savings Goal</h3>
               <button
