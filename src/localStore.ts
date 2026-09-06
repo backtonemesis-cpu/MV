@@ -13,7 +13,6 @@ import type {
   UserRole,
 } from './types';
 import { normalizeUserPreferences } from './themeEngine';
-import { createSourceBudgetHousehold, SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 import { calculateAccountFunding } from './utils/transferPlan';
 import {
   findLatestTransferPlanFundingBatch,
@@ -26,6 +25,7 @@ const STORAGE_KEY = 'mv_local_state_v1';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v1';
 const SOURCE_IMPORT_BACKUP_KEY = 'mv_local_state_before_source_budget_import_v1';
 const SOURCE_IMPORT_FUNDING_RECOVERY_ID = 'source-import-funding-recovery-v1';
+export const LEGACY_SOURCE_SEED_MIGRATION_ID = 'source-budget-2026-09-v2';
 const PREFS_KEY = 'mv_local_preferences_v1';
 const LOCAL_EVENT = 'mv-local-state-updated';
 const OWNER_EMAIL = 'marius@local.invalid';
@@ -251,12 +251,12 @@ function markSourceBudgetHandled(state: HouseholdData): void {
     isUpToDate: true,
   };
 
-  if (!current.appliedMigrations.some((migration) => migration.name === SOURCE_BUDGET_IMPORT_ID)) {
+  if (!current.appliedMigrations.some((migration) => migration.name === LEGACY_SOURCE_SEED_MIGRATION_ID)) {
     current.appliedMigrations = [
       ...current.appliedMigrations,
       {
         version: 1,
-        name: SOURCE_BUDGET_IMPORT_ID,
+        name: LEGACY_SOURCE_SEED_MIGRATION_ID,
         appliedAt: nowIso(),
         executionTimeMs: 0,
         checksum: 'user-explicit-state',
@@ -857,9 +857,13 @@ export function loadLocalHousehold(): HouseholdData {
 
   const raw = storage.getItem(STORAGE_KEY);
   if (!raw) {
-    const sourceHousehold = createSourceBudgetHousehold();
-    saveLocalHousehold(sourceHousehold);
-    return normalizeHousehold(sourceHousehold);
+    // Production must never reconstruct household finances from source-code
+    // fixtures. A new browser starts blank and the user can restore an explicit
+    // MV backup when moving to another device.
+    const blank = createBlankLocalHousehold();
+    markSourceBudgetHandled(blank);
+    saveLocalHousehold(blank);
+    return normalizeHousehold(blank);
   }
 
   let parsed: unknown;
@@ -873,32 +877,19 @@ export function loadLocalHousehold(): HouseholdData {
 
   assertHouseholdShape(parsed);
 
-  const hasSourceBudget =
-    parsed.schemaStatus?.appliedMigrations?.some(
-      (migration) => migration.name === SOURCE_BUDGET_IMPORT_ID
-    ) ?? false;
-
-  if (!hasSourceBudget) {
-    // Keep the exact pre-import state so operational Transfer Plan funding can
-    // be recovered instead of silently disappearing during source-fixture upgrades.
-    storage.setItem(SOURCE_IMPORT_BACKUP_KEY, raw);
-    const sourceHousehold = normalizeHousehold(createSourceBudgetHousehold(parsed));
-    const recovered = recoverTransferPlanFundingFromSourceBackup(
-      sourceHousehold,
-      storage
-    );
-    storage.setItem(STORAGE_KEY, JSON.stringify(recovered));
-    return recovered;
-  }
-
+  // Historical clients used an embedded September seed. Preserve the user's
+  // existing browser state exactly rather than reimporting or replacing it.
+  // Recording the legacy migration marker only prevents older seed logic from
+  // ever being reintroduced on this state.
   const normalized = normalizeHousehold(parsed);
+  markSourceBudgetHandled(normalized);
+
   const recovered = recoverTransferPlanFundingFromSourceBackup(
     normalized,
     storage
   );
-  if (recovered.version !== normalized.version) {
-    storage.setItem(STORAGE_KEY, JSON.stringify(recovered));
-  }
+
+  storage.setItem(STORAGE_KEY, JSON.stringify(recovered));
   return recovered;
 }
 
@@ -2903,8 +2894,8 @@ export function restoreLocalBackup(payload: any, expectedVersion: number): { ver
   if (!storage) throw new Error('Browser storage is unavailable.');
   storage.setItem(ROLLBACK_KEY, JSON.stringify(current));
   restored.version = current.version + 1;
-  // An explicit restore is authoritative. Mark the source import as handled so
-  // the one-time source seeding migration does not overwrite the restored backup.
+  // An explicit restore is authoritative. Mark the retired legacy source seed
+  // as handled so no future compatibility path can overwrite the restored backup.
   markSourceBudgetHandled(restored);
   appendAudit(restored, {
     action: 'database_restored',
@@ -2921,7 +2912,7 @@ export function resetLocalHousehold(expectedVersion: number): { version: number 
   if (current.version !== expectedVersion) throw conflict(current.version);
   const reset = createBlankLocalHousehold(current.version + 1);
   reset.auditLogs = current.auditLogs;
-  // An explicit reset must stay blank rather than immediately reimporting source data.
+  // An explicit reset must stay blank. Production no longer embeds household source data.
   markSourceBudgetHandled(reset);
   appendAudit(reset, {
     action: 'household_reset',
