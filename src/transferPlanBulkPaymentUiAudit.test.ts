@@ -24,7 +24,7 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
 
   it('provides explicit bulk payment actions distinct from Transfer Plan inclusion', () => {
     expect(transferSource).toContain('Mark selected paid');
-    expect(transferSource).toContain('Mark all unpaid paid');
+    expect(transferSource).toContain('Mark all paid');
     expect(transferSource).toContain('Undo selected payments');
     expect(transferSource).toContain('Include Unpaid');
     expect(transferSource).toContain('Include Paid');
@@ -32,9 +32,28 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
     expect(transferSource).toContain('Exclude All');
   });
 
-  it('uses a dedicated payment-action selector with an accessible name', () => {
-    expect(transferSource).toContain('Select ${payment.name} for payment-status action');
-    expect(transferSource).toContain('Payment action');
+  it('uses a simple payment selector with explicit accessible names and no visible Payment action clutter', () => {
+    expect(transferSource).toContain('Select ${payment.name} for payment');
+    expect(transferSource).toContain('Select ${payment.name} to undo payment');
+    expect(transferSource).not.toContain('<span>Payment action</span>');
+  });
+
+  it('routes normal single-bill Mark paid through the shared compact confirmation and keeps Payment details secondary', () => {
+    const paymentHandlerStart = transferSource.indexOf('const handlePaymentStatusAction');
+    const fundingHandlerStart = transferSource.indexOf('const handleUndoFunding');
+    const paymentHandler = transferSource.slice(paymentHandlerStart, fundingHandlerStart);
+    expect(paymentHandler).toContain("setBulkPaymentDialog({ mode: 'mark', payments: [payment] })");
+    expect(transferSource).toContain('Mark paid');
+    expect(transferSource).toContain('Payment details');
+    expect(transferSource).toContain('setMarkingPayment(payment)');
+  });
+
+  it('makes whole-card Mark all paid the primary ready-to-pay card action', () => {
+    expect(transferSource).toContain("(lifecycle === 'funded' || lifecycle === 'covered')");
+    expect(transferSource).toContain("payments: requirement.unpaidPayments");
+    expect(transferSource).toContain('Mark all paid');
+    expect(transferSource).toContain('Funding');
+    expect(transferSource).toContain('Payment');
   });
 
   it('uses Penny modal confirmation instead of browser confirm for Undo Paid', () => {
@@ -46,10 +65,12 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
     expect(paymentHandler).toContain("setBulkPaymentDialog({ mode: 'undo', payments: [payment] })");
   });
 
-  it('bulk modal defaults to local date and keeps assigned account/amount semantics explicit', () => {
+  it('shared quick-payment modal defaults to UK-local date and shows known account/person/category/amount context', () => {
     expect(modalSource).toContain('localDateInputValue()');
-    expect(modalSource).toContain("Planned amount and each bill's assigned payment account will be used.");
+    expect(modalSource).toContain('Planned amounts and assigned payment accounts are already set.');
     expect(modalSource).toContain('accountIdentityLabel(account)');
+    expect(modalSource).toContain('payment.responsiblePerson');
+    expect(modalSource).toContain('categoriesById.get(payment.categoryId)');
     expect(modalSource).toContain('formatPence(totalPence)');
   });
 
@@ -95,9 +116,11 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
 
   it('preserves phone-sized payment touch targets and does not communicate state by colour alone', () => {
     expect(transferSource).toContain('min-h-11');
+    expect(transferSource).toContain('min-w-11');
     expect(transferSource).toContain('Mark selected paid');
-    expect(transferSource).toContain('Mark all unpaid paid');
+    expect(transferSource).toContain('Mark all paid');
     expect(transferSource).toContain('Undo selected payments');
+    expect(transferSource).toContain('Payment details');
     expect(transferSource).toContain("{payment.status === 'paid' ? 'Paid' : 'Unpaid'}");
     expect(transferSource).toContain('Funded by Transfer');
     expect(transferSource).toContain('Covered by Existing Balance');
@@ -111,6 +134,7 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
     expect(undoFundingSource).toContain('useModalAccessibility<HTMLElement>(true, onClose)');
     expect(undoFundingSource).toContain('This reverses only the exact reviewed Transfer Plan funding batch.');
     expect(undoFundingSource).toContain('Paid/Unpaid status and linked Activity expenses are unchanged.');
+    expect(undoFundingSource).toContain('resulting account/funding position may change');
   });
 
   it('states that funding is unchanged for both mark and undo operations', () => {
