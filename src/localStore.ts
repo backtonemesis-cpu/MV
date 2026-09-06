@@ -195,6 +195,11 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
 
   let balance = hasReconciliation
     ? account.reconciledBalancePence!
+    : account.type === 'credit' &&
+      account.startingBalancePence === 0 &&
+      Number.isSafeInteger(account.balanceOwedPence) &&
+      (account.balanceOwedPence ?? 0) > 0
+    ? -account.balanceOwedPence!
     : account.startingBalancePence;
 
   const today = localTodayDateKey();
@@ -223,6 +228,13 @@ function calculateCurrentBalancePence(account: Account, transactions: Transactio
     if (tx.targetAccountId === account.id && tx.type === 'transfer' && tx.isTransfer) {
       balance += tx.amountPence;
     }
+
+    if (
+      tx.targetAccountId === account.id &&
+      (tx.type === 'repayment' || tx.isRepayment)
+    ) {
+      balance += tx.amountPence;
+    }
   }
 
   return balance;
@@ -240,6 +252,30 @@ function adjustAnchoredBalanceForNewTransfer(
   ) {
     account.reconciledBalancePence = account.reconciledBalancePence! + deltaPence;
   }
+}
+
+function normalizeCommitmentMonth(month: string | undefined, date: string): string {
+  const resolved = month || date.slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(resolved)) {
+    throw new Error('Commitment month must use YYYY-MM format.');
+  }
+  return resolved;
+}
+
+function calculateSafeToMovePence(
+  state: HouseholdData,
+  account: Account,
+  month: string
+): { safeToMovePence: number; committedPence: number } {
+  const monthPayments = state.plannedPayments.filter(
+    (payment) => payment.month === month
+  );
+  const funding = calculateAccountFunding(account, monthPayments, state.transactions);
+  const committedPence = funding.totalUnpaidSelectedPaymentsPence;
+  return {
+    committedPence,
+    safeToMovePence: Math.max(0, account.currentBalancePence - committedPence),
+  };
 }
 
 function markSourceBudgetHandled(state: HouseholdData): void {
@@ -983,6 +1019,22 @@ export function createLocalTransaction(
           'A destination account is only valid for an internal transfer or card repayment.'
         );
       }
+      if (isRepayment) {
+        if (!data.targetAccountId) {
+          throw new Error('Card repayments require the credit account being repaid.');
+        }
+        if (data.targetAccountId === data.accountId) {
+          throw new Error('Card repayment source and credit account must be different.');
+        }
+        const repaymentSource = assertAccountExists(state, data.accountId);
+        const repaymentTarget = assertAccountExists(state, data.targetAccountId);
+        if (repaymentSource.type === 'credit') {
+          throw new Error('Card repayments must be funded from a cash-capable account.');
+        }
+        if (repaymentTarget.type !== 'credit') {
+          throw new Error('Card repayment destination must be a credit account.');
+        }
+      }
       if (!data.payer) {
         throw new Error('Transaction person is required.');
       }
@@ -1015,14 +1067,14 @@ export function createLocalTransaction(
         date: data.date || localTodayDateKey(),
         description: data.description || 'Transaction',
         amountPence: data.amountPence!,
-        type: data.type,
+        type: isRepayment ? 'repayment' : data.type,
         categoryId,
         accountId: data.accountId,
         targetAccountId: data.targetAccountId,
         payer: data.payer,
         notes: data.notes,
         isTransfer: Boolean(data.isTransfer || data.type === 'transfer'),
-        isRepayment: Boolean(data.isRepayment || data.type === 'repayment'),
+        isRepayment,
         isSavings: Boolean(data.isSavings),
         isRefund: Boolean(data.isRefund || data.type === 'refund'),
         originalTransactionId: data.originalTransactionId,
@@ -1088,6 +1140,24 @@ export function updateLocalTransaction(
         throw new Error(
           'A destination account is only valid for an internal transfer or card repayment.'
         );
+      }
+      if (nextIsRepayment) {
+        if (!next.targetAccountId) {
+          throw new Error('Card repayments require the credit account being repaid.');
+        }
+        if (next.targetAccountId === next.accountId) {
+          throw new Error('Card repayment source and credit account must be different.');
+        }
+        const repaymentSource = assertAccountExists(state, next.accountId);
+        const repaymentTarget = assertAccountExists(state, next.targetAccountId);
+        if (repaymentSource.type === 'credit') {
+          throw new Error('Card repayments must be funded from a cash-capable account.');
+        }
+        if (repaymentTarget.type !== 'credit') {
+          throw new Error('Card repayment destination must be a credit account.');
+        }
+        next.type = 'repayment';
+        next.isRepayment = true;
       }
       if (!isSafePence(next.amountPence) || next.amountPence < 0) {
         throw new Error('Transaction amount must be exact integer pence.');
@@ -1628,6 +1698,7 @@ export function executeLocalTransfer(
     date?: string;
     payer?: string;
     idempotencyKey?: string;
+    commitmentMonth?: string;
   },
   expectedVersion: number
 ): { transaction: Transaction; version: number } {
@@ -1639,6 +1710,10 @@ export function executeLocalTransfer(
   }
 
   const transferDate = payload.date || localTodayDateKey();
+  const commitmentMonth = normalizeCommitmentMonth(
+    payload.commitmentMonth,
+    transferDate
+  );
   const idempotencyKey = payload.idempotencyKey?.trim();
 
   const result = mutateLocalHousehold(
@@ -1658,8 +1733,15 @@ export function executeLocalTransfer(
       if (source.type === 'credit') {
         throw new Error('Credit accounts cannot be used as transfer funding sources.');
       }
-      if (source.currentBalancePence < payload.amountPence) {
-        throw new Error('Funding source does not have enough available balance for this transfer.');
+      const { safeToMovePence, committedPence } = calculateSafeToMovePence(
+        state,
+        source,
+        commitmentMonth
+      );
+      if (safeToMovePence < payload.amountPence) {
+        throw new Error(
+          `Transfer exceeds safe-to-move balance after ${commitmentMonth} selected bill commitments (${committedPence} pence committed; ${safeToMovePence} pence safe to move).`
+        );
       }
 
       const category = state.categories.find((item) => item.id === 'cat-transfer');
@@ -1692,6 +1774,9 @@ export function executeLocalTransfer(
         isSavings: false,
         isRefund: false,
         idempotencyKey,
+        metadata: {
+          commitmentMonth,
+        },
         createdAt: nowIso(),
         createdBy: OWNER_EMAIL,
       };
@@ -2160,6 +2245,7 @@ export function contributeLocalSavingsGoal(
     amountPence: number;
     payer?: string;
     date?: string;
+    commitmentMonth?: string;
   },
   expectedVersion: number
 ): { transaction: Transaction; goal: SavingsGoal; version: number } {
@@ -2198,14 +2284,24 @@ export function contributeLocalSavingsGoal(
       if (!isSafePence(payload.amountPence) || payload.amountPence <= 0) {
         throw new Error('Savings contribution must be exact positive integer pence.');
       }
-      if (source.currentBalancePence < payload.amountPence) {
-        throw new Error('Savings funding source does not have enough available balance.');
+      const date = payload.date || localTodayDateKey();
+      const commitmentMonth = normalizeCommitmentMonth(
+        payload.commitmentMonth,
+        date
+      );
+      const { safeToMovePence, committedPence } = calculateSafeToMovePence(
+        state,
+        source,
+        commitmentMonth
+      );
+      if (safeToMovePence < payload.amountPence) {
+        throw new Error(
+          `Savings transfer exceeds safe-to-move balance after ${commitmentMonth} selected bill commitments (${committedPence} pence committed; ${safeToMovePence} pence safe to move).`
+        );
       }
 
       const category = state.categories.find((item) => item.id === 'cat-transfer');
       if (!category) throw new Error('Internal Transfer category is missing.');
-
-      const date = payload.date || localTodayDateKey();
 
       adjustAnchoredBalanceForNewTransfer(source, -payload.amountPence, date);
       adjustAnchoredBalanceForNewTransfer(destination, payload.amountPence, date);
@@ -2227,6 +2323,7 @@ export function contributeLocalSavingsGoal(
         isRefund: false,
         metadata: {
           savingsGoalId: goal.id,
+          commitmentMonth,
         },
         createdAt: nowIso(),
         createdBy: OWNER_EMAIL,
