@@ -10,6 +10,10 @@ const modalSource = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/BulkPaymentStatusModal.tsx'),
   'utf8'
 );
+const undoFundingSource = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/components/UndoFundingModal.tsx'),
+  'utf8'
+);
 
 describe('Transfer Plan bulk payment UI audit contract', () => {
   it('keeps funding lifecycle and Paid/Unpaid status visibly separate', () => {
@@ -98,6 +102,15 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
     expect(transferSource).toContain('Funded by Transfer');
     expect(transferSource).toContain('Covered by Existing Balance');
     expect(transferSource).toContain('Needs Funding');
+  });
+
+  it('uses no browser-native confirm anywhere in the Transfer Plan reversal workflow', () => {
+    expect(transferSource).not.toContain('window.confirm');
+    expect(transferSource).toContain('UndoFundingModal');
+    expect(undoFundingSource).toContain('data-modal-initial-focus');
+    expect(undoFundingSource).toContain('useModalAccessibility<HTMLElement>(true, onClose)');
+    expect(undoFundingSource).toContain('This reverses only the exact reviewed Transfer Plan funding batch.');
+    expect(undoFundingSource).toContain('Paid/Unpaid status and linked Activity expenses are unchanged.');
   });
 
   it('states that funding is unchanged for both mark and undo operations', () => {
