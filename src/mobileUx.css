@@ -1,0 +1,33 @@
+/* Stage 6 mobile/iPhone audit overrides.
+   Loaded after the global design system so these rules correct mobile-only
+   interaction faults without changing financial calculations or desktop layout. */
+
+@media (max-width: 40rem) {
+  /* Keep the Phone-mode navigation attached to the physical viewport on long
+     Activity, Plan, Savings and Settings pages. The workspace already reserves
+     bottom-nav + safe-area space. */
+  .mv-layout-phone .mv-nav-mobile {
+    position: fixed !important;
+    inset: auto 0 0 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  /* iPhone browsers should not need to magnify the page when a routine form
+     control receives focus. Keep control copy at the 16px body token while
+     preserving dense labels, pills and buttons separately. */
+  .mv-layout-phone :is(
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea
+  ) {
+    font-size: var(--mv-ds-text-body) !important;
+    line-height: var(--mv-ds-leading-body) !important;
+  }
+
+  /* Do not allow long entered values to widen mobile cards or dialogs. */
+  .mv-layout-phone :is(input, select, textarea) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
