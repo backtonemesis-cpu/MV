@@ -380,8 +380,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         disabled={isPaid && !payment.actualTransactionId}
         className={
           isPaid
-            ? 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50'
-            : 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50'
+            ? 'inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50 sm:min-h-8'
+            : 'inline-flex min-h-11 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50 sm:min-h-8'
         }
         title={
           isPaid
