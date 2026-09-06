@@ -1688,7 +1688,11 @@ export function updateLocalPlannedPayment(
 
       next.updatedAt = nowIso();
       next.updatedBy = OWNER_EMAIL;
-      assertAccountExists(state, next.accountId);
+      if (next.accountId === existing.accountId) {
+        assertAccountExists(state, next.accountId);
+      } else {
+        assertActiveAccount(state, next.accountId);
+      }
       if (next.categoryId) assertCategoryExists(state, next.categoryId);
       state.plannedPayments[index] = next;
       return next;
