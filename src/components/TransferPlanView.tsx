@@ -49,7 +49,7 @@ interface TransferPlanViewProps {
     data: Partial<PlannedPayment>
   ) => Promise<void>;
   onMarkPaymentPaid: (
-    id: string,
+    payment: PlannedPayment,
     payload: {
       actualAmountPence: number;
       actualDate: string;
@@ -1116,7 +1116,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           accounts={accounts}
           onClose={() => setMarkingPayment(null)}
           onConfirm={async (payload) => {
-            await onMarkPaymentPaid(markingPayment.id, payload);
+            await onMarkPaymentPaid(markingPayment, payload);
           }}
         />
       )}
