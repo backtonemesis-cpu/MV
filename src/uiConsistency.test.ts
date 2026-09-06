@@ -75,8 +75,9 @@ describe('Global finance UI consistency contract', () => {
     expect(plan).toContain('renderCardPaymentAction');
     expect(plan).toContain("'Undo payment'");
     expect(plan).toContain("'Record paid'");
-    expect(plan).toContain('Undo all funding for this card');
-    expect(plan).toContain('onUndoFunding(requirement.account.id, selectedMonth)');
+    expect(plan).toContain('UndoFundingModal');
+    expect(plan).toContain('setUndoFundingModel(model)');
+    expect(plan).not.toContain('window.confirm');
     expect(plan).toContain('Funding recorded');
     expect(plan).toContain('buildTransferPlanAccountModels');
     expect(plan).toContain('Bills · {formatMonthLabel(selectedMonth)}');

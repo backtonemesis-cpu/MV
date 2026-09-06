@@ -215,11 +215,14 @@ export function calculateMonthlySurplus(
   let fixedBillsUnpaidPence = 0;
 
   for (const p of monthPayments) {
+    // Resolve linked payment evidence against the full ledger, not only
+    // transactions dated inside the planned month. A valid bill can be paid
+    // just before/after month-end while still belonging to this planned month.
     const effectiveAmountPence = effectivePlannedPaymentAmountPence(
       p,
-      monthTransactions
+      transactions
     );
-    const isPaid = isPlannedPaymentEffectivelyPaid(p, monthTransactions);
+    const isPaid = isPlannedPaymentEffectivelyPaid(p, transactions);
 
     fixedBillsTotalPence += effectiveAmountPence;
     if (isPaid) {

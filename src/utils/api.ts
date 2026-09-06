@@ -6,6 +6,7 @@ import type {
   SavingsGoal,
   TestResult,
   Transaction,
+  TransferPlanFundingMutationExpectation,
   UserPreferences,
   UserRole,
   UserSession,
@@ -250,7 +251,7 @@ export async function deletePlannedPayment(id: string, expectedVersion: number) 
 }
 
 export async function markPaymentPaid(
-  id: string,
+  payment: PlannedPayment,
   payload: {
     actualAmountPence?: number;
     actualDate?: string;
@@ -259,7 +260,12 @@ export async function markPaymentPaid(
   }
 ) {
   const { expectedVersion, ...actual } = payload;
-  return markLocalPaymentPaid(id, actual, expectedVersion);
+  return markLocalPaymentPaid(
+    payment.id,
+    actual,
+    expectedVersion,
+    payment
+  );
 }
 
 export async function undoPaymentPaid(
@@ -270,18 +276,18 @@ export async function undoPaymentPaid(
 }
 
 export async function markPaymentsPaid(
-  ids: string[],
+  payments: PlannedPayment[],
   actualDate: string,
   expectedVersion: number
 ) {
-  return markLocalPaymentsPaid(ids, actualDate, expectedVersion);
+  return markLocalPaymentsPaid(payments, actualDate, expectedVersion);
 }
 
 export async function undoPaymentsPaid(
-  ids: string[],
+  payments: PlannedPayment[],
   expectedVersion: number
 ) {
-  return undoLocalPaymentsPaid(ids, expectedVersion);
+  return undoLocalPaymentsPaid(payments, expectedVersion);
 }
 
 export async function createPlannedIncome(
@@ -408,9 +414,15 @@ export async function executeTransferPlanAllocations(payload: {
 export async function undoTransferPlanFunding(
   destinationAccountId: string,
   month: string,
-  expectedVersion: number
+  expectedVersion: number,
+  expectedBatch?: TransferPlanFundingMutationExpectation
 ) {
-  return undoLatestLocalTransferPlanFunding(destinationAccountId, expectedVersion, month);
+  return undoLatestLocalTransferPlanFunding(
+    destinationAccountId,
+    expectedVersion,
+    month,
+    expectedBatch
+  );
 }
 
 export async function switchSession(email: string): Promise<void> {

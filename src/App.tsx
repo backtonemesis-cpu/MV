@@ -56,6 +56,7 @@ import {
   NavTab,
   Payer,
   UserPreferences,
+  TransferPlanFundingMutationExpectation,
 } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -524,7 +525,7 @@ export default function App() {
   };
 
   const handleMarkPlannedPaymentPaid = async (
-    id: string,
+    payment: PlannedPayment,
     payload: {
       actualAmountPence: number;
       actualDate: string;
@@ -533,7 +534,7 @@ export default function App() {
   ) => {
     if (!household) return;
     try {
-      await markPaymentPaid(id, {
+      await markPaymentPaid(payment, {
         ...payload,
         expectedVersion: household.version,
       });
@@ -549,12 +550,12 @@ export default function App() {
   };
 
   const handleMarkPlannedPaymentsPaid = async (
-    ids: string[],
+    payments: PlannedPayment[],
     actualDate: string
   ) => {
     if (!household) return;
     try {
-      await markPaymentsPaid(ids, actualDate, household.version);
+      await markPaymentsPaid(payments, actualDate, household.version);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
@@ -566,10 +567,10 @@ export default function App() {
     }
   };
 
-  const handleUndoPlannedPaymentsPaid = async (ids: string[]) => {
+  const handleUndoPlannedPaymentsPaid = async (payments: PlannedPayment[]) => {
     if (!household) return;
     try {
-      await undoPaymentsPaid(ids, household.version);
+      await undoPaymentsPaid(payments, household.version);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
@@ -663,12 +664,18 @@ export default function App() {
 
   const handleUndoTransferPlanFunding = async (
     destinationAccountId: string,
-    month: string
+    month: string,
+    expectedBatch: TransferPlanFundingMutationExpectation
   ) => {
     if (!household) return;
     try {
       setIsSubmitting(true);
-      await undoTransferPlanFunding(destinationAccountId, month, household.version);
+      await undoTransferPlanFunding(
+        destinationAccountId,
+        month,
+        household.version,
+        expectedBatch
+      );
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {

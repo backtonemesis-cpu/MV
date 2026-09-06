@@ -7,8 +7,10 @@ import type {
   Payer,
   PlannedIncome,
   PlannedPayment,
+  PlannedPaymentMutationExpectation,
   SavingsGoal,
   Transaction,
+  TransferPlanFundingMutationExpectation,
   UserPreferences,
   UserRole,
 } from './types';
@@ -113,6 +115,111 @@ export function createBlankLocalHousehold(version = 1): HouseholdData {
 
 function isSafePence(value: unknown): value is number {
   return Number.isSafeInteger(value);
+}
+
+function isValidDateKey(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1
+  ) {
+    return false;
+  }
+  return day <= new Date(year, month, 0).getDate();
+}
+
+function assertValidPaymentDate(value: string): void {
+  if (!isValidDateKey(value)) {
+    throw new Error('Payment date must be a valid YYYY-MM-DD calendar date.');
+  }
+}
+
+function isActualPaymentEvidence(
+  transaction: Transaction,
+  paymentId: string
+): boolean {
+  return (
+    transaction.plannedPaymentId === paymentId &&
+    transaction.type === 'expense' &&
+    !transaction.isTransfer &&
+    !transaction.isRepayment &&
+    !transaction.isSavings &&
+    !transaction.isRefund
+  );
+}
+
+function paymentEvidenceReferences(
+  state: HouseholdData,
+  paymentId: string
+): Transaction[] {
+  return state.transactions.filter(
+    (transaction) => transaction.plannedPaymentId === paymentId
+  );
+}
+
+function assertNoPaymentEvidenceReference(
+  state: HouseholdData,
+  payment: PlannedPayment
+): void {
+  const references = paymentEvidenceReferences(state, payment.id);
+  if (payment.actualTransactionId || references.length > 0) {
+    throw new Error(
+      `${payment.name} already has or references actual payment evidence. Nothing was changed.`
+    );
+  }
+}
+
+function requireUniqueLinkedPaymentEvidence(
+  state: HouseholdData,
+  payment: PlannedPayment
+): Transaction {
+  const references = paymentEvidenceReferences(state, payment.id);
+  if (!payment.actualTransactionId && references.length === 0) {
+    throw new Error(
+      `${payment.name} has no linked actual payment transaction to undo. Nothing was changed.`
+    );
+  }
+  if (
+    !payment.actualTransactionId ||
+    references.length !== 1 ||
+    references[0].id !== payment.actualTransactionId ||
+    !isActualPaymentEvidence(references[0], payment.id)
+  ) {
+    throw new Error(
+      `The linked Activity expense for ${payment.name} is missing, duplicated, or mismatched. Nothing was changed.`
+    );
+  }
+  return references[0];
+}
+
+function assertPaymentMatchesExpectation(
+  payment: PlannedPayment,
+  expected: PlannedPaymentMutationExpectation
+): void {
+  const same =
+    payment.id === expected.id &&
+    payment.name === expected.name &&
+    payment.amountPence === expected.amountPence &&
+    payment.month === expected.month &&
+    payment.responsiblePerson === expected.responsiblePerson &&
+    payment.accountId === expected.accountId &&
+    (payment.categoryId || '') === (expected.categoryId || '') &&
+    payment.status === expected.status &&
+    payment.includeInTransferPlan === expected.includeInTransferPlan &&
+    payment.actualAmountPence === expected.actualAmountPence &&
+    (payment.actualDate || '') === (expected.actualDate || '') &&
+    (payment.actualTransactionId || '') === (expected.actualTransactionId || '');
+
+  if (!same) {
+    throw new Error(
+      `${payment.name} changed after the confirmation was opened. Refresh and review the current bill before trying again. Nothing was changed.`
+    );
+  }
 }
 
 function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
@@ -247,17 +354,27 @@ function assertBackupReferentialIntegrity(state: HouseholdData): void {
     if (payment.categoryId && !categoryIds.has(payment.categoryId)) {
       throw new Error(`Planned payment '${payment.name}' references a missing category.`);
     }
+
+    const references = state.transactions.filter(
+      (transaction) => transaction.plannedPaymentId === payment.id
+    );
+
     if (payment.actualTransactionId) {
       const transaction = transactionsById.get(payment.actualTransactionId);
       if (
+        references.length !== 1 ||
         !transaction ||
-        transaction.plannedPaymentId !== payment.id ||
-        transaction.type !== 'expense'
+        references[0].id !== transaction.id ||
+        !isActualPaymentEvidence(transaction, payment.id)
       ) {
         throw new Error(
-          `Planned payment '${payment.name}' has invalid linked actual payment evidence.`
+          `Planned payment '${payment.name}' has missing, duplicated, or mismatched actual payment evidence.`
         );
       }
+    } else if (references.length > 0) {
+      throw new Error(
+        `Planned payment '${payment.name}' has orphan actual payment evidence.`
+      );
     }
   }
 
@@ -2361,7 +2478,8 @@ export function executeLocalTransferAllocations(
 export function undoLatestLocalTransferPlanFunding(
   destinationAccountId: string,
   expectedVersion: number,
-  month?: string
+  month?: string,
+  expectedBatch?: TransferPlanFundingMutationExpectation
 ): {
   undoneTransactions: Transaction[];
   version: number;
@@ -2380,6 +2498,24 @@ export function undoLatestLocalTransferPlanFunding(
         ? `No Transfer Plan funding is available to undo for this account in ${month}.`
         : 'No Transfer Plan funding is available to undo for this account.'
     );
+  }
+
+  if (expectedBatch) {
+    const actualIds = fundingBatch.transactions.map((transaction) => transaction.id).sort();
+    const expectedIds = [...expectedBatch.transactionIds].sort();
+    const sameBatch =
+      fundingBatch.batchKey === expectedBatch.batchKey &&
+      fundingBatch.destinationAccountId === expectedBatch.destinationAccountId &&
+      fundingBatch.destinationAccountId === destinationAccountId &&
+      fundingBatch.totalPence === expectedBatch.totalPence &&
+      actualIds.length === expectedIds.length &&
+      actualIds.every((id, index) => id === expectedIds[index]);
+
+    if (!sameBatch) {
+      throw new Error(
+        'Transfer Plan funding changed after the confirmation was opened. Refresh and review the current funding before trying again. Nothing was changed.'
+      );
+    }
   }
 
   const targetTransactions = fundingBatch.transactions;
@@ -2840,7 +2976,8 @@ function shiftDateToMonth(date: string | undefined, targetMonth: string): string
 export function markLocalPaymentPaid(
   id: string,
   payload: { actualAmountPence?: number; actualDate?: string; accountId?: string },
-  expectedVersion: number
+  expectedVersion: number,
+  expectedPayment?: PlannedPaymentMutationExpectation
 ): { transaction: Transaction; payment: PlannedPayment; version: number } {
   const result = mutateLocalHousehold(
     expectedVersion,
@@ -2854,7 +2991,15 @@ export function markLocalPaymentPaid(
       const index = state.plannedPayments.findIndex((payment) => payment.id === id);
       if (index < 0) throw new Error('Planned bill not found.');
       const payment = state.plannedPayments[index];
-      if (payment.actualTransactionId) throw new Error('Planned bill is already linked to an actual transaction.');
+      if (expectedPayment) {
+        assertPaymentMatchesExpectation(payment, expectedPayment);
+      }
+      if (payment.status === 'paid' && !payment.actualTransactionId) {
+        throw new Error(
+          'This legacy Paid bill has no exact linked Activity evidence. Nothing was changed.'
+        );
+      }
+      assertNoPaymentEvidenceReference(state, payment);
 
       const accountId = payload.accountId || payment.accountId;
       assertActiveAccount(state, accountId);
@@ -2865,6 +3010,7 @@ export function markLocalPaymentPaid(
         throw new Error('Actual payment amount must be exact integer pence.');
       }
       const actualDate = payload.actualDate || payment.dueDate || `${payment.month}-01`;
+      assertValidPaymentDate(actualDate);
       const tx: Transaction = {
         id: createId('tx'),
         date: actualDate,
@@ -2918,28 +3064,7 @@ export function undoLocalPaymentPaid(
       if (paymentIndex < 0) throw new Error('Planned bill not found.');
 
       const payment = state.plannedPayments[paymentIndex];
-      if (!payment.actualTransactionId) {
-        throw new Error(
-          'This paid bill has no linked actual payment transaction to undo.'
-        );
-      }
-
-      const linkedTransaction = state.transactions.find(
-        (transaction) =>
-          transaction.id === payment.actualTransactionId &&
-          transaction.plannedPaymentId === payment.id &&
-          transaction.type === 'expense' &&
-          !transaction.isTransfer &&
-          !transaction.isRepayment &&
-          !transaction.isSavings &&
-          !transaction.isRefund
-      );
-
-      if (!linkedTransaction) {
-        throw new Error(
-          'The linked actual payment transaction is missing or no longer matches this bill. Nothing was changed.'
-        );
-      }
+      const linkedTransaction = requireUniqueLinkedPaymentEvidence(state, payment);
 
       state.transactions = state.transactions.filter(
         (transaction) => transaction.id !== linkedTransaction.id
@@ -2967,56 +3092,55 @@ export function undoLocalPaymentPaid(
 }
 
 export function markLocalPaymentsPaid(
-  ids: string[],
+  expectations: PlannedPaymentMutationExpectation[],
   actualDate: string,
   expectedVersion: number
 ): { transactions: Transaction[]; payments: PlannedPayment[]; version: number } {
-  const uniqueIds = Array.from(new Set(ids));
-  if (uniqueIds.length === 0) throw new Error('Select at least one unpaid bill.');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(actualDate)) {
-    throw new Error('Payment date must use YYYY-MM-DD format.');
+  if (!Array.isArray(expectations) || expectations.length === 0) {
+    throw new Error('Select at least one unpaid bill.');
   }
+  assertValidPaymentDate(actualDate);
+
+  const uniqueById = new Map<string, PlannedPaymentMutationExpectation>();
+  for (const expectation of expectations) {
+    const existing = uniqueById.get(expectation.id);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(expectation)) {
+      throw new Error(
+        `Conflicting confirmation snapshots were supplied for ${expectation.name}. Nothing was changed.`
+      );
+    }
+    uniqueById.set(expectation.id, expectation);
+  }
+  const uniqueExpectations = Array.from(uniqueById.values());
 
   const result = mutateLocalHousehold(
     expectedVersion,
     {
       action: 'planned_payments_paid',
       entityType: 'planned_payment',
-      entityId: uniqueIds.join(','),
-      summary: `${uniqueIds.length} planned bill payment${uniqueIds.length === 1 ? '' : 's'} recorded`,
-      details: { paymentIds: uniqueIds, actualDate },
+      entityId: uniqueExpectations.map((item) => item.id).join(','),
+      summary: `${uniqueExpectations.length} planned bill payment${uniqueExpectations.length === 1 ? '' : 's'} recorded`,
+      details: {
+        paymentIds: uniqueExpectations.map((item) => item.id),
+        actualDate,
+      },
     },
     (state) => {
-      const prepared = uniqueIds.map((id) => {
-        const index = state.plannedPayments.findIndex((payment) => payment.id === id);
-        if (index < 0) throw new Error(`Planned bill not found: ${id}`);
+      const prepared = uniqueExpectations.map((expected) => {
+        const index = state.plannedPayments.findIndex(
+          (payment) => payment.id === expected.id
+        );
+        if (index < 0) throw new Error(`Planned bill not found: ${expected.id}`);
+
         const payment = state.plannedPayments[index];
+        assertPaymentMatchesExpectation(payment, expected);
 
         if (payment.status === 'paid') {
-          const linked = payment.actualTransactionId
-            ? state.transactions.find(
-                (transaction) =>
-                  transaction.id === payment.actualTransactionId &&
-                  transaction.plannedPaymentId === payment.id &&
-                  transaction.type === 'expense' &&
-                  !transaction.isTransfer &&
-                  !transaction.isRepayment &&
-                  !transaction.isSavings &&
-                  !transaction.isRefund
-              )
-            : undefined;
-          if (linked) return { kind: 'existing' as const, index, payment, existing: linked };
-          throw new Error(
-            `${payment.name} is marked Paid but does not have a valid linked Activity expense. Nothing was changed.`
-          );
+          const linked = requireUniqueLinkedPaymentEvidence(state, payment);
+          return { kind: 'existing' as const, index, payment, existing: linked };
         }
 
-        if (payment.actualTransactionId) {
-          throw new Error(
-            `${payment.name} already references payment evidence while marked Unpaid. Nothing was changed.`
-          );
-        }
-
+        assertNoPaymentEvidenceReference(state, payment);
         assertActiveAccount(state, payment.accountId);
         const categoryId = payment.categoryId || 'cat-housing';
         assertCategoryExists(state, categoryId);
@@ -3078,54 +3202,56 @@ export function markLocalPaymentsPaid(
 }
 
 export function undoLocalPaymentsPaid(
-  ids: string[],
+  expectations: PlannedPaymentMutationExpectation[],
   expectedVersion: number
 ): { transactions: Transaction[]; payments: PlannedPayment[]; version: number } {
-  const uniqueIds = Array.from(new Set(ids));
-  if (uniqueIds.length === 0) throw new Error('Select at least one paid bill.');
+  if (!Array.isArray(expectations) || expectations.length === 0) {
+    throw new Error('Select at least one paid bill.');
+  }
+
+  const uniqueById = new Map<string, PlannedPaymentMutationExpectation>();
+  for (const expectation of expectations) {
+    const existing = uniqueById.get(expectation.id);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(expectation)) {
+      throw new Error(
+        `Conflicting confirmation snapshots were supplied for ${expectation.name}. Nothing was changed.`
+      );
+    }
+    uniqueById.set(expectation.id, expectation);
+  }
+  const uniqueExpectations = Array.from(uniqueById.values());
 
   const result = mutateLocalHousehold(
     expectedVersion,
     {
       action: 'planned_payments_paid_undone',
       entityType: 'planned_payment',
-      entityId: uniqueIds.join(','),
-      summary: `${uniqueIds.length} recorded bill payment${uniqueIds.length === 1 ? '' : 's'} undone`,
-      details: { paymentIds: uniqueIds },
+      entityId: uniqueExpectations.map((item) => item.id).join(','),
+      summary: `${uniqueExpectations.length} recorded bill payment${uniqueExpectations.length === 1 ? '' : 's'} undone`,
+      details: { paymentIds: uniqueExpectations.map((item) => item.id) },
     },
     (state) => {
-      const prepared = uniqueIds.map((id) => {
-        const paymentIndex = state.plannedPayments.findIndex((payment) => payment.id === id);
-        if (paymentIndex < 0) throw new Error(`Planned bill not found: ${id}`);
+      const prepared = uniqueExpectations.map((expected) => {
+        const paymentIndex = state.plannedPayments.findIndex(
+          (payment) => payment.id === expected.id
+        );
+        if (paymentIndex < 0) throw new Error(`Planned bill not found: ${expected.id}`);
 
         const payment = state.plannedPayments[paymentIndex];
-        if (payment.status !== 'paid' || !payment.actualTransactionId) {
+        assertPaymentMatchesExpectation(payment, expected);
+        if (payment.status !== 'paid') {
           throw new Error(
-            `${payment.name} does not have a safely linked paid Activity record to undo. Nothing was changed.`
+            `${payment.name} is no longer Paid. Nothing was changed.`
           );
         }
 
-        const linkedTransaction = state.transactions.find(
-          (transaction) =>
-            transaction.id === payment.actualTransactionId &&
-            transaction.plannedPaymentId === payment.id &&
-            transaction.type === 'expense' &&
-            !transaction.isTransfer &&
-            !transaction.isRepayment &&
-            !transaction.isSavings &&
-            !transaction.isRefund
-        );
-
-        if (!linkedTransaction) {
-          throw new Error(
-            `The linked Activity expense for ${payment.name} is missing or mismatched. Nothing was changed.`
-          );
-        }
-
+        const linkedTransaction = requireUniqueLinkedPaymentEvidence(state, payment);
         return { paymentIndex, payment, linkedTransaction };
       });
 
-      const transactionIds = new Set(prepared.map((item) => item.linkedTransaction.id));
+      const transactionIds = new Set(
+        prepared.map((item) => item.linkedTransaction.id)
+      );
       state.transactions = state.transactions.filter(
         (transaction) => !transactionIds.has(transaction.id)
       );

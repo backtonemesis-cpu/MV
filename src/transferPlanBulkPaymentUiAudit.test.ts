@@ -10,6 +10,10 @@ const modalSource = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/BulkPaymentStatusModal.tsx'),
   'utf8'
 );
+const undoFundingSource = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/components/UndoFundingModal.tsx'),
+  'utf8'
+);
 
 describe('Transfer Plan bulk payment UI audit contract', () => {
   it('keeps funding lifecycle and Paid/Unpaid status visibly separate', () => {
@@ -55,6 +59,58 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
     expect(modalSource).toContain('aria-modal="true"');
     expect(modalSource).toContain('data-modal-initial-focus');
     expect(modalSource).not.toContain('autofocus');
+  });
+
+  it('carries the exact confirmation snapshots through to the final storage mutation', () => {
+    expect(transferSource).toContain('onMarkPaymentsPaid(confirmedPayments, actualDate)');
+    expect(transferSource).toContain('onUndoPaymentsPaid(confirmedPayments)');
+    expect(transferSource).toContain('transactions={transactions}');
+    expect(modalSource).toContain('await onMarkPaid(payments, date)');
+    expect(modalSource).toContain('await onUndoPaid(payments)');
+  });
+
+  it('uses authoritative linked Activity evidence for Undo account, amount and date', () => {
+    expect(modalSource).toContain('transaction.id === payment.actualTransactionId');
+    expect(modalSource).toContain('transaction.plannedPaymentId === payment.id');
+    expect(modalSource).toContain('references.length === 1');
+    expect(modalSource).toContain("mode === 'undo' ? evidence?.accountId : payment.accountId");
+    expect(modalSource).toContain('evidence?.amountPence');
+    expect(modalSource).toContain('Paid {evidence.date}');
+    expect(modalSource).toContain('hasUnsafeUndoEvidence');
+    expect(modalSource).toContain('Undo is blocked because exact reciprocal Activity evidence cannot');
+  });
+
+  it('keeps opening, selecting, Cancel, Close and Escape non-mutating', () => {
+    expect(transferSource).toContain('setPaymentActionSelectedIds');
+    expect(transferSource).toContain('setBulkPaymentDialog');
+    expect(modalSource).toContain('data-modal-initial-focus');
+    expect(modalSource).toContain('onClick={onClose}');
+    expect(modalSource).toContain('useModalAccessibility<HTMLElement>(true, onClose)');
+    const confirmStart = modalSource.indexOf('const handleConfirm');
+    const returnStart = modalSource.indexOf('return (', confirmStart);
+    const confirmHandler = modalSource.slice(confirmStart, returnStart);
+    expect(confirmHandler).toContain('await onMarkPaid(payments, date)');
+    expect(confirmHandler).toContain('await onUndoPaid(payments)');
+  });
+
+  it('preserves phone-sized payment touch targets and does not communicate state by colour alone', () => {
+    expect(transferSource).toContain('min-h-11');
+    expect(transferSource).toContain('Mark selected paid');
+    expect(transferSource).toContain('Mark all unpaid paid');
+    expect(transferSource).toContain('Undo selected payments');
+    expect(transferSource).toContain("{payment.status === 'paid' ? 'Paid' : 'Unpaid'}");
+    expect(transferSource).toContain('Funded by Transfer');
+    expect(transferSource).toContain('Covered by Existing Balance');
+    expect(transferSource).toContain('Needs Funding');
+  });
+
+  it('uses no browser-native confirm anywhere in the Transfer Plan reversal workflow', () => {
+    expect(transferSource).not.toContain('window.confirm');
+    expect(transferSource).toContain('UndoFundingModal');
+    expect(undoFundingSource).toContain('data-modal-initial-focus');
+    expect(undoFundingSource).toContain('useModalAccessibility<HTMLElement>(true, onClose)');
+    expect(undoFundingSource).toContain('This reverses only the exact reviewed Transfer Plan funding batch.');
+    expect(undoFundingSource).toContain('Paid/Unpaid status and linked Activity expenses are unchanged.');
   });
 
   it('states that funding is unchanged for both mark and undo operations', () => {

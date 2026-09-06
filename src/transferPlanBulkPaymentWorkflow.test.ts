@@ -86,6 +86,15 @@ function installFixture() {
   saveLocalHousehold(state);
 }
 
+function confirmedPayments(ids: string[]) {
+  const state = loadLocalHousehold();
+  return ids.map((id) => {
+    const payment = state.plannedPayments.find((item) => item.id === id);
+    if (!payment) throw new Error(`Missing test payment ${id}`);
+    return payment;
+  });
+}
+
 describe('Transfer Plan bulk payment workflow', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', new MemoryStorage());
@@ -116,7 +125,7 @@ describe('Transfer Plan bulk payment workflow', () => {
   it('marks multiple bills paid atomically with planned amounts, one date and each assigned account', () => {
     const before = loadLocalHousehold();
     const result = markLocalPaymentsPaid(
-      ['rent', 'phone'],
+      confirmedPayments(['rent', 'phone']),
       '2026-09-07',
       before.version
     );
@@ -144,7 +153,7 @@ describe('Transfer Plan bulk payment workflow', () => {
 
   it('does not duplicate Activity expenses when the same already-paid bills are submitted again', () => {
     let state = loadLocalHousehold();
-    markLocalPaymentsPaid(['rent', 'phone'], '2026-09-07', state.version);
+    markLocalPaymentsPaid(confirmedPayments(['rent', 'phone']), '2026-09-07', state.version);
     state = loadLocalHousehold();
 
     const firstIds = state.transactions
@@ -152,7 +161,7 @@ describe('Transfer Plan bulk payment workflow', () => {
       .map((tx) => tx.id)
       .sort();
 
-    markLocalPaymentsPaid(['rent', 'phone'], '2026-09-07', state.version);
+    markLocalPaymentsPaid(confirmedPayments(['rent', 'phone']), '2026-09-07', state.version);
     state = loadLocalHousehold();
 
     const secondIds = state.transactions
@@ -180,7 +189,7 @@ describe('Transfer Plan bulk payment workflow', () => {
     state = loadLocalHousehold();
 
     const fundingIds = state.transactions.filter((tx) => tx.type === 'transfer').map((tx) => tx.id);
-    markLocalPaymentsPaid(['rent', 'phone'], '2026-09-07', state.version);
+    markLocalPaymentsPaid(confirmedPayments(['rent', 'phone']), '2026-09-07', state.version);
     state = loadLocalHousehold();
 
     const unrelatedExpense = {
@@ -204,7 +213,7 @@ describe('Transfer Plan bulk payment workflow', () => {
     saveLocalHousehold(raw);
     state = loadLocalHousehold();
 
-    undoLocalPaymentsPaid(['rent', 'phone'], state.version);
+    undoLocalPaymentsPaid(confirmedPayments(['rent', 'phone']), state.version);
     state = loadLocalHousehold();
 
     expect(state.plannedPayments.every((p) => p.status === 'unpaid')).toBe(true);
@@ -216,7 +225,7 @@ describe('Transfer Plan bulk payment workflow', () => {
 
   it('fails safely and mutates nothing if any selected paid bill lacks a uniquely linked Activity expense', () => {
     let state = loadLocalHousehold();
-    markLocalPaymentsPaid(['rent'], '2026-09-07', state.version);
+    markLocalPaymentsPaid(confirmedPayments(['rent']), '2026-09-07', state.version);
     state = loadLocalHousehold();
 
     const broken = loadLocalHousehold();
@@ -226,7 +235,7 @@ describe('Transfer Plan bulk payment workflow', () => {
 
     state = loadLocalHousehold();
     const versionBefore = state.version;
-    expect(() => undoLocalPaymentsPaid(['rent'], versionBefore)).toThrow('missing or mismatched');
+    expect(() => undoLocalPaymentsPaid(confirmedPayments(['rent']), versionBefore)).toThrow(/missing, duplicated, or mismatched/);
 
     const after = loadLocalHousehold();
     expect(after.version).toBe(versionBefore);
