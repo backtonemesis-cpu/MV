@@ -1660,6 +1660,13 @@ export function permanentlyDeleteLocalAccount(
         );
       }
 
+      if (eligibility.removableAuditLogIds.length > 0) {
+        const harmlessAuditIds = new Set(eligibility.removableAuditLogIds);
+        state.auditLogs = state.auditLogs.filter(
+          (entry) => !harmlessAuditIds.has(entry.id)
+        );
+      }
+
       state.accounts.splice(index, 1);
     }
   );
@@ -1684,15 +1691,52 @@ export function reconcileLocalAccount(
     throw new Error('Reconciliation date must use YYYY-MM-DD format.');
   }
 
-  return updateLocalAccount(
-    id,
+  const current = loadLocalHousehold();
+  const account = current.accounts.find((candidate) => candidate.id === id);
+  if (!account) throw new Error('Account not found.');
+
+  const discrepancyPence =
+    reconciledBalancePence - account.currentBalancePence;
+  const zeroEffect =
+    account.startingBalancePence === 0 &&
+    account.currentBalancePence === 0 &&
+    (account.balanceOwedPence ?? 0) === 0 &&
+    reconciledBalancePence === 0 &&
+    discrepancyPence === 0;
+
+  const result = mutateLocalHousehold(
+    expectedVersion,
     {
-      reconciledBalancePence,
-      reconciliationDate,
-      reconciledAt: nowIso(),
+      action: 'account_reconciled',
+      entityType: 'account',
+      entityId: id,
+      summary: zeroEffect
+        ? 'Account reconciled with no financial effect'
+        : 'Account reconciliation recorded',
+      details: {
+        currentBalancePence: account.currentBalancePence,
+        reconciledBalancePence,
+        discrepancyPence,
+        zeroEffect,
+        createdFinancialTransaction: false,
+      },
     },
-    expectedVersion
+    (state) => {
+      const index = state.accounts.findIndex((candidate) => candidate.id === id);
+      if (index < 0) throw new Error('Account not found.');
+
+      const next = {
+        ...state.accounts[index],
+        reconciledBalancePence,
+        reconciliationDate,
+        reconciledAt: nowIso(),
+      };
+      state.accounts[index] = next;
+      return next;
+    }
   );
+
+  return { account: result.value, version: result.state.version };
 }
 
 function plannedPaymentFromPartial(data: Partial<PlannedPayment>): PlannedPayment {
