@@ -12,6 +12,7 @@ import {
   loadLocalHousehold,
   permanentlyDeleteLocalAccount,
   preflightLocalRestore,
+  reactivateLocalAccount,
   reconcileLocalAccount,
   saveLocalHousehold,
   updateLocalAccount,
@@ -356,7 +357,7 @@ describe('Safe conditional permanent account deletion', () => {
 
     archiveLocalAccount(created.account.id, state.version);
     state = loadLocalHousehold();
-    updateLocalAccount(created.account.id, { isActive: true }, state.version);
+    reactivateLocalAccount(created.account.id, state.version);
     state = loadLocalHousehold();
 
     const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
