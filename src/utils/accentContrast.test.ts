@@ -69,7 +69,8 @@ describe('Stage 8 accent contrast', () => {
   });
 
   it('does not change an already-compliant accent text color unnecessarily', () => {
-    const sapphire = accentRgbForPreference({ accent: 'sapphire' });
-    expect(accessibleAccentTextRgb(sapphire, 'light')).toEqual(sapphire);
+    const gold = accentRgbForPreference({ accent: 'gold' });
+    expect(contrastRatio(gold, WORST_ROUTINE_SURFACE.light)).toBeGreaterThanOrEqual(4.5);
+    expect(accessibleAccentTextRgb(gold, 'light')).toEqual(gold);
   });
 });
