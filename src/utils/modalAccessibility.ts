@@ -8,6 +8,12 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+const LEGACY_ERROR_SELECTOR = [
+  '.mv-rollover-error',
+  '.mv-transaction-modal .bg-danger-soft.border-danger',
+  '.mv-funding-modal-error',
+].join(',');
+
 let generatedId = 0;
 
 function nextId(prefix: string): string {
@@ -81,6 +87,12 @@ function exposePressedSelectionState(dialog: HTMLElement): void {
     });
 }
 
+function announceLegacyValidationErrors(dialog: HTMLElement): void {
+  dialog.querySelectorAll<HTMLElement>(LEGACY_ERROR_SELECTOR).forEach((error) => {
+    if (!error.hasAttribute('role')) error.setAttribute('role', 'alert');
+  });
+}
+
 function ensureDialogSemantics(dialog: HTMLElement): void {
   if (!dialog.hasAttribute('role')) dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-modal', 'true');
@@ -88,6 +100,7 @@ function ensureDialogSemantics(dialog: HTMLElement): void {
   ensureCloseButtonName(dialog);
   associateVisibleLabels(dialog);
   exposePressedSelectionState(dialog);
+  announceLegacyValidationErrors(dialog);
 }
 
 export function installModalAccessibility(): () => void {
