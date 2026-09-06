@@ -56,8 +56,8 @@ interface TransferPlanViewProps {
       accountId: string;
     }
   ) => Promise<void>;
-  onMarkPaymentsPaid: (ids: string[], actualDate: string) => Promise<void>;
-  onUndoPaymentsPaid: (ids: string[]) => Promise<void>;
+  onMarkPaymentsPaid: (payments: PlannedPayment[], actualDate: string) => Promise<void>;
+  onUndoPaymentsPaid: (payments: PlannedPayment[]) => Promise<void>;
   onBulkTogglePlannedPayments: (params: {
     month?: string;
     include: boolean;
@@ -1093,14 +1093,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           mode={bulkPaymentDialog.mode}
           payments={bulkPaymentDialog.payments}
           accounts={accounts}
+          transactions={transactions}
           onClose={() => setBulkPaymentDialog(null)}
-          onMarkPaid={async (ids, actualDate) => {
-            await onMarkPaymentsPaid(ids, actualDate);
-            clearPaymentActionSelection(ids);
+          onMarkPaid={async (confirmedPayments, actualDate) => {
+            await onMarkPaymentsPaid(confirmedPayments, actualDate);
+            clearPaymentActionSelection(
+              confirmedPayments.map((payment) => payment.id)
+            );
           }}
-          onUndoPaid={async (ids) => {
-            await onUndoPaymentsPaid(ids);
-            clearPaymentActionSelection(ids);
+          onUndoPaid={async (confirmedPayments) => {
+            await onUndoPaymentsPaid(confirmedPayments);
+            clearPaymentActionSelection(
+              confirmedPayments.map((payment) => payment.id)
+            );
           }}
         />
       )}
