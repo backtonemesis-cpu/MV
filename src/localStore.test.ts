@@ -266,7 +266,7 @@ describe('Penny-style local MV storage', () => {
       {
         name: 'Rollover Test Current',
         type: 'current',
-        startingBalancePence: -100_00,
+        startingBalancePence: 0,
         ownerPerson: 'Marius',
       },
       state.version
@@ -1866,7 +1866,7 @@ describe('Penny-style local MV storage', () => {
       {
         name: 'Synthetic Credit',
         type: 'credit',
-        startingBalancePence: 0,
+        startingBalancePence: -100_00,
         ownerPerson: 'Marius',
       },
       state.version
