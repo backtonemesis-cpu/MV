@@ -56,6 +56,7 @@ import {
   NavTab,
   Payer,
   UserPreferences,
+  TransferPlanFundingMutationExpectation,
 } from './types';
 import { Header } from './components/Header';
 import { Navigation } from './components/Navigation';
@@ -663,12 +664,18 @@ export default function App() {
 
   const handleUndoTransferPlanFunding = async (
     destinationAccountId: string,
-    month: string
+    month: string,
+    expectedBatch: TransferPlanFundingMutationExpectation
   ) => {
     if (!household) return;
     try {
       setIsSubmitting(true);
-      await undoTransferPlanFunding(destinationAccountId, month, household.version);
+      await undoTransferPlanFunding(
+        destinationAccountId,
+        month,
+        household.version,
+        expectedBatch
+      );
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
