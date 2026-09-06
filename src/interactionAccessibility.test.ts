@@ -64,6 +64,6 @@ describe('Global interaction accessibility contract', () => {
     expect(funding).toContain("event.key === 'Home'");
     expect(funding).toContain("event.key === 'End'");
     expect(funding).toContain("event.key === 'Escape'");
-    expect(funding).not.toContain('disabled={Boolean(disabledReason)}');
+    expect(funding).not.toMatch(/\sdisabled=\{Boolean\(disabledReason\)\}/);
   });
 });
