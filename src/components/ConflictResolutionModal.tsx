@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface ConflictResolutionModalProps {
   isOpen: boolean;
@@ -14,20 +15,30 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
   onClose,
   serverVersion,
 }) => {
+  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
+
   if (!isOpen) return null;
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-modal-body text-center space-y-3">
+      <div
+        ref={dialogRef}
+        className="mv-modal-card mv-modal-body text-center space-y-3"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="conflict-dialog-title"
+        aria-describedby="conflict-dialog-description"
+        tabIndex={-1}
+      >
         <div className="w-12 h-12 rounded-2xl bg-warning-soft text-warning flex items-center justify-center mx-auto">
           <AlertTriangle className="w-6 h-6" />
         </div>
 
         <div>
-          <h2 className="text-base font-bold text-main">
+          <h2 id="conflict-dialog-title" className="text-base font-bold text-main">
             Data Changed
           </h2>
-          <p className="text-xs text-muted text-subtle mt-1.5">Reload before saving again.</p>
+          <p id="conflict-dialog-description" className="text-xs text-muted text-subtle mt-1.5">Reload before saving again.</p>
         </div>
 
         <div className="flex gap-2 pt-2">
