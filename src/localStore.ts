@@ -10,6 +10,7 @@ import type {
   PlannedPaymentMutationExpectation,
   SavingsGoal,
   Transaction,
+  TransferPlanFundingMutationExpectation,
   UserPreferences,
   UserRole,
 } from './types';
@@ -2477,7 +2478,8 @@ export function executeLocalTransferAllocations(
 export function undoLatestLocalTransferPlanFunding(
   destinationAccountId: string,
   expectedVersion: number,
-  month?: string
+  month?: string,
+  expectedBatch?: TransferPlanFundingMutationExpectation
 ): {
   undoneTransactions: Transaction[];
   version: number;
@@ -2496,6 +2498,24 @@ export function undoLatestLocalTransferPlanFunding(
         ? `No Transfer Plan funding is available to undo for this account in ${month}.`
         : 'No Transfer Plan funding is available to undo for this account.'
     );
+  }
+
+  if (expectedBatch) {
+    const actualIds = fundingBatch.transactions.map((transaction) => transaction.id).sort();
+    const expectedIds = [...expectedBatch.transactionIds].sort();
+    const sameBatch =
+      fundingBatch.batchKey === expectedBatch.batchKey &&
+      fundingBatch.destinationAccountId === expectedBatch.destinationAccountId &&
+      fundingBatch.destinationAccountId === destinationAccountId &&
+      fundingBatch.totalPence === expectedBatch.totalPence &&
+      actualIds.length === expectedIds.length &&
+      actualIds.every((id, index) => id === expectedIds[index]);
+
+    if (!sameBatch) {
+      throw new Error(
+        'Transfer Plan funding changed after the confirmation was opened. Refresh and review the current funding before trying again. Nothing was changed.'
+      );
+    }
   }
 
   const targetTransactions = fundingBatch.transactions;
