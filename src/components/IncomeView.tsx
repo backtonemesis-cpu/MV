@@ -542,7 +542,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                   <Edit2 className="h-3.5 w-3.5" />
                                 </button>
 
-                                {!fullyReceived && (
+                                {!hasReceiptEvidence && (
                                   <button
                                     type="button"
                                     onClick={(event) => { event.stopPropagation(); removeIncome(income); }}
