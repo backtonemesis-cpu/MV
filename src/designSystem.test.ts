@@ -88,7 +88,7 @@ describe('semantic design system enforcement', () => {
     expect(plan).toContain('Include All');
     expect(plan).toContain('Exclude All');
     expect(plan).toContain('Mark selected paid');
-    expect(plan).toContain('Mark all unpaid paid');
+    expect(plan).toContain('Mark all paid');
     expect(plan).toContain('Undo selected payments');
     expect(plan).toContain('Selection only');
     expect(plan).toContain('Bill details are read-only here');
