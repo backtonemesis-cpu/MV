@@ -7,6 +7,8 @@ import {
   saveLocalHousehold,
   createLocalAccount,
   createLocalBackupPackage,
+  createLocalSavingsGoal,
+  contributeLocalSavingsGoal,
   createLocalHouseholdMember,
   createLocalPlannedIncome,
   createLocalPlannedPayment,
@@ -264,7 +266,7 @@ describe('Penny-style local MV storage', () => {
       {
         name: 'Rollover Test Current',
         type: 'current',
-        startingBalancePence: 0,
+        startingBalancePence: -100_00,
         ownerPerson: 'Marius',
       },
       state.version
@@ -1890,6 +1892,12 @@ describe('Penny-style local MV storage', () => {
     expect(repayment.transaction.targetAccountId).toBe(credit.account.id);
 
     state = loadLocalHousehold();
+    expect(
+      state.accounts.find((account) => account.id === source.id)?.currentBalancePence
+    ).toBe(970_00);
+    expect(
+      state.accounts.find((account) => account.id === credit.account.id)?.currentBalancePence
+    ).toBe(-70_00);
     expect(() =>
       updateLocalTransaction(
         repayment.transaction.id,
@@ -2116,6 +2124,91 @@ describe('Penny-style local MV storage', () => {
         state.version
       )
     ).toThrow('An account cannot be reconciled to a future date');
+  });
+
+  it('prevents ordinary transfers from spending money committed to selected bills', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-chase')!;
+
+    createLocalPlannedPayment(
+      {
+        name: 'Committed source bill',
+        amountPence: 800_00,
+        month: '2026-09',
+        responsiblePerson: 'Marius',
+        accountId: source.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      executeLocalTransfer(
+        {
+          sourceAccountId: source.id,
+          destinationAccountId: destination.id,
+          amountPence: 300_00,
+          description: 'Would drain committed money',
+          date: '2026-09-06',
+          commitmentMonth: '2026-09',
+        },
+        state.version
+      )
+    ).toThrow('Transfer exceeds safe-to-move balance');
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
+      .toBe(1000_00);
+  });
+
+  it('prevents savings contributions from draining selected bill commitments', () => {
+    let state = loadLocalHousehold();
+    const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const destination = state.accounts.find((account) => account.id === 'test-account-chase')!;
+
+    createLocalPlannedPayment(
+      {
+        name: 'Committed before saving',
+        amountPence: 800_00,
+        month: '2026-09',
+        responsiblePerson: 'Marius',
+        accountId: source.id,
+        status: 'unpaid',
+        includeInTransferPlan: true,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const goal = createLocalSavingsGoal(
+      {
+        name: 'Synthetic goal',
+        targetPence: 1000_00,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      contributeLocalSavingsGoal(
+        {
+          goalId: goal.goal.id,
+          sourceAccountId: source.id,
+          destinationAccountId: destination.id,
+          amountPence: 300_00,
+          date: '2026-09-06',
+          commitmentMonth: '2026-09',
+        },
+        state.version
+      )
+    ).toThrow('Savings transfer exceeds safe-to-move balance');
+
+    state = loadLocalHousehold();
+    expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
+      .toBe(1000_00);
   });
 
   it('locks out malformed stored JSON rather than overwriting it', () => {
