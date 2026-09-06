@@ -1654,6 +1654,33 @@ export function archiveLocalAccount(
   return { account: result.value, version: result.state.version };
 }
 
+export function reactivateLocalAccount(
+  id: string,
+  expectedVersion: number
+): { account: Account; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'account_reactivated',
+      entityType: 'account',
+      entityId: id,
+      summary: 'Account reactivated',
+      details: {
+        administrativeOnly: true,
+        financialStateChanged: false,
+      },
+    },
+    (state) => {
+      const index = state.accounts.findIndex((account) => account.id === id);
+      if (index < 0) throw new Error('Account not found.');
+      const next = { ...state.accounts[index], isActive: true };
+      state.accounts[index] = next;
+      return next;
+    }
+  );
+  return { account: result.value, version: result.state.version };
+}
+
 export function permanentlyDeleteLocalAccount(
   id: string,
   expectedVersion: number
