@@ -564,8 +564,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-success">
               <CheckCircle2 className="h-3.5 w-3.5" />
               <span>
-                Reconciled {new Date(acc.reconciledAt).toLocaleDateString('en-GB')}
-                {acc.reconciliationDate && ` · ${acc.reconciliationDate}`}
+                Reconciled{' '}
+                {acc.reconciliationDate
+                  ? new Date(`${acc.reconciliationDate}T00:00:00`).toLocaleDateString('en-GB')
+                  : new Date(acc.reconciledAt).toLocaleDateString('en-GB')}
               </span>
             </div>
           )}
