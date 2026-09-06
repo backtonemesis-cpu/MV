@@ -32,8 +32,10 @@ describe('Transfer Plan funded-selection lock audit contract', () => {
     expect(source).toContain('if (eligiblePaymentIds.length === 0) return;');
   });
 
-  it('leaves Undo Funding as the existing reconciliation route', () => {
+  it('keeps Undo Funding as a separate reviewed reconciliation route', () => {
     expect(source).toContain('Undo Funding');
-    expect(source).toContain('onUndoFunding(requirement.account.id, selectedMonth)');
+    expect(source).toContain('UndoFundingModal');
+    expect(source).toContain('setUndoFundingModel(model)');
+    expect(source).not.toContain('window.confirm');
   });
 });
