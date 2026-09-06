@@ -1635,13 +1635,19 @@ export function permanentlyDeleteLocalAccount(
   id: string,
   expectedVersion: number
 ): { version: number } {
+  const current = loadLocalHousehold();
+  const target = current.accounts.find((account) => account.id === id);
+  if (!target) throw new Error('Account not found.');
+
+  const auditSummary = `Permanently deleted unused account: ${target.name} · ${target.type} · ${target.ownerPerson || 'Unassigned'}`;
+
   const result = mutateLocalHousehold(
     expectedVersion,
     {
       action: 'account_permanently_deleted',
-      entityType: 'account',
-      entityId: id,
-      summary: 'Unused account permanently deleted after reference check',
+      entityType: 'system',
+      entityId: current.id,
+      summary: auditSummary,
     },
     (state) => {
       const index = state.accounts.findIndex((account) => account.id === id);
