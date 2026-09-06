@@ -6,6 +6,7 @@ import type {
   SavingsGoal,
   TestResult,
   Transaction,
+  TransferPlanFundingMutationExpectation,
   UserPreferences,
   UserRole,
   UserSession,
@@ -413,9 +414,15 @@ export async function executeTransferPlanAllocations(payload: {
 export async function undoTransferPlanFunding(
   destinationAccountId: string,
   month: string,
-  expectedVersion: number
+  expectedVersion: number,
+  expectedBatch?: TransferPlanFundingMutationExpectation
 ) {
-  return undoLatestLocalTransferPlanFunding(destinationAccountId, expectedVersion, month);
+  return undoLatestLocalTransferPlanFunding(
+    destinationAccountId,
+    expectedVersion,
+    month,
+    expectedBatch
+  );
 }
 
 export async function switchSession(email: string): Promise<void> {
