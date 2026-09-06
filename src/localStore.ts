@@ -180,6 +180,117 @@ function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
   }
 }
 
+function assertUniqueIds(label: string, ids: string[]): void {
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (!id?.trim()) throw new Error(`${label} contains a blank ID.`);
+    if (seen.has(id)) throw new Error(`${label} contains duplicate ID '${id}'.`);
+    seen.add(id);
+  }
+}
+
+function assertBackupReferentialIntegrity(state: HouseholdData): void {
+  assertUniqueIds('Accounts', state.accounts.map((item) => item.id));
+  assertUniqueIds('Categories', state.categories.map((item) => item.id));
+  assertUniqueIds('Transactions', state.transactions.map((item) => item.id));
+  assertUniqueIds('Planned payments', state.plannedPayments.map((item) => item.id));
+  assertUniqueIds('Planned incomes', (state.plannedIncomes || []).map((item) => item.id));
+  assertUniqueIds('Savings goals', state.savingsGoals.map((item) => item.id));
+  assertUniqueIds('Household members', state.members.map((item) => item.id));
+
+  const accountIds = new Set(state.accounts.map((item) => item.id));
+  const categoryIds = new Set(state.categories.map((item) => item.id));
+  const paymentIds = new Set(state.plannedPayments.map((item) => item.id));
+  const incomeIds = new Set((state.plannedIncomes || []).map((item) => item.id));
+  const transactionsById = new Map(state.transactions.map((item) => [item.id, item]));
+
+  for (const transaction of state.transactions) {
+    if (!accountIds.has(transaction.accountId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing source account.`
+      );
+    }
+    if (transaction.targetAccountId && !accountIds.has(transaction.targetAccountId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing destination account.`
+      );
+    }
+    if (!categoryIds.has(transaction.categoryId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing category.`
+      );
+    }
+    for (const split of transaction.splits || []) {
+      if (!categoryIds.has(split.categoryId)) {
+        throw new Error(
+          `Transaction '${transaction.description}' has a split referencing a missing category.`
+        );
+      }
+    }
+    if (transaction.plannedPaymentId && !paymentIds.has(transaction.plannedPaymentId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing planned payment.`
+      );
+    }
+    if (transaction.plannedIncomeId && !incomeIds.has(transaction.plannedIncomeId)) {
+      throw new Error(
+        `Transaction '${transaction.description}' references a missing planned income.`
+      );
+    }
+  }
+
+  for (const payment of state.plannedPayments) {
+    if (!accountIds.has(payment.accountId)) {
+      throw new Error(`Planned payment '${payment.name}' references a missing account.`);
+    }
+    if (payment.categoryId && !categoryIds.has(payment.categoryId)) {
+      throw new Error(`Planned payment '${payment.name}' references a missing category.`);
+    }
+    if (payment.actualTransactionId) {
+      const transaction = transactionsById.get(payment.actualTransactionId);
+      if (
+        !transaction ||
+        transaction.plannedPaymentId !== payment.id ||
+        transaction.type !== 'expense'
+      ) {
+        throw new Error(
+          `Planned payment '${payment.name}' has invalid linked actual payment evidence.`
+        );
+      }
+    }
+  }
+
+  for (const income of state.plannedIncomes || []) {
+    if (!accountIds.has(income.accountId)) {
+      throw new Error(`Planned income '${income.name}' references a missing account.`);
+    }
+    if (income.categoryId && !categoryIds.has(income.categoryId)) {
+      throw new Error(`Planned income '${income.name}' references a missing category.`);
+    }
+    const linkedId = income.actualTransactionId || income.linkedTransactionId;
+    if (linkedId) {
+      const transaction = transactionsById.get(linkedId);
+      if (
+        !transaction ||
+        transaction.plannedIncomeId !== income.id ||
+        transaction.type !== 'income'
+      ) {
+        throw new Error(
+          `Planned income '${income.name}' has invalid linked actual receipt evidence.`
+        );
+      }
+    }
+  }
+
+  for (const goal of state.savingsGoals) {
+    for (const accountId of [goal.accountId, goal.linkedAccountId]) {
+      if (accountId && !accountIds.has(accountId)) {
+        throw new Error(`Savings goal '${goal.name}' references a missing account.`);
+      }
+    }
+  }
+}
+
 function localTodayDateKey(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -815,7 +926,7 @@ function recoverTransferPlanFundingFromSourceBackup(
         },
       },
       ...(next.auditLogs || []),
-    ].slice(0, 500);
+    ];
   }
 
   return normalizeHousehold(next);
@@ -1408,8 +1519,12 @@ export function createLocalAccount(
         data.ownerMemberId,
         data.ownerPerson
       );
+      const accountId = data.id || createId('account');
+      if (state.accounts.some((account) => account.id === accountId)) {
+        throw new Error('An account with this ID already exists.');
+      }
       const account: Account = {
-        id: data.id || createId('account'),
+        id: accountId,
         name: data.name.trim(),
         type: data.type,
         currency: 'GBP',
@@ -1606,6 +1721,9 @@ export function createLocalPlannedPayment(
       });
       assertActiveAccount(state, payment.accountId);
       if (payment.categoryId) assertCategoryExists(state, payment.categoryId);
+      if (state.plannedPayments.some((item) => item.id === payment.id)) {
+        throw new Error('A planned payment with this ID already exists.');
+      }
       state.plannedPayments.push(payment);
       return payment;
     }
@@ -2243,6 +2361,9 @@ export function createLocalPlannedIncome(
       const income = plannedIncomeFromPartial(data);
       assertActiveAccount(state, income.accountId);
       if (income.categoryId) assertCategoryExists(state, income.categoryId);
+      if ((state.plannedIncomes || []).some((item) => item.id === income.id)) {
+        throw new Error('A planned income with this ID already exists.');
+      }
       state.plannedIncomes = [...(state.plannedIncomes || []), income];
       return income;
     }
@@ -2459,8 +2580,12 @@ export function createLocalSavingsGoal(
         throw new Error('Monthly saving plan must be non-negative exact integer pence.');
       }
 
+      const goalId = data.id || createId('goal');
+      if (state.savingsGoals.some((goal) => goal.id === goalId)) {
+        throw new Error('A savings goal with this ID already exists.');
+      }
       const goal: SavingsGoal = {
-        id: data.id || createId('goal'),
+        id: goalId,
         name: data.name.trim(),
         targetPence,
         currentPence: 0,
@@ -3161,6 +3286,7 @@ function extractBackupState(payload: any): HouseholdData {
   }
   if (payload?.app && payload.app !== 'MV') throw new Error('This backup belongs to a different app.');
   assertHouseholdShape(candidate);
+  assertBackupReferentialIntegrity(candidate);
   return normalizeHousehold(candidate);
 }
 
