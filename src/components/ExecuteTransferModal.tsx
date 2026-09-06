@@ -421,7 +421,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                                     event.key === 'ArrowDown' ? 'first' : 'last'
                                   )
                                 );
-                              }
+                              }}
                             >
                               <span className="mv-funding-source-trigger-copy">
                                 <strong>
