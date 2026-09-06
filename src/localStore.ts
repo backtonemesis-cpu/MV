@@ -1559,12 +1559,14 @@ export function updateLocalAccount(
   data: Partial<Account>,
   expectedVersion: number
 ): { account: Account; version: number } {
+  if (Object.prototype.hasOwnProperty.call(data, 'isActive')) {
+    throw new Error('Use the dedicated archive or reactivate account action to change account status.');
+  }
   const administrativeFields = new Set([
     'name',
     'type',
     'ownerMemberId',
     'ownerPerson',
-    'isActive',
     'notes',
   ]);
   const changedFields = Object.keys(data).filter((key) => key !== 'id' && key !== 'currency');
