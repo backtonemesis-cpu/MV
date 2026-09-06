@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AlertCircle, CheckCircle2, RotateCcw, X } from 'lucide-react';
-import type { Account, PlannedPayment, Transaction } from '../types';
+import type { Account, Category, PlannedPayment, Transaction } from '../types';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { formatPence } from '../utils/currency';
 import { localDateInputValue } from '../utils/dateInput';
@@ -10,6 +10,7 @@ interface BulkPaymentStatusModalProps {
   mode: 'mark' | 'undo';
   payments: PlannedPayment[];
   accounts: Account[];
+  categories: Category[];
   transactions: Transaction[];
   onClose: () => void;
   onMarkPaid: (payments: PlannedPayment[], actualDate: string) => Promise<void>;
@@ -35,6 +36,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
   mode,
   payments,
   accounts,
+  categories,
   transactions,
   onClose,
   onMarkPaid,
@@ -48,6 +50,11 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
   const accountsById = useMemo(
     () => new Map(accounts.map((account) => [account.id, account])),
     [accounts]
+  );
+
+  const categoriesById = useMemo(
+    () => new Map(categories.map((category) => [category.id, category.name])),
+    [categories]
   );
 
   const undoEvidenceByPaymentId = useMemo(() => {
@@ -82,7 +89,9 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
 
   const title =
     mode === 'mark'
-      ? `Mark ${payments.length} bill${payments.length === 1 ? '' : 's'} paid`
+      ? payments.length === 1
+        ? 'Mark paid'
+        : `Mark ${payments.length} bills paid`
       : `Undo ${payments.length} payment${payments.length === 1 ? '' : 's'}`;
 
   const handleConfirm = async () => {
@@ -209,7 +218,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
                 required
               />
               <p className="mt-1 text-[10px] text-subtle">
-                Planned amount and each bill's assigned payment account will be used.
+                Planned amounts and assigned payment accounts are already set. Change only the payment date if needed.
               </p>
             </div>
           )}
@@ -247,6 +256,14 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
                           ? accountIdentityLabel(account)
                           : 'Payment account unavailable'}
                     </div>
+                    {!rowUnsafe && (
+                      <div className="mt-0.5 text-[10px] text-subtle">
+                        {payment.responsiblePerson}
+                        {payment.categoryId && categoriesById.get(payment.categoryId)
+                          ? ` · ${categoriesById.get(payment.categoryId)}`
+                          : ''}
+                      </div>
+                    )}
                     {mode === 'undo' && evidence && (
                       <div className="mt-0.5 text-[10px] text-subtle">
                         Paid {evidence.date}

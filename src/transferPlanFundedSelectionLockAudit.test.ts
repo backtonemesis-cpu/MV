@@ -19,10 +19,12 @@ describe('Transfer Plan funded-selection lock audit contract', () => {
     expect(source).toContain('Undo Funding before changing Transfer Plan selection.');
   });
 
-  it('disables funded-card bill checkboxes without hiding their selected state', () => {
+  it('keeps Transfer Plan inclusion in the dedicated Selection only section and preserves funded-account locking', () => {
+    expect(source).toContain('aria-label="Transfer Plan bill selection"');
+    expect(source).toContain('Selection only');
     expect(source).toContain('checked={payment.includeInTransferPlan}');
-    expect(source).toContain('model.fundingBatches.length > 0');
-    expect(source).toContain('funded-selection-lock-');
+    expect(source).toContain('isPaymentSelectionLocked(payment)');
+    expect(source).toContain('selection-lock-');
   });
 
   it('prevents bulk selection from mutating funded accounts', () => {

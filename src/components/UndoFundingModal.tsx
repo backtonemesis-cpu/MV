@@ -135,7 +135,8 @@ export const UndoFundingModal: React.FC<UndoFundingModalProps> = ({
             <div className="rounded-lg border border-warning bg-warning-soft px-3 py-2 text-xs text-warning">
               {model.requirement.paidPayments.length} recorded bill payment
               {model.requirement.paidPayments.length === 1 ? '' : 's'} will remain
-              recorded. This action reverses funding only.
+              recorded with their linked Activity expenses. This action reverses
+              funding only, so the resulting account/funding position may change.
             </div>
           )}
 

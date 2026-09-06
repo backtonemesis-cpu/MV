@@ -80,8 +80,10 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
       >
         <div className="mv-modal-header">
           <div>
-            <h3 id="mark-paid-title" className="text-base font-bold text-main">Record Payment</h3>
-            <p className="mt-0.5 text-[11px] text-subtle">{payment.name}</p>
+            <h3 id="mark-paid-title" className="text-base font-bold text-main">Payment details</h3>
+            <p className="mt-0.5 text-[11px] text-subtle">
+              {payment.name} · use only when the actual payment differs from the plan.
+            </p>
           </div>
           <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close">
             <X className="h-4 w-4" />
@@ -144,16 +146,21 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
           </div>
 
           <div className="mv-modal-actions">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-xs font-semibold text-muted">
+            <button
+              type="button"
+              onClick={onClose}
+              data-modal-initial-focus
+              className="min-h-11 px-4 py-2 text-xs font-semibold text-muted"
+            >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-on-accent disabled:opacity-50"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-on-accent disabled:opacity-50"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {saving ? 'Recording…' : 'Record Payment'}
+              {saving ? 'Recording…' : 'Record payment'}
             </button>
           </div>
         </form>

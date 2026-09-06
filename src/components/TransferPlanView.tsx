@@ -327,11 +327,11 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     });
   };
 
-  const handlePaymentStatusAction = async (payment: PlannedPayment) => {
+  const handlePaymentStatusAction = (payment: PlannedPayment) => {
     if (isViewOnly) return;
 
     if (payment.status !== 'paid') {
-      setMarkingPayment(payment);
+      setBulkPaymentDialog({ mode: 'mark', payments: [payment] });
       return;
     }
 
@@ -345,35 +345,64 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     setUndoFundingModel(model);
   };
 
-  const renderCardPaymentAction = (payment: PlannedPayment) => {
+  const renderCardPaymentAction = (
+    model: TransferPlanAccountModel,
+    payment: PlannedPayment
+  ) => {
     if (isViewOnly) return null;
 
-    const isPaid = payment.status === 'paid';
-    return (
-      <button
-        type="button"
-        onClick={() => handlePaymentStatusAction(payment)}
-        disabled={isPaid && !payment.actualTransactionId}
-        className={
-          isPaid
-            ? 'inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50 sm:min-h-8'
-            : 'inline-flex min-h-11 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50 sm:min-h-8'
-        }
-        title={
-          isPaid
-            ? payment.actualTransactionId
+    if (payment.status === 'paid') {
+      return (
+        <button
+          type="button"
+          onClick={() => handlePaymentStatusAction(payment)}
+          disabled={!payment.actualTransactionId}
+          className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50 sm:min-h-8"
+          title={
+            payment.actualTransactionId
               ? 'Undo recorded payment'
               : 'Legacy Paid bill has no safely linked Activity expense to undo'
-            : 'Record payment'
-        }
-      >
-        {isPaid ? (
+          }
+        >
           <RotateCcw className="h-3.5 w-3.5" />
-        ) : (
-          <CheckCircle2 className="h-3.5 w-3.5" />
+          Undo payment
+        </button>
+      );
+    }
+
+    const defaultPaymentReady =
+      model.lifecycle === 'funded' ||
+      model.lifecycle === 'covered' ||
+      model.requirement.fundedPayments.some(
+        (candidate) => candidate.id === payment.id
+      );
+
+    return (
+      <div className="flex flex-wrap items-center justify-end gap-1">
+        {defaultPaymentReady && (
+          <button
+            type="button"
+            onClick={() => handlePaymentStatusAction(payment)}
+            className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 sm:min-h-8"
+            title="Mark paid using the planned amount and assigned account"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Mark paid
+          </button>
         )}
-        {isPaid ? 'Undo payment' : 'Record paid'}
-      </button>
+        <button
+          type="button"
+          onClick={() => setMarkingPayment(payment)}
+          className="inline-flex min-h-11 items-center justify-center rounded-md px-2 text-[10px] font-semibold text-muted hover:bg-surface-muted sm:min-h-8"
+          title={
+            defaultPaymentReady
+              ? 'Use different payment details'
+              : 'Payment details are required because the planned account is not yet fully funded'
+          }
+        >
+          Payment details
+        </button>
+      </div>
     );
   };
 
@@ -490,20 +519,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <button
                   type="button"
                   onClick={() =>
-                    setBulkPaymentDialog({
-                      mode: 'mark',
-                      payments: requirement.unpaidPayments,
-                    })
-                  }
-                  disabled={requirement.unpaidPayments.length === 0}
-                  className="inline-flex min-h-11 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface disabled:opacity-50 sm:min-h-8"
-                >
-                  <CheckSquare className="h-3.5 w-3.5" />
-                  Mark all unpaid paid
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
                     setBulkPaymentDialog({ mode: 'undo', payments: selectedPaid })
                   }
                   disabled={selectedPaid.length === 0}
@@ -530,35 +545,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="flex flex-col gap-2 bg-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-start gap-2.5">
-                  {!isViewOnly && (
-                    <label className="mt-0.5 flex shrink-0 items-center" title="In Transfer Plan">
-                      <input
-                        type="checkbox"
-                        checked={payment.includeInTransferPlan}
-                        onChange={() => handleTogglePaymentInPlan(payment)}
-                        disabled={
-                          selectionBusyId === payment.id ||
-                          model.fundingBatches.length > 0
-                        }
-                        aria-describedby={
-                          model.fundingBatches.length > 0
-                            ? `funded-selection-lock-${payment.id}`
-                            : undefined
-                        }
-                        className="h-4 w-4 rounded border-muted"
-                      />
-                      <span className="sr-only">In Plan</span>
-                      {model.fundingBatches.length > 0 ? (
-                        <span
-                          id={`funded-selection-lock-${payment.id}`}
-                          className="sr-only"
-                        >
-                          Undo Funding before changing Transfer Plan selection.
-                        </span>
-                      ) : null}
-                    </label>
-                  )}
-
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="truncate text-xs font-semibold text-main">
@@ -594,11 +580,13 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
                   {!isViewOnly && (
                     <label
-                      className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-[10px] font-semibold text-muted sm:min-h-8"
+                      className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-md text-muted hover:bg-surface-muted sm:min-h-8 sm:min-w-8"
                       title={
                         payment.status === 'paid' && !payment.actualTransactionId
                           ? 'Legacy Paid bill has no linked Activity expense to undo safely'
-                          : 'Select for payment-status action'
+                          : payment.status === 'paid'
+                            ? 'Select to undo payment'
+                            : 'Select for payment'
                       }
                     >
                       <input
@@ -607,15 +595,23 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         onChange={() => togglePaymentActionSelection(payment.id)}
                         disabled={payment.status === 'paid' && !payment.actualTransactionId}
                         className="h-4 w-4 rounded border-muted"
-                        aria-label={`Select ${payment.name} for payment-status action`}
+                        aria-label={
+                          payment.status === 'paid'
+                            ? `Select ${payment.name} to undo payment`
+                            : `Select ${payment.name} for payment`
+                        }
                       />
-                      <span>Payment action</span>
+                      <span className="sr-only">
+                        {payment.status === 'paid'
+                          ? `Select ${payment.name} to undo payment`
+                          : `Select ${payment.name} for payment`}
+                      </span>
                     </label>
                   )}
                   <span className="mv-private-value min-w-[82px] text-right font-mono text-xs font-bold tabular-nums text-main">
                     {formatPence(payment.amountPence)}
                   </span>
-                  {renderCardPaymentAction(payment)}
+                  {renderCardPaymentAction(model, payment)}
                 </div>
               </div>
             );
@@ -676,7 +672,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 {meta.label}
               </span>
             </div>
-            <p className="mt-1 text-[10px] text-subtle">{meta.description}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-subtle">
+              <span>
+                <span className="font-semibold uppercase tracking-wide text-muted">Funding</span>
+                {' · '}
+                {latestFundingBatch
+                  ? 'Funded by Transfer'
+                  : lifecycle === 'needs_funding'
+                    ? 'Needs Funding'
+                    : 'Covered by Existing Balance'}
+              </span>
+              <span>
+                <span className="font-semibold uppercase tracking-wide text-muted">Payment</span>
+                {' · '}
+                {requirement.unpaidPayments.length} Unpaid · {requirement.paidPayments.length} Paid
+              </span>
+            </div>
           </div>
 
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
@@ -690,6 +701,25 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 Record transfer
               </button>
             )}
+
+            {!isViewOnly &&
+              requirement.unpaidPayments.length > 0 &&
+              (lifecycle === 'funded' || lifecycle === 'covered') && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBulkPaymentDialog({
+                      mode: 'mark',
+                      payments: requirement.unpaidPayments,
+                    })
+                  }
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-md bg-success px-3 text-[11px] font-semibold text-on-accent hover:brightness-95 sm:min-h-8"
+                  aria-label={`Mark all ${requirement.unpaidPayments.length} unpaid bills paid`}
+                >
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  Mark all paid
+                </button>
+              )}
 
             {latestFundingBatch && !isViewOnly && (
               <button
@@ -1088,6 +1118,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           mode={bulkPaymentDialog.mode}
           payments={bulkPaymentDialog.payments}
           accounts={accounts}
+          categories={categories}
           transactions={transactions}
           onClose={() => setBulkPaymentDialog(null)}
           onMarkPaid={async (confirmedPayments, actualDate) => {
