@@ -12,6 +12,12 @@ const reconcileBlock =
   source.match(/\{\/\* MODAL: Reconcile Balance \*\/[\s\S]*?\{\/\* MODAL: Account Activity Ledger \*\//)?.[0] ?? '';
 
 describe('Accounts Reconcile submenu audit contract', () => {
+  it('shows one UK-formatted reconciliation date and never appends the raw ISO statement date', () => {
+    expect(source).toContain("new Date(\`\${acc.reconciliationDate}T00:00:00\`).toLocaleDateString('en-GB')");
+    expect(source).toContain(": new Date(acc.reconciledAt).toLocaleDateString('en-GB')");
+    expect(source).not.toContain("{acc.reconciliationDate && \` · \${acc.reconciliationDate}\`}");
+  });
+
   it('does not force focus into the statement date or balance on open', () => {
     expect(reconcileBlock).not.toContain('autoFocus');
   });
