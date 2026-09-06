@@ -954,7 +954,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  {accType === 'credit' ? 'Starting balance owed' : 'Starting Balance'}
+                  {accType === 'credit' ? 'Starting balance owed (£)' : 'Starting balance (£)'}
                 </label>
                 <MoneyInput
                   type="text"
@@ -1185,7 +1185,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted mb-1">
-                    {selectedAccount.type === 'credit' ? 'Statement balance owed' : 'Statement Balance'}
+                    {selectedAccount.type === 'credit' ? 'Statement balance owed (£)' : 'Statement balance (£)'}
                   </label>
                   <MoneyInput
                     type="text"
