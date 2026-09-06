@@ -40,38 +40,42 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen) {
-      executeSuite();
-    }
+    if (isOpen) executeSuite();
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-modal-wide flex flex-col">
-        {/* Header */}
+      <div
+        className="mv-modal-card mv-modal-wide flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="acceptance-tests-modal-title"
+      >
         <div className="mv-modal-header shrink-0">
           <div className="flex items-center gap-2">
             <FileCheck2 className="w-5 h-5 text-success" />
-            <div>
-              <h2 className="text-base font-bold text-main">
-                Automated Acceptance Criteria Verification
-              </h2>
-            </div>
+            <h2 id="acceptance-tests-modal-title" className="text-base font-bold text-main">
+              Automated Acceptance Criteria Verification
+            </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label="Close acceptance tests"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Body Content */}
         <div className="mv-modal-body overflow-y-auto space-y-3">
           {summary && (
-            <div className="p-4 rounded-xl bg-success-soft border border-success flex items-center justify-between">
+            <div
+              className="p-4 rounded-xl bg-success-soft border border-success flex items-center justify-between"
+              role="status"
+            >
               <div>
                 <span className="text-xs font-bold text-success">
                   Acceptance Test Suite Status
@@ -81,6 +85,7 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
                 </div>
               </div>
               <button
+                type="button"
                 onClick={executeSuite}
                 disabled={isRunning}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent text-on-accent rounded-lg text-xs font-semibold hover:bg-success-soft transition disabled:opacity-50"
@@ -96,13 +101,15 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
           )}
 
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
+            <div
+              className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2"
+              role="alert"
+            >
               <ShieldAlert className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Test items list */}
           <div className="space-y-2">
             {results.map((test) => (
               <div
