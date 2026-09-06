@@ -4,7 +4,6 @@ import {
   Download,
   ShieldCheck,
   AlertCircle,
-  FileCheck,
   CheckCircle2,
 } from 'lucide-react';
 import { fetchBackup, preflightRestore, restoreBackup } from '../utils/api';
@@ -113,15 +112,24 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-backup-modal">
+      <div
+        className="mv-modal-card mv-backup-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="backup-restore-modal-title"
+      >
         <div className="mv-modal-header">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-success" />
-            <h2 className="text-base font-bold text-main">Backup & Restore</h2>
+            <h2 id="backup-restore-modal-title" className="text-base font-bold text-main">
+              Backup & Restore
+            </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label="Close backup and restore"
           >
             <X className="w-5 h-5" />
           </button>
@@ -129,18 +137,21 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
         <div className="mv-modal-scroll-body">
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
+            <div
+              className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2"
+              role="alert"
+            >
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Export Section */}
           <section className="mv-backup-section">
             <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Backup
             </h3>
             <button
+              type="button"
               onClick={handleExport}
               disabled={isExporting}
               className="mv-backup-secondary inline-flex items-center gap-1.5"
@@ -150,7 +161,6 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
             </button>
           </section>
 
-          {/* Restore Section (Owner Only) */}
           <section className="mv-backup-section">
             <h3 className="text-xs font-bold text-main uppercase tracking-wider mb-1">
               Restore
@@ -162,7 +172,10 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                 Owner only.
               </div>
             ) : restoreComplete ? (
-              <div className="bg-success-soft border border-success rounded-xl p-4 text-xs text-success space-y-2">
+              <div
+                className="bg-success-soft border border-success rounded-xl p-4 text-xs text-success space-y-2"
+                role="status"
+              >
                 <div className="flex items-center gap-2 font-bold text-success">
                   <CheckCircle2 className="w-4 h-4 text-success" />
                   Local Backup Restored
@@ -170,7 +183,11 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
               </div>
             ) : (
               <div className="space-y-3">
+                <label htmlFor="backup-file-input" className="sr-only">
+                  Backup JSON file
+                </label>
                 <input
+                  id="backup-file-input"
                   ref={fileInputRef}
                   type="file"
                   accept=".json"
@@ -178,14 +195,16 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
                   className="block w-full"
                 />
 
+                <label htmlFor="backup-json-input" className="sr-only">
+                  Backup JSON payload
+                </label>
                 <textarea
+                  id="backup-json-input"
                   placeholder="Paste backup JSON"
                   value={importJson}
                   onChange={(e) => setImportJson(e.target.value)}
                   className="w-full font-mono"
                 />
-
-
               </div>
             )}
           </section>
