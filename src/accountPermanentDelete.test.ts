@@ -12,6 +12,7 @@ import {
   loadLocalHousehold,
   permanentlyDeleteLocalAccount,
   preflightLocalRestore,
+  reconcileLocalAccount,
   saveLocalHousehold,
 } from './localStore';
 import { getAccountPermanentDeleteEligibility } from './utils/accountDeletion';
@@ -105,6 +106,161 @@ describe('Safe conditional permanent account deletion', () => {
     permanentlyDeleteLocalAccount(created.account.id, state.version);
     state = loadLocalHousehold();
     expect(state.accounts.some((account) => account.id === created.account.id)).toBe(false);
+  });
+
+  it('allows an otherwise unused £0.00 account with only a zero-effect reconciliation marker', () => {
+    let state = loadLocalHousehold();
+    const created = createLocalAccount(
+      {
+        name: 'Zero reconcile only',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerMemberId: state.members[0].id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    reconcileLocalAccount(created.account.id, 0, '2026-09-06', state.version);
+    state = loadLocalHousehold();
+
+    const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
+    expect(eligibility.canDeletePermanently).toBe(true);
+    expect(eligibility.zeroEffectReconciliationOnly).toBe(true);
+    expect(eligibility.removableAuditLogIds).toHaveLength(1);
+
+    const unrelatedAuditIds = state.auditLogs
+      .filter((entry) => entry.entityId !== created.account.id)
+      .map((entry) => entry.id);
+
+    permanentlyDeleteLocalAccount(created.account.id, state.version);
+    state = loadLocalHousehold();
+
+    expect(state.accounts.some((account) => account.id === created.account.id)).toBe(false);
+    expect(JSON.stringify(state.auditLogs)).not.toContain(created.account.id);
+    for (const auditId of unrelatedAuditIds) {
+      expect(state.auditLogs.some((entry) => entry.id === auditId)).toBe(true);
+    }
+  });
+
+  it('blocks reconciliation with a discrepancy even when the account otherwise has no references', () => {
+    let state = loadLocalHousehold();
+    const created = createLocalAccount(
+      {
+        name: 'Discrepancy reconcile',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerMemberId: state.members[0].id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    reconcileLocalAccount(created.account.id, 1_00, '2026-09-06', state.version);
+    state = loadLocalHousehold();
+
+    const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
+    expect(eligibility.canDeletePermanently).toBe(false);
+    expect(eligibility.reasons.join(' ')).toMatch(/reconciliation discrepancy|material reconciliation/i);
+    expect(() => permanentlyDeleteLocalAccount(created.account.id, state.version)).toThrow();
+  });
+
+  it('blocks zero-balance reconciliation when a linked Activity transaction exists', () => {
+    let state = loadLocalHousehold();
+    const created = createLocalAccount(
+      {
+        name: 'Reconciled with activity',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerMemberId: state.members[0].id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    reconcileLocalAccount(created.account.id, 0, '2026-09-06', state.version);
+    state = loadLocalHousehold();
+    addTransactionReference(state, created.account.id);
+    saveLocalHousehold(state);
+    state = loadLocalHousehold();
+
+    const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
+    expect(eligibility.canDeletePermanently).toBe(false);
+    expect(eligibility.reasons.join(' ')).toMatch(/Activity \/ ledger/i);
+  });
+
+  it('blocks reconciliation with any material financial effect', () => {
+    let state = loadLocalHousehold();
+    const created = createLocalAccount(
+      {
+        name: 'Material reconcile',
+        type: 'current',
+        startingBalancePence: 5_00,
+        ownerMemberId: state.members[0].id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    reconcileLocalAccount(created.account.id, 5_00, '2026-09-06', state.version);
+    state = loadLocalHousehold();
+
+    const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
+    expect(eligibility.canDeletePermanently).toBe(false);
+    expect(eligibility.reasons.join(' ')).toMatch(/opening balance|current balance/i);
+  });
+
+  it('supports the legacy zero-effect reconciliation marker only when it is the sole account-specific audit reference', () => {
+    let state = loadLocalHousehold();
+    const created = createLocalAccount(
+      {
+        name: 'Legacy zero reconcile',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerMemberId: state.members[0].id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const index = state.accounts.findIndex((account) => account.id === created.account.id);
+    state.accounts[index] = {
+      ...state.accounts[index],
+      reconciledAt: '2026-09-06T12:00:00.000Z',
+      reconciliationDate: '2026-09-06',
+      reconciledBalancePence: 0,
+    };
+    state.auditLogs.unshift({
+      id: 'audit-legacy-zero-reconcile',
+      timestamp: '2026-09-06T12:00:00.000Z',
+      actorEmail: 'marius@local.invalid',
+      action: 'account_updated',
+      entityType: 'account',
+      entityId: created.account.id,
+      summary: 'Account updated',
+    });
+    saveLocalHousehold(state);
+    state = loadLocalHousehold();
+
+    let eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
+    expect(eligibility.canDeletePermanently).toBe(true);
+    expect(eligibility.removableAuditLogIds).toEqual(['audit-legacy-zero-reconcile']);
+
+    state.auditLogs.unshift({
+      id: 'audit-extra-account-change',
+      timestamp: '2026-09-06T12:01:00.000Z',
+      actorEmail: 'marius@local.invalid',
+      action: 'account_archived',
+      entityType: 'account',
+      entityId: created.account.id,
+      summary: 'Account archived; financial history preserved',
+    });
+    saveLocalHousehold(state);
+    state = loadLocalHousehold();
+
+    eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
+    expect(eligibility.canDeletePermanently).toBe(false);
+    expect(eligibility.reasons.join(' ')).toMatch(/retained audit history/i);
   });
 
   it('blocks a brand-new unused account with a non-zero opening balance because the opening balance is financial state', () => {
