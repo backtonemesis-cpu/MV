@@ -1,0 +1,23 @@
+/* Stage 7 contrast audit.
+   Supporting/reference text only. Financial amount semantics, accent colors,
+   calculation logic, and layout are deliberately unchanged. */
+
+:root,
+[data-theme="light"] {
+  /* Minimum contrast across white, app canvas, muted surface and hover surface:
+     4.82:1 (#566579 on #e2e8f0). */
+  --text-muted: #566579;
+  --text-subtle: #566579;
+}
+
+[data-theme="dark"] {
+  /* Minimum contrast across common dark app surfaces: 5.79:1. */
+  --text-muted: #94a3b8;
+  --text-subtle: #94a3b8;
+}
+
+[data-theme="slate"] {
+  /* Minimum contrast across common slate app surfaces: 5.10:1. */
+  --text-muted: #cbd5e1;
+  --text-subtle: #cbd5e1;
+}
