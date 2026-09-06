@@ -11,6 +11,7 @@ import {
   updateAccount,
   reconcileAccount,
   archiveAccount,
+  reactivateAccount,
   permanentlyDeleteAccount,
   createSavingsGoal,
   contributeSavingsGoal,
@@ -331,6 +332,21 @@ export default function App() {
         setConflictServerVersion(err.serverVersion || household.version + 1);
       } else {
         setError(err.message || 'Failed to archive account');
+      }
+      throw err;
+    }
+  };
+
+  const handleReactivateAccount = async (id: string) => {
+    if (!household) return;
+    try {
+      await reactivateAccount(id, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to reactivate account');
       }
       throw err;
     }
@@ -923,6 +939,7 @@ export default function App() {
                 onUpdateAccount={handleUpdateAccount}
                 onReconcileAccount={handleReconcileAccount}
                 onArchiveAccount={handleArchiveAccount}
+                onReactivateAccount={handleReactivateAccount}
                 onPermanentDeleteAccount={handlePermanentDeleteAccount}
                 onCreateSavingsGoal={handleCreateSavingsGoal}
                 onUpdateSavingsGoal={handleUpdateSavingsGoal}
