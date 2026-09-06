@@ -93,7 +93,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <>
       {/* Desktop / PC Navigation Bar */}
-      <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors">
+      <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors" aria-label="Primary navigation">
         <div className="mv-shell-boundary mx-auto w-full max-w-[1440px] px-4">
           <div className="mv-desktop-nav-rail flex gap-0.5">
             {tabs.map((tab) => {
@@ -104,13 +104,14 @@ export const Navigation: React.FC<NavigationProps> = ({
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
                   onClick={() => navigate(tab.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-1.5 border-b-2 px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                     isActive
                       ? 'border-accent text-accent bg-accent-soft text-accent'
                       : 'border-transparent text-muted hover:text-main'
                   }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-accent' : 'text-muted'}`} />
+                  <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
                   <span>{tab.label}</span>
                   {tab.badge && (
                     <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger-soft text-danger">
@@ -125,7 +126,7 @@ export const Navigation: React.FC<NavigationProps> = ({
       </nav>
 
       {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
-      <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors">
+      <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors" aria-label="Mobile navigation">
         {isMoreOpen && (
           <div
             ref={morePanelRef}
@@ -141,9 +142,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                   key={tab.id}
                   type="button"
                   onClick={() => navigate(tab.id)}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`mv-mobile-more-item ${isActive ? 'is-active' : ''}`}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>{tab.mobileLabel}</span>
                   {tab.badge && (
                     <span className="mv-mobile-more-badge" aria-label={`${tab.badge} pending`}>
@@ -165,11 +167,12 @@ export const Navigation: React.FC<NavigationProps> = ({
                 key={tab.id}
                 id={`mobile-nav-tab-${tab.id}`}
                 onClick={() => navigate(tab.id)}
+                aria-current={isActive ? 'page' : undefined}
                 className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
                   isActive ? 'text-accent font-bold' : 'text-muted'
                 }`}
               >
-                <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-accent' : 'text-muted'}`} />
+                <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
                 <span>{tab.mobileLabel}</span>
               </button>
             );
@@ -186,7 +189,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               isMoreActive || isMoreOpen ? 'text-accent font-bold' : 'text-muted'
             }`}
           >
-            <MoreHorizontal className={`w-4 h-4 mb-0.5 ${isMoreActive || isMoreOpen ? 'text-accent' : 'text-muted'}`} />
+            <MoreHorizontal className={`w-4 h-4 mb-0.5 ${isMoreActive || isMoreOpen ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
             <span>More</span>
             {moreBadge && <span className="mv-mobile-nav-badge" aria-hidden="true" />}
           </button>

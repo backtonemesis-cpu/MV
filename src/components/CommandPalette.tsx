@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Command, Search, X } from 'lucide-react';
 import type { CardDensityPreference, NavTab } from '../types';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSetDensity,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useModalAccessibility<HTMLElement>(isOpen, onClose);
   const [query, setQuery] = useState('');
 
   const commands = useMemo<PaletteCommand[]>(
@@ -75,17 +77,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      onClose();
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
   const executeCommand = (command: PaletteCommand) => {
@@ -110,10 +101,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       }}
     >
       <section
+        ref={dialogRef}
         className="mv-command-palette"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
+        tabIndex={-1}
       >
         <div className="mv-command-search-row">
           <Command className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
@@ -144,13 +137,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             className="mv-command-close"
             aria-label="Close command palette"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mv-command-list" role="listbox" aria-label="Available commands">
+        <div className="mv-command-list" aria-label="Available commands">
           {filteredCommands.length === 0 ? (
-            <div className="mv-command-empty">No matching command</div>
+            <div className="mv-command-empty" role="status">No matching command</div>
           ) : (
             filteredCommands.map((item) => (
               <button

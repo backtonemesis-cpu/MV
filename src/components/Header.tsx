@@ -72,8 +72,9 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenBackupModal}
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-muted bg-surface px-2.5 text-[11px] font-semibold text-main transition-colors"
               title="Backup"
+              aria-label="Open backup and restore"
             >
-              <DownloadCloud className="w-4 h-4 text-muted" />
+              <DownloadCloud className="w-4 h-4 text-muted" aria-hidden="true" />
               <span className="mv-header-backup-label hidden sm:inline">Backup</span>
             </button>
 
@@ -83,13 +84,17 @@ export const Header: React.FC<HeaderProps> = ({
               disabled={isLoading}
               className="flex h-8 w-8 items-center justify-center rounded-md p-0 text-muted transition-colors hover:bg-surface-muted disabled:opacity-50"
               title="Refresh"
+              aria-label={isLoading ? 'Refreshing household data' : 'Refresh household data'}
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-accent' : 'text-muted'}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${isLoading ? 'animate-spin text-accent' : 'text-muted'}`}
+                aria-hidden="true"
+              />
             </button>
 
             <div className="mv-header-user hidden h-8 items-center gap-1.5 rounded-md border border-muted bg-surface px-2 sm:flex">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warning-soft text-warning">
-                <Shield className="w-3.5 h-3.5" />
+                <Shield className="w-3.5 h-3.5" aria-hidden="true" />
               </div>
               <div className="text-[11px] leading-tight">
                 <div className="font-semibold text-main">
@@ -103,6 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
               id="header-privacy-mask-btn"
               onClick={onTogglePrivacyMask}
               aria-pressed={isPrivacyMasked}
+              aria-label={isPrivacyMasked ? 'Show balances' : 'Mask balances'}
               className={`mv-privacy-toggle inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[11px] font-semibold transition-colors ${
                 isPrivacyMasked
                   ? 'border-accent bg-accent text-on-accent'
@@ -111,9 +117,9 @@ export const Header: React.FC<HeaderProps> = ({
               title={isPrivacyMasked ? 'Show balances' : 'Mask balances'}
             >
               {isPrivacyMasked ? (
-                <EyeOff className="h-4 w-4 shrink-0" />
+                <EyeOff className="h-4 w-4 shrink-0" aria-hidden="true" />
               ) : (
-                <Eye className="h-4 w-4 shrink-0" />
+                <Eye className="h-4 w-4 shrink-0" aria-hidden="true" />
               )}
               <span className="mv-privacy-label">
                 {isPrivacyMasked ? 'Show Balances' : 'Mask Balances'}
@@ -135,7 +141,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Use PC layout"
                 className={`mv-layout-switcher-option ${layoutMode === 'pc' ? 'is-active' : ''}`}
               >
-                <Monitor className="h-4 w-4 shrink-0" />
+                <Monitor className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>PC</span>
               </button>
               <button
@@ -147,7 +153,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Use Phone layout"
                 className={`mv-layout-switcher-option ${layoutMode === 'phone' ? 'is-active' : ''}`}
               >
-                <Smartphone className="h-4 w-4 shrink-0" />
+                <Smartphone className="h-4 w-4 shrink-0" aria-hidden="true" />
                 <span>Phone</span>
               </button>
             </div>
