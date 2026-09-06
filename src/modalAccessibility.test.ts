@@ -25,6 +25,17 @@ describe('Stage 4 accessibility and responsive regression contract', () => {
     expect(modal).toContain('if (target?.isConnected) target.focus()');
   });
 
+  it('uses navigation semantics rather than an incomplete ARIA menu model', () => {
+    const navigation = read('components/Navigation.tsx');
+    expect(navigation).toContain('aria-label="Primary navigation"');
+    expect(navigation).toContain('aria-label="Mobile navigation"');
+    expect(navigation).toContain("aria-current={isActive ? 'page' : undefined}");
+    expect(navigation).toContain("if (event.key !== 'Escape') return");
+    expect(navigation).toContain("document.getElementById('mobile-nav-tab-more')?.focus()");
+    expect(navigation).not.toContain('role="menu"');
+    expect(navigation).not.toContain('role="menuitem"');
+  });
+
   it('retains the previously repaired PC/Phone controls and iPhone-safe sizing', () => {
     const header = read('components/Header.tsx');
     const design = read('globalDesignSystem.css');
