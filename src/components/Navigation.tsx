@@ -184,7 +184,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             type="button"
             onClick={() => setIsMoreOpen((current) => !current)}
             aria-expanded={isMoreOpen}
-            aria-controls={isMoreOpen ? 'mobile-more-navigation' : undefined}
+            aria-controls="mobile-more-navigation"
             className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
               isMoreActive || isMoreOpen ? 'text-accent font-bold' : 'text-muted'
             }`}
