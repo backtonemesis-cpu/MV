@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Receipt,
@@ -53,6 +53,20 @@ export const Navigation: React.FC<NavigationProps> = ({
   const mobileMoreTabs = tabs.filter((tab) => !mobilePrimaryIds.includes(tab.id));
   const isMoreActive = mobileMoreTabs.some((tab) => tab.id === activeTab);
   const moreBadge = mobileMoreTabs.some((tab) => Boolean(tab.badge));
+
+  useEffect(() => {
+    if (!isMoreOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setIsMoreOpen(false);
+      document.getElementById('mobile-nav-tab-more')?.focus();
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isMoreOpen]);
 
   const navigate = (tab: NavTab) => {
     setIsMoreOpen(false);
@@ -153,7 +167,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             type="button"
             onClick={() => setIsMoreOpen((current) => !current)}
             aria-expanded={isMoreOpen}
-            aria-controls="mobile-more-navigation"
+            aria-controls={isMoreOpen ? 'mobile-more-navigation' : undefined}
             className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
               isMoreActive || isMoreOpen ? 'text-accent font-bold' : 'text-muted'
             }`}
