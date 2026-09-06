@@ -71,12 +71,23 @@ function associateVisibleLabels(dialog: HTMLElement): void {
   });
 }
 
+function exposePressedSelectionState(dialog: HTMLElement): void {
+  dialog
+    .querySelectorAll<HTMLButtonElement>(
+      '.mv-transaction-type-tab, .mv-transaction-selector-pill'
+    )
+    .forEach((button) => {
+      button.setAttribute('aria-pressed', button.classList.contains('is-active') ? 'true' : 'false');
+    });
+}
+
 function ensureDialogSemantics(dialog: HTMLElement): void {
   if (!dialog.hasAttribute('role')) dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-modal', 'true');
   ensureDialogName(dialog);
   ensureCloseButtonName(dialog);
   associateVisibleLabels(dialog);
+  exposePressedSelectionState(dialog);
 }
 
 export function installModalAccessibility(): () => void {
@@ -145,7 +156,12 @@ export function installModalAccessibility(): () => void {
   };
 
   const observer = new MutationObserver(scan);
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class'],
+  });
   document.addEventListener('keydown', handleKeyDown, true);
   scan();
 
