@@ -1373,12 +1373,19 @@ describe('Penny-style local MV storage', () => {
     let state = loadLocalHousehold();
     const mariusLloyds = state.accounts.find(
       (account) => account.name === 'Lloyds' && account.ownerPerson === 'Marius'
-    );
-    const vestaLloyds = state.accounts.find(
-      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Vesta'
-    );
-    expect(mariusLloyds).toBeTruthy();
-    expect(vestaLloyds).toBeTruthy();
+    )!;
+    const vesta = createLocalHouseholdMember({ name: 'Vesta' }, state.version);
+    state = loadLocalHousehold();
+    const vestaLloyds = createLocalAccount(
+      {
+        name: 'Lloyds',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerMemberId: vesta.member.id,
+      },
+      state.version
+    ).account;
+    state = loadLocalHousehold();
 
     const bill = createLocalPlannedPayment(
       {
@@ -1386,7 +1393,7 @@ describe('Penny-style local MV storage', () => {
         amountPence: 1234,
         month: '2026-10',
         responsiblePerson: 'Vesta',
-        accountId: mariusLloyds!.id,
+        accountId: mariusLloyds.id,
         status: 'unpaid',
         includeInTransferPlan: true,
       },
@@ -1396,7 +1403,7 @@ describe('Penny-style local MV storage', () => {
     state = loadLocalHousehold();
     expect(
       state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.accountId
-    ).toBe(vestaLloyds!.id);
+    ).toBe(vestaLloyds.id);
   });
 
   it('selects paid and unpaid bills independently using linked actual payment evidence', () => {
