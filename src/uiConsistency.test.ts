@@ -46,14 +46,14 @@ describe('Global finance UI consistency contract', () => {
     expect(transactionModal.match(/<MoneyInput/g)?.length).toBe(2);
     expect(transactionModal).toContain('Split ${idx + 1} amount in pounds sterling');
 
-    expect(plan).toContain("'Undo payment'");
-    expect(plan).toContain("'Record paid'");
+    expect(plan).toContain('Undo payment');
+    expect(plan).toContain('Mark paid');
     expect(plan).toContain("'Undo recorded payment'");
-    expect(plan).toContain("'Record payment'");
+    expect(plan).toContain('Payment details');
     expect(plan).toContain('onUndoPaymentsPaid');
     expect(plan).toContain('BulkPaymentStatusModal');
     expect(plan).toContain('Mark selected paid');
-    expect(plan).toContain('Mark all unpaid paid');
+    expect(plan).toContain('Mark all paid');
     expect(plan).toContain('Undo selected payments');
     expect(plan).toContain('Paid / Complete');
 
@@ -73,8 +73,9 @@ describe('Global finance UI consistency contract', () => {
     expect(plan).toContain('Show bills (');
     expect(plan).toContain('Hide bills');
     expect(plan).toContain('renderCardPaymentAction');
-    expect(plan).toContain("'Undo payment'");
-    expect(plan).toContain("'Record paid'");
+    expect(plan).toContain('Undo payment');
+    expect(plan).toContain('Mark paid');
+    expect(plan).toContain('Payment details');
     expect(plan).toContain('UndoFundingModal');
     expect(plan).toContain('setUndoFundingModel(model)');
     expect(plan).not.toContain('window.confirm');
