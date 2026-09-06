@@ -82,20 +82,20 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <section className="mv-modal-card" role="dialog" aria-modal="true" aria-label="Mark bill paid">
+      <section className="mv-modal-card" role="dialog" aria-modal="true" aria-labelledby="record-payment-title">
         <div className="mv-modal-header">
           <div>
-            <h3 className="text-base font-bold text-main">Record Payment</h3>
+            <h3 id="record-payment-title" className="text-base font-bold text-main">Record Payment</h3>
             <p className="mt-0.5 text-[11px] text-subtle">{payment.name}</p>
           </div>
-          <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close">
+          <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close record payment">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mv-modal-form">
           {error && (
-            <div className="rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs text-danger">
+            <div className="rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs text-danger" role="alert">
               {error}
             </div>
           )}
@@ -107,8 +107,9 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
 
           <div className="mv-modal-grid-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
+              <label htmlFor="record-payment-amount" className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
               <input
+                id="record-payment-amount"
                 ref={amountRef}
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
@@ -118,8 +119,9 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted">Actual date</label>
+              <label htmlFor="record-payment-date" className="mb-1 block text-xs font-semibold text-muted">Actual date</label>
               <input
+                id="record-payment-date"
                 type="date"
                 value={date}
                 onChange={(event) => setDate(event.target.value)}
@@ -130,8 +132,9 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-muted">Paid from</label>
+            <label htmlFor="record-payment-account" className="mb-1 block text-xs font-semibold text-muted">Paid from</label>
             <select
+              id="record-payment-account"
               value={accountId}
               onChange={(event) => setAccountId(event.target.value)}
               className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-xs text-main"
