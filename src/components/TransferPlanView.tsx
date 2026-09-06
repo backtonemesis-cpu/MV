@@ -16,6 +16,7 @@ import type {
   HouseholdMember,
   PlannedPayment,
   Transaction,
+  TransferPlanFundingMutationExpectation,
   UserRole,
 } from '../types';
 import { formatPence } from '../utils/currency';
@@ -32,6 +33,7 @@ import {
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { MarkPaymentPaidModal } from './MarkPaymentPaidModal';
 import { BulkPaymentStatusModal } from './BulkPaymentStatusModal';
+import { UndoFundingModal } from './UndoFundingModal';
 import { MonthPicker } from './MonthPicker';
 
 interface TransferPlanViewProps {
@@ -76,7 +78,11 @@ interface TransferPlanViewProps {
     date: string;
     month: string;
   }) => Promise<void>;
-  onUndoFunding: (destinationAccountId: string, month: string) => Promise<void>;
+  onUndoFunding: (
+    destinationAccountId: string,
+    month: string,
+    expectedBatch: TransferPlanFundingMutationExpectation
+  ) => Promise<void>;
 }
 
 function formatDueDate(value?: string): string {
@@ -152,8 +158,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     useState<PlannedPayment | null>(null);
   const [expandedAccountIds, setExpandedAccountIds] =
     useState<Record<string, boolean>>({});
-  const [undoingFundingAccountId, setUndoingFundingAccountId] =
-    useState<string | null>(null);
+  const [undoFundingModel, setUndoFundingModel] =
+    useState<TransferPlanAccountModel | null>(null);
   const [selectionBusyId, setSelectionBusyId] =
     useState<string | null>(null);
   const [bulkSelectionBusy, setBulkSelectionBusy] = useState(false);
@@ -334,39 +340,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     setBulkPaymentDialog({ mode: 'undo', payments: [payment] });
   };
 
-  const handleUndoFunding = async (model: TransferPlanAccountModel) => {
+  const handleUndoFunding = (model: TransferPlanAccountModel) => {
     if (isViewOnly || !model.latestFundingBatch) return;
-
-    const { requirement, latestFundingBatch } = model;
-    const sourceNames = latestFundingBatch.sourceAccountIds
-      .map((id) => accountsById.get(id))
-      .filter((account): account is Account => Boolean(account))
-      .map((account) => accountIdentityLabel(account))
-      .join(' + ');
-
-    const paidCount = requirement.paidPayments.length;
-    const paidWarning =
-      paidCount > 0
-        ? ` ${paidCount} recorded bill payment${paidCount === 1 ? '' : 's'} will remain recorded; this action reverses funding only.`
-        : '';
-
-    const confirmed = window.confirm(
-      `Undo the latest ${formatPence(
-        latestFundingBatch.totalPence
-      )} funding for ${accountIdentityLabel(requirement.account)}${
-        sourceNames ? ` from ${sourceNames}` : ''
-      }? The exact latest funding batch will be returned to its original source account(s).${paidWarning}`
-    );
-    if (!confirmed) return;
-
-    try {
-      setUndoingFundingAccountId(requirement.account.id);
-      await onUndoFunding(requirement.account.id, selectedMonth);
-    } catch (error: any) {
-      window.alert(error.message || 'Failed to undo Transfer Plan funding.');
-    } finally {
-      setUndoingFundingAccountId(null);
-    }
+    setUndoFundingModel(model);
   };
 
   const renderCardPaymentAction = (payment: PlannedPayment) => {
@@ -719,8 +695,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               <button
                 type="button"
                 onClick={() => handleUndoFunding(model)}
-                disabled={undoingFundingAccountId === account.id}
-                className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-muted px-3 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-md border border-muted px-3 text-[11px] font-semibold text-muted hover:bg-surface-muted sm:min-h-8"
                 title="Undo all funding for this card and return the money to the original source account(s)"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -1084,6 +1059,26 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               ...payload,
               month: selectedMonth,
             });
+          }}
+        />
+      )}
+
+      {undoFundingModel && (
+        <UndoFundingModal
+          model={undoFundingModel}
+          accounts={accounts}
+          month={selectedMonth}
+          onClose={() => setUndoFundingModel(null)}
+          onConfirm={async (
+            destinationAccountId,
+            month,
+            expectedBatch
+          ) => {
+            await onUndoFunding(
+              destinationAccountId,
+              month,
+              expectedBatch
+            );
           }}
         />
       )}
