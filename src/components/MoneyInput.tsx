@@ -1,7 +1,10 @@
 import React, { forwardRef } from 'react';
 
-interface MoneyInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface MoneyInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'inputMode'> {
   wrapperClassName?: string;
+  type?: 'text';
+  inputMode?: 'decimal';
 }
 
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
@@ -9,6 +12,8 @@ export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
     <div className={`mv-money-input-shell ${wrapperClassName}`.trim()}>
       <input
         {...inputProps}
+        type="text"
+        inputMode="decimal"
         ref={ref}
         className={`mv-money-input-control ${className}`.trim()}
       />
