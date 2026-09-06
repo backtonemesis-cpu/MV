@@ -18,6 +18,7 @@ import {
 } from '../utils/currency';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MoneyInput } from './MoneyInput';
 
 interface SavingsViewProps {
   savingsGoals: SavingsGoal[];
@@ -711,11 +712,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Target (£)</label>
-                <input
+                <MoneyInput
                   value={goalTargetStr}
                   onChange={(event) => setGoalTargetStr(event.target.value)}
                   className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                   placeholder="20000.00"
+                  inputMode="decimal"
+                  aria-label="Savings goal target in pounds sterling"
                   required
                 />
               </div>
@@ -724,11 +727,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 <label className="mb-1 block text-xs font-semibold text-muted">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
-                <input
+                <MoneyInput
                   value={goalMonthlyPlanStr}
                   onChange={(event) => setGoalMonthlyPlanStr(event.target.value)}
                   className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
                   placeholder="e.g. 500.00"
+                  inputMode="decimal"
+                  aria-label="Monthly savings plan in pounds sterling"
                 />
               </div>
 
@@ -860,21 +865,17 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Amount
                 </label>
-                <div className="relative min-w-0">
-                  <span className="mv-money-prefix pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-subtle">
-                    £
-                  </span>
-                  <input
-                    autoFocus
-                    type="text"
-                    inputMode="decimal"
-                    value={transferAmountStr}
-                    onChange={(e) => setTransferAmountStr(e.target.value)}
-                    placeholder="250.00"
-                    className="mv-money-input-with-prefix w-full min-w-0 bg-surface border border-muted rounded-xl text-xs text-main font-bold tabular-nums focus:ring-2 focus:ring-accent focus:outline-none"
-                    required
-                  />
-                </div>
+                <MoneyInput
+                  wrapperClassName="min-w-0"
+                  type="text"
+                  inputMode="decimal"
+                  value={transferAmountStr}
+                  onChange={(e) => setTransferAmountStr(e.target.value)}
+                  placeholder="250.00"
+                  className="w-full min-w-0 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  aria-label="Savings transfer amount in pounds sterling"
+                  required
+                />
               </div>
 
               <div className="mv-modal-actions">
@@ -940,11 +941,13 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
                             <div>
                 <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
-                <input
+                <MoneyInput
                   type="text"
                   value={goalTargetStr}
                   onChange={(e) => setGoalTargetStr(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  inputMode="decimal"
+                  aria-label="Savings goal target in pounds sterling"
                   required
                 />
               </div>
@@ -953,12 +956,14 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
-                <input
+                <MoneyInput
                   type="text"
                   value={goalMonthlyPlanStr}
                   onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   placeholder="e.g. 500.00"
+                  inputMode="decimal"
+                  aria-label="Monthly savings plan in pounds sterling"
                 />
               </div>
 
