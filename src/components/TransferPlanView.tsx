@@ -213,6 +213,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
   const selectedUnpaidCount = selectedPayments.length - selectedPaidCount;
 
+  const fundedSelectionLockedAccountIds = useMemo(
+    () =>
+      new Set(
+        accountModels
+          .filter((model) => model.fundingBatches.length > 0)
+          .map((model) => model.requirement.account.id)
+      ),
+    [accountModels]
+  );
+
+  const isPaymentSelectionLocked = (payment: PlannedPayment) =>
+    fundedSelectionLockedAccountIds.has(payment.accountId);
+
   const accountsById = useMemo(
     () => new Map(accounts.map((account) => [account.id, account])),
     [accounts]
@@ -242,7 +255,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   };
 
   const handleTogglePaymentInPlan = async (payment: PlannedPayment) => {
-    if (isViewOnly) return;
+    if (isViewOnly || isPaymentSelectionLocked(payment)) return;
     try {
       setSelectionBusyId(payment.id);
       await onUpdatePlannedPayment(payment.id, {
@@ -260,12 +273,24 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     status?: 'paid' | 'unpaid'
   ) => {
     if (isViewOnly) return;
+
+    const eligiblePaymentIds = monthPayments
+      .filter(
+        (payment) =>
+          !isPaymentSelectionLocked(payment) &&
+          (!status || payment.status === status)
+      )
+      .map((payment) => payment.id);
+
+    if (eligiblePaymentIds.length === 0) return;
+
     try {
       setBulkSelectionBusy(true);
       await onBulkTogglePlannedPayments({
         month: selectedMonth,
         include,
         status,
+        paymentIds: eligiblePaymentIds,
       });
     } catch (error: any) {
       window.alert(error.message || 'Failed to update Transfer Plan selection.');
@@ -479,10 +504,26 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                         type="checkbox"
                         checked={payment.includeInTransferPlan}
                         onChange={() => handleTogglePaymentInPlan(payment)}
-                        disabled={selectionBusyId === payment.id}
+                        disabled={
+                          selectionBusyId === payment.id ||
+                          model.fundingBatches.length > 0
+                        }
+                        aria-describedby={
+                          model.fundingBatches.length > 0
+                            ? `funded-selection-lock-${payment.id}`
+                            : undefined
+                        }
                         className="h-4 w-4 rounded border-muted"
                       />
                       <span className="sr-only">In Plan</span>
+                      {model.fundingBatches.length > 0 ? (
+                        <span
+                          id={`funded-selection-lock-${payment.id}`}
+                          className="sr-only"
+                        >
+                          Undo Funding before changing Transfer Plan selection.
+                        </span>
+                      ) : null}
                     </label>
                   )}
 
@@ -890,12 +931,26 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       type="checkbox"
                       checked={payment.includeInTransferPlan}
                       onChange={() => handleTogglePaymentInPlan(payment)}
-                      disabled={isViewOnly || selectionBusyId === payment.id}
+                      disabled={
+                        isViewOnly ||
+                        selectionBusyId === payment.id ||
+                        isPaymentSelectionLocked(payment)
+                      }
+                      aria-describedby={
+                        isPaymentSelectionLocked(payment)
+                          ? `selection-lock-${payment.id}`
+                          : undefined
+                      }
                       className="h-4 w-4 rounded border-muted"
                     />
                     <span className="sr-only">
                       {payment.includeInTransferPlan ? 'In Plan' : 'Not in Plan'}
                     </span>
+                    {isPaymentSelectionLocked(payment) ? (
+                      <span id={`selection-lock-${payment.id}`} className="sr-only">
+                        Undo Funding before changing Transfer Plan selection.
+                      </span>
+                    ) : null}
                   </label>
 
                   <div className="min-w-0">
