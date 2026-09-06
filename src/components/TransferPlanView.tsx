@@ -56,7 +56,6 @@ interface TransferPlanViewProps {
       accountId: string;
     }
   ) => Promise<void>;
-  onUndoPaymentPaid: (id: string) => Promise<void>;
   onMarkPaymentsPaid: (ids: string[], actualDate: string) => Promise<void>;
   onUndoPaymentsPaid: (ids: string[]) => Promise<void>;
   onBulkTogglePlannedPayments: (params: {
@@ -135,7 +134,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onOpenMonthImport,
   onUpdatePlannedPayment,
   onMarkPaymentPaid,
-  onUndoPaymentPaid,
   onMarkPaymentsPaid,
   onUndoPaymentsPaid,
   onBulkTogglePlannedPayments,
@@ -155,8 +153,6 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const [expandedAccountIds, setExpandedAccountIds] =
     useState<Record<string, boolean>>({});
   const [undoingFundingAccountId, setUndoingFundingAccountId] =
-    useState<string | null>(null);
-  const [undoingPaymentId, setUndoingPaymentId] =
     useState<string | null>(null);
   const [selectionBusyId, setSelectionBusyId] =
     useState<string | null>(null);
@@ -333,12 +329,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       return;
     }
 
-    if (!payment.actualTransactionId) {
-      window.alert(
-        'This legacy Paid bill has no safely linked Activity expense to undo. Nothing was changed.'
-      );
-      return;
-    }
+    if (!payment.actualTransactionId) return;
 
     setBulkPaymentDialog({ mode: 'undo', payments: [payment] });
   };
@@ -386,13 +377,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       <button
         type="button"
         onClick={() => handlePaymentStatusAction(payment)}
-        disabled={undoingPaymentId === payment.id}
+        disabled={isPaid && !payment.actualTransactionId}
         className={
           isPaid
             ? 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50'
             : 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50'
         }
-        title={isPaid ? 'Undo recorded payment' : 'Record payment'}
+        title={
+          isPaid
+            ? payment.actualTransactionId
+              ? 'Undo recorded payment'
+              : 'Legacy Paid bill has no safely linked Activity expense to undo'
+            : 'Record payment'
+        }
       >
         {isPaid ? (
           <RotateCcw className="h-3.5 w-3.5" />
