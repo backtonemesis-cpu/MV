@@ -5,12 +5,12 @@ import { describe, expect, it } from 'vitest';
 const css = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
 
 describe('Transaction amount money-prefix regression guard', () => {
-  it('protects transaction-body money inputs from the currency prefix', () => {
+  it('protects every prefixed money input across the density-root UI', () => {
     const rule = css.match(
-      /\.mv-modal-form input\.mv-money-input-with-prefix,[\s\S]*?\.mv-transaction-body input\.mv-money-input-with-prefix\s*\{[^}]+\}/
+      /\.mv-density-root input\.mv-money-input-with-prefix\s*\{[^}]+\}/s
     )?.[0] ?? '';
 
-    expect(rule).toContain('.mv-transaction-body input.mv-money-input-with-prefix');
+    expect(rule).toContain('.mv-density-root input.mv-money-input-with-prefix');
     expect(rule).toContain('padding-left: 32px !important');
     expect(rule).toContain('padding-right: 12px !important');
   });
@@ -19,5 +19,18 @@ describe('Transaction amount money-prefix regression guard', () => {
     const prefixRule = css.match(/\.mv-money-prefix\s*\{[^}]+\}/s)?.[0] ?? '';
     expect(prefixRule).toContain('z-index: 1');
     expect(prefixRule).toContain('color: var(--text-muted) !important');
+  });
+});
+
+
+describe('Transaction modal initial focus regression guard', () => {
+  it('does not force autofocus into the amount field when the modal opens', () => {
+    const transactionModal = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/components/TransactionModal.tsx'),
+      'utf8'
+    );
+
+    expect(transactionModal).not.toMatch(/<input\s+autoFocus\s+type="text"/);
+    expect(transactionModal).not.toContain('autoFocus\n                  type="text"');
   });
 });
