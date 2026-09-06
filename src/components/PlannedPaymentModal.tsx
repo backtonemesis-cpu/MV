@@ -4,6 +4,7 @@ import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../ty
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
+import { isBillEligibleCategory } from '../utils/categoryEligibility';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
@@ -55,6 +56,10 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const paymentAccountOptions = accounts.filter(
     (account) => account.isActive !== false || account.id === payment?.accountId
   );
+  const billCategoryOptions = categories.filter(
+    (category) =>
+      isBillEligibleCategory(category) || category.id === payment?.categoryId
+  );
 
   const dialogRef = useModalAccessibility<HTMLDivElement>(true, onClose);
 
@@ -84,6 +89,17 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     if (!month.trim()) {
       setError('Billing month is required.');
       return;
+    }
+    if (categoryId) {
+      const selectedCategory = categories.find((category) => category.id === categoryId);
+      const preservesHistoricalCategory = categoryId === payment?.categoryId;
+      if (
+        !selectedCategory ||
+        (!isBillEligibleCategory(selectedCategory) && !preservesHistoricalCategory)
+      ) {
+        setError('Choose a spending category that is valid for bills.');
+        return;
+      }
     }
 
     try {
@@ -168,9 +184,8 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               </label>
               <MoneyInput
                 id="planned-payment-amount"
-                type="number"
-                step="0.01"
-                min="0.01"
+                type="text"
+                inputMode="decimal"
                 placeholder="0.00"
                 value={amountStr}
                 onChange={(e) => setAmountStr(e.target.value)}
@@ -261,7 +276,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
                 <option value="">Select category (optional)</option>
-                {categories.map((c) => (
+                {billCategoryOptions.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
