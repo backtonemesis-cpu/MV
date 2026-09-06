@@ -3005,7 +3005,7 @@ export function markLocalPaymentsPaid(
                   !transaction.isRefund
               )
             : undefined;
-          if (linked) return { index, payment, existing: linked };
+          if (linked) return { kind: 'existing' as const, index, payment, existing: linked };
           throw new Error(
             `${payment.name} is marked Paid but does not have a valid linked Activity expense. Nothing was changed.`
           );
@@ -3023,14 +3023,14 @@ export function markLocalPaymentsPaid(
         if (!isSafePence(payment.amountPence) || payment.amountPence < 0) {
           throw new Error(`${payment.name} does not have a valid exact-pence amount.`);
         }
-        return { index, payment, categoryId };
+        return { kind: 'new' as const, index, payment, categoryId };
       });
 
       const transactions: Transaction[] = [];
       const payments: PlannedPayment[] = [];
 
       for (const item of prepared) {
-        if ('existing' in item) {
+        if (item.kind === 'existing') {
           transactions.push(item.existing);
           payments.push(item.payment);
           continue;
