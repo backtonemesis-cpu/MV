@@ -1448,14 +1448,13 @@ body,
 }
 
 .mv-funding-money-field {
-  position: relative;
+  display: block;
+  min-width: 0;
 }
 
-/* Funding amounts use the same shared GBP primitive as every other money
-   entry surface. Do not reintroduce local prefix typography or wide padding. */
+/* Funding amounts use the same numeric-only GBP primitive as every other
+   money-entry surface; the generic funding control padding remains authoritative. */
 .mv-funding-modal-form input.mv-money-input-control {
-  padding-left: 23px !important;
-  padding-right: var(--mv-ds-space-3) !important;
   font-weight: 600 !important;
   font-variant-numeric: tabular-nums lining-nums;
 }
