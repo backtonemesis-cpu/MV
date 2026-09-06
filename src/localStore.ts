@@ -1621,99 +1621,81 @@ export function executeLocalTransfer(
     description?: string;
     date?: string;
     payer?: string;
+    idempotencyKey?: string;
   },
   expectedVersion: number
 ): { transaction: Transaction; version: number } {
   if (payload.sourceAccountId === payload.destinationAccountId) {
     throw new Error('Source and destination accounts must be different.');
   }
-  const state = loadLocalHousehold();
-  const source = state.accounts.find((account) => account.id === payload.sourceAccountId);
-  const destination = state.accounts.find(
-    (account) => account.id === payload.destinationAccountId
-  );
-  if (!source || source.isActive === false) throw new Error('Funding source account is unavailable.');
-  if (!destination || destination.isActive === false) {
-    throw new Error('Destination account is unavailable.');
-  }
-  if (source.type === 'credit') {
-    throw new Error('Credit accounts cannot be used as Transfer Plan funding sources.');
-  }
   if (!isSafePence(payload.amountPence) || payload.amountPence <= 0) {
     throw new Error('Transfer amount must be exact positive integer pence.');
   }
-  if (source.currentBalancePence < payload.amountPence) {
-    throw new Error('Funding source does not have enough available balance for this transfer.');
-  }
-  const category = state.categories.find((item) => item.id === 'cat-transfer');
-  if (!category) throw new Error('Internal Transfer category is missing.');
 
   const transferDate = payload.date || localTodayDateKey();
-  const sourceNeedsAnchorAdjustment =
-    source.reconciliationDate &&
-    Number.isSafeInteger(source.reconciledBalancePence) &&
-    transferDate <= source.reconciliationDate;
-  const destinationNeedsAnchorAdjustment =
-    destination.reconciliationDate &&
-    Number.isSafeInteger(destination.reconciledBalancePence) &&
-    transferDate <= destination.reconciliationDate;
+  const idempotencyKey = payload.idempotencyKey?.trim();
 
-  if (sourceNeedsAnchorAdjustment || destinationNeedsAnchorAdjustment) {
-    const result = mutateLocalHousehold(
-      expectedVersion,
-      {
-        action: 'transfer_created',
-        entityType: 'transaction',
-        entityId: '',
-        summary: payload.description || 'Internal transfer',
-      },
-      (draft) => {
-        const draftSource = draft.accounts.find((account) => account.id === payload.sourceAccountId)!;
-        const draftDestination = draft.accounts.find(
-          (account) => account.id === payload.destinationAccountId
-        )!;
-        adjustAnchoredBalanceForNewTransfer(draftSource, -payload.amountPence, transferDate);
-        adjustAnchoredBalanceForNewTransfer(draftDestination, payload.amountPence, transferDate);
-
-        const tx: Transaction = {
-          id: createId('tx'),
-          accountId: payload.sourceAccountId,
-          targetAccountId: payload.destinationAccountId,
-          amountPence: payload.amountPence,
-          description: payload.description || 'Internal transfer',
-          date: transferDate,
-          payer: payload.payer || source.ownerPerson || 'Joint',
-          categoryId: category.id,
-          type: 'transfer',
-          isTransfer: true,
-          isRepayment: false,
-          isSavings: false,
-          isRefund: false,
-          createdAt: nowIso(),
-          createdBy: OWNER_EMAIL,
-        };
-        draft.transactions.unshift(tx);
-        return tx;
-      }
-    );
-    return { transaction: result.value, version: result.state.version };
-  }
-
-  return createLocalTransaction(
+  const result = mutateLocalHousehold(
+    expectedVersion,
     {
-      accountId: payload.sourceAccountId,
-      targetAccountId: payload.destinationAccountId,
-      amountPence: payload.amountPence,
-      description: payload.description || 'Internal transfer',
-      date: transferDate,
-      payer: payload.payer || source.ownerPerson || 'Joint',
-      categoryId: category.id,
-      type: 'transfer',
-      isTransfer: true,
-      isSavings: false,
+      action: 'transfer_created',
+      entityType: 'transaction',
+      entityId: '',
+      summary: payload.description || 'Internal transfer',
     },
-    expectedVersion
+    (state) => {
+      const source = assertAccountExists(state, payload.sourceAccountId);
+      const destination = assertAccountExists(state, payload.destinationAccountId);
+
+      if (source.isActive === false) throw new Error('Funding source account is unavailable.');
+      if (destination.isActive === false) throw new Error('Destination account is unavailable.');
+      if (source.type === 'credit') {
+        throw new Error('Credit accounts cannot be used as transfer funding sources.');
+      }
+      if (source.currentBalancePence < payload.amountPence) {
+        throw new Error('Funding source does not have enough available balance for this transfer.');
+      }
+
+      const category = state.categories.find((item) => item.id === 'cat-transfer');
+      if (!category) throw new Error('Internal Transfer category is missing.');
+
+      if (
+        idempotencyKey &&
+        state.transactions.some(
+          (transaction) => transaction.idempotencyKey?.trim() === idempotencyKey
+        )
+      ) {
+        throw new Error('Duplicate transfer request rejected.');
+      }
+
+      adjustAnchoredBalanceForNewTransfer(source, -payload.amountPence, transferDate);
+      adjustAnchoredBalanceForNewTransfer(destination, payload.amountPence, transferDate);
+
+      const tx: Transaction = {
+        id: createId('tx'),
+        accountId: payload.sourceAccountId,
+        targetAccountId: payload.destinationAccountId,
+        amountPence: payload.amountPence,
+        description: payload.description || 'Internal transfer',
+        date: transferDate,
+        payer: payload.payer || source.ownerPerson || 'Joint',
+        categoryId: category.id,
+        type: 'transfer',
+        isTransfer: true,
+        isRepayment: false,
+        isSavings: false,
+        isRefund: false,
+        idempotencyKey,
+        createdAt: nowIso(),
+        createdBy: OWNER_EMAIL,
+      };
+
+      state.transactions.unshift(tx);
+      return tx;
+    }
   );
+
+  return { transaction: result.value, version: result.state.version };
 }
 
 
