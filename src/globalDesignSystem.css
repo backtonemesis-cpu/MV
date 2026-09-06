@@ -2028,3 +2028,93 @@ body,
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
+
+
+/* ==========================================================================
+   PHYSICAL PHONE HEADER ESCAPE HATCH — MODE SWITCHER ALWAYS REACHABLE
+   The PC/Phone control belongs to the physical viewport, not the selected
+   content layout. On iPhone-sized screens it must remain fully visible even
+   while PC mode is active, so the user can always switch back to Phone mode.
+   ========================================================================== */
+
+@media (max-width: 40rem) {
+  .mv-density-root .mv-app-header {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow: visible !important;
+  }
+
+  .mv-density-root .mv-app-header .mv-shell-boundary {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding-inline: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-density-root .mv-app-header-row {
+    width: 100%;
+    min-width: 0 !important;
+    gap: var(--mv-ds-space-1) !important;
+  }
+
+  .mv-density-root .mv-header-brand {
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+  }
+
+  .mv-density-root .mv-header-brand-copy,
+  .mv-density-root .mv-header-user,
+  .mv-density-root .mv-header-backup-label,
+  .mv-density-root .mv-privacy-label {
+    display: none !important;
+  }
+
+  .mv-density-root .mv-header-actions {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    gap: var(--mv-ds-space-1) !important;
+    overflow: visible !important;
+  }
+
+  .mv-density-root #header-backup-btn,
+  .mv-density-root #header-refresh-btn,
+  .mv-density-root #header-privacy-mask-btn {
+    width: var(--mv-ds-control-large) !important;
+    min-width: var(--mv-ds-control-large) !important;
+    height: var(--mv-ds-control-large) !important;
+    min-height: var(--mv-ds-control-large) !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+
+  .mv-density-root .mv-layout-switcher {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 10rem !important;
+    min-width: 10rem !important;
+    max-width: 10rem !important;
+    flex: 0 0 10rem !important;
+    gap: var(--mv-ds-space-1) !important;
+    padding: var(--mv-ds-space-1) !important;
+  }
+
+  .mv-density-root .mv-layout-switcher-option,
+  .mv-layout-pc .mv-layout-switcher-option,
+  .mv-layout-phone .mv-layout-switcher-option {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: var(--mv-ds-control-large) !important;
+    min-height: var(--mv-ds-control-large) !important;
+    padding-inline: var(--mv-ds-space-2) !important;
+    gap: var(--mv-ds-space-1) !important;
+    font-size: var(--mv-ds-text-compact) !important;
+    line-height: var(--mv-ds-leading-compact) !important;
+  }
+
+  .mv-density-root .mv-layout-switcher-option svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+}
