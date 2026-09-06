@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard,
   Receipt,
@@ -31,6 +31,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   pendingMembersCount,
 }) => {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreTriggerRef = useRef<HTMLButtonElement>(null);
+  const morePanelRef = useRef<HTMLDivElement>(null);
 
   const tabs: TabItem[] = [
     { id: 'dashboard', label: 'Home', mobileLabel: 'Home', icon: LayoutDashboard },
@@ -53,6 +55,35 @@ export const Navigation: React.FC<NavigationProps> = ({
   const mobileMoreTabs = tabs.filter((tab) => !mobilePrimaryIds.includes(tab.id));
   const isMoreActive = mobileMoreTabs.some((tab) => tab.id === activeTab);
   const moreBadge = mobileMoreTabs.some((tab) => Boolean(tab.badge));
+
+  useEffect(() => {
+    if (!isMoreOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setIsMoreOpen(false);
+      moreTriggerRef.current?.focus({ preventScroll: true });
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (
+        morePanelRef.current?.contains(event.target) ||
+        moreTriggerRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setIsMoreOpen(false);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isMoreOpen]);
 
   const navigate = (tab: NavTab) => {
     setIsMoreOpen(false);
@@ -96,7 +127,12 @@ export const Navigation: React.FC<NavigationProps> = ({
       {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
       <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors">
         {isMoreOpen && (
-          <div className="mv-mobile-more-menu" role="menu" aria-label="More navigation">
+          <div
+            ref={morePanelRef}
+            id="mobile-more-navigation"
+            className="mv-mobile-more-menu"
+            aria-label="More navigation"
+          >
             {mobileMoreTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -104,7 +140,6 @@ export const Navigation: React.FC<NavigationProps> = ({
                 <button
                   key={tab.id}
                   type="button"
-                  role="menuitem"
                   onClick={() => navigate(tab.id)}
                   className={`mv-mobile-more-item ${isActive ? 'is-active' : ''}`}
                 >
@@ -141,11 +176,12 @@ export const Navigation: React.FC<NavigationProps> = ({
           })}
 
           <button
+            ref={moreTriggerRef}
             id="mobile-nav-tab-more"
             type="button"
             onClick={() => setIsMoreOpen((current) => !current)}
             aria-expanded={isMoreOpen}
-            aria-haspopup="menu"
+            aria-controls="mobile-more-navigation"
             className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
               isMoreActive || isMoreOpen ? 'text-accent font-bold' : 'text-muted'
             }`}
