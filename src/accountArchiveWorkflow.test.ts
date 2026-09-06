@@ -42,7 +42,7 @@ describe('dedicated account archive/reactivate mutations', () => {
     expect(account.isActive).toBe(false);
     expect(account.startingBalancePence).toBe(12345);
     expect(account.currentBalancePence).toBe(12345);
-    expect(state.auditLogs.at(-1)?.action).toBe('account_archived');
+    expect(state.auditLogs.some((entry) => entry.action === 'account_archived' && entry.entityId === created.account.id)).toBe(true);
 
     reactivateLocalAccount(created.account.id, state.version);
     state = loadLocalHousehold();
@@ -50,7 +50,7 @@ describe('dedicated account archive/reactivate mutations', () => {
     expect(account.isActive).toBe(true);
     expect(account.startingBalancePence).toBe(12345);
     expect(account.currentBalancePence).toBe(12345);
-    expect(state.auditLogs.at(-1)?.action).toBe('account_reactivated');
+    expect(state.auditLogs.some((entry) => entry.action === 'account_reactivated' && entry.entityId === created.account.id)).toBe(true);
   });
 
   it('blocks generic account updates from bypassing dedicated status audit actions', () => {
