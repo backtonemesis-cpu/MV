@@ -137,6 +137,19 @@ export interface PlannedPayment {
   updatedBy?: string;
 }
 
+export interface PlannedPaymentMutationExpectation {
+  id: string;
+  name: string;
+  amountPence: number;
+  month: string;
+  responsiblePerson: Payer;
+  accountId: string;
+  categoryId?: string;
+  status: 'unpaid' | 'paid';
+  includeInTransferPlan: boolean;
+  actualTransactionId?: string;
+}
+
 export interface AccountFundingRequirement {
   account: Account;
   currentBalancePence: number;
