@@ -14,6 +14,7 @@ import type {
 } from './types';
 import { normalizeUserPreferences } from './themeEngine';
 import { calculateAccountFunding } from './utils/transferPlan';
+import { getAccountPermanentDeleteEligibility } from './utils/accountDeletion';
 import {
   findLatestTransferPlanFundingBatch,
   getLegacyIncomingFundingBatches,
@@ -1607,28 +1608,61 @@ export function updateLocalAccount(
   return { account: result.value, version: result.state.version };
 }
 
-export function deleteLocalAccount(id: string, expectedVersion: number): { version: number } {
+export function archiveLocalAccount(
+  id: string,
+  expectedVersion: number
+): { account: Account; version: number } {
   const result = mutateLocalHousehold(
     expectedVersion,
     {
-      action: 'account_deleted_or_archived',
+      action: 'account_archived',
       entityType: 'account',
       entityId: id,
-      summary: 'Account removed from active use',
+      summary: 'Account archived; financial history preserved',
     },
     (state) => {
       const index = state.accounts.findIndex((account) => account.id === id);
       if (index < 0) throw new Error('Account not found.');
-      const referenced =
-        state.transactions.some((tx) => tx.accountId === id || tx.targetAccountId === id) ||
-        state.plannedPayments.some((item) => item.accountId === id) ||
-        (state.plannedIncomes || []).some((item) => item.accountId === id) ||
-        state.savingsGoals.some((item) => item.accountId === id || item.linkedAccountId === id);
-      if (referenced) state.accounts[index] = { ...state.accounts[index], isActive: false };
-      else state.accounts.splice(index, 1);
+      const next = { ...state.accounts[index], isActive: false };
+      state.accounts[index] = next;
+      return next;
+    }
+  );
+  return { account: result.value, version: result.state.version };
+}
+
+export function permanentlyDeleteLocalAccount(
+  id: string,
+  expectedVersion: number
+): { version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'account_permanently_deleted',
+      entityType: 'account',
+      entityId: id,
+      summary: 'Unused account permanently deleted after reference check',
+    },
+    (state) => {
+      const index = state.accounts.findIndex((account) => account.id === id);
+      if (index < 0) throw new Error('Account not found.');
+
+      const eligibility = getAccountPermanentDeleteEligibility(state, id);
+      if (!eligibility.canDeletePermanently) {
+        throw new Error(
+          `This account cannot be permanently deleted. ${eligibility.reasons.join(' ')} Archive it instead.`
+        );
+      }
+
+      state.accounts.splice(index, 1);
     }
   );
   return { version: result.state.version };
+}
+
+/** @deprecated Use archiveLocalAccount or permanentlyDeleteLocalAccount explicitly. */
+export function deleteLocalAccount(id: string, expectedVersion: number): { version: number } {
+  return permanentlyDeleteLocalAccount(id, expectedVersion);
 }
 
 export function reconcileLocalAccount(
