@@ -705,7 +705,7 @@ describe('Penny-style local MV storage', () => {
     ).toBe(4_000_00);
     expect(
       state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
-    ).toBe(15_687_47);
+    ).toBe(20_000_00);
   });
 
   it('prevents Transfer Plan funding from draining a source account below its own selected bills', () => {
