@@ -37,6 +37,7 @@ import {
   removeLocalHouseholdMember,
 } from './localStore';
 import { generateTransferPlan } from './utils/transferPlan';
+import { calculateFinancialSummary } from './utils/currency';
 import { getLatestTransferPlanFundingByDestination } from './utils/transferPlanFunding';
 
 class MemoryStorage implements Storage {
@@ -1637,18 +1638,17 @@ describe('Penny-style local MV storage', () => {
     ).toBe('unpaid');
   });
 
-  it('keeps received income and its linked Activity transaction reconciled when edited', () => {
+  it('keeps partial income open until cumulative Activity receipts satisfy the expectation', () => {
     let state = loadLocalHousehold();
-    const account = state.accounts.find((item) => item.name === 'Lloyds');
-    expect(account).toBeTruthy();
+    const account = state.accounts.find((item) => item.id === 'test-account-lloyds')!;
 
     const created = createLocalPlannedIncome(
       {
-        name: 'Test Wage',
-        expectedAmountPence: 120000,
+        name: 'Synthetic wage',
+        expectedAmountPence: 1000_00,
         month: '2026-10',
         sourcePerson: 'Marius',
-        accountId: account!.id,
+        accountId: account.id,
         categoryId: 'cat-salary',
         expectedDate: '2026-10-01',
         status: 'expected',
@@ -1657,54 +1657,161 @@ describe('Penny-style local MV storage', () => {
     );
 
     state = loadLocalHousehold();
-    const received = markLocalIncomeReceived(
+    const first = markLocalIncomeReceived(
       created.income.id,
       {
-        actualAmountPence: 119500,
+        actualAmountPence: 400_00,
         actualDate: '2026-10-02',
-        accountId: account!.id,
+        accountId: account.id,
       },
       state.version
     );
 
     state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        actualAmountPence: 400_00,
+      })
+    );
+
+    const second = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 350_00,
+        actualDate: '2026-10-05',
+        accountId: account.id,
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        actualAmountPence: 750_00,
+        actualTransactionId: second.transaction.id,
+      })
+    );
+    expect(
+      state.transactions.filter((tx) => tx.plannedIncomeId === created.income.id)
+    ).toHaveLength(2);
+
+    updateLocalTransaction(
+      first.transaction.id,
+      { amountPence: 450_00 },
+      state.version
+    );
+    state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)?.actualAmountPence)
+      .toBe(800_00);
+
+    const finalReceipt = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 200_00,
+        actualDate: '2026-10-10',
+        accountId: account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'received',
+        actualAmountPence: 1000_00,
+        actualTransactionId: finalReceipt.transaction.id,
+      })
+    );
+
+    expect(() =>
+      markLocalIncomeReceived(
+        created.income.id,
+        {
+          actualAmountPence: 1_00,
+          actualDate: '2026-10-11',
+          accountId: account.id,
+        },
+        state.version
+      )
+    ).toThrow('Planned income is already fully received');
+
+    deleteLocalTransaction(second.transaction.id, state.version);
+    state = loadLocalHousehold();
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        actualAmountPence: 650_00,
+      })
+    );
+    expect(
+      state.transactions.filter((tx) => tx.plannedIncomeId === created.income.id)
+    ).toHaveLength(2);
+  });
+
+  it('keeps planned income edits separate from actual Activity evidence', () => {
+    let state = loadLocalHousehold();
+    const account = state.accounts.find((item) => item.id === 'test-account-lloyds')!;
+
+    const created = createLocalPlannedIncome(
+      {
+        name: 'Original wage plan',
+        expectedAmountPence: 500_00,
+        month: '2026-10',
+        sourcePerson: 'Marius',
+        accountId: account.id,
+        categoryId: 'cat-salary',
+        status: 'expected',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const receipt = markLocalIncomeReceived(
+      created.income.id,
+      {
+        actualAmountPence: 200_00,
+        actualDate: '2026-10-03',
+        accountId: account.id,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
     updateLocalPlannedIncome(
       created.income.id,
       {
-        name: 'Corrected Wage',
-        expectedAmountPence: 120500,
-        actualAmountPence: 120000,
-        actualDate: '2026-10-03',
-        sourcePerson: 'Marius',
-        accountId: account!.id,
-        categoryId: 'cat-salary',
-        status: 'partial',
+        name: 'Corrected expected wage',
+        expectedAmountPence: 600_00,
       },
       state.version
     );
-
     state = loadLocalHousehold();
-    const income = state.plannedIncomes?.find((item) => item.id === created.income.id);
-    const linkedTx = state.transactions.find((tx) => tx.id === received.transaction.id);
 
-    expect(income).toEqual(
+    expect(state.plannedIncomes?.find((item) => item.id === created.income.id)).toEqual(
       expect.objectContaining({
-        name: 'Corrected Wage',
-        expectedAmountPence: 120500,
-        actualAmountPence: 120000,
-        actualDate: '2026-10-03',
+        name: 'Corrected expected wage',
+        expectedAmountPence: 600_00,
+        actualAmountPence: 200_00,
+        status: 'partial',
       })
     );
-    expect(linkedTx).toEqual(
+    expect(state.transactions.find((tx) => tx.id === receipt.transaction.id)).toEqual(
       expect.objectContaining({
-        description: 'Corrected Wage',
-        amountPence: 120000,
+        description: 'Original wage plan',
+        amountPence: 200_00,
         date: '2026-10-03',
-        categoryId: 'cat-salary',
-        accountId: account!.id,
-        plannedIncomeId: created.income.id,
       })
     );
+
+    expect(() =>
+      updateLocalPlannedIncome(
+        created.income.id,
+        { actualAmountPence: 250_00 },
+        state.version
+      )
+    ).toThrow('Actual income evidence cannot be edited from the planned-income form');
   });
 
   it('fails stale local writes instead of silently overwriting another tab', () => {
@@ -2195,6 +2302,182 @@ describe('Penny-style local MV storage', () => {
     state = loadLocalHousehold();
     expect(state.accounts.find((account) => account.id === source.id)?.currentBalancePence)
       .toBe(1000_00);
+  });
+
+  it('keeps credit-card purchases as spending while repayments reduce the liability without double-counting spend', () => {
+    let state = loadLocalHousehold();
+    const current = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
+    const credit = createLocalAccount(
+      {
+        name: 'Liability test card',
+        type: 'credit',
+        startingBalancePence: -100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    createLocalTransaction(
+      {
+        description: 'Card purchase',
+        amountPence: 40_00,
+        type: 'expense',
+        categoryId: 'cat-groceries',
+        accountId: credit.account.id,
+        payer: 'Marius',
+        date: '2026-09-06',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.accounts.find((account) => account.id === credit.account.id)?.currentBalancePence
+    ).toBe(-140_00);
+
+    createLocalTransaction(
+      {
+        description: 'Card repayment',
+        amountPence: 30_00,
+        type: 'repayment',
+        categoryId: 'cat-transfer',
+        accountId: current.id,
+        targetAccountId: credit.account.id,
+        payer: 'Marius',
+        isRepayment: true,
+        date: '2026-09-06',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(
+      state.accounts.find((account) => account.id === credit.account.id)?.currentBalancePence
+    ).toBe(-110_00);
+    expect(
+      state.accounts.find((account) => account.id === current.id)?.currentBalancePence
+    ).toBe(970_00);
+
+    const summary = calculateFinancialSummary(
+      state.transactions.filter((transaction) => transaction.date.startsWith('2026-09'))
+    );
+    expect(summary.grossExpensesPence).toBe(40_00);
+    expect(summary.cardRepaymentsPence).toBe(30_00);
+  });
+
+  it('blocks new financial activity on archived accounts while preserving historical references', () => {
+    let state = loadLocalHousehold();
+    const account = createLocalAccount(
+      {
+        name: 'Archive guard current',
+        type: 'current',
+        startingBalancePence: 100_00,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const bill = createLocalPlannedPayment(
+      {
+        name: 'Pre-archive bill',
+        amountPence: 10_00,
+        month: '2026-10',
+        responsiblePerson: 'Marius',
+        accountId: account.account.id,
+        includeInTransferPlan: false,
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    const income = createLocalPlannedIncome(
+      {
+        name: 'Pre-archive income',
+        expectedAmountPence: 20_00,
+        month: '2026-10',
+        sourcePerson: 'Marius',
+        accountId: account.account.id,
+        categoryId: 'cat-salary',
+      },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    updateLocalAccount(account.account.id, { isActive: false }, state.version);
+    state = loadLocalHousehold();
+
+    expect(() =>
+      createLocalTransaction(
+        {
+          description: 'Post-archive expense',
+          amountPence: 1_00,
+          type: 'expense',
+          categoryId: 'cat-groceries',
+          accountId: account.account.id,
+          payer: 'Marius',
+        },
+        state.version
+      )
+    ).toThrow('Archived accounts cannot receive new financial activity');
+
+    expect(() =>
+      markLocalPaymentPaid(
+        bill.payment.id,
+        {
+          actualAmountPence: 10_00,
+          actualDate: '2026-10-02',
+          accountId: account.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Archived accounts cannot receive new financial activity');
+
+    expect(() =>
+      markLocalIncomeReceived(
+        income.income.id,
+        {
+          actualAmountPence: 20_00,
+          actualDate: '2026-10-02',
+          accountId: account.account.id,
+        },
+        state.version
+      )
+    ).toThrow('Archived accounts cannot receive new financial activity');
+
+    state = loadLocalHousehold();
+    expect(state.plannedPayments.some((item) => item.id === bill.payment.id)).toBe(true);
+    expect(state.plannedIncomes?.some((item) => item.id === income.income.id)).toBe(true);
+  });
+
+  it('retains audit history beyond 500 entries', () => {
+    let state = loadLocalHousehold();
+    state.auditLogs = Array.from({ length: 501 }, (_, index) => ({
+      id: `historic-audit-${index}`,
+      timestamp: '2026-01-01T00:00:00.000Z',
+      actorEmail: 'audit@local.invalid',
+      action: 'historic_test',
+      entityType: 'system' as const,
+      entityId: `historic-${index}`,
+      summary: `Historic audit ${index}`,
+    }));
+    saveLocalHousehold(state);
+
+    state = loadLocalHousehold();
+    createLocalAccount(
+      {
+        name: 'Audit retention account',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerPerson: 'Marius',
+      },
+      state.version
+    );
+
+    state = loadLocalHousehold();
+    expect(state.auditLogs).toHaveLength(502);
+    expect(state.auditLogs.some((entry) => entry.id === 'historic-audit-500')).toBe(true);
   });
 
   it('locks out malformed stored JSON rather than overwriting it', () => {
