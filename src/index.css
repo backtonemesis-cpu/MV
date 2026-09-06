@@ -1817,7 +1817,7 @@ html[data-theme] button.bg-white:hover {
   gap: 6px;
   border-radius: 6px;
   padding: 6px 16px !important;
-  color: #64748B;
+  color: var(--text-muted);
   font-size: 13px !important;
   font-weight: 600;
   line-height: 1;
@@ -1877,9 +1877,12 @@ html[data-theme] button.bg-white:hover {
 }
 
 .mv-settings-panel p,
-.mv-settings-panel .text-muted,
+.mv-settings-panel .text-muted {
+  color: var(--text-muted);
+}
+
 .mv-settings-panel .text-subtle {
-  color: #64748B;
+  color: var(--text-subtle);
 }
 
 .mv-settings-control,
@@ -1958,7 +1961,7 @@ html[data-theme] button.bg-white:hover {
 .mv-settings-primary {
   border: 1px solid #22C55E;
   background: #22C55E;
-  color: #FFFFFF;
+  color: #0F172A;
 }
 
 .mv-settings-primary:hover:not(:disabled) {
@@ -2023,7 +2026,7 @@ html[data-theme] button.bg-white:hover {
   gap: 6px;
   border-radius: 5px;
   padding: 6px 10px !important;
-  color: #64748B;
+  color: var(--text-muted);
   font-size: 12px !important;
   font-weight: 600;
 }
@@ -2085,7 +2088,7 @@ html[data-theme] button.bg-white:hover {
   border-radius: 6px;
   padding: 8px 10px;
   background: var(--field);
-  color: #64748B;
+  color: var(--text-muted);
   font-size: 11px;
 }
 
@@ -2095,9 +2098,12 @@ html[data-theme] button.bg-white:hover {
   font-weight: 600;
 }
 
-.mv-settings-log-row .text-subtle,
 .mv-settings-log-row .text-muted {
-  color: #64748B;
+  color: var(--text-muted);
+}
+
+.mv-settings-log-row .text-subtle {
+  color: var(--text-subtle);
 }
 
 /* Backup modal and Income modals share the same compact geometry. */
@@ -2220,7 +2226,7 @@ html[data-theme] button.bg-white:hover {
 .mv-income-primary {
   border: 1px solid #22C55E;
   background: #22C55E;
-  color: #FFFFFF;
+  color: #0F172A;
 }
 
 .mv-backup-secondary,
