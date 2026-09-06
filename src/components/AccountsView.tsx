@@ -835,7 +835,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   setDeleteAccountTarget(null);
                 }}
                 disabled={isSubmitting}
-                className="mv-secondary-action"
+                className="inline-flex items-center justify-center rounded-lg border border-muted bg-surface-muted px-4 text-sm font-semibold text-main transition-all hover:bg-surface disabled:opacity-50"
                 data-modal-initial-focus
               >
                 Cancel
@@ -844,7 +844,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 type="button"
                 onClick={handlePermanentDelete}
                 disabled={isSubmitting}
-                className="mv-danger-action"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-4 text-sm font-semibold text-danger transition-all hover:opacity-80 disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
                 {isSubmitting ? 'Deleting…' : 'Delete permanently'}
