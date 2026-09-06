@@ -7,6 +7,11 @@ import type {
   ThemePreference,
   UserPreferences,
 } from './types';
+import {
+  accessibleAccentTextRgb,
+  rgbCss,
+  textOnAccentRgb,
+} from './utils/accentContrast';
 
 export const THEME_STORAGE_KEY = 'mv_local_preferences_v1';
 export const LEGACY_THEME_KEY = 'mv-theme-mode';
@@ -176,10 +181,17 @@ export function applyThemePreferences(
 
   const accentRgb = accentRgbForPreference(normalized);
   const accentRgbCss = `${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}`;
+  const accentTextRgb = accessibleAccentTextRgb(accentRgb, normalized.theme);
+  const textOnAccent = textOnAccentRgb(accentRgb);
+
+  // Preserve the user's actual accent for fills, focus rings and decoration.
+  // Only text-facing tokens are adjusted when contrast requires it.
   resolvedRoot.style.setProperty('--accent-rgb', accentRgbCss);
   resolvedRoot.style.setProperty('--primary', `rgb(${accentRgbCss})`);
   resolvedRoot.style.setProperty('--primary-light', `rgba(${accentRgbCss}, 0.10)`);
-  resolvedRoot.style.setProperty('--primary-light-text', `rgb(${accentRgbCss})`);
+  resolvedRoot.style.setProperty('--color-accent', rgbCss(accentTextRgb));
+  resolvedRoot.style.setProperty('--primary-light-text', rgbCss(accentTextRgb));
+  resolvedRoot.style.setProperty('--text-on-primary', rgbCss(textOnAccent));
 
   const cardDensity =
     normalized.cardDensity === 'comfortable'
