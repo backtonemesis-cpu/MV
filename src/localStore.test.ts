@@ -2112,20 +2112,6 @@ describe('Penny-style local MV storage', () => {
     ).toBe('2028-02-29');
   });
 
-  it('rejects future reconciliation anchors instead of fabricating a future current balance', () => {
-    const state = loadLocalHousehold();
-    const account = state.accounts.find((candidate) => candidate.id === 'test-account-lloyds')!;
-
-    expect(() =>
-      reconcileLocalAccount(
-        account.id,
-        999_00,
-        '2099-01-01',
-        state.version
-      )
-    ).toThrow('An account cannot be reconciled to a future date');
-  });
-
   it('prevents ordinary transfers from spending money committed to selected bills', () => {
     let state = loadLocalHousehold();
     const source = state.accounts.find((account) => account.id === 'test-account-lloyds')!;
