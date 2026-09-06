@@ -1,5 +1,4 @@
 import React, { forwardRef, useRef } from 'react';
-import { CalendarDays } from 'lucide-react';
 
 interface MonthPickerProps {
   value: string;
@@ -58,7 +57,6 @@ export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
         onClick={openPicker}
         data-disabled={disabled ? 'true' : 'false'}
       >
-        <CalendarDays className="mv-month-picker-icon" aria-hidden="true" />
         <input
           ref={setInputRef}
           id={id}
