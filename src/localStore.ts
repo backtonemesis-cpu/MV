@@ -178,6 +178,11 @@ function requireUniqueLinkedPaymentEvidence(
   payment: PlannedPayment
 ): Transaction {
   const references = paymentEvidenceReferences(state, payment.id);
+  if (!payment.actualTransactionId && references.length === 0) {
+    throw new Error(
+      `${payment.name} has no linked actual payment transaction to undo. Nothing was changed.`
+    );
+  }
   if (
     !payment.actualTransactionId ||
     references.length !== 1 ||
