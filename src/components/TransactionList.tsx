@@ -298,7 +298,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                 : 'finance-status-neutral';
 
               const isInternalTransfer = Boolean(
-                tx.isTransfer || tx.type === 'transfer' || tx.targetAccountId
+                tx.isTransfer || tx.type === 'transfer'
               );
               const transferManagedElsewhere = Boolean(
                 isInternalTransfer &&
