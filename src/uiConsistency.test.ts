@@ -159,7 +159,9 @@ describe('Global finance UI consistency contract', () => {
     expect(app).not.toContain("new Date().toISOString().slice(0, 10)");
     expect(app).toContain('localDateInputValue()');
 
-    expect(css).toContain('.mv-modal-form input.mv-money-input-with-prefix');
+    // Prefix protection is intentionally global so Transaction splits and any future
+    // standard prefixed-money fields cannot bypass the spacing contract.
+    expect(css).toContain('.mv-density-root input.mv-money-input-with-prefix');
     expect(css).toContain('padding-left: 32px !important');
     expect(css).toContain('.mv-money-prefix');
   });

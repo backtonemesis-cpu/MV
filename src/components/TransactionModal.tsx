@@ -349,7 +349,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   £
                 </span>
                 <input
-                  autoFocus
                   type="text"
                   placeholder="0.00"
                   value={amountStr}
