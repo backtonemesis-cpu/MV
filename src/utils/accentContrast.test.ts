@@ -69,8 +69,8 @@ describe('Stage 8 accent contrast', () => {
   });
 
   it('does not change an already-compliant accent text color unnecessarily', () => {
-    const gold = accentRgbForPreference({ accent: 'gold' });
-    expect(contrastRatio(gold, WORST_ROUTINE_SURFACE.light)).toBeGreaterThanOrEqual(4.5);
-    expect(accessibleAccentTextRgb(gold, 'light')).toEqual(gold);
+    const indigo = accentRgbForPreference({ accent: 'indigo' });
+    expect(contrastRatio(indigo, WORST_ROUTINE_SURFACE.light)).toBeGreaterThanOrEqual(4.5);
+    expect(accessibleAccentTextRgb(indigo, 'light')).toEqual(indigo);
   });
 });
