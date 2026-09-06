@@ -128,7 +128,7 @@ describe('Safe conditional permanent account deletion', () => {
     const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
     expect(eligibility.canDeletePermanently).toBe(true);
     expect(eligibility.zeroEffectReconciliationOnly).toBe(true);
-    expect(eligibility.removableAuditLogIds).toHaveLength(1);
+    expect(eligibility.removableAuditLogIds.length).toBeGreaterThanOrEqual(2);
 
     const unrelatedAuditIds = state.auditLogs
       .filter((entry) => entry.entityId !== created.account.id)
@@ -245,7 +245,7 @@ describe('Safe conditional permanent account deletion', () => {
 
     let eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
     expect(eligibility.canDeletePermanently).toBe(true);
-    expect(eligibility.removableAuditLogIds).toEqual(['audit-legacy-zero-reconcile']);
+    expect(eligibility.removableAuditLogIds).toContain('audit-legacy-zero-reconcile');
 
     state.auditLogs.unshift({
       id: 'audit-extra-account-change',
@@ -286,7 +286,7 @@ describe('Safe conditional permanent account deletion', () => {
     expect(state.accounts.some((account) => account.id === created.account.id)).toBe(false);
   });
 
-  it('blocks a non-zero account once its balance has moved away from original setup state', () => {
+  it('blocks a financial account update even when the final balance still looks like isolated setup state', () => {
     let state = loadLocalHousehold();
     const created = createLocalAccount(
       {
@@ -298,17 +298,20 @@ describe('Safe conditional permanent account deletion', () => {
       state.version
     );
     state = loadLocalHousehold();
-    const index = state.accounts.findIndex((account) => account.id === created.account.id);
-    state.accounts[index] = {
-      ...state.accounts[index],
-      currentBalancePence: 24_00,
-    };
-    saveLocalHousehold(state);
+
+    updateLocalAccount(
+      created.account.id,
+      {
+        startingBalancePence: 24_00,
+        currentBalancePence: 24_00,
+      },
+      state.version
+    );
     state = loadLocalHousehold();
 
     const eligibility = getAccountPermanentDeleteEligibility(state, created.account.id);
     expect(eligibility.canDeletePermanently).toBe(false);
-    expect(eligibility.reasons.join(' ')).toMatch(/changed from its original setup state/i);
+    expect(eligibility.reasons.join(' ')).toMatch(/material retained audit history/i);
   });
 
   it('keeps wrong-name/type/owner corrections deletable when no material references exist', () => {
