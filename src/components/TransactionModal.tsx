@@ -5,6 +5,7 @@ import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -45,18 +46,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   // Split transaction state
   const [isSplitEnabled, setIsSplitEnabled] = useState(false);
   const [splits, setSplits] = useState<{ categoryId: string; amountStr: string; notes?: string }[]>([]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (initialTransaction) {
@@ -106,6 +95,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
     setError(null);
   }, [initialTransaction, isOpen, accounts, categories]);
+
+  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
 
   const personOptions = householdPersonOptions(
     members,
@@ -297,14 +288,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-transaction-modal">
+      <div
+        ref={dialogRef}
+        className="mv-modal-card mv-transaction-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="transaction-modal-title"
+        tabIndex={-1}
+      >
         <div className="mv-modal-header">
-          <h2 className="text-base font-bold text-main">
+          <h2 id="transaction-modal-title" className="text-base font-bold text-main">
             {initialTransaction ? 'Edit Transaction' : 'New Transaction'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label="Close transaction dialog"
           >
             <X className="w-5 h-5" />
           </button>
@@ -313,7 +313,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="mv-modal-scroll-body mv-transaction-body">
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
+            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2" role="alert">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
               <span>{error}</span>
             </div>
