@@ -31,6 +31,7 @@ import {
 } from '../utils/transferPlanViewModel';
 import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { MarkPaymentPaidModal } from './MarkPaymentPaidModal';
+import { BulkPaymentStatusModal } from './BulkPaymentStatusModal';
 import { MonthPicker } from './MonthPicker';
 
 interface TransferPlanViewProps {
@@ -55,7 +56,8 @@ interface TransferPlanViewProps {
       accountId: string;
     }
   ) => Promise<void>;
-  onUndoPaymentPaid: (id: string) => Promise<void>;
+  onMarkPaymentsPaid: (ids: string[], actualDate: string) => Promise<void>;
+  onUndoPaymentsPaid: (ids: string[]) => Promise<void>;
   onBulkTogglePlannedPayments: (params: {
     month?: string;
     include: boolean;
@@ -132,7 +134,8 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onOpenMonthImport,
   onUpdatePlannedPayment,
   onMarkPaymentPaid,
-  onUndoPaymentPaid,
+  onMarkPaymentsPaid,
+  onUndoPaymentsPaid,
   onBulkTogglePlannedPayments,
   onExecuteTransfer,
   onUndoFunding,
@@ -151,11 +154,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     useState<Record<string, boolean>>({});
   const [undoingFundingAccountId, setUndoingFundingAccountId] =
     useState<string | null>(null);
-  const [undoingPaymentId, setUndoingPaymentId] =
-    useState<string | null>(null);
   const [selectionBusyId, setSelectionBusyId] =
     useState<string | null>(null);
   const [bulkSelectionBusy, setBulkSelectionBusy] = useState(false);
+  const [paymentActionSelectedIds, setPaymentActionSelectedIds] =
+    useState<Record<string, boolean>>({});
+  const [bulkPaymentDialog, setBulkPaymentDialog] = useState<{
+    mode: 'mark' | 'undo';
+    payments: PlannedPayment[];
+  } | null>(null);
 
   const handleSelectMonth = (month: string) => {
     if (propOnSelectMonth) propOnSelectMonth(month);
@@ -299,6 +306,21 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     }
   };
 
+  const togglePaymentActionSelection = (paymentId: string) => {
+    setPaymentActionSelectedIds((current) => ({
+      ...current,
+      [paymentId]: !current[paymentId],
+    }));
+  };
+
+  const clearPaymentActionSelection = (paymentIds: string[]) => {
+    setPaymentActionSelectedIds((current) => {
+      const next = { ...current };
+      for (const paymentId of paymentIds) delete next[paymentId];
+      return next;
+    });
+  };
+
   const handlePaymentStatusAction = async (payment: PlannedPayment) => {
     if (isViewOnly) return;
 
@@ -307,32 +329,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       return;
     }
 
-    const account = accountsById.get(payment.accountId);
-    const accountLabel = account
-      ? accountIdentityLabel(account)
-      : 'the recorded payment account';
+    if (!payment.actualTransactionId) return;
 
-    const confirmed = window.confirm(
-      `Undo recorded payment for ${payment.name} (${formatPence(
-        payment.actualAmountPence ?? payment.amountPence
-      )}) from ${accountLabel}? This will remove the linked Activity expense and return the bill to Unpaid. Funding records are not changed.`
-    );
-    if (!confirmed) return;
-
-    try {
-      setUndoingPaymentId(payment.id);
-      if (payment.actualTransactionId) {
-        await onUndoPaymentPaid(payment.id);
-      } else {
-        // Compatibility for legacy paid rows that pre-date linked Activity
-        // evidence. New paid rows always use the linked payment workflow.
-        await onUpdatePlannedPayment(payment.id, { status: 'unpaid' });
-      }
-    } catch (error: any) {
-      window.alert(error.message || 'Failed to undo recorded payment.');
-    } finally {
-      setUndoingPaymentId(null);
-    }
+    setBulkPaymentDialog({ mode: 'undo', payments: [payment] });
   };
 
   const handleUndoFunding = async (model: TransferPlanAccountModel) => {
@@ -378,13 +377,19 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       <button
         type="button"
         onClick={() => handlePaymentStatusAction(payment)}
-        disabled={undoingPaymentId === payment.id}
+        disabled={isPaid && !payment.actualTransactionId}
         className={
           isPaid
-            ? 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50'
-            : 'inline-flex min-h-8 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50'
+            ? 'inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50 sm:min-h-8'
+            : 'inline-flex min-h-11 items-center justify-center gap-1 rounded-md bg-accent px-2.5 text-[11px] font-semibold text-on-accent hover:brightness-95 disabled:opacity-50 sm:min-h-8'
         }
-        title={isPaid ? 'Undo recorded payment' : 'Record payment'}
+        title={
+          isPaid
+            ? payment.actualTransactionId
+              ? 'Undo recorded payment'
+              : 'Legacy Paid bill has no safely linked Activity expense to undo'
+            : 'Record payment'
+        }
       >
         {isPaid ? (
           <RotateCcw className="h-3.5 w-3.5" />
@@ -476,13 +481,64 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
     return (
       <div className="mt-3 overflow-hidden rounded-lg border border-muted">
-        <div className="flex items-center justify-between gap-3 bg-surface-muted px-3 py-2">
+        <div className="flex flex-col gap-2 bg-surface-muted px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-[11px] font-semibold text-main">Bills in this card</div>
             <div className="text-[10px] text-subtle">
-              {requirement.selectedPayments.length} selected · {requirement.paidPayments.length} paid · {requirement.unpaidPayments.length} unpaid
+              {requirement.selectedPayments.length} in plan · {requirement.paidPayments.length} paid · {requirement.unpaidPayments.length} unpaid
             </div>
           </div>
+          {!isViewOnly && (() => {
+            const actionSelected = payments.filter(
+              (payment) => paymentActionSelectedIds[payment.id]
+            );
+            const selectedUnpaid = actionSelected.filter(
+              (payment) => payment.status !== 'paid'
+            );
+            const selectedPaid = actionSelected.filter(
+              (payment) => payment.status === 'paid' && payment.actualTransactionId
+            );
+            return (
+              <div className="flex flex-wrap items-center gap-1.5" aria-label="Payment status actions">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBulkPaymentDialog({ mode: 'mark', payments: selectedUnpaid })
+                  }
+                  disabled={selectedUnpaid.length === 0}
+                  className="inline-flex min-h-11 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface disabled:opacity-50 sm:min-h-8"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Mark selected paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBulkPaymentDialog({
+                      mode: 'mark',
+                      payments: requirement.unpaidPayments,
+                    })
+                  }
+                  disabled={requirement.unpaidPayments.length === 0}
+                  className="inline-flex min-h-11 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface disabled:opacity-50 sm:min-h-8"
+                >
+                  <CheckSquare className="h-3.5 w-3.5" />
+                  Mark all unpaid paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setBulkPaymentDialog({ mode: 'undo', payments: selectedPaid })
+                  }
+                  disabled={selectedPaid.length === 0}
+                  className="inline-flex min-h-11 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface disabled:opacity-50 sm:min-h-8"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Undo selected payments
+                </button>
+              </div>
+            );
+          })()}
         </div>
 
         <div className="divide-y divide-muted">
@@ -559,7 +615,27 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 sm:justify-end">
+                  {!isViewOnly && (
+                    <label
+                      className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-[10px] font-semibold text-muted sm:min-h-8"
+                      title={
+                        payment.status === 'paid' && !payment.actualTransactionId
+                          ? 'Legacy Paid bill has no linked Activity expense to undo safely'
+                          : 'Select for payment-status action'
+                      }
+                    >
+                      <input
+                        type="checkbox"
+                        checked={paymentActionSelectedIds[payment.id] === true}
+                        onChange={() => togglePaymentActionSelection(payment.id)}
+                        disabled={payment.status === 'paid' && !payment.actualTransactionId}
+                        className="h-4 w-4 rounded border-muted"
+                        aria-label={`Select ${payment.name} for payment-status action`}
+                      />
+                      <span>Payment action</span>
+                    </label>
+                  )}
                   <span className="mv-private-value min-w-[82px] text-right font-mono text-xs font-bold tabular-nums text-main">
                     {formatPence(payment.amountPence)}
                   </span>
@@ -876,7 +952,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
                 <CheckSquare className="h-3.5 w-3.5" />
-                Select Unpaid
+                Include Unpaid
               </button>
               <button
                 type="button"
@@ -885,7 +961,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
                 <CheckSquare className="h-3.5 w-3.5" />
-                Select Paid
+                Include Paid
               </button>
               <button
                 type="button"
@@ -894,7 +970,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
                 <CheckSquare className="h-3.5 w-3.5" />
-                Select All
+                Include All
               </button>
               <button
                 type="button"
@@ -903,7 +979,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                 className="inline-flex min-h-8 items-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted disabled:opacity-50"
               >
                 <Square className="h-3.5 w-3.5" />
-                Deselect All
+                Exclude All
               </button>
             </div>
           )}
@@ -1008,6 +1084,23 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               ...payload,
               month: selectedMonth,
             });
+          }}
+        />
+      )}
+
+      {bulkPaymentDialog && (
+        <BulkPaymentStatusModal
+          mode={bulkPaymentDialog.mode}
+          payments={bulkPaymentDialog.payments}
+          accounts={accounts}
+          onClose={() => setBulkPaymentDialog(null)}
+          onMarkPaid={async (ids, actualDate) => {
+            await onMarkPaymentsPaid(ids, actualDate);
+            clearPaymentActionSelection(ids);
+          }}
+          onUndoPaid={async (ids) => {
+            await onUndoPaymentsPaid(ids);
+            clearPaymentActionSelection(ids);
           }}
         />
       )}

@@ -50,9 +50,11 @@ describe('Global finance UI consistency contract', () => {
     expect(plan).toContain("'Record paid'");
     expect(plan).toContain("'Undo recorded payment'");
     expect(plan).toContain("'Record payment'");
-    expect(plan).toContain('onUndoPaymentPaid');
-    expect(plan).toContain('remove the linked Activity expense');
-    expect(plan).toContain('Funding records are not changed.');
+    expect(plan).toContain('onUndoPaymentsPaid');
+    expect(plan).toContain('BulkPaymentStatusModal');
+    expect(plan).toContain('Mark selected paid');
+    expect(plan).toContain('Mark all unpaid paid');
+    expect(plan).toContain('Undo selected payments');
     expect(plan).toContain('Paid / Complete');
 
     expect(plan).toContain('Selection only');

@@ -83,10 +83,13 @@ describe('semantic design system enforcement', () => {
 
     // Transfer Plan V2 is a selection + funding workflow, not a second bill
     // editor. Bulk inclusion remains fast, while bill facts stay read-only.
-    expect(plan).toContain('Select Unpaid');
-    expect(plan).toContain('Select Paid');
-    expect(plan).toContain('Select All');
-    expect(plan).toContain('Deselect All');
+    expect(plan).toContain('Include Unpaid');
+    expect(plan).toContain('Include Paid');
+    expect(plan).toContain('Include All');
+    expect(plan).toContain('Exclude All');
+    expect(plan).toContain('Mark selected paid');
+    expect(plan).toContain('Mark all unpaid paid');
+    expect(plan).toContain('Undo selected payments');
     expect(plan).toContain('Selection only');
     expect(plan).toContain('Bill details are read-only here');
     expect(plan).not.toContain('<PlannedPaymentModal');

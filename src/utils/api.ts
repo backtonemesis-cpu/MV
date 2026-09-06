@@ -34,12 +34,14 @@ import {
   executeLocalTransferAllocations,
   undoLatestLocalTransferPlanFunding,
   undoLocalPaymentPaid,
+  undoLocalPaymentsPaid,
   undoLocalTransferTransaction,
   getLocalPreferences,
   importLocalMonth,
   loadLocalHousehold,
   markLocalIncomeReceived,
   markLocalPaymentPaid,
+  markLocalPaymentsPaid,
   preflightLocalRestore,
   reconcileLocalAccount,
   removeLocalHouseholdMember,
@@ -265,6 +267,21 @@ export async function undoPaymentPaid(
   expectedVersion: number
 ) {
   return undoLocalPaymentPaid(id, expectedVersion);
+}
+
+export async function markPaymentsPaid(
+  ids: string[],
+  actualDate: string,
+  expectedVersion: number
+) {
+  return markLocalPaymentsPaid(ids, actualDate, expectedVersion);
+}
+
+export async function undoPaymentsPaid(
+  ids: string[],
+  expectedVersion: number
+) {
+  return undoLocalPaymentsPaid(ids, expectedVersion);
 }
 
 export async function createPlannedIncome(
