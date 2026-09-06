@@ -2954,7 +2954,8 @@ function shiftDateToMonth(date: string | undefined, targetMonth: string): string
 export function markLocalPaymentPaid(
   id: string,
   payload: { actualAmountPence?: number; actualDate?: string; accountId?: string },
-  expectedVersion: number
+  expectedVersion: number,
+  expectedPayment?: PlannedPaymentMutationExpectation
 ): { transaction: Transaction; payment: PlannedPayment; version: number } {
   const result = mutateLocalHousehold(
     expectedVersion,
@@ -2968,6 +2969,9 @@ export function markLocalPaymentPaid(
       const index = state.plannedPayments.findIndex((payment) => payment.id === id);
       if (index < 0) throw new Error('Planned bill not found.');
       const payment = state.plannedPayments[index];
+      if (expectedPayment) {
+        assertPaymentMatchesExpectation(payment, expectedPayment);
+      }
       if (payment.status === 'paid' && !payment.actualTransactionId) {
         throw new Error(
           'This legacy Paid bill has no exact linked Activity evidence. Nothing was changed.'
