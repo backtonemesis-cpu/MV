@@ -250,7 +250,7 @@ export async function deletePlannedPayment(id: string, expectedVersion: number) 
 }
 
 export async function markPaymentPaid(
-  id: string,
+  payment: PlannedPayment,
   payload: {
     actualAmountPence?: number;
     actualDate?: string;
@@ -259,7 +259,12 @@ export async function markPaymentPaid(
   }
 ) {
   const { expectedVersion, ...actual } = payload;
-  return markLocalPaymentPaid(id, actual, expectedVersion);
+  return markLocalPaymentPaid(
+    payment.id,
+    actual,
+    expectedVersion,
+    payment
+  );
 }
 
 export async function undoPaymentPaid(
