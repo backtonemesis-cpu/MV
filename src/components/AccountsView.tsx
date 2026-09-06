@@ -823,6 +823,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   }
                 </div>
               </div>
+              {accountDeleteEligibility[deleteAccountTarget.id]?.isolatedSetupBalancePence !== 0 && (
+                <p className="text-xs font-semibold text-warning">
+                  This mistaken account still contains an isolated setup balance of{' '}
+                  {formatPence(accountDeleteEligibility[deleteAccountTarget.id].isolatedSetupBalancePence)}.
+                  Deleting the account will remove that setup balance because no linked financial evidence exists.
+                </p>
+              )}
               <p className="text-xs text-muted">
                 Penny will re-check that the account still has no financial history or references immediately before deletion.
               </p>
