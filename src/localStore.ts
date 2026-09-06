@@ -1448,9 +1448,6 @@ export function reconcileLocalAccount(
   if (!/^\d{4}-\d{2}-\d{2}$/.test(reconciliationDate)) {
     throw new Error('Reconciliation date must use YYYY-MM-DD format.');
   }
-  if (reconciliationDate > localTodayDateKey()) {
-    throw new Error('An account cannot be reconciled to a future date.');
-  }
 
   return updateLocalAccount(
     id,
