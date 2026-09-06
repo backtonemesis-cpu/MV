@@ -12,7 +12,7 @@ describe('Stage 4 accessibility and responsive regression contract', () => {
     expect(main).toContain('installModalAccessibility();');
   });
 
-  it('enforces modal semantics, contained focus, labelled controls and focus restoration', () => {
+  it('enforces modal semantics, contained focus, labelled controls, selection state and focus restoration', () => {
     const modal = read('utils/modalAccessibility.ts');
     expect(modal).toContain(".mv-modal-backdrop .mv-modal-card");
     expect(modal).toContain("dialog.setAttribute('role', 'dialog')");
@@ -20,9 +20,32 @@ describe('Stage 4 accessibility and responsive regression contract', () => {
     expect(modal).toContain("dialog.setAttribute('aria-labelledby', title.id)");
     expect(modal).toContain("button.setAttribute('aria-label', 'Close dialog')");
     expect(modal).toContain('label.htmlFor = control.id');
+    expect(modal).toContain(".mv-transaction-type-tab, .mv-transaction-selector-pill");
+    expect(modal).toContain("button.setAttribute('aria-pressed'");
     expect(modal).toContain("if (event.key !== 'Tab') return");
     expect(modal).toContain('(event.shiftKey ? last : first).focus()');
     expect(modal).toContain('if (target?.isConnected) target.focus()');
+    expect(modal).toContain("attributeFilter: ['class']");
+  });
+
+  it('hardens high-risk finance and recovery dialogs explicitly', () => {
+    const backup = read('components/BackupRestoreModal.tsx');
+    const payment = read('components/MarkPaymentPaidModal.tsx');
+    const bill = read('components/PlannedPaymentModal.tsx');
+    const conflict = read('components/ConflictResolutionModal.tsx');
+
+    expect(backup).toContain('aria-labelledby="backup-restore-modal-title"');
+    expect(backup).toContain('aria-label="Close backup and restore"');
+    expect(backup).toContain('role="alert"');
+    expect(payment).toContain('htmlFor="record-payment-amount"');
+    expect(payment).toContain('htmlFor="record-payment-date"');
+    expect(payment).toContain('htmlFor="record-payment-account"');
+    expect(payment).toContain('role="alert"');
+    expect(bill).toContain('aria-labelledby="planned-payment-modal-title"');
+    expect(bill).toContain('htmlFor="planned-payment-account"');
+    expect(bill).toContain('aria-label="Include in Transfer Plan"');
+    expect(conflict).toContain('role="alertdialog"');
+    expect(conflict).toContain('aria-describedby="conflict-modal-description"');
   });
 
   it('uses navigation semantics rather than an incomplete ARIA menu model', () => {
