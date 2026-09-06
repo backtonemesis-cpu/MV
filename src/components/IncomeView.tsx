@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Banknote,
-  CalendarDays,
   CheckCircle2,
   Edit2,
   Plus,
@@ -22,6 +21,7 @@ import { householdPersonOptions } from '../utils/householdPeople';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface IncomeViewProps {
   incomes: PlannedIncome[];
@@ -73,22 +73,18 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-
-      if (showReceiveModal) {
-        setShowReceiveModal(false);
-        setSelectedIncome(null);
-      } else if (showEditModal) {
-        setShowEditModal(false);
-        setSelectedIncome(null);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showEditModal, showReceiveModal]);
+  const anyModalOpen = showEditModal || showReceiveModal;
+  const closeActiveModal = () => {
+    if (showReceiveModal) {
+      setShowReceiveModal(false);
+      setSelectedIncome(null);
+    } else if (showEditModal) {
+      setShowEditModal(false);
+      setSelectedIncome(null);
+    }
+  };
+  const dialogLabel = showReceiveModal ? 'Record income received' : 'Edit expected income';
+  const dialogRef = useModalAccessibility<HTMLDivElement>(anyModalOpen, closeActiveModal);
 
   const personOptions = useMemo(
     () => householdPersonOptions(members, sourcePerson ? [sourcePerson] : []),
@@ -569,7 +565,14 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
       {showEditModal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card mv-income-modal">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-income-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <header className="mv-modal-header">
               <h2 className="text-base font-bold text-main">
                 {selectedIncome ? 'Edit Income' : 'Add Income'}
@@ -578,6 +581,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 type="button"
                 onClick={() => setShowEditModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -721,7 +725,14 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
       {showReceiveModal && selectedIncome && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card mv-income-modal">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-income-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <div>
                 <h2 className="text-base font-bold text-main">Record Income Received</h2>
@@ -736,6 +747,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 type="button"
                 onClick={() => setShowReceiveModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -763,12 +775,11 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted">Received date</label>
                 <div className="relative">
-                  <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
                   <input
                     type="date"
                     value={actualDate}
                     onChange={(event) => setActualDate(event.target.value)}
-                    className={`${inputClassName} pl-10`}
+                    className={inputClassName}
                     required
                   />
                 </div>
