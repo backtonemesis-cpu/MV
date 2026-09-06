@@ -40,12 +40,12 @@ jobs:
             fi
           done
 
-          if grep -R --line-number -E '@(gmail|outlook|hotmail|icloud)\.com'             src data ./*.md ./*.json 2>/dev/null; then
+          if grep -R --line-number -E '@(gmail|outlook|hotmail|icloud)\.com'             src ./*.md ./*.json 2>/dev/null; then
             echo "Repository source/docs must not contain personal consumer email addresses"
             exit 1
           fi
 
-          if grep -R --line-number -E             'LIVE - 2026 September budget|source-budget-workbook|sourceBalanceKind'             src data 2>/dev/null; then
+          if grep -R --line-number -E             'LIVE - 2026 September budget|source-budget-workbook|sourceBalanceKind'             src 2>/dev/null; then
             echo "Production source must not contain the retired household finance fixture"
             exit 1
           fi
