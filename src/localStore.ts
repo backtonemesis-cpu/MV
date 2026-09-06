@@ -922,7 +922,7 @@ function appendAudit(
       ...entry,
     },
     ...(state.auditLogs || []),
-  ].slice(0, 500);
+  ];
 }
 
 export function mutateLocalHousehold<T>(
@@ -969,8 +969,15 @@ export function createLocalTransaction(
     (state) => {
       if (!data.accountId) throw new Error('Account is required.');
       if (!data.type) throw new Error('Transaction type is required.');
-      const isInternalTransfer = Boolean(data.isTransfer || data.type === 'transfer');
-      if (!isInternalTransfer && !data.payer) {
+      const isInternalTransfer = Boolean(
+        data.isTransfer || data.type === 'transfer' || data.targetAccountId
+      );
+      if (isInternalTransfer) {
+        throw new Error(
+          'Internal transfers must be recorded through the transfer workflow so both account balances stay traceable.'
+        );
+      }
+      if (!data.payer) {
         throw new Error('Transaction person is required.');
       }
       const categoryId =
@@ -983,6 +990,19 @@ export function createLocalTransaction(
         throw new Error('Transaction amount must be exact integer pence.');
       }
       if (data.targetAccountId) assertAccountExists(state, data.targetAccountId);
+
+      if (data.id && state.transactions.some((transaction) => transaction.id === data.id)) {
+        throw new Error('A transaction with this ID already exists.');
+      }
+      const idempotencyKey = data.idempotencyKey?.trim();
+      if (
+        idempotencyKey &&
+        state.transactions.some(
+          (transaction) => transaction.idempotencyKey?.trim() === idempotencyKey
+        )
+      ) {
+        throw new Error('Duplicate transaction request rejected.');
+      }
 
       const tx: Transaction = {
         id: data.id || createId('tx'),
@@ -1009,7 +1029,7 @@ export function createLocalTransaction(
         splits: data.splits,
         plannedPaymentId: data.plannedPaymentId,
         plannedIncomeId: data.plannedIncomeId,
-        idempotencyKey: data.idempotencyKey,
+        idempotencyKey,
         taxYear: data.taxYear,
         schemaVersion: data.schemaVersion,
         metadata: data.metadata,
@@ -1051,8 +1071,18 @@ export function updateLocalTransaction(
       if (existing.metadata?.savingsGoalId) {
         throw new Error('Savings goal contributions must be managed from the Savings view.');
       }
+      if (existing.isTransfer || existing.type === 'transfer' || existing.targetAccountId) {
+        throw new Error(
+          'Internal transfers cannot be edited in place. Undo the exact transfer and record a corrected transfer instead.'
+        );
+      }
 
       const next = { ...existing, ...data, id, updatedAt: nowIso(), updatedBy: OWNER_EMAIL };
+      if (next.isTransfer || next.type === 'transfer' || next.targetAccountId) {
+        throw new Error(
+          'A normal Activity transaction cannot be converted into an internal transfer. Use the transfer workflow.'
+        );
+      }
       if (!isSafePence(next.amountPence) || next.amountPence < 0) {
         throw new Error('Transaction amount must be exact integer pence.');
       }
@@ -1144,6 +1174,11 @@ export function deleteLocalTransaction(id: string, expectedVersion: number): { v
       if (!existing) throw new Error('Transaction not found.');
       if (existing.metadata?.savingsGoalId) {
         throw new Error('Savings goal contributions must be managed from the Savings view.');
+      }
+      if (existing.isTransfer || existing.type === 'transfer' || existing.targetAccountId) {
+        throw new Error(
+          'Internal transfers cannot be deleted directly. Use the exact transfer undo workflow.'
+        );
       }
 
       state.transactions = state.transactions.filter((tx) => tx.id !== id);
@@ -1326,6 +1361,16 @@ export function reconcileLocalAccount(
   reconciliationDate: string,
   expectedVersion: number
 ): { account: Account; version: number } {
+  if (!isSafePence(reconciledBalancePence)) {
+    throw new Error('Reconciled balance must be exact integer pence.');
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(reconciliationDate)) {
+    throw new Error('Reconciliation date must use YYYY-MM-DD format.');
+  }
+  if (reconciliationDate > localTodayDateKey()) {
+    throw new Error('An account cannot be reconciled to a future date.');
+  }
+
   return updateLocalAccount(
     id,
     {
@@ -1671,6 +1716,68 @@ export function executeLocalTransfer(
   );
 }
 
+
+export function undoLocalTransferTransaction(
+  id: string,
+  expectedVersion: number
+): { transaction: Transaction; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'transfer_undone',
+      entityType: 'transaction',
+      entityId: id,
+      summary: 'Internal transfer undone exactly',
+    },
+    (state) => {
+      const transaction = state.transactions.find((candidate) => candidate.id === id);
+      if (!transaction) throw new Error('Transfer transaction not found.');
+      if (
+        !transaction.isTransfer ||
+        transaction.type !== 'transfer' ||
+        !transaction.targetAccountId
+      ) {
+        throw new Error('Only a complete internal transfer can be undone with this workflow.');
+      }
+      if (transaction.metadata?.savingsGoalId) {
+        throw new Error('Savings transfers must be managed from the Savings view.');
+      }
+      if (
+        transaction.metadata?.transferBatchId ||
+        transaction.metadata?.transferPlanMonth
+      ) {
+        throw new Error('Transfer Plan funding must be undone from the Transfer Plan.');
+      }
+      if (!isSafePence(transaction.amountPence) || transaction.amountPence <= 0) {
+        throw new Error('Transfer amount is invalid; nothing was changed.');
+      }
+
+      const source = assertAccountExists(state, transaction.accountId);
+      const destination = assertAccountExists(state, transaction.targetAccountId);
+
+      // Generic transfers at/before a reconciliation anchor were folded into
+      // that anchor when created. Undo must reverse those exact anchor deltas.
+      adjustAnchoredBalanceForNewTransfer(
+        source,
+        transaction.amountPence,
+        transaction.date
+      );
+      adjustAnchoredBalanceForNewTransfer(
+        destination,
+        -transaction.amountPence,
+        transaction.date
+      );
+
+      state.transactions = state.transactions.filter(
+        (candidate) => candidate.id !== transaction.id
+      );
+
+      return transaction;
+    }
+  );
+
+  return { transaction: result.value, version: result.state.version };
+}
 
 export function executeLocalTransferAllocations(
   payload: {
@@ -2267,8 +2374,29 @@ export function deleteLocalSavingsGoal(id: string, expectedVersion: number): { v
 
 function shiftDateToMonth(date: string | undefined, targetMonth: string): string | undefined {
   if (!date || date.length < 10) return date;
-  const day = date.slice(8, 10);
-  return `${targetMonth}-${day}`;
+  if (!/^\d{4}-\d{2}$/.test(targetMonth)) {
+    throw new Error('Target month must use YYYY-MM format.');
+  }
+
+  const [yearText, monthText] = targetMonth.split('-');
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const sourceDay = Number(date.slice(8, 10));
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    month < 1 ||
+    month > 12 ||
+    !Number.isInteger(sourceDay) ||
+    sourceDay < 1
+  ) {
+    throw new Error('Cannot shift an invalid calendar date.');
+  }
+
+  const lastDay = new Date(year, month, 0).getDate();
+  const day = Math.min(sourceDay, lastDay);
+  return `${targetMonth}-${String(day).padStart(2, '0')}`;
 }
 
 export function markLocalPaymentPaid(
