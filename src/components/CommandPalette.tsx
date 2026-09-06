@@ -148,9 +148,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           </button>
         </div>
 
-        <div className="mv-command-list" role="listbox" aria-label="Available commands">
+        <div className="mv-command-list" aria-label="Available commands">
           {filteredCommands.length === 0 ? (
-            <div className="mv-command-empty">No matching command</div>
+            <div className="mv-command-empty" role="status">No matching command</div>
           ) : (
             filteredCommands.map((item) => (
               <button
