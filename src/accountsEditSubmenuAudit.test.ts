@@ -45,11 +45,12 @@ describe('Accounts Edit Account submenu audit contract', () => {
     expect(source).toContain("setError('Enter an account name.')");
   });
 
-  it('announces validation errors and gives Status a programmatic label', () => {
+  it('announces validation errors and keeps account status read-only in generic Edit', () => {
     expect(editBlock).toContain('<div role="alert"');
-    expect(editBlock).toContain('id="account-edit-status-label"');
-    expect(editBlock).toContain('id="account-edit-status-text"');
-    expect(editBlock).toContain('aria-labelledby="account-edit-status-label account-edit-status-text"');
+    expect(editBlock).toContain("selectedAccount.isActive === false ? 'Archived' : 'Active'");
+    expect(editBlock).not.toContain('type="checkbox"');
+    expect(editBlock).not.toContain('setEditIsActive');
+    expect(editBlock).not.toContain('isActive:');
   });
 
   it('preserves removed-owner historical identity when editing', () => {
