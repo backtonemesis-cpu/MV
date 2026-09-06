@@ -22,6 +22,8 @@ import {
   undoLocalPaymentsPaid,
   updateLocalPlannedPayment,
   executeLocalTransferAllocations,
+  deleteLocalPlannedPayment,
+  updateLocalTransaction,
 } from './localStore';
 import {
   calculateFinancialSummary,
@@ -390,6 +392,91 @@ describe('Final post-PR #114 financial safety audit', () => {
       markLocalPaymentsPaid(staleSelection, paymentDate, state.version)
     ).toThrow(/changed after the confirmation was opened/);
     expect(linkedTransactions(loadLocalHousehold())).toHaveLength(0);
+  });
+
+  it('blocks a stale detailed Record paid modal if the planned bill changed before confirmation', () => {
+    let state = installBase([payment('rent', 'Rent', 349_79, 'lloyds-marius')]);
+    const stale = currentPayments(['rent'])[0];
+
+    updateLocalPlannedPayment('rent', { amountPence: 400_00 }, state.version);
+    state = loadLocalHousehold();
+
+    expect(() =>
+      markLocalPaymentPaid(
+        'rent',
+        {
+          actualAmountPence: stale.amountPence,
+          actualDate: paymentDate,
+          accountId: stale.accountId,
+        },
+        state.version,
+        stale
+      )
+    ).toThrow(/changed after the confirmation was opened/);
+
+    state = loadLocalHousehold();
+    expect(linkedTransactions(state)).toHaveLength(0);
+    expect(state.plannedPayments[0].status).toBe('unpaid');
+  });
+
+  it('blocks stale Undo if linked Activity amount/date evidence changed after confirmation opened', () => {
+    let state = installBase([payment('rent', 'Rent', 349_79, 'lloyds-marius')]);
+    markLocalPaymentsPaid(currentPayments(['rent']), paymentDate, state.version);
+    state = loadLocalHousehold();
+
+    const staleUndo = currentPayments(['rent'])[0];
+    const tx = linkedTransactions(state)[0];
+    updateLocalTransaction(
+      tx.id,
+      { amountPence: 350_01, date: '2026-09-05' },
+      state.version
+    );
+    state = loadLocalHousehold();
+
+    expect(() =>
+      undoLocalPaymentsPaid([staleUndo], state.version)
+    ).toThrow(/changed after the confirmation was opened/);
+
+    state = loadLocalHousehold();
+    expect(state.plannedPayments[0]).toMatchObject({
+      status: 'paid',
+      actualAmountPence: 350_01,
+      actualDate: '2026-09-05',
+    });
+    expect(linkedTransactions(state)).toHaveLength(1);
+  });
+
+  it('handles overlapping Mark selected / Mark all sequences without duplicate evidence', () => {
+    let state = installBase();
+    markLocalPaymentsPaid(currentPayments(['rent']), paymentDate, state.version);
+    state = loadLocalHousehold();
+    expect(linkedTransactions(state).filter((tx) => tx.plannedPaymentId === 'rent')).toHaveLength(1);
+
+    markLocalPaymentsPaid(currentPayments(['phone']), paymentDate, state.version);
+    state = loadLocalHousehold();
+    expect(linkedTransactions(state)).toHaveLength(2);
+
+    markLocalPaymentsPaid(currentPayments(['rent', 'phone']), paymentDate, state.version);
+    state = loadLocalHousehold();
+    expect(linkedTransactions(state)).toHaveLength(2);
+    expect(
+      new Set(linkedTransactions(state).map((tx) => tx.plannedPaymentId)).size
+    ).toBe(2);
+  });
+
+  it('fails the whole stale batch if a selected bill was deleted after confirmation opened', () => {
+    let state = installBase();
+    const stale = currentPayments(['rent', 'phone']);
+
+    deleteLocalPlannedPayment('phone', state.version);
+    state = loadLocalHousehold();
+
+    expect(() =>
+      markLocalPaymentsPaid(stale, paymentDate, state.version)
+    ).toThrow(/Planned bill not found/);
+    state = loadLocalHousehold();
+    expect(linkedTransactions(state)).toHaveLength(0);
+    expect(state.plannedPayments.find((p) => p.id === 'rent')?.status).toBe('unpaid');
   });
 
   it('keeps duplicate bank names and Marius/Vesta/Joint IDs isolated in one batch', () => {
