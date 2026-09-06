@@ -155,8 +155,8 @@ describe('semantic design system enforcement', () => {
     expect(header).toContain('aria-label="Use PC layout"');
     expect(header).toContain('aria-label="Use Phone layout"');
     expect(header).not.toContain('Mobile View');
-    expect(transactionList).toContain('finance-filter-control-leading');
-    expect(transactionList).toContain('finance-filter-control-trailing');
+    expect(transactionList).toContain('finance-filter-icon-shell-leading');
+    expect(transactionList).toContain('finance-filter-icon-shell-trailing');
     expect(transactionList).toContain('finance-filter-grid');
     expect(transactionList).toContain('finance-ledger-panel');
 
