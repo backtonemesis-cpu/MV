@@ -1559,12 +1559,14 @@ export function updateLocalAccount(
   data: Partial<Account>,
   expectedVersion: number
 ): { account: Account; version: number } {
+  if (Object.prototype.hasOwnProperty.call(data, 'isActive')) {
+    throw new Error('Use the dedicated archive or reactivate account action to change account status.');
+  }
   const administrativeFields = new Set([
     'name',
     'type',
     'ownerMemberId',
     'ownerPerson',
-    'isActive',
     'notes',
   ]);
   const changedFields = Object.keys(data).filter((key) => key !== 'id' && key !== 'currency');
@@ -1647,6 +1649,33 @@ export function archiveLocalAccount(
       const index = state.accounts.findIndex((account) => account.id === id);
       if (index < 0) throw new Error('Account not found.');
       const next = { ...state.accounts[index], isActive: false };
+      state.accounts[index] = next;
+      return next;
+    }
+  );
+  return { account: result.value, version: result.state.version };
+}
+
+export function reactivateLocalAccount(
+  id: string,
+  expectedVersion: number
+): { account: Account; version: number } {
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'account_reactivated',
+      entityType: 'account',
+      entityId: id,
+      summary: 'Account reactivated',
+      details: {
+        administrativeOnly: true,
+        financialStateChanged: false,
+      },
+    },
+    (state) => {
+      const index = state.accounts.findIndex((account) => account.id === id);
+      if (index < 0) throw new Error('Account not found.');
+      const next = { ...state.accounts[index], isActive: true };
       state.accounts[index] = next;
       return next;
     }

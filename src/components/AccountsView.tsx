@@ -41,6 +41,7 @@ interface AccountsViewProps {
   onReconcileAccount: (id: string, reconciledBalancePence: number, reconciliationDate: string) => Promise<void>;
   accountDeleteEligibility: Record<string, AccountPermanentDeleteEligibility>;
   onArchiveAccount: (id: string) => Promise<void>;
+  onReactivateAccount: (id: string) => Promise<void>;
   onPermanentDeleteAccount: (id: string) => Promise<void>;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
   onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
@@ -58,6 +59,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   onReconcileAccount,
   accountDeleteEligibility,
   onArchiveAccount,
+  onReactivateAccount,
   onPermanentDeleteAccount,
   onCreateSavingsGoal,
   onUpdateSavingsGoal,
@@ -70,9 +72,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showEditGoalModal, setShowEditGoalModal] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showArchiveAccountModal, setShowArchiveAccountModal] = useState(false);
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [deleteAccountTarget, setDeleteAccountTarget] = useState<Account | null>(null);
+  const [archiveAccountTarget, setArchiveAccountTarget] = useState<Account | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -88,7 +92,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [editType, setEditType] = useState<AccountType>('current');
   const [editOwnerMemberId, setEditOwnerMemberId] = useState('');
   const [editNotes, setEditNotes] = useState('');
-  const [editIsActive, setEditIsActive] = useState(true);
 
   // Reconcile form state
   const [reconcileBalanceStr, setReconcileBalanceStr] = useState('');
@@ -110,9 +113,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     showActivityModal ||
     showGoalModal ||
     showEditGoalModal ||
-    showDeleteAccountModal;
+    showDeleteAccountModal ||
+    showArchiveAccountModal;
   const closeActiveModal = () => {
-    if (showDeleteAccountModal) {
+    if (showArchiveAccountModal) {
+      setShowArchiveAccountModal(false);
+      setArchiveAccountTarget(null);
+    } else if (showDeleteAccountModal) {
       setShowDeleteAccountModal(false);
       setDeleteAccountTarget(null);
     } else if (showActivityModal) setShowActivityModal(false);
@@ -126,7 +133,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       setSelectedAccount(null);
     } else if (showAccModal) setShowAccModal(false);
   };
-  const dialogLabel = showDeleteAccountModal
+  const dialogLabel = showArchiveAccountModal
+    ? 'Archive account'
+    : showDeleteAccountModal
     ? 'Permanently delete account'
     : showActivityModal
     ? 'Account activity'
@@ -263,7 +272,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       '';
     setEditOwnerMemberId(resolvedOwnerId);
     setEditNotes(acc.notes || '');
-    setEditIsActive(acc.isActive !== false);
     setError(null);
     setShowEditModal(true);
   };
@@ -288,7 +296,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         type: editType,
         ownerMemberId: editOwnerMemberId,
         notes: editNotes.trim() || undefined,
-        isActive: editIsActive,
       });
       setShowEditModal(false);
     } catch (err: any) {
@@ -350,14 +357,38 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setShowActivityModal(true);
   };
 
-  // Archive preserves the account record and every historical reference.
-  const handleArchive = async (acc: Account) => {
-    if (!confirm(`Archive "${acc.name}"? Financial history will be preserved.`)) return;
+  // Archive is a dedicated audited status transition; generic Edit cannot bypass it.
+  const openArchiveDialog = (acc: Account) => {
+    setArchiveAccountTarget(acc);
+    setError(null);
+    setShowArchiveAccountModal(true);
+  };
+
+  const handleArchiveConfirmed = async () => {
+    if (!archiveAccountTarget || isSubmitting) return;
     try {
+      setIsSubmitting(true);
       setError(null);
-      await onArchiveAccount(acc.id);
+      await onArchiveAccount(archiveAccountTarget.id);
+      setShowArchiveAccountModal(false);
+      setArchiveAccountTarget(null);
     } catch (err: any) {
       setError(err.message || 'Failed to archive account');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReactivate = async (acc: Account) => {
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      setError(null);
+      await onReactivateAccount(acc.id);
+    } catch (err: any) {
+      setError(err.message || 'Failed to reactivate account');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -584,10 +615,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <Edit2 className="h-3.5 w-3.5 text-accent" />
                   Edit
                 </button>
-                {!isArchived && (
+                {isArchived ? (
                   <button
                     type="button"
-                    onClick={() => handleArchive(acc)}
+                    onClick={() => handleReactivate(acc)}
+                    disabled={isSubmitting}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-success bg-success-soft px-2.5 text-[11px] font-semibold text-success transition-all hover:opacity-80 active:scale-[0.97] disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Reactivate
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => openArchiveDialog(acc)}
                     className="inline-flex h-8 items-center gap-1 rounded-lg border border-danger bg-danger-soft px-2.5 text-[11px] font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.97]"
                   >
                     <Archive className="h-3.5 w-3.5" />
@@ -801,6 +842,90 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           </div>
         )}
       </section>
+
+      {/* MODAL: Archive account confirmation */}
+      {showArchiveAccountModal && archiveAccountTarget && (
+        <div className="mv-modal-backdrop">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-account-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
+            <div className="mv-modal-header">
+              <h3 className="text-base font-bold text-danger">Archive account</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowArchiveAccountModal(false);
+                  setArchiveAccountTarget(null);
+                }}
+                className="mv-modal-close"
+                aria-label="Cancel account archive"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mv-modal-body space-y-3">
+              {error && (
+                <div role="alert" className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                  {error}
+                </div>
+              )}
+              <p className="text-sm text-main">
+                Archive this account? Existing financial history and references will be preserved.
+              </p>
+
+              <div className="rounded-lg border border-muted bg-surface-muted p-3">
+                <div className="text-sm font-bold text-main">
+                  {accountIdentityLabel(archiveAccountTarget)}
+                </div>
+                <div className="mt-1 text-xs text-muted">
+                  {archiveAccountTarget.type === 'credit' ? 'Owed' : 'Balance'}{' '}
+                  {formatPence(
+                    archiveAccountTarget.type === 'credit'
+                      ? archiveAccountTarget.currentBalancePence !== 0
+                        ? Math.max(0, -archiveAccountTarget.currentBalancePence)
+                        : (archiveAccountTarget.balanceOwedPence ?? 0)
+                      : archiveAccountTarget.currentBalancePence
+                  )}
+                </div>
+              </div>
+
+              <p className="text-xs text-muted">
+                Archived accounts are hidden from active lists and blocked from new financial activity until reactivated.
+              </p>
+            </div>
+
+            <div className="mv-modal-fixed-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowArchiveAccountModal(false);
+                  setArchiveAccountTarget(null);
+                }}
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center rounded-lg border border-muted bg-surface-muted px-4 text-sm font-semibold text-main transition-all hover:bg-surface disabled:opacity-50"
+                data-modal-initial-focus
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleArchiveConfirmed}
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-4 text-sm font-semibold text-danger transition-all hover:opacity-80 disabled:opacity-50"
+              >
+                <Archive className="h-4 w-4" />
+                {isSubmitting ? 'Archiving…' : 'Archive account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: Permanent account deletion */}
       {showDeleteAccountModal && deleteAccountTarget && (
@@ -1120,19 +1245,12 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <div id="account-edit-status-label" className="block text-xs font-semibold text-muted mb-1">
+                <div className="block text-xs font-semibold text-muted mb-1">
                   Status
                 </div>
-                <label className="mv-account-toggle">
-                  <input
-                    aria-labelledby="account-edit-status-label account-edit-status-text"
-                    type="checkbox"
-                    checked={editIsActive}
-                    onChange={(e) => setEditIsActive(e.target.checked)}
-                    className="w-4 h-4 rounded text-success focus:ring-accent border-muted"
-                  />
-                  <span id="account-edit-status-text">Active</span>
-                </label>
+                <div className="inline-flex items-center rounded-lg border border-muted bg-surface-muted px-3 py-2 text-xs font-semibold text-main">
+                  {selectedAccount.isActive === false ? 'Archived' : 'Active'}
+                </div>
               </div>
 
               <div>

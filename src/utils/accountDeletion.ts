@@ -56,7 +56,11 @@ function isExplicitHarmlessReconciliationAudit(entry: AuditLogEntry): boolean {
 }
 
 function isExplicitHarmlessAdministrativeAudit(entry: AuditLogEntry): boolean {
-  if (entry.action === 'account_created' || entry.action === 'account_archived') {
+  if (
+    entry.action === 'account_created' ||
+    entry.action === 'account_archived' ||
+    entry.action === 'account_reactivated'
+  ) {
     return true;
   }
 
