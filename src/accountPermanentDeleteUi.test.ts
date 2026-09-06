@@ -36,6 +36,14 @@ describe('Permanent account deletion UI contract', () => {
     expect(accounts).toContain('deleteAccountTarget.ownerMemberId === JOINT_ACCOUNT_OWNER_ID');
   });
 
+  it('warns when deletion will remove an isolated mistaken setup balance', () => {
+    const accounts = read('components/AccountsView.tsx');
+
+    expect(accounts).toContain('isolatedSetupBalancePence');
+    expect(accounts).toContain('isolated setup balance');
+    expect(accounts).toContain('no linked financial evidence exists');
+  });
+
   it('prevents repeated confirmation while the mutation is in flight', () => {
     const accounts = read('components/AccountsView.tsx');
 
