@@ -7,6 +7,10 @@ import { accountOptionLabel } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
+import {
+  getTransactionCategoryOptions,
+  isTransactionCategorySelectionAllowed,
+} from '../utils/categoryEligibility';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -105,12 +109,55 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       (value): value is Payer => Boolean(value)
     )
   );
+  const preservedHistoricalCategoryIds =
+    initialTransaction && initialTransaction.type === type
+      ? [
+          initialTransaction.categoryId,
+          ...(initialTransaction.splits?.map((split) => split.categoryId) || []),
+        ].filter(Boolean)
+      : [];
+  const transactionCategoryOptions = getTransactionCategoryOptions(
+    categories,
+    type,
+    preservedHistoricalCategoryIds
+  );
 
   if (!isOpen) return null;
 
   // Handle Type change
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
+    const preservedForNewType =
+      initialTransaction?.type === newType
+        ? [
+            initialTransaction.categoryId,
+            ...(initialTransaction.splits?.map((split) => split.categoryId) || []),
+          ].filter(Boolean)
+        : [];
+    if (
+      categoryId &&
+      !isTransactionCategorySelectionAllowed(
+        categories,
+        newType,
+        categoryId,
+        preservedForNewType
+      )
+    ) {
+      setCategoryId('');
+    }
+    setSplits((previous) =>
+      previous.map((row) =>
+        row.categoryId &&
+        !isTransactionCategorySelectionAllowed(
+          categories,
+          newType,
+          row.categoryId,
+          preservedForNewType
+        )
+          ? { ...row, categoryId: '' }
+          : row
+      )
+    );
     if (newType === 'transfer') {
       setIsTransfer(true);
       setIsRepayment(false);
@@ -188,6 +235,19 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setError('Choose a category.');
       return;
     }
+    if (
+      !isTransfer &&
+      !isSplitEnabled &&
+      !isTransactionCategorySelectionAllowed(
+        categories,
+        type,
+        categoryId,
+        preservedHistoricalCategoryIds
+      )
+    ) {
+      setError('Choose a category that matches the transaction type.');
+      return;
+    }
 
     if (isTransfer && (!targetAccountId || targetAccountId === accountId)) {
       setError('For transfers, select a destination account distinct from the source account.');
@@ -231,6 +291,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         }
         if (!item.categoryId) {
           setError(`Split item #${i + 1} must have a category selected`);
+          return;
+        }
+        if (
+          !isTransactionCategorySelectionAllowed(
+            categories,
+            type,
+            item.categoryId,
+            preservedHistoricalCategoryIds
+          )
+        ) {
+          setError(`Split item #${i + 1} must use a category that matches the transaction type`);
           return;
         }
         splitSumPence += itemPence;
@@ -322,16 +393,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
           {/* Type Selector Tabs */}
           <div>
-            <label className="block text-xs font-semibold text-muted mb-1.5">
+            <div id="transaction-type-label" className="block text-xs font-semibold text-muted mb-1.5">
               Type
-            </label>
-            <div className="mv-transaction-type-tabs">
+            </div>
+            <div className="mv-transaction-type-tabs" role="group" aria-labelledby="transaction-type-label">
               {(['expense', 'income', 'transfer', 'repayment', 'refund'] as const).map((t) => (
                 <button
                   type="button"
                   key={t}
                   onClick={() => handleTypeChange(t)}
                   className={`mv-transaction-type-tab ${type === t ? 'is-active' : ''}`}
+                  aria-pressed={type === t}
                 >
                   {t}
                 </button>
@@ -342,10 +414,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Amount & Date */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-semibold text-muted mb-1">
+              <label htmlFor="transaction-amount" className="block text-xs font-semibold text-muted mb-1">
                 Amount (£)
               </label>
               <MoneyInput
+                id="transaction-amount"
                 type="text"
                 inputMode="decimal"
                 placeholder="0.00"
@@ -358,10 +431,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-muted mb-1">
+              <label htmlFor="transaction-date" className="block text-xs font-semibold text-muted mb-1">
                 Date
               </label>
               <input
+                id="transaction-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -373,10 +447,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-muted mb-1">
+            <label htmlFor="transaction-description" className="block text-xs font-semibold text-muted mb-1">
               Description
             </label>
             <input
+              id="transaction-description"
               type="text"
               placeholder="Description"
               value={description}
@@ -389,16 +464,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Person is a deliberate fact for income/expense/refund. Transfers derive owner from source account. */}
           {!isTransfer && (
             <div>
-              <label className="block text-xs font-semibold text-muted mb-1.5">
+              <div id="transaction-person-label" className="block text-xs font-semibold text-muted mb-1.5">
                 {type === 'income' || type === 'refund' ? 'Received by' : 'Paid by'}
-              </label>
-              <div className="flex flex-wrap gap-2">
+              </div>
+              <div className="flex flex-wrap gap-2" role="group" aria-labelledby="transaction-person-label">
                 {personOptions.map((person) => (
                   <button
                     type="button"
                     key={person}
                     onClick={() => setPayer(person)}
                     className={`mv-transaction-selector-pill ${payer === person ? 'is-active' : ''}`}
+                    aria-pressed={payer === person}
                   >
                     {person}
                   </button>
@@ -416,10 +492,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           {/* Account Selection */}
           <div className="mv-modal-grid-2">
             <div>
-              <label className="block text-xs font-semibold text-muted mb-1">
+              <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">
                 {isTransfer ? 'From Account' : isRepayment ? 'Paid from account' : 'Account'}
               </label>
               <select
+                id="transaction-account"
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
                 className="mv-transaction-control w-full"
@@ -444,10 +521,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
             {(isTransfer || isRepayment) && (
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">
                   {isRepayment ? 'Credit account' : 'To Account'}
                 </label>
                 <select
+                  id="transaction-target-account"
                   value={targetAccountId}
                   onChange={(e) => setTargetAccountId(e.target.value)}
                   className="mv-transaction-control w-full"
@@ -474,17 +552,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
             {!isTransfer && !isSplitEnabled && (
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="transaction-category" className="block text-xs font-semibold text-muted mb-1">
                   Category
                 </label>
                 <select
+                  id="transaction-category"
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="mv-transaction-control w-full"
                   required
                 >
                   <option value="">Select category</option>
-                  {categories.map((cat) => (
+                  {transactionCategoryOptions.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name} ({cat.group})
                     </option>
@@ -502,11 +581,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   type="button"
                   onClick={() => {
                     if (!isSplitEnabled && splits.length === 0) {
-                      handleAddSplitRow();
+                      setSplits([
+                        {
+                          categoryId,
+                          amountStr,
+                          notes: '',
+                        },
+                      ]);
                     }
                     setIsSplitEnabled(!isSplitEnabled);
                   }}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-success hover:text-success"
+                  aria-expanded={isSplitEnabled}
                 >
                   <Split className="w-3.5 h-3.5" />
                   <span>{isSplitEnabled ? 'Remove Splits' : 'Split Categories'}</span>
@@ -539,13 +625,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   {splits.map((splitRow, idx) => (
                     <div key={idx} className="mv-hscroll items-center">
                       <select
+                        aria-label={`Split ${idx + 1} category`}
                         value={splitRow.categoryId}
                         onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)}
                         className="mv-transaction-control flex-1"
                         required
                       >
                         <option value="">Select category</option>
-                        {categories.map((c) => (
+                        {transactionCategoryOptions.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name}
                           </option>
@@ -592,10 +679,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-muted mb-1">
+<label htmlFor="transaction-notes" className="block text-xs font-semibold text-muted mb-1">
               Notes
             </label>
             <input
+              id="transaction-notes"
               type="text"
               placeholder="Notes"
               value={notes}
