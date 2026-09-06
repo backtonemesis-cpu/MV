@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { Category } from '../types';
 import {
   getBillCategoryOptions,
+  getTransactionCategoryOptions,
   isBillCategorySelectionAllowed,
   isBillEligibleCategory,
+  isTransactionCategoryEligible,
+  isTransactionCategorySelectionAllowed,
 } from './categoryEligibility';
 
 const category = (id: string, name: string, group: string): Category => ({
@@ -83,5 +86,59 @@ describe('bill category eligibility', () => {
 
   it('rejects an unknown category id instead of silently accepting it', () => {
     expect(isBillCategorySelectionAllowed(categories, 'missing')).toBe(false);
+  });
+});
+
+
+describe('transaction category eligibility', () => {
+  it('keeps expenses and refunds in spending groups', () => {
+    for (const item of [housing, living, utilities, family, personal, discretionary]) {
+      expect(isTransactionCategoryEligible(item, 'expense')).toBe(true);
+      expect(isTransactionCategoryEligible(item, 'refund')).toBe(true);
+    }
+    for (const item of [income, benefits, transfer, savings]) {
+      expect(isTransactionCategoryEligible(item, 'expense')).toBe(false);
+      expect(isTransactionCategoryEligible(item, 'refund')).toBe(false);
+    }
+  });
+
+  it('allows only Income group categories for income transactions', () => {
+    expect(getTransactionCategoryOptions(categories, 'income').map((item) => item.id)).toEqual([
+      'income',
+      'benefits',
+    ]);
+  });
+
+  it('allows only Transfers group categories for card repayments', () => {
+    expect(getTransactionCategoryOptions(categories, 'repayment').map((item) => item.id)).toEqual([
+      'transfer',
+    ]);
+  });
+
+  it('preserves only explicitly linked legacy categories during edit', () => {
+    const options = getTransactionCategoryOptions(categories, 'expense', ['income']).map(
+      (item) => item.id
+    );
+    expect(options).toContain('income');
+    expect(options).not.toContain('benefits');
+    expect(options).not.toContain('transfer');
+    expect(options).not.toContain('savings');
+  });
+
+  it('rejects mismatched new selections while allowing an unchanged legacy category', () => {
+    expect(isTransactionCategorySelectionAllowed(categories, 'expense', 'housing')).toBe(true);
+    expect(isTransactionCategorySelectionAllowed(categories, 'expense', 'income')).toBe(false);
+    expect(isTransactionCategorySelectionAllowed(categories, 'income', 'income')).toBe(true);
+    expect(isTransactionCategorySelectionAllowed(categories, 'income', 'housing')).toBe(false);
+    expect(isTransactionCategorySelectionAllowed(categories, 'repayment', 'transfer')).toBe(true);
+    expect(isTransactionCategorySelectionAllowed(categories, 'repayment', 'housing')).toBe(false);
+    expect(
+      isTransactionCategorySelectionAllowed(categories, 'expense', 'income', ['income'])
+    ).toBe(true);
+  });
+
+  it('never assigns a category to a transfer through this eligibility rule', () => {
+    expect(getTransactionCategoryOptions(categories, 'transfer')).toEqual([]);
+    expect(isTransactionCategorySelectionAllowed(categories, 'transfer', 'housing')).toBe(false);
   });
 });
