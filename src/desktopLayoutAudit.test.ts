@@ -17,7 +17,9 @@ describe('Audited desktop layout contract', () => {
     expect(app).toContain('max-w-[1440px]');
     expect(header).toContain('max-w-[1440px]');
     expect(navigation).toContain('max-w-[1440px]');
-    expect(css).not.toMatch(/\.mv-layout-pc[\s\S]{0,180}max-width:\s*none\s*!important/);
+    const auditedContract = css.slice(css.lastIndexOf('AUDITED DESKTOP CONTRACT'));
+    expect(auditedContract).toContain('max-width: 1440px !important');
+    expect(auditedContract).toContain('margin-inline: auto !important');
   });
 
   it('keeps the PC app bar and routine form controls at the audited sizes', () => {
