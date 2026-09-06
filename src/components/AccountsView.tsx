@@ -21,6 +21,7 @@ import { JOINT_ACCOUNT_OWNER_ID } from '../types';
 import type { Account, SavingsGoal, UserRole, AccountType, Transaction, HouseholdMember } from '../types';
 import {
   formatPence,
+  parseHumanPoundsToPence,
   parseToPence,
 } from '../utils/currency';
 import { localDateInputValue } from '../utils/dateInput';
@@ -204,7 +205,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   // Account creation
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accName.trim()) return;
+    if (!accName.trim()) {
+      setError('Enter an account name.');
+      return;
+    }
     if (!accOwnerMemberId) {
       setError('Choose the account owner.');
       return;
@@ -213,10 +217,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       setError('Choose the account type.');
       return;
     }
+    const enteredPence = parseHumanPoundsToPence(accBalanceStr);
+    if (enteredPence === null) {
+      setError('Enter a valid starting balance in pounds and pence.');
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
-      const enteredPence = parseToPence(accBalanceStr);
       const startingBalancePence =
         accType === 'credit' ? -Math.abs(enteredPence) : enteredPence;
       await onCreateAccount({
@@ -891,17 +899,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <form onSubmit={handleAccountSubmit} className="flex min-h-0 flex-1 flex-col">
               <div className="mv-modal-scroll-body space-y-3">
               {error && (
-                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                <div role="alert" className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
-                  Account Name
+                <label htmlFor="account-create-name" className="block text-xs font-semibold text-muted mb-1">
+                  Account Name *
                 </label>
                 <input
-                  autoFocus
+                  id="account-create-name"
                   type="text"
                   value={accName}
                   onChange={(e) => setAccName(e.target.value)}
@@ -913,10 +921,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div className="mv-modal-grid-2">
                 <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Owner
+                  <label htmlFor="account-create-owner" className="block text-xs font-semibold text-muted mb-1">
+                    Owner *
                   </label>
                   <select
+                    id="account-create-owner"
                     value={accOwnerMemberId}
                     onChange={(e) => setAccOwnerMemberId(e.target.value)}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
@@ -934,10 +943,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Type
+                  <label htmlFor="account-create-type" className="block text-xs font-semibold text-muted mb-1">
+                    Type *
                   </label>
                   <select
+                    id="account-create-type"
                     value={accType}
                     onChange={(e) => setAccType(e.target.value as AccountType | '')}
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
@@ -953,10 +963,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
-                  {accType === 'credit' ? 'Starting balance owed (£)' : 'Starting balance (£)'}
+                <label htmlFor="account-create-balance" className="block text-xs font-semibold text-muted mb-1">
+                  {accType === 'credit' ? 'Starting balance owed (£) *' : 'Starting balance (£) *'}
                 </label>
                 <MoneyInput
+                  id="account-create-balance"
                   type="text"
                   value={accBalanceStr}
                   onChange={(e) => setAccBalanceStr(e.target.value)}
@@ -969,10 +980,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="account-create-notes" className="block text-xs font-semibold text-muted mb-1">
                   Notes
                 </label>
                 <textarea
+                  id="account-create-notes"
                   value={accNotes}
                   onChange={(e) => setAccNotes(e.target.value)}
                   placeholder="Notes"
