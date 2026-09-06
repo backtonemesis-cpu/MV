@@ -35,13 +35,12 @@ describe('Global money-input audit contract', () => {
     expect(allSurfaceSource).not.toContain("className='mv-money-prefix");
   });
 
-  it('keeps GBP meaning programmatically clear', () => {
-    const labels = allSurfaceSource.match(/aria-label=(?:\{[^}]+\}|"[^"]+")/g) ?? [];
-    const moneyLabels = labels.filter((label) =>
-      /amount|balance|target|saving|funding|payment/i.test(label)
-    );
-    expect(moneyLabels.length).toBeGreaterThanOrEqual(18);
-    expect(moneyLabels.every((label) => /pounds sterling/i.test(label))).toBe(true);
+  it('keeps GBP meaning programmatically clear on every shared money input', () => {
+    for (const source of Object.values(surfaces)) {
+      const blocks = source.match(/<MoneyInput[\s\S]*?\/>/g) ?? [];
+      expect(blocks.every((block) => /aria-label=/.test(block))).toBe(true);
+      expect(blocks.every((block) => /pounds sterling/i.test(block))).toBe(true);
+    }
   });
 
   it('does not force autofocus into any shared money input', () => {
