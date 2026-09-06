@@ -20,6 +20,7 @@ describe('Stage 4 accessibility and responsive regression contract', () => {
   it('enforces modal semantics, contained focus, labelled controls, selection state, alerts and focus restoration', () => {
     const modal = read('utils/modalAccessibility.ts');
     expect(modal).toContain(".mv-modal-backdrop .mv-modal-card");
+    expect(modal).toContain(".mv-command-backdrop .mv-command-palette");
     expect(modal).toContain("dialog.setAttribute('role', 'dialog')");
     expect(modal).toContain("dialog.setAttribute('aria-modal', 'true')");
     expect(modal).toContain("dialog.setAttribute('aria-labelledby', title.id)");
@@ -56,8 +57,10 @@ describe('Stage 4 accessibility and responsive regression contract', () => {
     expect(conflict).toContain('aria-describedby="conflict-modal-description"');
   });
 
-  it('uses navigation semantics rather than an incomplete ARIA menu model', () => {
+  it('uses simple navigation and command-result semantics instead of incomplete composite-widget models', () => {
     const navigation = read('components/Navigation.tsx');
+    const commandPalette = read('components/CommandPalette.tsx');
+
     expect(navigation).toContain('aria-label="Primary navigation"');
     expect(navigation).toContain('aria-label="Mobile navigation"');
     expect(navigation).toContain("aria-current={isActive ? 'page' : undefined}");
@@ -65,6 +68,12 @@ describe('Stage 4 accessibility and responsive regression contract', () => {
     expect(navigation).toContain("document.getElementById('mobile-nav-tab-more')?.focus()");
     expect(navigation).not.toContain('role="menu"');
     expect(navigation).not.toContain('role="menuitem"');
+
+    expect(commandPalette).toContain('role="dialog"');
+    expect(commandPalette).toContain('aria-label="Command palette"');
+    expect(commandPalette).toContain('className="mv-command-list" aria-label="Available commands"');
+    expect(commandPalette).not.toContain('role="listbox"');
+    expect(commandPalette).not.toContain('role="option"');
   });
 
   it('retains the repaired PC/Phone controls and iPhone-safe sizing', () => {
