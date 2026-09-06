@@ -2966,6 +2966,195 @@ export function undoLocalPaymentPaid(
   return { ...result.value, version: result.state.version };
 }
 
+export function markLocalPaymentsPaid(
+  ids: string[],
+  actualDate: string,
+  expectedVersion: number
+): { transactions: Transaction[]; payments: PlannedPayment[]; version: number } {
+  const uniqueIds = Array.from(new Set(ids));
+  if (uniqueIds.length === 0) throw new Error('Select at least one unpaid bill.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(actualDate)) {
+    throw new Error('Payment date must use YYYY-MM-DD format.');
+  }
+
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'planned_payments_paid',
+      entityType: 'planned_payment',
+      entityId: uniqueIds.join(','),
+      summary: `${uniqueIds.length} planned bill payment${uniqueIds.length === 1 ? '' : 's'} recorded`,
+      details: { paymentIds: uniqueIds, actualDate },
+    },
+    (state) => {
+      const prepared = uniqueIds.map((id) => {
+        const index = state.plannedPayments.findIndex((payment) => payment.id === id);
+        if (index < 0) throw new Error(`Planned bill not found: ${id}`);
+        const payment = state.plannedPayments[index];
+
+        if (payment.status === 'paid') {
+          const linked = payment.actualTransactionId
+            ? state.transactions.find(
+                (transaction) =>
+                  transaction.id === payment.actualTransactionId &&
+                  transaction.plannedPaymentId === payment.id &&
+                  transaction.type === 'expense' &&
+                  !transaction.isTransfer &&
+                  !transaction.isRepayment &&
+                  !transaction.isSavings &&
+                  !transaction.isRefund
+              )
+            : undefined;
+          if (linked) return { index, payment, existing: linked };
+          throw new Error(
+            `${payment.name} is marked Paid but does not have a valid linked Activity expense. Nothing was changed.`
+          );
+        }
+
+        if (payment.actualTransactionId) {
+          throw new Error(
+            `${payment.name} already references payment evidence while marked Unpaid. Nothing was changed.`
+          );
+        }
+
+        assertActiveAccount(state, payment.accountId);
+        const categoryId = payment.categoryId || 'cat-housing';
+        assertCategoryExists(state, categoryId);
+        if (!isSafePence(payment.amountPence) || payment.amountPence < 0) {
+          throw new Error(`${payment.name} does not have a valid exact-pence amount.`);
+        }
+        return { index, payment, categoryId };
+      });
+
+      const transactions: Transaction[] = [];
+      const payments: PlannedPayment[] = [];
+
+      for (const item of prepared) {
+        if ('existing' in item) {
+          transactions.push(item.existing);
+          payments.push(item.payment);
+          continue;
+        }
+
+        const tx: Transaction = {
+          id: createId('tx'),
+          date: actualDate,
+          description: item.payment.name,
+          amountPence: item.payment.amountPence,
+          type: 'expense',
+          categoryId: item.categoryId,
+          accountId: item.payment.accountId,
+          payer: item.payment.responsiblePerson,
+          isTransfer: false,
+          isRepayment: false,
+          isSavings: false,
+          isRefund: false,
+          plannedPaymentId: item.payment.id,
+          createdAt: nowIso(),
+          createdBy: OWNER_EMAIL,
+        };
+
+        const nextPayment: PlannedPayment = {
+          ...item.payment,
+          status: 'paid',
+          actualAmountPence: item.payment.amountPence,
+          actualDate,
+          actualTransactionId: tx.id,
+          updatedAt: nowIso(),
+          updatedBy: OWNER_EMAIL,
+        };
+
+        state.transactions.unshift(tx);
+        state.plannedPayments[item.index] = nextPayment;
+        transactions.push(tx);
+        payments.push(nextPayment);
+      }
+
+      return { transactions, payments };
+    }
+  );
+
+  return { ...result.value, version: result.state.version };
+}
+
+export function undoLocalPaymentsPaid(
+  ids: string[],
+  expectedVersion: number
+): { transactions: Transaction[]; payments: PlannedPayment[]; version: number } {
+  const uniqueIds = Array.from(new Set(ids));
+  if (uniqueIds.length === 0) throw new Error('Select at least one paid bill.');
+
+  const result = mutateLocalHousehold(
+    expectedVersion,
+    {
+      action: 'planned_payments_paid_undone',
+      entityType: 'planned_payment',
+      entityId: uniqueIds.join(','),
+      summary: `${uniqueIds.length} recorded bill payment${uniqueIds.length === 1 ? '' : 's'} undone`,
+      details: { paymentIds: uniqueIds },
+    },
+    (state) => {
+      const prepared = uniqueIds.map((id) => {
+        const paymentIndex = state.plannedPayments.findIndex((payment) => payment.id === id);
+        if (paymentIndex < 0) throw new Error(`Planned bill not found: ${id}`);
+
+        const payment = state.plannedPayments[paymentIndex];
+        if (payment.status !== 'paid' || !payment.actualTransactionId) {
+          throw new Error(
+            `${payment.name} does not have a safely linked paid Activity record to undo. Nothing was changed.`
+          );
+        }
+
+        const linkedTransaction = state.transactions.find(
+          (transaction) =>
+            transaction.id === payment.actualTransactionId &&
+            transaction.plannedPaymentId === payment.id &&
+            transaction.type === 'expense' &&
+            !transaction.isTransfer &&
+            !transaction.isRepayment &&
+            !transaction.isSavings &&
+            !transaction.isRefund
+        );
+
+        if (!linkedTransaction) {
+          throw new Error(
+            `The linked Activity expense for ${payment.name} is missing or mismatched. Nothing was changed.`
+          );
+        }
+
+        return { paymentIndex, payment, linkedTransaction };
+      });
+
+      const transactionIds = new Set(prepared.map((item) => item.linkedTransaction.id));
+      state.transactions = state.transactions.filter(
+        (transaction) => !transactionIds.has(transaction.id)
+      );
+
+      const payments: PlannedPayment[] = [];
+      for (const item of prepared) {
+        const nextPayment: PlannedPayment = {
+          ...item.payment,
+          status: 'unpaid',
+          actualAmountPence: undefined,
+          actualDate: undefined,
+          actualTransactionId: undefined,
+          updatedAt: nowIso(),
+          updatedBy: OWNER_EMAIL,
+        };
+        state.plannedPayments[item.paymentIndex] = nextPayment;
+        payments.push(nextPayment);
+      }
+
+      return {
+        transactions: prepared.map((item) => item.linkedTransaction),
+        payments,
+      };
+    }
+  );
+
+  return { ...result.value, version: result.state.version };
+}
+
 export function markLocalIncomeReceived(
   id: string,
   payload: { actualAmountPence?: number; actualDate?: string; accountId?: string },
