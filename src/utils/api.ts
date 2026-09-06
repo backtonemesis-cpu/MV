@@ -24,6 +24,7 @@ import {
   contributeLocalSavingsGoal,
   createLocalTransaction,
   archiveLocalAccount,
+  reactivateLocalAccount,
   permanentlyDeleteLocalAccount,
   deleteLocalPlannedIncome,
   deleteLocalPlannedPayment,
@@ -203,6 +204,10 @@ export async function updateAccount(
 
 export async function archiveAccount(id: string, expectedVersion: number) {
   return archiveLocalAccount(id, expectedVersion);
+}
+
+export async function reactivateAccount(id: string, expectedVersion: number) {
+  return reactivateLocalAccount(id, expectedVersion);
 }
 
 export async function permanentlyDeleteAccount(id: string, expectedVersion: number) {
