@@ -31,6 +31,7 @@ import {
   calculateSavingsPosition,
 } from './utils/currency';
 import { generateTransferPlan } from './utils/transferPlan';
+import { findLatestTransferPlanFundingBatch } from './utils/transferPlanFunding';
 import {
   buildTransferPlanAccountModels,
   groupTransferPlanAccountModels,
@@ -190,6 +191,57 @@ describe('Final post-PR #114 financial safety audit', () => {
     expect(state.plannedPayments[0].actualTransactionId).toBe(secondPaymentTxId);
     expect(state.transactions.some((tx) => tx.id === secondPaymentTxId)).toBe(true);
     expect(state.transactions.filter((tx) => tx.type === 'transfer')).toHaveLength(0);
+  });
+
+  it('Undo Funding revalidates the exact reviewed batch and cannot reverse a newer batch', () => {
+    let state = installBase([payment('rent', 'Rent', 100_00, 'lloyds-marius')]);
+
+    executeLocalTransferAllocations({
+      destinationAccountId: 'lloyds-marius',
+      expectedTotalPence: 100_00,
+      allocations: [{ sourceAccountId: 'savings', amountPence: 100_00 }],
+      date: '2026-09-04',
+      month,
+    }, state.version);
+    state = loadLocalHousehold();
+
+    const reviewed = findLatestTransferPlanFundingBatch(
+      state.transactions,
+      'lloyds-marius',
+      month,
+      true
+    )!;
+    const reviewedExpectation = {
+      batchKey: reviewed.batchKey,
+      destinationAccountId: reviewed.destinationAccountId,
+      totalPence: reviewed.totalPence,
+      transactionIds: reviewed.transactions.map((tx) => tx.id),
+    };
+
+    updateLocalPlannedPayment('rent', { amountPence: 150_00 }, state.version);
+    state = loadLocalHousehold();
+    executeLocalTransferAllocations({
+      destinationAccountId: 'lloyds-marius',
+      expectedTotalPence: 50_00,
+      allocations: [{ sourceAccountId: 'savings', amountPence: 50_00 }],
+      date: '2026-09-05',
+      month,
+    }, state.version);
+    state = loadLocalHousehold();
+
+    expect(state.transactions.filter((tx) => tx.type === 'transfer')).toHaveLength(2);
+    expect(() =>
+      undoLatestLocalTransferPlanFunding(
+        'lloyds-marius',
+        state.version,
+        month,
+        reviewedExpectation
+      )
+    ).toThrow(/funding changed after the confirmation was opened/);
+
+    state = loadLocalHousehold();
+    expect(state.transactions.filter((tx) => tx.type === 'transfer')).toHaveLength(2);
+    expect(state.plannedPayments[0].status).toBe('unpaid');
   });
 
   it('reconciles Accounts, Activity, Dashboard math, Savings and Transfer Plan exactly before/after bulk pay and undo', () => {
