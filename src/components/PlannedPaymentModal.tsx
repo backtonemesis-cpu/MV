@@ -160,7 +160,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-medium text-muted mb-1">
-                Amount *
+                Amount (£) *
               </label>
               <MoneyInput
                 type="number"
