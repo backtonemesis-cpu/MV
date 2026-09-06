@@ -138,6 +138,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setIsRepayment(false);
       setIsRefund(false);
     }
+
+    if (newType !== 'transfer' && newType !== 'repayment') {
+      setTargetAccountId('');
+    }
   };
 
   const handleAddSplitRow = () => {
@@ -198,6 +202,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       return;
     }
 
+    if (isRepayment) {
+      const sourceAccount = accounts.find((account) => account.id === accountId);
+      const creditAccount = accounts.find((account) => account.id === targetAccountId);
+      if (!targetAccountId || targetAccountId === accountId) {
+        setError('Choose the credit account being repaid.');
+        return;
+      }
+      if (sourceAccount?.type === 'credit') {
+        setError('Card repayments must be funded from a cash-capable account.');
+        return;
+      }
+      if (!creditAccount || creditAccount.type !== 'credit') {
+        setError('Card repayment destination must be a credit account.');
+        return;
+      }
+    }
+
     let finalSplits: TransactionSplit[] | undefined = undefined;
 
     if (isSplitEnabled && !isTransfer && !isRepayment) {
@@ -248,7 +269,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       await onSave({
         description: description.trim(),
         amountPence: pence,
-        type: type as TransactionType,
+        type: isRepayment ? 'repayment' : (type as TransactionType),
         categoryId: isTransfer ? undefined : categoryId || undefined,
         accountId,
         targetAccountId: isTransfer || isRepayment ? targetAccountId : undefined,
@@ -304,7 +325,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               Type
             </label>
             <div className="mv-transaction-type-tabs">
-              {(['expense', 'income', 'transfer', 'refund'] as const).map((t) => (
+              {(['expense', 'income', 'transfer', 'repayment', 'refund'] as const).map((t) => (
                 <button
                   type="button"
                   key={t}
@@ -399,7 +420,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div className="mv-modal-grid-2">
             <div>
               <label className="block text-xs font-semibold text-muted mb-1">
-                {isTransfer ? 'From Account' : 'Account'}
+                {isTransfer ? 'From Account' : isRepayment ? 'Paid from account' : 'Account'}
               </label>
               <select
                 value={accountId}
@@ -408,29 +429,43 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 required
               >
                 <option value="">
-                  {isTransfer ? 'Select source account' : 'Select account'}
+                  {isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}
                 </option>
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {accountOptionLabel(acc)}
-                  </option>
-                ))}
+                {accounts
+                  .filter(
+                    (acc) =>
+                      (acc.isActive !== false || acc.id === accountId) &&
+                      (!isRepayment || acc.type !== 'credit')
+                  )
+                  .map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {accountOptionLabel(acc)}
+                    </option>
+                  ))}
               </select>
             </div>
 
-            {isTransfer && (
+            {(isTransfer || isRepayment) && (
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">
-                  To Account
+                  {isRepayment ? 'Credit account' : 'To Account'}
                 </label>
                 <select
                   value={targetAccountId}
                   onChange={(e) => setTargetAccountId(e.target.value)}
                   className="mv-transaction-control w-full"
+                  required
                 >
-                  <option value="">Select account</option>
+                  <option value="">
+                    {isRepayment ? 'Select credit account' : 'Select account'}
+                  </option>
                   {accounts
-                    .filter((a) => a.id !== accountId)
+                    .filter(
+                      (a) =>
+                        a.id !== accountId &&
+                        (a.isActive !== false || a.id === targetAccountId) &&
+                        (!isRepayment || a.type === 'credit')
+                    )
                     .map((acc) => (
                       <option key={acc.id} value={acc.id}>
                         {accountOptionLabel(acc)}
@@ -553,32 +588,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           )}
           </div>
 
-          {/* Financial Options */}
-          <div className="mv-integrity-flags">
-            <span className="mv-integrity-title">
-              Integrity Flags
-            </span>
-
-            <label className="mv-integrity-flag">
-              <input
-                type="checkbox"
-                checked={isRepayment}
-                onChange={(e) => setIsRepayment(e.target.checked)}
-                className="w-4 h-4 text-success rounded border-muted focus:ring-accent"
-              />
-              <span>Card repayment</span>
-            </label>
-
-            <label className="mv-integrity-flag">
-              <input
-                type="checkbox"
-                checked={isSavings}
-                onChange={(e) => setIsSavings(e.target.checked)}
-                className="w-4 h-4 text-success rounded border-muted focus:ring-accent"
-              />
-              <span>Savings</span>
-            </label>
-          </div>
+          {/* Repayment is an explicit type. Savings classification is derived from transfer accounts. */}
 
           {/* Notes */}
           <div>
