@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Layers, X } from 'lucide-react';
 import { Account, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
@@ -58,8 +58,6 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
   accounts,
   onImport,
 }) => {
-  const sourceMonthRef = useRef<HTMLInputElement>(null);
-
   const [sourceMonth, setSourceMonth] = useState(activeMonth);
   const [targetMonth, setTargetMonth] = useState(nextMonth(activeMonth));
   const [includeIncomes, setIncludeIncomes] = useState(true);
@@ -152,8 +150,6 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
     setIncludePayments(true);
     setError(null);
 
-    const frame = requestAnimationFrame(() => sourceMonthRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
   }, [activeMonth, isOpen]);
 
   useEffect(() => {
@@ -321,7 +317,6 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
               <label>
                 From Month
                 <MonthPicker
-                  ref={sourceMonthRef}
                   value={sourceMonth}
                   onChange={setSourceMonth}
                   ariaLabel="Source month"
