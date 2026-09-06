@@ -331,6 +331,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   // Archive preserves the account record and every historical reference.
   const handleArchive = async (acc: Account) => {
+    if (!confirm(`Archive "${acc.name}"? Financial history will be preserved.`)) return;
     try {
       setError(null);
       await onArchiveAccount(acc.id);
