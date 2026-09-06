@@ -210,6 +210,8 @@ function assertPaymentMatchesExpectation(
     (payment.categoryId || '') === (expected.categoryId || '') &&
     payment.status === expected.status &&
     payment.includeInTransferPlan === expected.includeInTransferPlan &&
+    payment.actualAmountPence === expected.actualAmountPence &&
+    (payment.actualDate || '') === (expected.actualDate || '') &&
     (payment.actualTransactionId || '') === (expected.actualTransactionId || '');
 
   if (!same) {
