@@ -524,7 +524,7 @@ export default function App() {
   };
 
   const handleMarkPlannedPaymentPaid = async (
-    id: string,
+    payment: PlannedPayment,
     payload: {
       actualAmountPence: number;
       actualDate: string;
@@ -533,7 +533,7 @@ export default function App() {
   ) => {
     if (!household) return;
     try {
-      await markPaymentPaid(id, {
+      await markPaymentPaid(payment, {
         ...payload,
         expectedVersion: household.version,
       });
