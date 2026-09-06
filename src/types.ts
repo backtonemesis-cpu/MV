@@ -147,6 +147,8 @@ export interface PlannedPaymentMutationExpectation {
   categoryId?: string;
   status: 'unpaid' | 'paid';
   includeInTransferPlan: boolean;
+  actualAmountPence?: number;
+  actualDate?: string;
   actualTransactionId?: string;
 }
 
