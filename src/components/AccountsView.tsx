@@ -26,6 +26,7 @@ import {
 import { localDateInputValue } from '../utils/dateInput';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import type { AccountPermanentDeleteEligibility } from '../utils/accountDeletion';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -36,7 +37,9 @@ interface AccountsViewProps {
   onCreateAccount: (data: Partial<Account>) => Promise<void>;
   onUpdateAccount: (id: string, data: Partial<Account> & { reconciledBalancePence?: number }) => Promise<void>;
   onReconcileAccount: (id: string, reconciledBalancePence: number, reconciliationDate: string) => Promise<void>;
-  onDeleteAccount: (id: string) => Promise<void>;
+  accountDeleteEligibility: Record<string, AccountPermanentDeleteEligibility>;
+  onArchiveAccount: (id: string) => Promise<void>;
+  onPermanentDeleteAccount: (id: string) => Promise<void>;
   onCreateSavingsGoal: (data: Partial<SavingsGoal>) => Promise<void>;
   onUpdateSavingsGoal: (id: string, data: Partial<SavingsGoal>) => Promise<void>;
   onDeleteSavingsGoal: (id: string) => Promise<void>;
@@ -51,7 +54,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   onCreateAccount,
   onUpdateAccount,
   onReconcileAccount,
-  onDeleteAccount,
+  accountDeleteEligibility,
+  onArchiveAccount,
+  onPermanentDeleteAccount,
   onCreateSavingsGoal,
   onUpdateSavingsGoal,
   onDeleteSavingsGoal,
@@ -62,8 +67,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showEditGoalModal, setShowEditGoalModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [deleteAccountTarget, setDeleteAccountTarget] = useState<Account | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
@@ -100,9 +107,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     showReconcileModal ||
     showActivityModal ||
     showGoalModal ||
-    showEditGoalModal;
+    showEditGoalModal ||
+    showDeleteAccountModal;
   const closeActiveModal = () => {
-    if (showActivityModal) setShowActivityModal(false);
+    if (showDeleteAccountModal) {
+      setShowDeleteAccountModal(false);
+      setDeleteAccountTarget(null);
+    } else if (showActivityModal) setShowActivityModal(false);
     else if (showReconcileModal) setShowReconcileModal(false);
     else if (showEditGoalModal) {
       setShowEditGoalModal(false);
@@ -113,7 +124,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       setSelectedAccount(null);
     } else if (showAccModal) setShowAccModal(false);
   };
-  const dialogLabel = showActivityModal
+  const dialogLabel = showDeleteAccountModal
+    ? 'Permanently delete account'
+    : showActivityModal
     ? 'Account activity'
     : showReconcileModal
     ? 'Reconcile account'
@@ -316,15 +329,42 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setShowActivityModal(true);
   };
 
-  // Handle Deactivate / Delete
-  const handleDeactivate = async (acc: Account) => {
-    if (!confirm(`Are you sure you want to archive or remove "${acc.name}"? Active references will be safely protected.`)) {
+  // Archive preserves the account record and every historical reference.
+  const handleArchive = async (acc: Account) => {
+    if (!confirm(`Archive "${acc.name}"? Financial history will be preserved.`)) return;
+    try {
+      setError(null);
+      await onArchiveAccount(acc.id);
+    } catch (err: any) {
+      setError(err.message || 'Failed to archive account');
+    }
+  };
+
+  const openPermanentDeleteDialog = (acc: Account) => {
+    const eligibility = accountDeleteEligibility[acc.id];
+    if (!eligibility?.canDeletePermanently) {
+      setError('This account has financial history and must be archived.');
       return;
     }
+    setError(null);
+    setDeleteAccountTarget(acc);
+    setShowDeleteAccountModal(true);
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!deleteAccountTarget || isSubmitting) return;
     try {
-      await onDeleteAccount(acc.id);
+      setIsSubmitting(true);
+      setError(null);
+      await onPermanentDeleteAccount(deleteAccountTarget.id);
+      setShowDeleteAccountModal(false);
+      setDeleteAccountTarget(null);
     } catch (err: any) {
-      alert(err.message || 'Failed to archive account');
+      setError(err.message || 'Permanent account deletion was blocked.');
+      setShowDeleteAccountModal(false);
+      setDeleteAccountTarget(null);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -523,14 +563,26 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <Edit2 className="h-3.5 w-3.5 text-accent" />
                   Edit
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeactivate(acc)}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-danger bg-danger-soft px-2.5 text-[11px] font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.97]"
-                >
-                  <Archive className="h-3.5 w-3.5" />
-                  {isArchived ? 'Delete' : 'Archive'}
-                </button>
+                {!isArchived && (
+                  <button
+                    type="button"
+                    onClick={() => handleArchive(acc)}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-danger bg-danger-soft px-2.5 text-[11px] font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.97]"
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                    Archive
+                  </button>
+                )}
+                {accountDeleteEligibility[acc.id]?.canDeletePermanently && (
+                  <button
+                    type="button"
+                    onClick={() => openPermanentDeleteDialog(acc)}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-danger bg-danger-soft px-2.5 text-[11px] font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.97]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete permanently
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -728,6 +780,80 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           </div>
         )}
       </section>
+
+      {/* MODAL: Permanent account deletion */}
+      {showDeleteAccountModal && deleteAccountTarget && (
+        <div className="mv-modal-backdrop">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card mv-account-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
+            <div className="mv-modal-header">
+              <h3 className="text-base font-bold text-danger">Delete permanently</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteAccountModal(false);
+                  setDeleteAccountTarget(null);
+                }}
+                className="mv-modal-close"
+                aria-label="Cancel permanent account deletion"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mv-modal-body space-y-3">
+              <p className="text-sm text-main">
+                This permanently removes only this unused account record. It cannot be undone.
+              </p>
+              <div className="rounded-lg border border-muted bg-surface-muted p-3 text-sm text-main">
+                <div className="font-bold">{deleteAccountTarget.name}</div>
+                <div className="mt-1 text-xs text-muted">
+                  {deleteAccountTarget.type} · {
+                    deleteAccountTarget.ownerMemberId === JOINT_ACCOUNT_OWNER_ID
+                      ? 'Joint'
+                      : members.find((member) => member.id === deleteAccountTarget.ownerMemberId)?.name ||
+                        deleteAccountTarget.ownerPerson ||
+                        'Unassigned'
+                  }
+                </div>
+              </div>
+              <p className="text-xs text-muted">
+                Penny will re-check that the account still has no financial history or references immediately before deletion.
+              </p>
+            </div>
+
+            <div className="mv-modal-fixed-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteAccountModal(false);
+                  setDeleteAccountTarget(null);
+                }}
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center rounded-lg border border-muted bg-surface-muted px-4 text-sm font-semibold text-main transition-all hover:bg-surface disabled:opacity-50"
+                data-modal-initial-focus
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePermanentDelete}
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-4 text-sm font-semibold text-danger transition-all hover:opacity-80 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {isSubmitting ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: Add Account */}
       {showAccModal && (
