@@ -151,25 +151,25 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         aria-label="Activity filters"
       >
         <div className="finance-filter-grid grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="relative block min-w-0">
+          <label className="finance-filter-icon-shell finance-filter-icon-shell-leading min-w-0">
             <span className="sr-only">Search transactions</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <Search className="finance-filter-shell-icon h-4 w-4 text-subtle" aria-hidden="true" />
             <input
               type="search"
               placeholder="Search transactions"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              className={`${filterInputClassName} finance-filter-control-leading`}
+              className={`${filterInputClassName} finance-filter-embedded-control finance-filter-embedded-search`}
             />
           </label>
 
-          <label className="relative block min-w-0">
+          <label className="finance-filter-icon-shell finance-filter-icon-shell-leading finance-filter-icon-shell-trailing min-w-0">
             <span className="sr-only">Date filter</span>
-            <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <Calendar className="finance-filter-shell-icon h-4 w-4 text-subtle" aria-hidden="true" />
             <select
               value={filterBySelectedMonth && selectedMonth ? 'selected-month' : 'all'}
               onChange={(event) => setFilterBySelectedMonth(event.target.value === 'selected-month')}
-              className={`${filterInputClassName} finance-filter-control-leading finance-filter-control-trailing appearance-none`}
+              className={`${filterInputClassName} finance-filter-embedded-control appearance-none`}
               disabled={!selectedMonth}
             >
               {selectedMonth && (
@@ -177,7 +177,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               )}
               <option value="all">All dates</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+            <ChevronDown className="finance-filter-shell-icon finance-filter-shell-icon-trailing h-4 w-4 text-subtle" aria-hidden="true" />
           </label>
 
           <label className="relative block min-w-0">

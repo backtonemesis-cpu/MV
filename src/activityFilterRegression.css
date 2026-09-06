@@ -1,34 +1,79 @@
-/* Targeted live-regression repair: Activity filter icons must never overlap control text.
-   Loaded after the shared design-system layers so audited laptop and responsive layouts
-   retain the existing grid while reserving explicit icon space inside affected controls. */
+/* Targeted root-cause repair for the Activity search/month controls.
+   The shared desktop density layer applies !important padding shorthands to all
+   inputs/selects. The first live repair attempted to reserve icon space with
+   padding-left/right, but the audited Windows/Chrome render still showed the
+   glyphs colliding with text. These two affected controls now use a real grid
+   shell: icons occupy dedicated columns and the native input/select occupies
+   its own column, so no cascade or browser appearance can place text beneath
+   an icon. Filtering logic and the other three controls are unchanged. */
 
-.mv-density-root .finance-activity-workspace .finance-filter-control {
+.mv-density-root .finance-activity-workspace .finance-filter-icon-shell {
   box-sizing: border-box;
+  display: grid;
+  width: 100%;
   min-width: 0;
+  height: 38px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-muted);
+  overflow: hidden;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 
-.mv-density-root .finance-activity-workspace .finance-filter-control.finance-filter-control-leading {
-  padding-left: 2.75rem !important;
+.mv-density-root .finance-activity-workspace .finance-filter-icon-shell-leading {
+  grid-template-columns: 2.5rem minmax(0, 1fr);
 }
 
-.mv-density-root .finance-activity-workspace .finance-filter-control.finance-filter-control-trailing {
-  padding-right: 2.75rem !important;
+.mv-density-root .finance-activity-workspace .finance-filter-icon-shell-leading.finance-filter-icon-shell-trailing {
+  grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
 }
 
-.mv-density-root .finance-activity-workspace .finance-filter-grid > label > svg.pointer-events-none.left-3 {
-  left: 0.875rem !important;
+.mv-density-root .finance-activity-workspace .finance-filter-icon-shell:focus-within {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
 }
 
-.mv-density-root .finance-activity-workspace .finance-filter-grid > label > svg.pointer-events-none.right-3 {
-  right: 0.875rem !important;
+.mv-density-root .finance-activity-workspace .finance-filter-shell-icon {
+  position: static !important;
+  justify-self: center;
+  pointer-events: none;
 }
 
+.mv-density-root .finance-activity-workspace .finance-filter-shell-icon-trailing {
+  grid-column: 3;
+}
+
+.mv-density-root .finance-activity-workspace .finance-filter-embedded-control {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 100% !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 0.75rem !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mv-density-root .finance-activity-workspace .finance-filter-embedded-control:focus {
+  border: 0 !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mv-density-root .finance-activity-workspace .finance-filter-embedded-search {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Preserve the existing 44px phone control target while keeping the same
+   deterministic icon/value columns. */
 @media (max-width: 47.999rem) {
-  .mv-density-root .finance-activity-workspace .finance-filter-control.finance-filter-control-leading {
-    padding-left: 2.75rem !important;
-  }
-
-  .mv-density-root .finance-activity-workspace .finance-filter-control.finance-filter-control-trailing {
-    padding-right: 2.75rem !important;
+  .mv-density-root .finance-activity-workspace .finance-filter-icon-shell {
+    height: 44px;
   }
 }
