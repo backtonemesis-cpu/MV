@@ -315,10 +315,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const handleReconcileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAccount) return;
+    if (!reconcileDate) {
+      setError('Choose the statement date.');
+      return;
+    }
+    const enteredPence = parseHumanPoundsToPence(reconcileBalanceStr);
+    if (enteredPence === null) {
+      setError('Enter a valid statement balance in pounds and pence.');
+      return;
+    }
     try {
       setIsSubmitting(true);
       setError(null);
-      const enteredPence = parseToPence(reconcileBalanceStr);
       const reconciledBalancePence =
         selectedAccount.type === 'credit'
           ? -Math.abs(enteredPence)
@@ -1189,18 +1197,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleReconcileSubmit} className="mv-modal-form">
               {error && (
-                <div className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
+                <div role="alert" className="p-3 bg-danger-soft border border-danger rounded-xl text-danger text-xs">
                   {error}
                 </div>
               )}
 
               <div className="mv-modal-grid-2">
                 <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    Statement Date
+                  <label htmlFor="account-reconcile-date" className="block text-xs font-semibold text-muted mb-1">
+                    Statement Date *
                   </label>
                   <input
-                    autoFocus
+                    id="account-reconcile-date"
                     type="date"
                     value={reconcileDate}
                     onChange={(e) => setReconcileDate(e.target.value)}
@@ -1209,14 +1217,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-muted mb-1">
-                    {selectedAccount.type === 'credit' ? 'Statement balance owed (£)' : 'Statement balance (£)'}
+                  <label htmlFor="account-reconcile-balance" className="block text-xs font-semibold text-muted mb-1">
+                    {selectedAccount.type === 'credit' ? 'Statement balance owed (£) *' : 'Statement balance (£) *'}
                   </label>
                   <MoneyInput
+                    id="account-reconcile-balance"
                     type="text"
                     value={reconcileBalanceStr}
                     onChange={(e) => setReconcileBalanceStr(e.target.value)}
-                    placeholder="e.g. 2450.00"
+                    placeholder="0.00"
                     className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-sm text-main focus:ring-2 focus:ring-accent focus:outline-none"
                     inputMode="decimal"
                     aria-label={selectedAccount.type === 'credit' ? 'Statement balance owed in pounds sterling' : 'Statement balance in pounds sterling'}
@@ -1227,16 +1236,19 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               {/* Real-time Discrepancy Card */}
               {(() => {
-                const enteredPence = parseToPence(reconcileBalanceStr);
+                const enteredPence = parseHumanPoundsToPence(reconcileBalanceStr);
                 const currentShownPence =
                   selectedAccount.type === 'credit'
                     ? Math.max(0, -selectedAccount.currentBalancePence)
                     : selectedAccount.currentBalancePence;
                 const targetShownPence =
-                  selectedAccount.type === 'credit'
-                    ? Math.abs(enteredPence)
-                    : enteredPence;
-                const diffPence = targetShownPence - currentShownPence;
+                  enteredPence === null
+                    ? null
+                    : selectedAccount.type === 'credit'
+                      ? Math.abs(enteredPence)
+                      : enteredPence;
+                const diffPence =
+                  targetShownPence === null ? null : targetShownPence - currentShownPence;
                 return (
                   <div className="p-3 bg-surface-muted rounded-xl border border-muted text-xs space-y-1.5">
                     <div className="flex justify-between text-muted text-subtle">
@@ -1248,21 +1260,31 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <div className="flex justify-between text-muted text-subtle">
                       <span>{selectedAccount.type === 'credit' ? 'Statement owed' : 'Statement'}</span>
                       <span className="font-semibold text-main">
-                        {formatPence(targetShownPence)}
+                        {targetShownPence === null ? '—' : formatPence(targetShownPence)}
                       </span>
                     </div>
                     <div className="flex justify-between pt-1 border-t border-muted font-bold">
-                      <span>{diffPence === 0 ? 'Match:' : 'Adjustment on confirm:'}</span>
+                      <span>
+                        {diffPence === null
+                          ? 'Match:'
+                          : diffPence === 0
+                            ? 'Match:'
+                            : 'Adjustment on confirm:'}
+                      </span>
                       <span
                         className={
-                          diffPence === 0
-                            ? 'text-success'
-                            : 'text-warning'
+                          diffPence === null
+                            ? 'text-warning'
+                            : diffPence === 0
+                              ? 'text-success'
+                              : 'text-warning'
                         }
                       >
-                        {diffPence === 0
-                          ? 'Exact match (£0.00)'
-                          : `${diffPence > 0 ? '+' : ''}${formatPence(diffPence)}`}
+                        {diffPence === null
+                          ? 'Enter a valid balance'
+                          : diffPence === 0
+                            ? 'Exact match (£0.00)'
+                            : `${diffPence > 0 ? '+' : ''}${formatPence(diffPence)}`}
                       </span>
                     </div>
                   </div>
