@@ -1,0 +1,6 @@
+/* Stage 8 accent contrast compatibility.
+   Accent fills/decorative color remain --primary; text uses --color-accent. */
+
+.mv-primary-text {
+  color: var(--color-accent) !important;
+}
