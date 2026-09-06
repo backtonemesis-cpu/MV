@@ -152,6 +152,8 @@ describe('semantic design system enforcement', () => {
     expect(header).toContain('App display mode');
     expect(header).toContain("onLayoutModeChange('pc')");
     expect(header).toContain("onLayoutModeChange('phone')");
+    expect(header).toContain('aria-label="Use PC layout"');
+    expect(header).toContain('aria-label="Use Phone layout"');
     expect(header).not.toContain('Mobile View');
     expect(transactionList).toContain('finance-filter-control-leading');
     expect(transactionList).toContain('finance-filter-control-trailing');
@@ -229,6 +231,10 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('.mv-dashboard-workspace .mv-dashboard-surplus-card');
     expect(css).toContain('.mv-month-picker-input::-webkit-calendar-picker-indicator');
     expect(css).toContain('MOBILE POLISH PASS — IPHONE 13 + PHONE MODE');
+    expect(css).toContain('PHYSICAL PHONE HEADER ESCAPE HATCH — MODE SWITCHER ALWAYS REACHABLE');
+    expect(css).toContain('.mv-density-root .mv-app-header .mv-shell-boundary');
+    expect(css).toContain('width: 10rem !important');
+    expect(css).toContain('.mv-layout-pc .mv-layout-switcher-option');
     expect(css).toContain('.mv-layout-phone .finance-filter-grid > label:first-child');
     expect(css).toContain('grid-template-columns: repeat(2, minmax(0, 1fr)) !important');
     expect(css).toContain('.mv-layout-phone .finance-ledger-row');

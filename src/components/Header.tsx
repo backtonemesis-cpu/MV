@@ -131,6 +131,8 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-layout-pc-btn"
                 onClick={() => onLayoutModeChange('pc')}
                 aria-pressed={layoutMode === 'pc'}
+                aria-label="Use PC layout"
+                title="Use PC layout"
                 className={`mv-layout-switcher-option ${layoutMode === 'pc' ? 'is-active' : ''}`}
               >
                 <Monitor className="h-4 w-4 shrink-0" />
@@ -141,6 +143,8 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-layout-phone-btn"
                 onClick={() => onLayoutModeChange('phone')}
                 aria-pressed={layoutMode === 'phone'}
+                aria-label="Use Phone layout"
+                title="Use Phone layout"
                 className={`mv-layout-switcher-option ${layoutMode === 'phone' ? 'is-active' : ''}`}
               >
                 <Smartphone className="h-4 w-4 shrink-0" />

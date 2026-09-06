@@ -5,4 +5,4 @@
  * local financial-data mutations. Increment this value when a new MV app
  * release is deployed.
  */
-export const APP_VERSION = '217';
+export const APP_VERSION = '218';
