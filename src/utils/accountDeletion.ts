@@ -6,6 +6,7 @@ export interface AccountPermanentDeleteEligibility {
   reasons: string[];
   removableAuditLogIds: string[];
   zeroEffectReconciliationOnly: boolean;
+  isolatedSetupBalancePence: number;
 }
 
 function containsExactId(value: unknown, id: string, seen = new Set<unknown>()): boolean {
@@ -23,29 +24,16 @@ function containsExactId(value: unknown, id: string, seen = new Set<unknown>()):
   );
 }
 
-function hasNonReconciliationFinancialState(account: Account): string[] {
-  const reasons: string[] = [];
-
-  if (account.startingBalancePence !== 0) {
-    reasons.push('The account has a non-zero opening balance.');
-  }
-  if (account.currentBalancePence !== 0) {
-    reasons.push('The account has a non-zero current balance.');
-  }
-  if ((account.balanceOwedPence ?? 0) !== 0) {
-    reasons.push('The credit account has a recorded amount owed.');
-  }
-
-  return reasons;
+function reconciliationMarkerPresent(account: Account): boolean {
+  return (
+    Boolean(account.reconciledAt) ||
+    Boolean(account.reconciliationDate) ||
+    account.reconciledBalancePence !== undefined
+  );
 }
 
 function reconciliationIsZeroEffect(account: Account): boolean {
-  const hasMarker =
-    Boolean(account.reconciledAt) ||
-    Boolean(account.reconciliationDate) ||
-    account.reconciledBalancePence !== undefined;
-
-  if (!hasMarker) return false;
+  if (!reconciliationMarkerPresent(account)) return false;
 
   return (
     account.startingBalancePence === 0 &&
@@ -67,6 +55,26 @@ function isExplicitHarmlessReconciliationAudit(entry: AuditLogEntry): boolean {
   );
 }
 
+function isExplicitHarmlessAdministrativeAudit(entry: AuditLogEntry): boolean {
+  if (entry.action === 'account_created' || entry.action === 'account_archived') {
+    return true;
+  }
+
+  if (entry.action === 'account_updated') {
+    const details = entry.details || {};
+    return details.administrativeOnly === true && details.financialStateChanged === false;
+  }
+
+  return false;
+}
+
+function isLegacyHarmlessAdministrativeAudit(entry: AuditLogEntry): boolean {
+  // Legacy account UI edits/reactivations were all recorded as account_updated
+  // without details. The UI did not expose account balances, so these rows are
+  // administrative-only unless other material state evidence exists elsewhere.
+  return entry.action === 'account_updated' && !entry.details;
+}
+
 function getAccountAuditReferences(
   state: HouseholdData,
   accountId: string
@@ -77,7 +85,7 @@ function getAccountAuditReferences(
   );
 }
 
-function classifyReconciliationAuditReferences(
+function classifyAccountAuditReferences(
   account: Account,
   references: AuditLogEntry[]
 ): {
@@ -88,7 +96,15 @@ function classifyReconciliationAuditReferences(
   const material: AuditLogEntry[] = [];
 
   for (const entry of references) {
-    if (isExplicitHarmlessReconciliationAudit(entry)) {
+    if (
+      isExplicitHarmlessAdministrativeAudit(entry) ||
+      isExplicitHarmlessReconciliationAudit(entry)
+    ) {
+      harmless.push(entry);
+      continue;
+    }
+
+    if (isLegacyHarmlessAdministrativeAudit(entry)) {
       harmless.push(entry);
       continue;
     }
@@ -96,34 +112,43 @@ function classifyReconciliationAuditReferences(
     material.push(entry);
   }
 
-  // Compatibility for reconciliation records created before account_reconciled
-  // became explicit. The old workflow wrote one generic account_updated audit
-  // row and no details. Treat that row as the harmless reconciliation marker
-  // only when it is the sole account-specific audit reference and the account
-  // itself proves a zero-effect £0.00 reconciliation. Any additional update,
-  // archive, financial or structural audit evidence remains blocking.
+  // A generic legacy reconciliation row is indistinguishable from an old UI
+  // account edit. It is only harmless because the current account state and all
+  // persisted financial collections are checked independently below.
   if (
-    material.length === 1 &&
-    harmless.length === 0 &&
     reconciliationIsZeroEffect(account) &&
-    material[0].action === 'account_updated' &&
-    material[0].summary === 'Account updated' &&
-    !material[0].details
+    material.length === 0
   ) {
-    harmless.push(material[0]);
-    material.length = 0;
+    return { harmless, material };
   }
 
   return { harmless, material };
 }
 
+function isolatedSetupBalancePence(account: Account): number {
+  // A non-zero balance is only treated as setup-state when it is exactly the
+  // original opening value and there is no credit debt. Any later balance
+  // movement makes current != starting and remains blocking.
+  if (
+    account.currentBalancePence === account.startingBalancePence &&
+    (account.balanceOwedPence ?? 0) === 0
+  ) {
+    return account.startingBalancePence;
+  }
+  return 0;
+}
+
 /**
- * One authoritative decision for both UI presentation and the final mutation guard.
+ * Authoritative decision used by both the Accounts UI and the final mutation.
  *
- * Permanent deletion is deliberately stricter than archiving. The only
- * reconciliation exception is a provably zero-effect marker on an otherwise
- * unused £0.00 account. Material reconciliation discrepancy/history remains
- * blocking.
+ * Safe deletion is about evidence, not merely a £0 balance:
+ * - any financial/structural foreign-key reference blocks;
+ * - any material reconciliation blocks;
+ * - any unexplained balance movement blocks;
+ * - harmless account-management history does not trap an otherwise unused
+ *   mistaken account forever;
+ * - a non-zero opening balance can be removed only when it is still exactly the
+ *   untouched opening/current setup value and has no linked evidence anywhere.
  */
 export function getAccountPermanentDeleteEligibility(
   state: HouseholdData,
@@ -137,10 +162,11 @@ export function getAccountPermanentDeleteEligibility(
       reasons: ['Account not found.'],
       removableAuditLogIds: [],
       zeroEffectReconciliationOnly: false,
+      isolatedSetupBalancePence: 0,
     };
   }
 
-  const reasons = hasNonReconciliationFinancialState(account);
+  const reasons: string[] = [];
 
   if (state.transactions.some((item) => containsExactId(item, accountId))) {
     reasons.push('The account is referenced by Activity / ledger history.');
@@ -158,29 +184,27 @@ export function getAccountPermanentDeleteEligibility(
     reasons.push('The account is referenced by savings data.');
   }
 
-  const reconciliationMarkerPresent =
-    Boolean(account.reconciledAt) ||
-    Boolean(account.reconciliationDate) ||
-    account.reconciledBalancePence !== undefined;
+  if (
+    account.currentBalancePence !== account.startingBalancePence ||
+    (account.balanceOwedPence ?? 0) !== 0
+  ) {
+    reasons.push('The account balance has changed from its original setup state.');
+  }
 
-  if (reconciliationMarkerPresent && !reconciliationIsZeroEffect(account)) {
+  if (
+    reconciliationMarkerPresent(account) &&
+    !reconciliationIsZeroEffect(account)
+  ) {
     reasons.push('The account has material reconciliation history or a reconciliation discrepancy.');
   }
 
   const auditReferences = getAccountAuditReferences(state, accountId);
-  const auditClassification = classifyReconciliationAuditReferences(
-    account,
-    auditReferences
-  );
+  const auditClassification = classifyAccountAuditReferences(account, auditReferences);
 
   if (auditClassification.material.length > 0) {
-    reasons.push('The account is referenced by retained audit history.');
+    reasons.push('The account is referenced by material retained audit history.');
   }
 
-  // Future-proof the current schema: if new top-level persisted financial
-  // collections are added, an exact target-account ID must not silently escape
-  // the eligibility guard. Core identity/config collections are intentionally
-  // excluded because they cannot contain account foreign keys today.
   const futurePersistedState = Object.fromEntries(
     Object.entries(state).filter(
       ([key]) =>
@@ -205,12 +229,12 @@ export function getAccountPermanentDeleteEligibility(
   }
 
   const canDeletePermanently = reasons.length === 0;
+  const setupBalance = canDeletePermanently ? isolatedSetupBalancePence(account) : 0;
   const zeroEffectReconciliationOnly =
     canDeletePermanently &&
-    reconciliationMarkerPresent &&
+    reconciliationMarkerPresent(account) &&
     reconciliationIsZeroEffect(account) &&
-    auditReferences.length > 0 &&
-    auditReferences.length === auditClassification.harmless.length;
+    auditReferences.every((entry) => auditClassification.harmless.includes(entry));
 
   return {
     accountId,
@@ -220,5 +244,6 @@ export function getAccountPermanentDeleteEligibility(
       ? auditClassification.harmless.map((entry) => entry.id)
       : [],
     zeroEffectReconciliationOnly,
+    isolatedSetupBalancePence: setupBalance,
   };
 }

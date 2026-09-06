@@ -1502,13 +1502,18 @@ export function createLocalAccount(
   data: Partial<Account>,
   expectedVersion: number
 ): { account: Account; version: number } {
+  const accountId = data.id || createId('account');
   const result = mutateLocalHousehold(
     expectedVersion,
     {
       action: 'account_created',
       entityType: 'account',
-      entityId: '',
+      entityId: accountId,
       summary: data.name || 'Account created',
+      details: {
+        administrativeOnly: true,
+        financialStateChanged: false,
+      },
     },
     (state) => {
       if (!data.name?.trim()) throw new Error('Account name is required.');
@@ -1520,7 +1525,6 @@ export function createLocalAccount(
         data.ownerMemberId,
         data.ownerPerson
       );
-      const accountId = data.id || createId('account');
       if (state.accounts.some((account) => account.id === accountId)) {
         throw new Error('An account with this ID already exists.');
       }
@@ -1555,6 +1559,16 @@ export function updateLocalAccount(
   data: Partial<Account>,
   expectedVersion: number
 ): { account: Account; version: number } {
+  const administrativeFields = new Set([
+    'name',
+    'type',
+    'ownerMemberId',
+    'ownerPerson',
+    'isActive',
+    'notes',
+  ]);
+  const changedFields = Object.keys(data).filter((key) => key !== 'id' && key !== 'currency');
+  const administrativeOnly = changedFields.every((key) => administrativeFields.has(key));
   const result = mutateLocalHousehold(
     expectedVersion,
     {
@@ -1562,6 +1576,11 @@ export function updateLocalAccount(
       entityType: 'account',
       entityId: id,
       summary: data.name || 'Account updated',
+      details: {
+        changedFields,
+        administrativeOnly,
+        financialStateChanged: !administrativeOnly,
+      },
     },
     (state) => {
       const index = state.accounts.findIndex((account) => account.id === id);
@@ -1619,6 +1638,10 @@ export function archiveLocalAccount(
       entityType: 'account',
       entityId: id,
       summary: 'Account archived; financial history preserved',
+      details: {
+        administrativeOnly: true,
+        financialStateChanged: false,
+      },
     },
     (state) => {
       const index = state.accounts.findIndex((account) => account.id === id);
@@ -1639,6 +1662,7 @@ export function permanentlyDeleteLocalAccount(
   const target = current.accounts.find((account) => account.id === id);
   if (!target) throw new Error('Account not found.');
 
+  const initialEligibility = getAccountPermanentDeleteEligibility(current, id);
   const auditSummary = `Permanently deleted unused account: ${target.name} · ${target.type} · ${target.ownerPerson || 'Unassigned'}`;
 
   const result = mutateLocalHousehold(
@@ -1648,6 +1672,9 @@ export function permanentlyDeleteLocalAccount(
       entityType: 'system',
       entityId: current.id,
       summary: auditSummary,
+      details: {
+        removedIsolatedSetupBalancePence: initialEligibility.isolatedSetupBalancePence,
+      },
     },
     (state) => {
       const index = state.accounts.findIndex((account) => account.id === id);
