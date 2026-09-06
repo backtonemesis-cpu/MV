@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import './globalDesignSystem.css';
 import './mobileUx.css';
+import './accessibilityContrast.css';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 // Apply the saved token set before React paints to prevent theme flash.
