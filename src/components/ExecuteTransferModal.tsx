@@ -9,6 +9,7 @@ import {
 } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MoneyInput } from './MoneyInput';
 
 interface ExecuteTransferModalProps {
   fundingRequirement: AccountFundingRequirement;
@@ -532,22 +533,19 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
 
                         <div className="min-w-0">
                           <label htmlFor={`funding-amount-${allocation.id}`}>Amount</label>
-                          <div className="mv-funding-money-field">
-                            <span className="mv-money-prefix">£</span>
-                            <input
-                              id={`funding-amount-${allocation.id}`}
-                              type="text"
-                              inputMode="decimal"
-                              value={allocation.amountStr}
-                              onChange={(e) =>
-                                updateAllocation(allocation.id, {
-                                  amountStr: e.target.value,
-                                })
-                              }
-                              className="mv-money-input-with-prefix"
-                              aria-label={`Funding amount from source account ${index + 1}`}
-                            />
-                          </div>
+                          <MoneyInput
+                            wrapperClassName="mv-funding-money-field"
+                            id={`funding-amount-${allocation.id}`}
+                            type="text"
+                            inputMode="decimal"
+                            value={allocation.amountStr}
+                            onChange={(e) =>
+                              updateAllocation(allocation.id, {
+                                amountStr: e.target.value,
+                              })
+                            }
+                            aria-label={`Funding amount from source account ${index + 1} in pounds sterling`}
+                          />
                         </div>
 
                         <div className="mv-funding-allocation-actions">
