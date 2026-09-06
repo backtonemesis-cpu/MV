@@ -17,6 +17,7 @@ import {
   parseToPence,
 } from '../utils/currency';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface SavingsViewProps {
   savingsGoals: SavingsGoal[];
@@ -72,23 +73,20 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-
-      if (showTransferModal) {
-        setShowTransferModal(false);
-      } else if (showEditGoalModal) {
-        setShowEditGoalModal(false);
-        setSelectedGoal(null);
-      } else if (showGoalModal) {
-        setShowGoalModal(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showEditGoalModal, showGoalModal, showTransferModal]);
+  const anyModalOpen = showGoalModal || showTransferModal || showEditGoalModal;
+  const closeActiveModal = () => {
+    if (showTransferModal) setShowTransferModal(false);
+    else if (showEditGoalModal) {
+      setShowEditGoalModal(false);
+      setSelectedGoal(null);
+    } else if (showGoalModal) setShowGoalModal(false);
+  };
+  const dialogLabel = showTransferModal
+    ? 'Record savings transfer'
+    : showEditGoalModal
+    ? 'Edit savings goal'
+    : 'Add savings goal';
+  const dialogRef = useModalAccessibility<HTMLDivElement>(anyModalOpen, closeActiveModal);
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
 
@@ -670,7 +668,14 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       {/* MODAL: Add Savings Goal */}
       {showGoalModal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <div>
                 <h3 className="text-base font-bold text-main">Add Savings Goal</h3>
@@ -761,14 +766,23 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       {/* MODAL: Transfer into Savings */}
       {showTransferModal && selectedGoal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Add to Savings · {selectedGoal.name}
               </h3>
               <button
+                type="button"
                 onClick={() => setShowTransferModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -887,14 +901,23 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
       {/* MODAL: Edit Goal */}
       {showEditGoalModal && selectedGoal && (
         <div className="mv-modal-backdrop">
-          <div className="mv-modal-card">
+          <div
+            ref={dialogRef}
+            className="mv-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={dialogLabel}
+            tabIndex={-1}
+          >
             <div className="mv-modal-header">
               <h3 className="text-base font-bold text-main">
                 Edit {selectedGoal.name}
               </h3>
               <button
+                type="button"
                 onClick={() => setShowEditGoalModal(false)}
                 className="mv-modal-close"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
