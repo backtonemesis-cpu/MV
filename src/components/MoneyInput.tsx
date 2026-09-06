@@ -7,9 +7,6 @@ interface MoneyInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
   ({ wrapperClassName = '', className = '', ...inputProps }, ref) => (
     <div className={`mv-money-input-shell ${wrapperClassName}`.trim()}>
-      <span className="mv-money-prefix" aria-hidden="true">
-        £
-      </span>
       <input
         {...inputProps}
         ref={ref}
