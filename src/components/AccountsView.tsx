@@ -1519,11 +1519,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
-                <input
+                <MoneyInput
                   type="text"
                   value={goalTargetStr}
                   onChange={(e) => setGoalTargetStr(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  inputMode="decimal"
+                  aria-label="Savings goal target in pounds sterling"
                   required
                 />
               </div>
@@ -1532,12 +1534,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
-                <input
+                <MoneyInput
                   type="text"
                   value={goalMonthlyPlanStr}
                   onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
                   placeholder="e.g. 500.00"
+                  inputMode="decimal"
+                  aria-label="Monthly savings plan in pounds sterling"
                 />
               </div>
 
