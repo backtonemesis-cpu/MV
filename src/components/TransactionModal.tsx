@@ -50,7 +50,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   // Split transaction state
   const [isSplitEnabled, setIsSplitEnabled] = useState(false);
-  const [splits, setSplits] = useState<{ categoryId: string; amountStr: string; notes?: string }[]>([]);
+  const [splits, setSplits] = useState<
+    { categoryId: string; amountStr: string; notes?: string; originalCategoryId?: string }[]
+  >([]);
 
   useEffect(() => {
     if (initialTransaction) {
@@ -73,6 +75,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         setSplits(
           initialTransaction.splits.map((s) => ({
             categoryId: s.categoryId,
+            originalCategoryId: s.categoryId,
             amountStr: (s.amountPence / 100).toFixed(2),
             notes: s.notes || '',
           }))
@@ -111,10 +114,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   );
   const preservedHistoricalCategoryIds =
     initialTransaction && initialTransaction.type === type
-      ? [
-          initialTransaction.categoryId,
-          ...(initialTransaction.splits?.map((split) => split.categoryId) || []),
-        ].filter(Boolean)
+      ? [initialTransaction.categoryId].filter(Boolean)
       : [];
   const transactionCategoryOptions = getTransactionCategoryOptions(
     categories,
@@ -129,10 +129,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setType(newType);
     const preservedForNewType =
       initialTransaction?.type === newType
-        ? [
-            initialTransaction.categoryId,
-            ...(initialTransaction.splits?.map((split) => split.categoryId) || []),
-          ].filter(Boolean)
+        ? [initialTransaction.categoryId].filter(Boolean)
         : [];
     if (
       categoryId &&
@@ -146,17 +143,21 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setCategoryId('');
     }
     setSplits((previous) =>
-      previous.map((row) =>
-        row.categoryId &&
-        !isTransactionCategorySelectionAllowed(
-          categories,
-          newType,
-          row.categoryId,
-          preservedForNewType
-        )
+      previous.map((row) => {
+        const preservedSplit =
+          initialTransaction?.type === newType && row.originalCategoryId
+            ? [row.originalCategoryId]
+            : [];
+        return row.categoryId &&
+          !isTransactionCategorySelectionAllowed(
+            categories,
+            newType,
+            row.categoryId,
+            preservedSplit
+          )
           ? { ...row, categoryId: '' }
-          : row
-      )
+          : row;
+      })
     );
     if (newType === 'transfer') {
       setIsTransfer(true);
@@ -298,7 +299,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             categories,
             type,
             item.categoryId,
-            preservedHistoricalCategoryIds
+            initialTransaction?.type === type && item.originalCategoryId
+              ? [item.originalCategoryId]
+              : []
           )
         ) {
           setError(`Split item #${i + 1} must use a category that matches the transaction type`);
@@ -584,6 +587,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       setSplits([
                         {
                           categoryId,
+                          originalCategoryId:
+                            initialTransaction?.type === type
+                              ? initialTransaction.categoryId
+                              : undefined,
                           amountStr,
                           notes: '',
                         },
@@ -632,7 +639,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         required
                       >
                         <option value="">Select category</option>
-                        {transactionCategoryOptions.map((c) => (
+                        {getTransactionCategoryOptions(
+                          categories,
+                          type,
+                          initialTransaction?.type === type && splitRow.originalCategoryId
+                            ? [splitRow.originalCategoryId]
+                            : []
+                        ).map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.name}
                           </option>
