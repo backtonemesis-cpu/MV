@@ -45,7 +45,7 @@ describe('Settings contrast regression guard', () => {
     expect(css).toContain('color: var(--text-subtle);');
   });
 
-  it('uses dark text on the fixed green primary background at AA contrast', () => {
+  it('uses dark text on fixed green primary backgrounds at AA contrast', () => {
     expect(contrast('#22C55E', '#0F172A')).toBeGreaterThanOrEqual(4.5);
 
     const settingsPrimary = css.match(/\.mv-settings-primary\s*\{[^}]+\}/s)?.[0] ?? '';
@@ -55,5 +55,21 @@ describe('Settings contrast regression guard', () => {
     const sharedPrimary = css.match(/\.mv-backup-primary,\s*\.mv-income-primary\s*\{[^}]+\}/s)?.[0] ?? '';
     expect(sharedPrimary).toContain('background: #22C55E');
     expect(sharedPrimary).toContain('color: #0F172A');
+
+    const transactionPrimary = css.match(/\.mv-transaction-primary,\s*\.mv-account-primary,\s*\.mv-income-primary\s*\{[^}]+\}/s)?.[0] ?? '';
+    expect(transactionPrimary).toContain('background: #22C55E');
+    expect(transactionPrimary).toContain('color: #0F172A');
+  });
+
+  it('routes transaction modal inactive type and payer controls through hardened muted text', () => {
+    const typeRule = css.match(/\.mv-transaction-type-tab\s*\{[^}]+\}/s)?.[0] ?? '';
+    const payerRule = css.match(/\.mv-transaction-selector-pill\s*\{[^}]+\}/s)?.[0] ?? '';
+    const integrityRule = css.match(/\.mv-integrity-title\s*\{[^}]+\}/s)?.[0] ?? '';
+
+    expect(typeRule).toContain('color: var(--text-muted)');
+    expect(payerRule).toContain('color: var(--text-muted)');
+    expect(integrityRule).toContain('color: var(--text-muted)');
+    expect(typeRule).not.toContain('color: #64748B');
+    expect(payerRule).not.toContain('color: #64748B');
   });
 });
