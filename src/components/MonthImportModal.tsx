@@ -4,6 +4,7 @@ import { Account, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
 import { localDateInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface MonthImportModalProps {
   isOpen: boolean;
@@ -185,18 +186,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
     targetMonth,
   ]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      onClose();
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -295,13 +285,20 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-modal-wide mv-rollover-modal">
+      <div
+        ref={dialogRef}
+        className="mv-modal-card mv-modal-wide mv-rollover-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="month-import-title"
+        tabIndex={-1}
+      >
         <div className="mv-modal-header">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-success-soft text-success">
               <Layers className="h-3.5 w-3.5" />
             </div>
-            <h2>Prepare Next Month</h2>
+            <h2 id="month-import-title">Prepare Next Month</h2>
           </div>
 
           <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close">
@@ -364,7 +361,7 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
             </div>
 
             {error && (
-              <div className="mv-rollover-error">
+              <div className="mv-rollover-error" role="alert">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                 <span>{error}</span>
               </div>

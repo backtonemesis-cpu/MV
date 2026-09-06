@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { runAcceptanceTests } from '../utils/api';
 import { TestResult } from '../types';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface AcceptanceTestsModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [summary, setSummary] = useState<{ total: number; passed: number; failed: number } | null>(null);
@@ -49,20 +51,29 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-modal-wide flex flex-col">
+      <div
+        ref={dialogRef}
+        className="mv-modal-card mv-modal-wide flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="acceptance-tests-title"
+        tabIndex={-1}
+      >
         {/* Header */}
         <div className="mv-modal-header shrink-0">
           <div className="flex items-center gap-2">
             <FileCheck2 className="w-5 h-5 text-success" />
             <div>
-              <h2 className="text-base font-bold text-main">
+              <h2 id="acceptance-tests-title" className="text-base font-bold text-main">
                 Automated Acceptance Criteria Verification
               </h2>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label="Close acceptance tests"
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,7 +107,7 @@ export const AcceptanceTestsModal: React.FC<AcceptanceTestsModalProps> = ({
           )}
 
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
+            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2" role="alert">
               <ShieldAlert className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>

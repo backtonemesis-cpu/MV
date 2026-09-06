@@ -8,6 +8,7 @@ import {
   accountTypeLabel,
 } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface ExecuteTransferModalProps {
   fundingRequirement: AccountFundingRequirement;
@@ -79,18 +80,6 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   const [openSourcePickerId, setOpenSourcePickerId] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-
-      if (openSourcePickerId) {
-        setOpenSourcePickerId(null);
-        return;
-      }
-
-      onClose();
-    };
-
     const handlePointerDown = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
       if (!event.target.closest('[data-funding-source-picker]')) {
@@ -98,13 +87,45 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
     document.addEventListener('pointerdown', handlePointerDown);
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('pointerdown', handlePointerDown);
-    };
-  }, [onClose, openSourcePickerId]);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
+
+  const dialogRef = useModalAccessibility<HTMLDivElement>(true, () => {
+    if (openSourcePickerId) {
+      const trigger = document.getElementById(
+        `funding-source-${openSourcePickerId}`
+      ) as HTMLButtonElement | null;
+      setOpenSourcePickerId(null);
+      requestAnimationFrame(() => trigger?.focus({ preventScroll: true }));
+      return;
+    }
+    onClose();
+  });
+
+  const focusSourceOption = (
+    allocationId: string,
+    position: 'first' | 'last' | 'next' | 'previous',
+    current?: HTMLElement
+  ) => {
+    const listbox = document.getElementById(
+      `funding-source-listbox-${allocationId}`
+    );
+    if (!listbox) return;
+
+    const options = Array.from(
+      listbox.querySelectorAll<HTMLButtonElement>('[role="option"]')
+    );
+    if (options.length === 0) return;
+
+    let index = current ? options.indexOf(current as HTMLButtonElement) : -1;
+    if (position === 'first') index = 0;
+    else if (position === 'last') index = options.length - 1;
+    else if (position === 'next') index = index < 0 ? 0 : (index + 1) % options.length;
+    else index = index <= 0 ? options.length - 1 : index - 1;
+
+    options[index]?.focus({ preventScroll: true });
+  };
 
   const allocatedTotalPence = allocations.reduce(
     (sum, allocation) => sum + parseToPence(allocation.amountStr || '0'),
@@ -260,11 +281,13 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   return (
     <div className="mv-modal-backdrop mv-funding-modal-backdrop">
       <div
+        ref={dialogRef}
         className="mv-modal-card mv-modal-wide mv-funding-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="funding-modal-title"
         aria-describedby="funding-modal-summary"
+        tabIndex={-1}
       >
         <div className="mv-modal-header mv-funding-modal-header">
           <div className="min-w-0">
@@ -382,11 +405,23 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                               className="mv-funding-source-trigger"
                               aria-haspopup="listbox"
                               aria-expanded={openSourcePickerId === allocation.id}
+                              aria-controls={`funding-source-listbox-${allocation.id}`}
                               onClick={() =>
                                 setOpenSourcePickerId((current) =>
                                   current === allocation.id ? null : allocation.id
                                 )
                               }
+                              onKeyDown={(event) => {
+                                if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+                                event.preventDefault();
+                                setOpenSourcePickerId(allocation.id);
+                                requestAnimationFrame(() =>
+                                  focusSourceOption(
+                                    allocation.id,
+                                    event.key === 'ArrowDown' ? 'first' : 'last'
+                                  )
+                                );
+                              }}
                             >
                               <span className="mv-funding-source-trigger-copy">
                                 <strong>
@@ -403,6 +438,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
 
                             {openSourcePickerId === allocation.id && (
                               <div
+                                id={`funding-source-listbox-${allocation.id}`}
                                 className="mv-funding-source-menu"
                                 role="listbox"
                                 aria-labelledby={`funding-source-${allocation.id}`}
@@ -421,14 +457,53 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                                       type="button"
                                       role="option"
                                       aria-selected={isSelected}
-                                      disabled={Boolean(disabledReason)}
+                                      aria-disabled={Boolean(disabledReason)}
                                       className="mv-funding-source-option"
-                                      onClick={() => {
+                                      onClick={(event) => {
+                                        if (disabledReason) {
+                                          event.preventDefault();
+                                          return;
+                                        }
                                         updateAllocation(allocation.id, {
                                           sourceAccountId: account.id,
                                         });
                                         setOpenSourcePickerId(null);
                                         setError(null);
+                                        requestAnimationFrame(() =>
+                                          document
+                                            .getElementById(`funding-source-${allocation.id}`)
+                                            ?.focus({ preventScroll: true })
+                                        );
+                                      }}
+                                      onKeyDown={(event) => {
+                                        if (event.key === 'ArrowDown') {
+                                          event.preventDefault();
+                                          focusSourceOption(
+                                            allocation.id,
+                                            'next',
+                                            event.currentTarget
+                                          );
+                                        } else if (event.key === 'ArrowUp') {
+                                          event.preventDefault();
+                                          focusSourceOption(
+                                            allocation.id,
+                                            'previous',
+                                            event.currentTarget
+                                          );
+                                        } else if (event.key === 'Home') {
+                                          event.preventDefault();
+                                          focusSourceOption(allocation.id, 'first');
+                                        } else if (event.key === 'End') {
+                                          event.preventDefault();
+                                          focusSourceOption(allocation.id, 'last');
+                                        } else if (event.key === 'Escape') {
+                                          event.preventDefault();
+                                          event.stopPropagation();
+                                          setOpenSourcePickerId(null);
+                                          document
+                                            .getElementById(`funding-source-${allocation.id}`)
+                                            ?.focus({ preventScroll: true });
+                                        }
                                       }}
                                     >
                                       <span className="mv-funding-source-option-copy">

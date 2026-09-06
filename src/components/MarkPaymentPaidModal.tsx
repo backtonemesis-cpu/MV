@@ -3,6 +3,7 @@ import { CheckCircle2, X } from 'lucide-react';
 import type { Account, PlannedPayment } from '../types';
 import { formatPence, formatPenceToPoundsInput, parseToPence } from '../utils/currency';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface MarkPaymentPaidModalProps {
   payment: PlannedPayment;
@@ -38,15 +39,7 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
     return () => cancelAnimationFrame(frame);
   }, []);
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      onClose();
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  const dialogRef = useModalAccessibility<HTMLElement>(true, onClose);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -82,10 +75,17 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <section className="mv-modal-card" role="dialog" aria-modal="true" aria-label="Mark bill paid">
+      <section
+        ref={dialogRef}
+        className="mv-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mark-paid-title"
+        tabIndex={-1}
+      >
         <div className="mv-modal-header">
           <div>
-            <h3 className="text-base font-bold text-main">Record Payment</h3>
+            <h3 id="mark-paid-title" className="text-base font-bold text-main">Record Payment</h3>
             <p className="mt-0.5 text-[11px] text-subtle">{payment.name}</p>
           </div>
           <button type="button" onClick={onClose} className="mv-modal-close" aria-label="Close">
@@ -95,7 +95,7 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
 
         <form onSubmit={handleSubmit} className="mv-modal-form">
           {error && (
-            <div className="rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs text-danger">
+            <div className="rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs text-danger" role="alert">
               {error}
             </div>
           )}

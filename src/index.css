@@ -3070,15 +3070,6 @@ html[data-theme] button.bg-white:hover {
   opacity: 0.55;
 }
 
-.mv-month-picker-icon {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 14px;
-  margin-left: 9px;
-  color: var(--text-subtle);
-  pointer-events: none;
-}
-
 .mv-month-picker-input {
   width: 100%;
   min-width: 0;
@@ -3086,7 +3077,7 @@ html[data-theme] button.bg-white:hover {
   min-height: 30px !important;
   border: 0 !important;
   border-radius: 5px !important;
-  padding: 5px 8px 5px 0 !important;
+  padding: 5px 8px 5px 10px !important;
   background: transparent !important;
   color: var(--text) !important;
   font-size: 13px !important;
@@ -3155,7 +3146,7 @@ html[data-theme] button.bg-white:hover {
   min-height: 30px !important;
   height: 30px !important;
   border: 0 !important;
-  padding: 5px 8px 5px 0 !important;
+  padding: 5px 8px 5px 10px !important;
   background: transparent !important;
   box-shadow: none !important;
 }

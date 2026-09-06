@@ -5,6 +5,7 @@ import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
 import { MonthPicker } from './MonthPicker';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface PlannedPaymentModalProps {
   payment?: PlannedPayment | null;
@@ -51,21 +52,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     responsiblePerson ? [responsiblePerson] : []
   );
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => nameInputRef.current?.focus());
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [onClose]);
+  const dialogRef = useModalAccessibility<HTMLDivElement>(true, onClose);
 
   const handleAccountChange = (newAccId: string) => {
     setAccountId(newAccId);
@@ -120,16 +107,25 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card">
+      <div
+        ref={dialogRef}
+        className="mv-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="planned-payment-title"
+        tabIndex={-1}
+      >
         <div className="mv-modal-header">
           <div>
-            <h3 className="text-base font-semibold text-main">
+            <h3 id="planned-payment-title" className="text-base font-semibold text-main">
               {isEditing ? 'Edit Bill' : 'Add Bill'}
             </h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label="Close bill dialog"
           >
             <X className="w-5 h-5" />
           </button>
@@ -137,7 +133,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
         <form onSubmit={handleSubmit} className="mv-modal-form">
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs">
+            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs" role="alert">
               <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
