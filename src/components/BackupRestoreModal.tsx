@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { fetchBackup, preflightRestore, restoreBackup } from '../utils/api';
 import { localDateInputValue } from '../utils/dateInput';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -32,21 +33,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const frame = requestAnimationFrame(() => fileInputRef.current?.focus());
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
+  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -113,15 +100,24 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div className="mv-modal-card mv-backup-modal">
+      <div
+        ref={dialogRef}
+        className="mv-modal-card mv-backup-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="backup-restore-title"
+        tabIndex={-1}
+      >
         <div className="mv-modal-header">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-success" />
-            <h2 className="text-base font-bold text-main">Backup & Restore</h2>
+            <h2 id="backup-restore-title" className="text-base font-bold text-main">Backup & Restore</h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="mv-modal-close"
+            aria-label="Close backup and restore"
           >
             <X className="w-5 h-5" />
           </button>
@@ -129,7 +125,7 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
 
         <div className="mv-modal-scroll-body">
           {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2">
+            <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2" role="alert">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
               <span>{error}</span>
             </div>
