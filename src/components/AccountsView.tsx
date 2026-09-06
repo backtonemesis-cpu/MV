@@ -27,6 +27,7 @@ import { localDateInputValue } from '../utils/dateInput';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import type { AccountPermanentDeleteEligibility } from '../utils/accountDeletion';
+import { MoneyInput } from './MoneyInput';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -955,12 +956,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   {accType === 'credit' ? 'Starting balance owed' : 'Starting Balance'}
                 </label>
-                <input
+                <MoneyInput
                   type="text"
                   value={accBalanceStr}
                   onChange={(e) => setAccBalanceStr(e.target.value)}
                   placeholder="0.00"
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  inputMode="decimal"
+                  aria-label={accType === 'credit' ? 'Starting balance owed in pounds sterling' : 'Starting balance in pounds sterling'}
                   required
                 />
               </div>
@@ -1184,12 +1187,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   <label className="block text-xs font-semibold text-muted mb-1">
                     {selectedAccount.type === 'credit' ? 'Statement balance owed' : 'Statement Balance'}
                   </label>
-                  <input
+                  <MoneyInput
                     type="text"
                     value={reconcileBalanceStr}
                     onChange={(e) => setReconcileBalanceStr(e.target.value)}
                     placeholder="e.g. 2450.00"
-                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-sm font-bold text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-sm text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                    inputMode="decimal"
+                    aria-label={selectedAccount.type === 'credit' ? 'Statement balance owed in pounds sterling' : 'Statement balance in pounds sterling'}
                     required
                   />
                 </div>
@@ -1408,12 +1413,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Target (£)
                 </label>
-                <input
+                <MoneyInput
                   type="text"
                   value={goalTargetStr}
                   onChange={(e) => setGoalTargetStr(e.target.value)}
                   placeholder="20000.00"
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  inputMode="decimal"
+                  aria-label="Savings goal target in pounds sterling"
                   required
                 />
               </div>
@@ -1422,12 +1429,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <label className="block text-xs font-semibold text-muted mb-1">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
-                <input
+                <MoneyInput
                   type="text"
                   value={goalMonthlyPlanStr}
                   onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
                   placeholder="e.g. 500.00"
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
+                  inputMode="decimal"
+                  aria-label="Monthly savings plan in pounds sterling"
                 />
               </div>
 
