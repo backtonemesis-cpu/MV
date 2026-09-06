@@ -23,7 +23,8 @@ import {
   createLocalSavingsGoal,
   contributeLocalSavingsGoal,
   createLocalTransaction,
-  deleteLocalAccount,
+  archiveLocalAccount,
+  permanentlyDeleteLocalAccount,
   deleteLocalPlannedIncome,
   deleteLocalPlannedPayment,
   deleteLocalSavingsGoal,
@@ -200,8 +201,12 @@ export async function updateAccount(
   return updateLocalAccount(id, data, expectedVersion);
 }
 
-export async function deleteAccount(id: string, expectedVersion: number) {
-  return deleteLocalAccount(id, expectedVersion);
+export async function archiveAccount(id: string, expectedVersion: number) {
+  return archiveLocalAccount(id, expectedVersion);
+}
+
+export async function permanentlyDeleteAccount(id: string, expectedVersion: number) {
+  return permanentlyDeleteLocalAccount(id, expectedVersion);
 }
 
 export async function reconcileAccount(
