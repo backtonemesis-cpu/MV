@@ -28,6 +28,28 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Guard against committed household finance data
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for forbidden in             src/sourceBudgetData.ts             data/household.json             firebase-applet-config.json; do
+            if test -e "$forbidden"; then
+              echo "Retired sensitive artifact must not be committed: $forbidden"
+              exit 1
+            fi
+          done
+
+          if grep -R --line-number -E '@(gmail|outlook|hotmail|icloud)\.com'             src ./*.md ./*.json 2>/dev/null; then
+            echo "Repository source/docs must not contain personal consumer email addresses"
+            exit 1
+          fi
+
+          if grep -R --line-number -E             'LIVE - 2026 September budget|source-budget-workbook|sourceBalanceKind'             src 2>/dev/null; then
+            echo "Production source must not contain the retired household finance fixture"
+            exit 1
+          fi
+
       - name: Typecheck browser app
         run: npm run lint
 
@@ -64,8 +86,13 @@ jobs:
           test -f dist/index.html
           grep --fixed-strings '/MV/assets/' dist/index.html
 
-          if grep -R --line-number --fixed-strings 'backtonemesis@gmail.com' dist; then
-            echo "Production bundle must not expose the private owner email"
+          if grep -R --line-number -E '@(gmail|outlook|hotmail|icloud)\.com' dist; then
+            echo "Production bundle must not expose personal consumer email addresses"
+            exit 1
+          fi
+
+          if grep -R --line-number -E 'LIVE - 2026 September budget|source-budget-workbook|sourceBalanceKind' dist; then
+            echo "Production bundle must not contain the retired household finance fixture"
             exit 1
           fi
 

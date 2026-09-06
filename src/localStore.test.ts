@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   LOCAL_STORAGE_KEY,
   SOURCE_IMPORT_BACKUP_STORAGE_KEY,
+  LEGACY_SOURCE_SEED_MIGRATION_ID,
+  createBlankLocalHousehold,
+  saveLocalHousehold,
   createLocalAccount,
   createLocalBackupPackage,
   createLocalHouseholdMember,
@@ -30,7 +33,6 @@ import {
 } from './localStore';
 import { generateTransferPlan } from './utils/transferPlan';
 import { getLatestTransferPlanFundingByDestination } from './utils/transferPlanFunding';
-import { SOURCE_BUDGET_IMPORT_ID } from './sourceBudgetData';
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -60,43 +62,118 @@ class MemoryStorage implements Storage {
   }
 }
 
+function installSyntheticFixture(): void {
+  const state = createBlankLocalHousehold();
+  state.schemaStatus!.appliedMigrations = [
+    {
+      version: 1,
+      name: LEGACY_SOURCE_SEED_MIGRATION_ID,
+      appliedAt: '2026-09-01T00:00:00.000Z',
+      executionTimeMs: 0,
+      checksum: 'synthetic-test-fixture',
+    },
+  ];
+  state.accounts = [
+    {
+      id: 'test-account-lloyds',
+      name: 'Lloyds',
+      type: 'current',
+      currency: 'GBP',
+      startingBalancePence: 1000_00,
+      currentBalancePence: 1000_00,
+      ownerPerson: 'Marius',
+      ownerMemberId: 'local-marius',
+      isActive: true,
+    },
+    {
+      id: 'test-account-chase',
+      name: 'Chase',
+      type: 'savings',
+      currency: 'GBP',
+      startingBalancePence: 20000_00,
+      currentBalancePence: 20000_00,
+      ownerPerson: 'Marius',
+      ownerMemberId: 'local-marius',
+      isActive: true,
+    },
+    {
+      id: 'test-account-santander',
+      name: 'Santander',
+      type: 'current',
+      currency: 'GBP',
+      startingBalancePence: 4000_00,
+      currentBalancePence: 4000_00,
+      ownerPerson: 'Marius',
+      ownerMemberId: 'local-marius',
+      isActive: true,
+    },
+  ];
+  state.plannedPayments = [
+    {
+      id: 'test-payment-recurring',
+      name: 'Synthetic recurring bill',
+      amountPence: 100_00,
+      month: '2026-09',
+      responsiblePerson: 'Marius',
+      accountId: 'test-account-santander',
+      dueDate: '2026-09-28',
+      categoryId: 'cat-housing',
+      status: 'unpaid',
+      includeInTransferPlan: true,
+      isRecurring: true,
+      createdAt: '2026-09-01T00:00:00.000Z',
+      createdBy: 'test',
+    },
+  ];
+  state.plannedIncomes = [
+    {
+      id: 'test-income-recurring',
+      name: 'Synthetic wage',
+      expectedAmountPence: 500_00,
+      month: '2026-09',
+      sourcePerson: 'Marius',
+      accountId: 'test-account-lloyds',
+      categoryId: 'cat-salary',
+      expectedDate: '2026-09-30',
+      status: 'expected',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      createdBy: 'test',
+    },
+  ];
+  saveLocalHousehold(state);
+}
+
 describe('Penny-style local MV storage', () => {
   let storage: MemoryStorage;
 
   beforeEach(() => {
     storage = new MemoryStorage();
     vi.stubGlobal('localStorage', storage);
+    installSyntheticFixture();
   });
 
-  it('starts with the audited September source budget and Marius owner', () => {
+  it('starts a brand-new browser with a blank local household and no embedded finance fixture', () => {
+    storage.clear();
     const state = loadLocalHousehold();
 
     expect(state.version).toBe(1);
-    expect(state.members).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: 'Marius',
-          email: 'marius@local.invalid',
-          role: 'owner',
-        }),
-        expect.objectContaining({
-          name: 'Vesta',
-          role: 'editor',
-        }),
-      ])
-    );
-    expect(state.accounts.map((item) => item.name)).toEqual(
-      expect.arrayContaining(['Chase', 'Santander', 'Cash', 'Lloyds', 'NatWest', 'Credit Card'])
-    );
-    expect(state.transactions).toHaveLength(19);
-    expect(state.plannedPayments).toHaveLength(13);
-    expect(state.plannedIncomes).toHaveLength(5);
+    expect(state.members).toEqual([
+      expect.objectContaining({
+        name: 'Marius',
+        email: 'marius@local.invalid',
+        role: 'owner',
+      }),
+    ]);
+    expect(state.accounts).toHaveLength(0);
+    expect(state.transactions).toHaveLength(0);
+    expect(state.plannedPayments).toHaveLength(0);
+    expect(state.plannedIncomes).toHaveLength(0);
     expect(state.categories.map((item) => item.id)).toEqual(
-      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer', 'src-cat-fixed'])
+      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer'])
     );
     expect(
       state.schemaStatus?.appliedMigrations.some(
-        (migration) => migration.name === SOURCE_BUDGET_IMPORT_ID
+        (migration) => migration.name === LEGACY_SOURCE_SEED_MIGRATION_ID
       )
     ).toBe(true);
     expect(storage.getItem(LOCAL_STORAGE_KEY)).toBeTruthy();
@@ -585,8 +662,8 @@ describe('Penny-style local MV storage', () => {
     executeLocalTransferAllocations(
       {
         destinationAccountId: santander.id,
-        expectedTotalPence: 500_00,
-        allocations: [{ sourceAccountId: chase.id, amountPence: 500_00 }],
+        expectedTotalPence: 600_00,
+        allocations: [{ sourceAccountId: chase.id, amountPence: 600_00 }],
         description: 'Transfer Plan: recovery test',
         date: '2026-09-05',
         month: '2026-09',
@@ -611,12 +688,12 @@ describe('Penny-style local MV storage', () => {
       expect.objectContaining({
         accountId: chase.id,
         targetAccountId: santander.id,
-        amountPence: 500_00,
+        amountPence: 600_00,
       })
     );
     expect(
       state.accounts.find((account) => account.id === santander.id)?.currentBalancePence
-    ).toBe(4_500_00);
+    ).toBe(4_600_00);
     expect(
       state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
     ).toBe(fundedChaseBalance);
@@ -628,7 +705,7 @@ describe('Penny-style local MV storage', () => {
     ).toBe(4_000_00);
     expect(
       state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
-    ).toBe(15_687_47);
+    ).toBe(20_000_00);
   });
 
   it('prevents Transfer Plan funding from draining a source account below its own selected bills', () => {
@@ -1267,68 +1344,48 @@ describe('Penny-style local MV storage', () => {
     expect(state.members.filter((member) => member.role === 'owner')).toHaveLength(1);
   });
 
-  it('keeps imported same-name Lloyds routing isolated by explicit owner', () => {
-    const state = loadLocalHousehold();
-    const mariusLloyds = state.accounts.find(
+  it('keeps same-name accounts isolated by stable owner identity without source fixtures', () => {
+    let state = loadLocalHousehold();
+    const primary = state.accounts.find(
       (account) => account.name === 'Lloyds' && account.ownerPerson === 'Marius'
     );
-    const vestaLloyds = state.accounts.find(
-      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Vesta'
-    );
+    expect(primary).toBeTruthy();
 
-    expect(mariusLloyds).toBeTruthy();
-    expect(vestaLloyds).toBeTruthy();
-    expect(mariusLloyds!.id).not.toBe(vestaLloyds!.id);
+    const secondMember = createLocalHouseholdMember({ name: 'Vesta' }, state.version);
+    state = loadLocalHousehold();
 
-    const vestaImportedBills = state.plannedPayments.filter(
-      (payment) =>
-        payment.responsiblePerson === 'Vesta' &&
-        payment.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID &&
-        ['Council tax', 'Internet - Vodafone', 'Phone', 'Lloyds'].includes(payment.name)
-    );
-    expect(vestaImportedBills).toHaveLength(4);
-    expect(
-      vestaImportedBills.every((payment) => payment.accountId === vestaLloyds!.id)
-    ).toBe(true);
+    const second = createLocalAccount(
+      {
+        name: 'Lloyds',
+        type: 'current',
+        startingBalancePence: 200_00,
+        ownerMemberId: secondMember.member.id,
+      },
+      state.version
+    ).account;
 
-    const mariusImportedLloydsBills = state.plannedPayments.filter(
-      (payment) =>
-        payment.responsiblePerson === 'Marius' &&
-        payment.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID &&
-        ['Child Maintenance', 'National Trust'].includes(payment.name)
-    );
-    expect(mariusImportedLloydsBills).toHaveLength(2);
-    expect(
-      mariusImportedLloydsBills.every((payment) => payment.accountId === mariusLloyds!.id)
-    ).toBe(true);
-
-    const vestaLloydsIncome = state.plannedIncomes?.find(
-      (income) =>
-        income.name === 'Paycheck' &&
-        income.sourcePerson === 'Vesta' &&
-        income.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID
-    );
-    expect(vestaLloydsIncome?.accountId).toBe(vestaLloyds!.id);
-
-    const mariusLloydsIncome = state.plannedIncomes?.find(
-      (income) =>
-        income.name === 'Paycheck' &&
-        income.sourcePerson === 'Marius' &&
-        income.metadata?.sourceImportId === SOURCE_BUDGET_IMPORT_ID
-    );
-    expect(mariusLloydsIncome?.accountId).toBe(mariusLloyds!.id);
+    expect(primary!.id).not.toBe(second.id);
+    expect(primary!.ownerMemberId).toBe('local-marius');
+    expect(second.ownerMemberId).toBe(secondMember.member.id);
   });
 
   it('repairs manually-created same-name bills to the matching household owner account', () => {
     let state = loadLocalHousehold();
     const mariusLloyds = state.accounts.find(
       (account) => account.name === 'Lloyds' && account.ownerPerson === 'Marius'
-    );
-    const vestaLloyds = state.accounts.find(
-      (account) => account.name === 'Lloyds' && account.ownerPerson === 'Vesta'
-    );
-    expect(mariusLloyds).toBeTruthy();
-    expect(vestaLloyds).toBeTruthy();
+    )!;
+    const vesta = createLocalHouseholdMember({ name: 'Vesta' }, state.version);
+    state = loadLocalHousehold();
+    const vestaLloyds = createLocalAccount(
+      {
+        name: 'Lloyds',
+        type: 'current',
+        startingBalancePence: 0,
+        ownerMemberId: vesta.member.id,
+      },
+      state.version
+    ).account;
+    state = loadLocalHousehold();
 
     const bill = createLocalPlannedPayment(
       {
@@ -1336,7 +1393,7 @@ describe('Penny-style local MV storage', () => {
         amountPence: 1234,
         month: '2026-10',
         responsiblePerson: 'Vesta',
-        accountId: mariusLloyds!.id,
+        accountId: mariusLloyds.id,
         status: 'unpaid',
         includeInTransferPlan: true,
       },
@@ -1346,7 +1403,7 @@ describe('Penny-style local MV storage', () => {
     state = loadLocalHousehold();
     expect(
       state.plannedPayments.find((payment) => payment.id === bill.payment.id)?.accountId
-    ).toBe(vestaLloyds!.id);
+    ).toBe(vestaLloyds.id);
   });
 
   it('selects paid and unpaid bills independently using linked actual payment evidence', () => {
@@ -1689,7 +1746,7 @@ describe('Penny-style local MV storage', () => {
     const backup = createLocalBackupPackage();
     const preflight = preflightLocalRestore(backup);
     expect(preflight.valid).toBe(true);
-    expect(preflight.counts.accounts).toBe(8);
+    expect(preflight.counts.accounts).toBe(4);
 
     state = loadLocalHousehold();
     resetLocalHousehold(state.version);
@@ -1698,10 +1755,10 @@ describe('Penny-style local MV storage', () => {
 
     restoreLocalBackup(backup, state.version);
     state = loadLocalHousehold();
-    expect(state.accounts).toHaveLength(8);
+    expect(state.accounts).toHaveLength(4);
     expect(state.accounts.find((account) => account.name === 'Main')?.startingBalancePence).toBe(123_45);
     expect(state.members.map((member) => member.name)).toEqual(
-      expect.arrayContaining(['Marius', 'Vesta'])
+      expect.arrayContaining(['Marius'])
     );
     expect(state.members[0].email).toBe('marius@local.invalid');
     expect(state.auditLogs.map((entry) => entry.action)).toContain('database_restored');

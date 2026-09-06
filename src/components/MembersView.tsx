@@ -116,7 +116,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
 
         <div className="divide-y divide-muted">
           {activeMembers.map((member) => {
-            const isMarius = member.email.toLowerCase() === 'backtonemesis@gmail.com';
+            const isOwnerMember = member.role === 'owner';
             return (
               <div
                 key={member.id}
@@ -129,7 +129,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-main">{member.name}</span>
-                      {isMarius && (
+                      {isOwnerMember && (
                         <span className="text-[10px] font-bold bg-warning-soft text-warning px-2 py-0.2 rounded-full border border-warning">
                           Owner
                         </span>
@@ -140,7 +140,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                 </div>
 
                 <div className="mv-hscroll mv-edge-safe items-center">
-                  {isOwner && !isMarius ? (
+                  {isOwner && !isOwnerMember ? (
                     <div className="mv-hscroll items-center">
                       <select
                         value={member.role}
