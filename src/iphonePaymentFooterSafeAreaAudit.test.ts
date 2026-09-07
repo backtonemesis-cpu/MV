@@ -24,4 +24,17 @@ describe('Actual iPhone payment footer safe-area regression', () => {
     );
     expect(css).toContain('pointer-events: none !important');
   });
+  it('removes the bottom navigation visually while the payment confirmation is open', () => {
+    expect(css).toContain(
+      '.mv-layout-phone:has(.mv-payment-status-modal) .mv-nav-mobile'
+    );
+    expect(css).toContain('display: none !important');
+    expect(css).toContain(
+      '.mv-layout-phone:has(.mv-payment-status-modal) .mv-modal-backdrop'
+    );
+    expect(css).toContain(
+      'padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important'
+    );
+  });
+
 });
