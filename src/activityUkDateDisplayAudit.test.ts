@@ -20,8 +20,8 @@ describe('Activity UK date display regression', () => {
     expect(activity).not.toContain('<span>{tx.date}</span>');
   });
 
-  it('does not alter stored transaction dates or mutation logic', () => {
-    expect(activity).toContain('transactions={');
+  it('keeps transaction date keys unchanged for filtering and only formats presentation', () => {
+    expect(activity).toContain('!tx.date.startsWith(selectedMonth)');
     expect(activity).not.toContain('tx.date =');
     expect(activity).not.toContain('updateTransaction(');
   });
