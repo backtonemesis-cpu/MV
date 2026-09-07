@@ -466,6 +466,7 @@ describe('Safe conditional permanent account deletion', () => {
     state = loadLocalHousehold();
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Linked bill',
         amountPence: 10_00,
         month: '2026-09',
@@ -627,6 +628,7 @@ describe('Safe conditional permanent account deletion', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Reference added after UI render',
         amountPence: 1_00,
         month: '2026-09',
@@ -712,6 +714,7 @@ describe('Safe conditional permanent account deletion', () => {
     state = loadLocalHousehold();
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Protected bill',
         amountPence: 2_00,
         month: '2026-09',

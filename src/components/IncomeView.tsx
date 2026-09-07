@@ -1,3 +1,5 @@
+import { createCategoryEligibility } from '../utils/categoryEligibility';
+import type { CategoryGroup } from '../types';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Banknote,
@@ -28,6 +30,7 @@ interface IncomeViewProps {
   incomes: PlannedIncome[];
   accounts: Account[];
   categories: Category[];
+  categoryGroups: CategoryGroup[];
   transactions: Transaction[];
   members: HouseholdMember[];
   selectedMonth: string;
@@ -46,6 +49,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   incomes,
   accounts,
   categories,
+  categoryGroups,
   transactions,
   members,
   selectedMonth,
@@ -93,8 +97,8 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   );
 
   const incomeCategories = useMemo(
-    () => categories.filter((category) => category.group === 'Income'),
-    [categories]
+    () => createCategoryEligibility(categoryGroups).getTransactionCategoryOptions(categories, 'income', selectedIncome?.categoryId ? [selectedIncome.categoryId] : []),
+    [categories, categoryGroups, selectedIncome]
   );
 
   const monthIncomes = useMemo(
@@ -237,13 +241,18 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       return;
     }
 
+    if (!createCategoryEligibility(categoryGroups).isTransactionCategorySelectionAllowed(categories, 'income', categoryId, selectedIncome?.categoryId ? [selectedIncome.categoryId] : [])) {
+      setError('Choose an income category.');
+      return;
+    }
+
     const payload: Partial<PlannedIncome> = {
       name: name.trim(),
       expectedAmountPence,
       month: selectedIncome?.month || selectedMonth,
       sourcePerson: sourcePerson as Payer,
       accountId,
-      categoryId: categoryId || undefined,
+      categoryId,
       expectedDate: expectedDate || undefined,
       notes: notes.trim() || undefined,
     };

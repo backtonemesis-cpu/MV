@@ -1,3 +1,5 @@
+// LEGACY V1 ONLY — not authoritative for the Pages runtime or V2.
+// V2 taxonomy lives in src/categories/registry.ts. Do not seed V2 from this module.
 export interface StandardCategoryDefinition {
   id: string;
   name: string;

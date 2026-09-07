@@ -1,3 +1,5 @@
+import { CategorySettings } from './CategorySettings';
+import type { HouseholdData } from '../types';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Palette,
@@ -48,6 +50,8 @@ function sameRgb(left: AccentRgb, right: AccentRgb): boolean {
 }
 
 interface SettingsViewProps {
+  household: HouseholdData;
+  onCategoriesChanged: () => Promise<void>;
   currentSession: UserSession;
   members: HouseholdMember[];
   auditLogs: AuditLogEntry[];
@@ -65,6 +69,8 @@ interface SettingsViewProps {
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
+  household,
+  onCategoriesChanged,
   currentSession,
   members,
   auditLogs,
@@ -81,7 +87,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onLoadSampleData,
 }) => {
   const isOwner = currentSession.role === 'owner';
-  const [activeTab, setActiveTab] = useState<'appearance' | 'members' | 'audit' | 'backup'>('appearance');
+  const [activeTab, setActiveTab] = useState<'appearance' | 'members' | 'audit' | 'backup' | 'categories'>('appearance');
   const [restoreJson, setRestoreJson] = useState('');
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreSuccess, setRestoreSuccess] = useState<string | null>(null);
@@ -102,7 +108,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [isUpdatingMember, setIsUpdatingMember] = useState(false);
   const memberNameInputRef = useRef<HTMLInputElement>(null);
 
-  const settingsTabOrder = ['appearance', 'members', 'audit', 'backup'] as const;
+  const settingsTabOrder = ['categories', 'appearance', 'members', 'audit', 'backup'] as const;
 
   const handleSettingsTabKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
@@ -289,7 +295,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Settings Tabs */}
       <div className="mv-settings-tabs" role="tablist" aria-label="Settings sections">
-        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-5">
+          <button id="settings-tab-categories" role="tab" aria-selected={activeTab === 'categories'} onClick={() => setActiveTab('categories')} onKeyDown={(event) => handleSettingsTabKeyDown(event, 'categories')} className={`mv-settings-tab ${activeTab === 'categories' ? 'is-active' : ''}`}>Categories</button>
           <button
             id="settings-tab-appearance"
             role="tab"
@@ -344,6 +351,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       </div>
 
       {/* TAB 1: Appearance & Themes */}
+      {activeTab === 'categories' && <div role="tabpanel" aria-labelledby="settings-tab-categories"><CategorySettings household={household} onChanged={onCategoriesChanged}/></div>}
+
       {activeTab === 'appearance' && (
         <div className="mv-settings-stack max-w-3xl">
           <div className="mv-settings-panel space-y-4">

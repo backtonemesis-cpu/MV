@@ -1,3 +1,5 @@
+// LEGACY V1 ONLY — not authoritative for the Pages runtime or V2.
+// V2 taxonomy lives in src/categories/registry.ts. Do not seed V2 from this module.
 import { createRequire } from 'module';
 import type { DatabaseSync } from 'node:sqlite';
 import { Request, Response, NextFunction } from 'express';

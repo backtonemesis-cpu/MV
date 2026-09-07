@@ -95,7 +95,7 @@ function payment(
     month,
     responsiblePerson,
     accountId,
-    categoryId: 'cat-housing',
+    categoryId: 'cat-rent',
     status: 'unpaid',
     includeInTransferPlan: true,
     isRecurring: true,
@@ -378,7 +378,7 @@ describe('Final post-PR #114 financial safety audit', () => {
       description: 'Rent',
       amountPence: 349_79,
       type: 'expense',
-      categoryId: 'cat-housing',
+      categoryId: 'cat-rent',
       accountId: 'lloyds-marius',
       payer: 'Marius',
       isTransfer: false,
@@ -726,7 +726,7 @@ describe('Final post-PR #114 financial safety audit', () => {
     const corrupted = structuredClone(backup);
     const original = corrupted.state.transactions.find(
       (tx: Transaction) => tx.plannedPaymentId === 'rent'
-    );
+    )!;
     corrupted.state.transactions.push({ ...original, id: 'duplicate-backup-payment' });
     expect(() => preflightLocalRestore(corrupted)).toThrow(/duplicated/);
   });

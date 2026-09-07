@@ -1,71 +1,33 @@
-import type { Category, TransactionType } from '../types';
+import type { Category, CategoryGroup, TransactionType } from '../types';
 
-const EXCLUDED_BILL_CATEGORY_GROUPS = new Set(['income', 'transfers', 'savings']);
-
-function normalizedGroup(category: Category): string {
-  return category.group.trim().toLowerCase();
-}
-
-export function isBillEligibleCategory(category: Category): boolean {
-  return !EXCLUDED_BILL_CATEGORY_GROUPS.has(normalizedGroup(category));
-}
-
-export function getBillCategoryOptions(
-  categories: Category[],
-  currentCategoryId?: string
-): Category[] {
-  return categories.filter(
-    (category) =>
-      isBillEligibleCategory(category) || category.id === currentCategoryId
-  );
-}
-
-export function isBillCategorySelectionAllowed(
-  categories: Category[],
-  selectedCategoryId: string,
-  currentCategoryId?: string
-): boolean {
-  if (!selectedCategoryId) return true;
-  const category = categories.find((item) => item.id === selectedCategoryId);
-  if (!category) return false;
-  return isBillEligibleCategory(category) || selectedCategoryId === currentCategoryId;
-}
-
-export function isTransactionCategoryEligible(
-  category: Category,
-  type: TransactionType | ''
-): boolean {
-  if (!type) return true;
-  const group = normalizedGroup(category);
-  if (type === 'income') return group === 'income';
-  if (type === 'repayment') return group === 'transfers';
-  if (type === 'transfer') return false;
-  return !EXCLUDED_BILL_CATEGORY_GROUPS.has(group);
-}
-
-export function getTransactionCategoryOptions(
-  categories: Category[],
-  type: TransactionType | '',
-  preservedCategoryIds: string[] = []
-): Category[] {
-  const preserved = new Set(preservedCategoryIds.filter(Boolean));
-  return categories.filter(
-    (category) =>
-      isTransactionCategoryEligible(category, type) || preserved.has(category.id)
-  );
-}
-
-export function isTransactionCategorySelectionAllowed(
-  categories: Category[],
-  type: TransactionType | '',
-  selectedCategoryId: string,
-  preservedCategoryIds: string[] = []
-): boolean {
-  if (!selectedCategoryId) return true;
-  const category = categories.find((item) => item.id === selectedCategoryId);
-  if (!category) return false;
-  return (
-    isTransactionCategoryEligible(category, type) ||
-    preservedCategoryIds.includes(selectedCategoryId)
-  );
+/** Bind eligibility to this household's groups, including custom groups. */
+export function createCategoryEligibility(categoryGroups: CategoryGroup[]) {
+  const compatible = (category: Category, type: TransactionType | '') => {
+    const group = categoryGroups.find(group => group.id === category.groupId);
+    if (!group || !type || category.supersededById) return false;
+    if (type === 'transfer' || type === 'repayment') return category.systemRole === 'internal-transfer';
+    if (category.systemRole === 'uncategorised-expense') return type === 'expense' || type === 'refund';
+    if (category.systemRole === 'uncategorised-income') return type === 'income';
+    return group.scope === (type === 'income' ? 'income' : 'expense');
+  };
+  const isTransactionCategoryEligible = (category: Category, type: TransactionType | '') => {
+    const group = categoryGroups.find(group => group.id === category.groupId);
+    if (!group || group.isArchived || category.isArchived || category.supersededById) return false;
+    if (type === 'transfer') return false;
+    if (type === 'repayment') return compatible(category, type);
+    return !category.isSystem && compatible(category, type);
+  };
+  const isBillEligibleCategory = (category: Category) => isTransactionCategoryEligible(category, 'expense');
+  const getTransactionCategoryOptions = (categories: Category[], type: TransactionType | '', preservedCategoryIds: string[] = []) =>
+    categories.filter(category => isTransactionCategoryEligible(category, type) ||
+      (preservedCategoryIds.includes(category.id) && compatible(category, type)))
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'en-GB'));
+  const isTransactionCategorySelectionAllowed = (categories: Category[], type: TransactionType | '', selectedCategoryId: string, preservedCategoryIds: string[] = []) =>
+    !!selectedCategoryId && getTransactionCategoryOptions(categories, type, preservedCategoryIds).some(category => category.id === selectedCategoryId);
+  const getBillCategoryOptions = (categories: Category[], currentCategoryId?: string) =>
+    getTransactionCategoryOptions(categories, 'expense', currentCategoryId ? [currentCategoryId] : []);
+  const isBillCategorySelectionAllowed = (categories: Category[], selectedCategoryId: string, currentCategoryId?: string) =>
+    isTransactionCategorySelectionAllowed(categories, 'expense', selectedCategoryId, currentCategoryId ? [currentCategoryId] : []);
+  return { compatible, isBillEligibleCategory, getBillCategoryOptions, isBillCategorySelectionAllowed,
+    isTransactionCategoryEligible, getTransactionCategoryOptions, isTransactionCategorySelectionAllowed };
 }
