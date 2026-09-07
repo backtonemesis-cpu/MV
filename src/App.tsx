@@ -116,6 +116,20 @@ export default function App() {
   const [isPrivacyMasked, setIsPrivacyMasked] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
 
+  const handlePrimaryTabChange = useCallback((tab: NavTab) => {
+    setActiveTab(tab);
+
+    window.requestAnimationFrame(() => {
+      const workspace = document.querySelector<HTMLElement>('.mv-app-workspace');
+      if (workspace) {
+        workspace.scrollTop = 0;
+        workspace.scrollLeft = 0;
+      }
+
+      window.scrollTo(0, 0);
+    });
+  }, []);
+
   // Token-based theme engine: base mode and accent are independent.
   useEffect(() => {
     applyThemePreferences(userPreferences);
@@ -853,7 +867,7 @@ export default function App() {
       {session && session.role !== 'pending' && session.role !== 'removed' && (
         <Navigation
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handlePrimaryTabChange}
           pendingMembersCount={pendingMembersCount}
         />
       )}
@@ -904,7 +918,7 @@ export default function App() {
                   setEditingPlannedPayment(null);
                   setShowPlannedPaymentModal(true);
                 }}
-                onNavigateToTab={(tab) => setActiveTab(tab)}
+                onNavigateToTab={handlePrimaryTabChange}
               />
             )}
 
@@ -1145,7 +1159,7 @@ export default function App() {
       <CommandPalette
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}
-        onNavigate={(tab) => setActiveTab(tab)}
+        onNavigate={handlePrimaryTabChange}
         onSetDensity={(cardDensity) =>
           setUserPreferences((current) => ({ ...current, cardDensity }))
         }
