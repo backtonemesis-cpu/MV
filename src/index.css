@@ -6318,3 +6318,41 @@ body,
     max-height: calc(100% - 16px - env(safe-area-inset-bottom)) !important;
   }
 }
+
+
+/* Actual iPhone transaction-sheet safety.
+   Generic Phone modal spacing reserves the fixed bottom navigation, which can
+   push this tall transaction sheet above the real Safari viewport and clip its
+   title/header. While this financial-entry sheet is open, remove the competing
+   bottom nav and let the sheet use the reclaimed safe viewport. */
+@media (max-width: 430px) {
+  .mv-layout-phone:has(.mv-transaction-modal) .mv-nav-mobile {
+    display: none !important;
+  }
+
+  .mv-layout-phone:has(.mv-transaction-modal) .mv-modal-backdrop {
+    padding:
+      8px
+      8px
+      calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .mv-layout-phone:has(.mv-transaction-modal) .mv-transaction-modal {
+    height: min(680px, calc(100% - 16px - env(safe-area-inset-bottom))) !important;
+    max-height: calc(100% - 16px - env(safe-area-inset-bottom)) !important;
+  }
+
+  .mv-layout-phone:has(.mv-transaction-modal) .mv-transaction-body {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-bottom: 16px;
+  }
+
+  .mv-layout-phone:has(.mv-transaction-modal) .mv-modal-fixed-actions {
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+  }
+}
