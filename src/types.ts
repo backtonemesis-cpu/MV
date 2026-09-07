@@ -41,14 +41,8 @@ export interface Account {
   metadata?: Record<string, any>;
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  group: string;
-  monthlyBudgetPence: number;
-  icon?: string;
-  isArchived?: boolean;
-}
+export type { CategoryGroup, MonthlyCategoryBudget } from './categories/model';
+export type Category = import('./categories/model').CategoryV2;
 
 export interface TransactionSplit {
   id: string;
@@ -229,6 +223,9 @@ export interface SchemaStatus {
 }
 
 export interface HouseholdData {
+  dataSchemaVersion: 2;
+  categoryGroups: import('./categories/model').CategoryGroup[];
+  monthlyCategoryBudgets: import('./categories/model').MonthlyCategoryBudget[];
   id: string;
   name: string;
   version: number;

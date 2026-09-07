@@ -74,7 +74,7 @@ describe('Cross-view financial reconciliation', () => {
       month: '2026-09',
       sourcePerson: 'Marius',
       accountId: current.id,
-      categoryId: 'cat-salary',
+      categoryId: 'cat-salary-wages',
       expectedDate: '2026-09-01',
     }, state.version).income;
     state = loadLocalHousehold();
@@ -85,7 +85,7 @@ describe('Cross-view financial reconciliation', () => {
       month: '2026-09',
       responsiblePerson: 'Marius',
       accountId: current.id,
-      categoryId: 'cat-housing',
+      categoryId: 'cat-rent',
       includeInTransferPlan: true,
       dueDate: '2026-09-15',
     }, state.version).payment;

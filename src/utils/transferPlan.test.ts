@@ -113,7 +113,7 @@ describe('Transfer Plan account identity and funding calculations', () => {
       description: 'recorded-bill',
       amountPence: 12_000,
       type: 'expense',
-      categoryId: 'cat-housing',
+      categoryId: 'cat-rent',
       accountId: current.id,
       payer: 'Marius',
       isTransfer: false,

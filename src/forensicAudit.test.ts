@@ -296,6 +296,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const mariusBill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Marius Gym',
         amountPence: 45_00,
         month: '2026-09',
@@ -310,6 +311,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const vestaBill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Vesta Phone',
         amountPence: 30_00,
         month: '2026-09',
@@ -358,6 +360,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Status Guard Bill',
         amountPence: 20_00,
         month: '2026-09',
@@ -398,6 +401,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Linked Status Bill',
         amountPence: 25_00,
         month: '2026-09',
@@ -509,6 +513,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const mariusWage = createLocalPlannedIncome(
       {
+        categoryId: 'cat-salary-wages',
         name: 'Marius Wage',
         expectedAmountPence: 3361_02,
         month: '2026-09',
@@ -521,6 +526,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
 
     const vestaWage = createLocalPlannedIncome(
       {
+        categoryId: 'cat-salary-wages',
         name: 'Vesta Wage',
         expectedAmountPence: 2400_00,
         month: '2026-09',
@@ -796,7 +802,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
         month: '2026-09',
         accountId: account.account.id,
         responsiblePerson: 'Marius',
-        categoryId: 'cat-utilities',
+        categoryId: 'cat-gas-electricity',
         status: 'unpaid',
       },
       state.version
@@ -862,7 +868,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
         month: '2026-09',
         accountId: account.account.id,
         responsiblePerson: 'Marius',
-        categoryId: 'cat-internet',
+        categoryId: 'cat-broadband',
         status: 'unpaid',
       },
       state.version
@@ -1163,7 +1169,7 @@ describe('Forensic Financial Audit Regression Suite', () => {
         month: '2026-10',
         responsiblePerson: 'Marius',
         accountId: destination.account.id,
-        categoryId: 'cat-housing',
+        categoryId: 'cat-rent',
         includeInTransferPlan: true,
       },
       state.version

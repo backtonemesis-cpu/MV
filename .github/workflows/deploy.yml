@@ -61,7 +61,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          grep --fixed-strings "const STORAGE_KEY = 'mv_local_state_v1'" src/localStore.ts
+          grep --fixed-strings "const STORAGE_KEY = 'mv_local_state_v2'" src/localStore.ts
           grep --fixed-strings "localStorage" src/localStore.ts
           grep --fixed-strings '"build": "vite build"' package.json
           grep --fixed-strings "base: '/MV/'" vite.config.ts

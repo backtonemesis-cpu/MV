@@ -53,7 +53,7 @@ function bill(
     month,
     responsiblePerson: 'Marius',
     accountId: 'santander-current-marius',
-    categoryId: 'cat-housing',
+    categoryId: 'cat-rent',
     status: 'unpaid',
     includeInTransferPlan: true,
     dueDate: '2026-09-20',

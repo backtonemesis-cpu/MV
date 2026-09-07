@@ -1,3 +1,4 @@
+import type { CategoryGroup, MonthlyCategoryBudget } from '../types';
 import React, { useMemo, useState } from 'react';
 import {
   Calendar,
@@ -13,6 +14,8 @@ import { MonthPicker } from './MonthPicker';
 
 interface BudgetViewProps {
   categories: Category[];
+  categoryGroups: CategoryGroup[];
+  monthlyCategoryBudgets: MonthlyCategoryBudget[];
   transactions: Transaction[];
   plannedIncomes?: PlannedIncome[];
   plannedPayments?: PlannedPayment[];
@@ -22,6 +25,8 @@ interface BudgetViewProps {
 
 export const BudgetView: React.FC<BudgetViewProps> = ({
   categories,
+  categoryGroups,
+  monthlyCategoryBudgets,
   transactions,
   plannedIncomes = [],
   plannedPayments = [],
@@ -98,18 +103,19 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
   const groupedCategories = useMemo(() => {
     const groups: { [key: string]: Category[] } = {};
     categories.forEach((cat) => {
-      if (cat.group === 'Income') return;
-      if (!groups[cat.group]) groups[cat.group] = [];
-      groups[cat.group].push(cat);
+      const group = categoryGroups.find(group => group.id === cat.groupId);
+      if (!group || group.scope !== 'expense') return;
+      if (!groups[group.name]) groups[group.name] = [];
+      groups[group.name].push(cat);
     });
     return groups;
-  }, [categories]);
+  }, [categories, categoryGroups, monthlyCategoryBudgets, activeMonth]);
 
   const totalBudgetedPence = useMemo(() => {
     return categories
-      .filter((c) => c.group !== 'Income')
-      .reduce((sum, c) => sum + c.monthlyBudgetPence, 0);
-  }, [categories]);
+      .filter((c) => categoryGroups.some(g => g.id === c.groupId && g.scope === 'expense'))
+      .reduce((sum, c) => sum + (monthlyCategoryBudgets.find(b => b.monthKey === activeMonth && b.categoryId === c.id)?.budgetAmountPence ?? 0), 0);
+  }, [categories, categoryGroups, monthlyCategoryBudgets, activeMonth]);
 
   const totalActualLivingPence = useMemo(() => {
     return Array.from(categorySpendMap.values()).reduce((sum, v) => sum + v, 0);
@@ -174,7 +180,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             {formatPence(totalBudgetedPence)}
           </div>
           <div className="text-xs text-muted text-subtle mt-1">
-            {categories.filter((c) => c.group !== 'Income').length} categories
+            {categories.filter((c) => categoryGroups.some(g => g.id === c.groupId && g.scope === 'expense')).length} categories
           </div>
         </div>
 
@@ -251,7 +257,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
             <div className="space-y-4">
               {cats.map((cat) => {
                 const spent = categorySpendMap.get(cat.id) || 0;
-                const budget = cat.monthlyBudgetPence;
+                const budget = monthlyCategoryBudgets.find(b => b.monthKey === activeMonth && b.categoryId === cat.id)?.budgetAmountPence ?? 0;
                 const percent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
                 const isOver = budget > 0 && spent > budget;
 

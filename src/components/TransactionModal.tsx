@@ -7,10 +7,8 @@ import { accountOptionLabel } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
-import {
-  getTransactionCategoryOptions,
-  isTransactionCategorySelectionAllowed,
-} from '../utils/categoryEligibility';
+import { createCategoryEligibility } from '../utils/categoryEligibility';
+import type { CategoryGroup } from '../types';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -19,6 +17,7 @@ interface TransactionModalProps {
   initialTransaction?: Transaction | null;
   accounts: Account[];
   categories: Category[];
+  categoryGroups: CategoryGroup[];
   members: HouseholdMember[];
   isSubmitting: boolean;
 }
@@ -30,9 +29,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   initialTransaction,
   accounts,
   categories,
+  categoryGroups,
   members,
   isSubmitting,
 }) => {
+  const { getBillCategoryOptions, isBillCategorySelectionAllowed, getTransactionCategoryOptions, isTransactionCategorySelectionAllowed } = createCategoryEligibility(categoryGroups);
   const [description, setDescription] = useState('');
   const [amountStr, setAmountStr] = useState('');
   const [type, setType] = useState<TransactionType | ''>('');
@@ -568,7 +569,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   <option value="">Select category</option>
                   {transactionCategoryOptions.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.name} ({cat.group})
+                      {cat.name}
                     </option>
                   ))}
                 </select>

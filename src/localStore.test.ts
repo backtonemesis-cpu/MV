@@ -124,7 +124,7 @@ function installSyntheticFixture(): void {
       responsiblePerson: 'Marius',
       accountId: 'test-account-santander',
       dueDate: '2026-09-28',
-      categoryId: 'cat-housing',
+      categoryId: 'cat-rent',
       status: 'unpaid',
       includeInTransferPlan: true,
       isRecurring: true,
@@ -140,7 +140,7 @@ function installSyntheticFixture(): void {
       month: '2026-09',
       sourcePerson: 'Marius',
       accountId: 'test-account-lloyds',
-      categoryId: 'cat-salary',
+      categoryId: 'cat-salary-wages',
       expectedDate: '2026-09-30',
       status: 'expected',
       createdAt: '2026-09-01T00:00:00.000Z',
@@ -176,7 +176,7 @@ describe('Penny-style local MV storage', () => {
     expect(state.plannedPayments).toHaveLength(0);
     expect(state.plannedIncomes).toHaveLength(0);
     expect(state.categories.map((item) => item.id)).toEqual(
-      expect.arrayContaining(['cat-housing', 'cat-salary', 'cat-transfer'])
+      expect.arrayContaining(['cat-rent', 'cat-salary-wages', 'cat-transfer'])
     );
     expect(
       state.schemaStatus?.appliedMigrations.some(
@@ -282,7 +282,7 @@ describe('Penny-style local MV storage', () => {
         month: '2026-11',
         accountId: account.account.id,
         responsiblePerson: 'Marius',
-        categoryId: 'cat-housing',
+        categoryId: 'cat-rent',
         status: 'unpaid',
         includeInTransferPlan: true,
         isRecurring: true,
@@ -298,7 +298,7 @@ describe('Penny-style local MV storage', () => {
         month: '2026-11',
         accountId: account.account.id,
         responsiblePerson: 'Marius',
-        categoryId: 'cat-housing',
+        categoryId: 'cat-rent',
         status: 'unpaid',
         includeInTransferPlan: true,
         isRecurring: false,
@@ -362,7 +362,7 @@ describe('Penny-style local MV storage', () => {
         description: 'Salary',
         amountPence: 200_00,
         type: 'income',
-        categoryId: 'cat-salary',
+        categoryId: 'cat-salary-wages',
         accountId: main.account.id,
         payer: 'Marius',
       },
@@ -483,7 +483,7 @@ describe('Penny-style local MV storage', () => {
         description: 'Future wage',
         amountPence: 1000_00,
         type: 'income',
-        categoryId: 'cat-salary',
+        categoryId: 'cat-salary-wages',
         accountId: account.account.id,
         payer: 'Vesta',
         date: '2099-09-11',
@@ -640,7 +640,7 @@ describe('Penny-style local MV storage', () => {
     ).toBe(200_00);
   });
 
-  it('recovers a traceable Transfer Plan funding batch lost by a source-data migration', () => {
+  it('quarantines legacy source backups instead of recovering V1 funding into V2', () => {
     let state = loadLocalHousehold();
     const pristineRaw = storage.getItem(LOCAL_STORAGE_KEY)!;
     const santander = state.accounts.find(
@@ -652,6 +652,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Recovery Test Bill',
         amountPence: 4_500_00,
         month: '2026-09',
@@ -687,29 +688,11 @@ describe('Penny-style local MV storage', () => {
     const recovered = state.transactions.filter(
       (transaction) => transaction.metadata?.recoveredFromSourceImportBackup === true
     );
-    expect(recovered).toHaveLength(1);
-    expect(recovered[0]).toEqual(
-      expect.objectContaining({
-        accountId: chase.id,
-        targetAccountId: santander.id,
-        amountPence: 600_00,
-      })
-    );
-    expect(
-      state.accounts.find((account) => account.id === santander.id)?.currentBalancePence
-    ).toBe(4_600_00);
-    expect(
-      state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
-    ).toBe(fundedChaseBalance);
-
-    undoLatestLocalTransferPlanFunding(santander.id, state.version, '2026-09');
-    state = loadLocalHousehold();
-    expect(
-      state.accounts.find((account) => account.id === santander.id)?.currentBalancePence
-    ).toBe(4_000_00);
-    expect(
-      state.accounts.find((account) => account.id === chase.id)?.currentBalancePence
-    ).toBe(20_000_00);
+    expect(recovered).toHaveLength(0);
+    expect(state.accounts.find(account => account.id === santander.id)?.currentBalancePence).toBe(4_000_00);
+    expect(state.accounts.find(account => account.id === chase.id)?.currentBalancePence).toBe(20_000_00);
+    expect(storage.getItem(SOURCE_IMPORT_BACKUP_STORAGE_KEY)).toBe(fundedRaw);
+    expect(storage.getItem(LOCAL_STORAGE_KEY)).toBe(pristineRaw);
   });
 
   it('prevents Transfer Plan funding from draining a source account below its own selected bills', () => {
@@ -739,6 +722,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Source account bill',
         amountPence: 80_00,
         month: '2026-10',
@@ -752,6 +736,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Destination bill',
         amountPence: 50_00,
         month: '2026-10',
@@ -871,6 +856,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'September month-scope bill',
         amountPence: 60_00,
         month: '2026-09',
@@ -885,6 +871,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         // After the £60 September funding reaches this account, £130 of
         // October selected bills leaves a genuine £70 October requirement.
         name: 'October month-scope bill',
@@ -1066,6 +1053,7 @@ describe('Penny-style local MV storage', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Workflow bill',
         amountPence: 40_00,
         month: '2026-09',
@@ -1219,6 +1207,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Fund me once',
         amountPence: 50_00,
         month: '2026-09',
@@ -1327,7 +1316,7 @@ describe('Penny-style local MV storage', () => {
         month: '2026-10',
         sourcePerson: 'Alex',
         accountId: account.account.id,
-        categoryId: 'cat-salary',
+        categoryId: 'cat-salary-wages',
         status: 'expected',
       },
       state.version
@@ -1393,6 +1382,7 @@ describe('Penny-style local MV storage', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Vesta test bill',
         amountPence: 1234,
         month: '2026-10',
@@ -1417,6 +1407,7 @@ describe('Penny-style local MV storage', () => {
 
     const unpaid = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'October unpaid',
         amountPence: 1000,
         month: '2026-10',
@@ -1431,6 +1422,7 @@ describe('Penny-style local MV storage', () => {
 
     const paidDraft = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'October paid',
         amountPence: 2000,
         month: '2026-10',
@@ -1506,6 +1498,7 @@ describe('Penny-style local MV storage', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Vesta payment undo test',
         amountPence: 25_00,
         month: '2026-09',
@@ -1613,6 +1606,7 @@ describe('Penny-style local MV storage', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'No evidence bill',
         amountPence: 10_00,
         month: '2026-09',
@@ -1650,7 +1644,7 @@ describe('Penny-style local MV storage', () => {
         month: '2026-10',
         sourcePerson: 'Marius',
         accountId: account.id,
-        categoryId: 'cat-salary',
+        categoryId: 'cat-salary-wages',
         expectedDate: '2026-10-01',
         status: 'expected',
       },
@@ -1762,7 +1756,7 @@ describe('Penny-style local MV storage', () => {
         month: '2026-10',
         sourcePerson: 'Marius',
         accountId: account.id,
-        categoryId: 'cat-salary',
+        categoryId: 'cat-salary-wages',
         status: 'expected',
       },
       state.version
@@ -1906,6 +1900,7 @@ describe('Penny-style local MV storage', () => {
     expect(() =>
       createLocalPlannedPayment(
         {
+        categoryId: 'cat-rent',
           name: 'No Person Bill',
           amountPence: 10_00,
           month: '2026-10',
@@ -1918,6 +1913,7 @@ describe('Penny-style local MV storage', () => {
     expect(() =>
       createLocalPlannedIncome(
         {
+        categoryId: 'cat-salary-wages',
           name: 'No Person Income',
           expectedAmountPence: 10_00,
           month: '2026-10',
@@ -1929,6 +1925,7 @@ describe('Penny-style local MV storage', () => {
 
     const created = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Explicit Person, No Plan Choice',
         amountPence: 10_00,
         month: '2026-10',
@@ -2153,6 +2150,7 @@ describe('Penny-style local MV storage', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Month-end bill',
         amountPence: 10_00,
         month: '2027-01',
@@ -2187,6 +2185,7 @@ describe('Penny-style local MV storage', () => {
 
     const leapBill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Leap month-end bill',
         amountPence: 10_00,
         month: '2028-01',
@@ -2227,6 +2226,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Committed source bill',
         amountPence: 800_00,
         month: '2026-09',
@@ -2265,6 +2265,7 @@ describe('Penny-style local MV storage', () => {
 
     createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Committed before saving',
         amountPence: 800_00,
         month: '2026-09',
@@ -2382,6 +2383,7 @@ describe('Penny-style local MV storage', () => {
 
     const bill = createLocalPlannedPayment(
       {
+        categoryId: 'cat-rent',
         name: 'Pre-archive bill',
         amountPence: 10_00,
         month: '2026-10',
@@ -2400,7 +2402,7 @@ describe('Penny-style local MV storage', () => {
         month: '2026-10',
         sourcePerson: 'Marius',
         accountId: account.account.id,
-        categoryId: 'cat-salary',
+        categoryId: 'cat-salary-wages',
       },
       state.version
     );

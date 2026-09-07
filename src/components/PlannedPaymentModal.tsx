@@ -4,10 +4,8 @@ import { PlannedPayment, Account, Category, Payer, HouseholdMember } from '../ty
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
-import {
-  getBillCategoryOptions,
-  isBillCategorySelectionAllowed,
-} from '../utils/categoryEligibility';
+import { createCategoryEligibility } from '../utils/categoryEligibility';
+import type { CategoryGroup } from '../types';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
@@ -16,6 +14,7 @@ interface PlannedPaymentModalProps {
   payment?: PlannedPayment | null;
   accounts: Account[];
   categories: Category[];
+  categoryGroups: CategoryGroup[];
   members: HouseholdMember[];
   activeMonth: string;
   onClose: () => void;
@@ -26,11 +25,13 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   payment,
   accounts,
   categories,
+  categoryGroups,
   members,
   activeMonth,
   onClose,
   onSave,
 }) => {
+  const { getBillCategoryOptions, isBillCategorySelectionAllowed, getTransactionCategoryOptions, isTransactionCategorySelectionAllowed } = createCategoryEligibility(categoryGroups);
   const isEditing = Boolean(payment);
 
   const [name, setName] = useState(payment?.name || '');
@@ -277,7 +278,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
               >
-                <option value="">Select category (optional)</option>
+                <option value="">Select category</option>
                 {billCategoryOptions.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}

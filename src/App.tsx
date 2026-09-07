@@ -990,6 +990,7 @@ export default function App() {
 
             {activeTab === 'income' && (
               <IncomeView
+                categoryGroups={household.categoryGroups}
                 incomes={household.plannedIncomes || []}
                 accounts={household.accounts}
                 categories={household.categories}
@@ -1068,6 +1069,8 @@ export default function App() {
             {/* Backwards compatibility for direct sub-views */}
             {activeTab === 'budget' && (
               <BudgetView
+                monthlyCategoryBudgets={household.monthlyCategoryBudgets}
+                categoryGroups={household.categoryGroups}
                 categories={household.categories}
                 transactions={household.transactions}
                 plannedIncomes={household.plannedIncomes || []}
@@ -1087,6 +1090,7 @@ export default function App() {
       {/* Transaction Modal */}
       {household && (
         <TransactionModal
+                categoryGroups={household.categoryGroups}
           isOpen={showTxModal}
           onClose={() => {
             setShowTxModal(false);
@@ -1104,6 +1108,7 @@ export default function App() {
       {/* Planned Bill / Payment Modal */}
       {household && showPlannedPaymentModal && (
         <PlannedPaymentModal
+                categoryGroups={household.categoryGroups}
           payment={editingPlannedPayment}
           accounts={household.accounts}
           categories={household.categories}

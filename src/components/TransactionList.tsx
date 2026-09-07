@@ -278,7 +278,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               const targetName = tx.targetAccountId
                 ? accountsMap.get(tx.targetAccountId) || 'Account'
                 : null;
-              const categoryName = categoriesMap.get(tx.categoryId) || 'General';
+              const categoryName = categoriesMap.get(tx.categoryId) || 'Invalid category — review required';
 
               const classification = tx.isSavings
                 ? 'Savings'

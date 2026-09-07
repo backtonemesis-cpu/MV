@@ -3,30 +3,31 @@
 Base: main bd84a67934aa45d42da65b861490124d969b6334.
 Branch: feat/category-system-v2. PR #128 is not the implementation base.
 
-## Stage 1 foundation checkpoint
+## Stages 1–2 integration checkpoint
 
-The V2 model, canonical UK registry, catalogue validator and isolated storage-boundary
-primitive are implemented. These modules are not yet imported by the active app.
-The existing V1 runtime remains active until integration and its regression gate pass.
-This is a deliberate intermediate checkpoint, not a completed schema transition.
+The active browser runtime now uses mv_local_state_v2 and dataSchemaVersion 2.
+V1 and legacy source-import backups are never consumed by this runtime. The canonical
+registry is authoritative for blank V2 seeds; dormant server definitions are labelled
+V1-only. Existing runtime financial calculations remain in localStore.
 
-V2 uses immutable category/group IDs, semantic group scope, protected system roles,
-separate month/category budgets and retained supersession lineage. Its clean-state
-factory accepts household identity only. Its loader reads/writes only mv_local_state_v2
-and requires a complete financial-validation callback before any initial write.
-No legacy financial dataset is read or migrated. Unknown schemas fail closed.
+Manual bill/income/transaction categories are validated at the write boundary. Paid
+and received records propagate the existing category exactly. Semantic eligibility is
+bound to household group scope, including custom groups, rather than group names.
+Split assignments are checked on create/edit. Missing Activity categories are explicit
+invalid references. The Budget view reads period-specific budgets; editing remains
+part of Stage 5. This minimal read adaptation was necessary when removing the old
+category-level budget property.
 
-The old local and dormant server registries remain V1 definitions at this checkpoint.
-They must be retired or labelled non-authoritative during integration before sign-off.
+Local validation: typecheck PASS, 348 tests in 47 files PASS, production build PASS.
+The required Node 22 CI remains the merge gate (local runtime is Node 24).
+Synthetic fixtures now provide explicit categories and canonical IDs. The obsolete
+V1 source recovery assertion was replaced with a quarantine/no-recovery assertion.
+No test was skipped. New write-boundary tests cover missing/cross-scope categories,
+exact paid/received propagation, invalid split categories/totals, and schema rejection.
+Existing transfer/payment/refund/repayment/reconciliation tests remain green.
 
-Tests cover taxonomy identities, independent seeds, scope independent of group names,
-system flags, duplicate IDs/names, archived name reservation, invalid group references,
-merge cycles/scope, period budget structure, untouched V1 bytes, no partial seed writes
-and rejection of corrupt/incompatible saved data.
-
-Local full-suite execution is blocked by unavailable npm dependencies. Required CI
-typecheck, existing and new tests, privacy guard and build must pass before advancing.
-No financial mutation, merge, deployment or live verification has occurred.
+Stage 3 category/group administration, Stages 4–6 and production verification remain
+pending. No merge, deployment or live financial mutation has occurred.
 
 ## Preserved forensic findings from PR #128
 
