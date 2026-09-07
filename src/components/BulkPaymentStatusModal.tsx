@@ -132,7 +132,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
     <div className="mv-modal-backdrop">
       <section
         ref={dialogRef}
-        className="mv-modal-card max-w-[560px]"
+        className="mv-modal-card mv-payment-status-modal max-w-[560px]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="bulk-payment-title"
@@ -159,7 +159,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
           </button>
         </div>
 
-        <div className="mv-modal-form">
+        <div className="mv-modal-form mv-payment-status-form">
           {error && (
             <div
               className="rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs text-danger"
@@ -182,7 +182,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="mv-payment-summary-grid grid grid-cols-2 gap-2">
             <div className="rounded-lg border border-muted bg-surface-muted px-3 py-2">
               <div className="text-[9px] font-semibold uppercase tracking-wide text-subtle">
                 Bills
@@ -223,7 +223,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
             </div>
           )}
 
-          <div className="max-h-56 overflow-y-auto rounded-lg border border-muted">
+          <div className="mv-payment-status-list max-h-56 overflow-y-auto rounded-lg border border-muted">
             {payments.map((payment) => {
               const evidence =
                 mode === 'undo'
