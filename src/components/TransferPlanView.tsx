@@ -751,7 +751,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+        <div className="mv-transfer-card-metrics mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
           <div className="rounded-lg border border-muted bg-surface-muted px-2.5 py-2">
             <div className="text-[9px] font-semibold uppercase tracking-wide text-subtle">
               Current balance
