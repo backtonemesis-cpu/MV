@@ -6356,3 +6356,23 @@ body,
     flex: 0 0 auto;
   }
 }
+
+
+/* Actual iPhone: WebKit date controls have an intrinsic width that can exceed
+   a one-column grid item even when Tailwind's w-full is present. Keep the
+   native date picker but explicitly allow the field and its grid cell to
+   shrink inside the transaction sheet. */
+@media (max-width: 430px) {
+  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mv-layout-phone .mv-transaction-modal input[type="date"].mv-transaction-control {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+}

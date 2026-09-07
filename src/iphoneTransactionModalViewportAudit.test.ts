@@ -46,4 +46,17 @@ describe('Actual iPhone transaction modal viewport safety', () => {
     expect(modal).toContain('date,');
     expect(modal).toContain('await onSave({');
   });
+  it('contains the native iPhone date input within its one-column grid cell', () => {
+    expect(css).toContain(
+      '.mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > *'
+    );
+    expect(css).toContain('min-width: 0');
+    expect(css).toContain(
+      '.mv-layout-phone .mv-transaction-modal input[type="date"].mv-transaction-control'
+    );
+    expect(css).toContain('width: 100% !important');
+    expect(css).toContain('max-width: 100% !important');
+    expect(css).toContain('box-sizing: border-box');
+  });
+
 });
