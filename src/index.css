@@ -5733,6 +5733,26 @@ body,
     padding: 9px 10px calc(72px + env(safe-area-inset-bottom)) !important;
   }
 
+  .mv-layout-phone .mv-workspace .grid.mv-transfer-card-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .mv-layout-phone .mv-transfer-card-metrics > div {
+    min-width: 0;
+    padding: 10px 12px !important;
+  }
+
+  .mv-layout-phone .mv-transfer-card-metrics .text-\[9px\] {
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  .mv-layout-phone .mv-transfer-card-metrics .text-sm {
+    font-size: 16px !important;
+    line-height: 1.25 !important;
+  }
+
   .mv-layout-phone .finance-activity-workspace {
     gap: 10px !important;
   }
