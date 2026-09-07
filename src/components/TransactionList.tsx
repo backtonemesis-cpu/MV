@@ -16,6 +16,7 @@ import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence } from '../utils/currency';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { formatMonthLabel } from '../utils/transferPlan';
+import { formatDateKeyUk } from '../utils/dateInput';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -357,7 +358,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       </div>
 
                       <div className="finance-metadata-line">
-                        <span>{tx.date}</span>
+                        <span>{formatDateKeyUk(tx.date)}</span>
                         <span className="text-subtle" aria-hidden="true">·</span>
                         <span>{categoryName}</span>
                         <span className="text-subtle" aria-hidden="true">·</span>
