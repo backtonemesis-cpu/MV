@@ -72,3 +72,12 @@ Publishing integration commit 6819cfd was blocked by automatic approval review, 
 cited unverified sensitive-code disclosure to the explicitly requested GitHub repository.
 No alternate publishing path was attempted after that rejection. PR #129 still contains
 the isolated foundation commit only. Later local commits remain unpublished.
+
+## Stage 4 checkpoint
+
+Added reclassification.ts/test and CategoryCorrection.tsx. Merge previews all supported
+references, requires an explicit monthly-budget collision policy, retires the source
+and preserves financial fields. Bulk correction can be period-limited, follows linked
+plan/payment evidence across periods and rejects third-category linkage conflicts.
+Both operations are atomic, version-checked and audited, with runtime financial guards.
+Local typecheck, 358 tests in 49 files and build passed. Publishing remains blocked.

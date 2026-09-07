@@ -1,3 +1,4 @@
+import {CategoryCorrection} from './CategoryCorrection';
 import React,{useState} from 'react';
 import type {HouseholdData} from '../types';
 import {executeCategoryCommand,categoryReferences,type CategoryCommand} from '../categories/management';
@@ -55,6 +56,7 @@ export function CategorySettings({household,onChanged}:Props){
     {!group.isProtected&&<><button className={button} onClick={()=>confirm({action:group.isArchived?'restore-group':'archive-group',id:group.id},group.name)}>{group.isArchived?'Restore':'Archive'}</button><button className={button} onClick={()=>confirm({action:'delete-group',id:group.id},group.name)}>Delete empty</button></>}
    </div>
   </div>)}
+  <CategoryCorrection household={household} onChanged={onChanged}/>
   <p className="text-xs text-muted">Used categories can be archived. System classifications are protected.</p>
   {(editor||confirmation)&&<div className="mv-modal-backdrop"><div ref={ref} className="mv-modal-card" role="dialog" aria-modal="true" aria-labelledby="category-dialog-title" tabIndex={-1}>
    <div className="mv-modal-header"><h2 id="category-dialog-title" className="font-semibold text-main">{editor?`${editor.id?'Edit':'Add'} ${editor.kind}`:`Confirm ${confirmation!.command.action.replaceAll('-',' ')}`}</h2><button type="button" className={button} onClick={close} disabled={busy} aria-label="Close category dialog">Close</button></div>
