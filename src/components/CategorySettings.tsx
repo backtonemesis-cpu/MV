@@ -1,3 +1,4 @@
+import {CategoryBudgets} from './CategoryBudgets';
 import {CategoryCorrection} from './CategoryCorrection';
 import React,{useState} from 'react';
 import type {HouseholdData} from '../types';
@@ -56,6 +57,7 @@ export function CategorySettings({household,onChanged}:Props){
     {!group.isProtected&&<><button className={button} onClick={()=>confirm({action:group.isArchived?'restore-group':'archive-group',id:group.id},group.name)}>{group.isArchived?'Restore':'Archive'}</button><button className={button} onClick={()=>confirm({action:'delete-group',id:group.id},group.name)}>Delete empty</button></>}
    </div>
   </div>)}
+  <CategoryBudgets household={household} onChanged={onChanged}/>
   <CategoryCorrection household={household} onChanged={onChanged}/>
   <p className="text-xs text-muted">Used categories can be archived. System classifications are protected.</p>
   {(editor||confirmation)&&<div className="mv-modal-backdrop"><div ref={ref} className="mv-modal-card" role="dialog" aria-modal="true" aria-labelledby="category-dialog-title" tabIndex={-1}>

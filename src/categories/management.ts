@@ -39,7 +39,7 @@ export function assertOrdinaryCategory(category:Category):void {
 
 /** Classification-only snapshot: audit/revision and intended category references excluded. */
 export function financialIdentitySnapshot(state:HouseholdData):string {
-  const {categories,categoryGroups,monthlyCategoryBudgets,auditLogs,version,...financial}=state;
+  const {categories,categoryGroups,monthlyCategoryBudgets,auditLogs,version,schemaStatus,...financial}=state;
   return JSON.stringify({ ...financial,
     transactions:state.transactions.map(({categoryId,splits,...t})=>({ ...t,...(splits?{splits:splits.map(({categoryId,...split})=>split)}:{}) })),
     plannedPayments:state.plannedPayments.map(({categoryId,...p})=>p),

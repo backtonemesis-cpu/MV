@@ -726,7 +726,7 @@ describe('Final post-PR #114 financial safety audit', () => {
     const corrupted = structuredClone(backup);
     const original = corrupted.state.transactions.find(
       (tx: Transaction) => tx.plannedPaymentId === 'rent'
-    );
+    )!;
     corrupted.state.transactions.push({ ...original, id: 'duplicate-backup-payment' });
     expect(() => preflightLocalRestore(corrupted)).toThrow(/duplicated/);
   });

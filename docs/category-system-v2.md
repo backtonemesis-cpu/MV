@@ -81,3 +81,21 @@ and preserves financial fields. Bulk correction can be period-limited, follows l
 plan/payment evidence across periods and rejects third-category linkage conflicts.
 Both operations are atomic, version-checked and audited, with runtime financial guards.
 Local typecheck, 358 tests in 49 files and build passed. Publishing remains blocked.
+
+## Stage 5 checkpoint
+
+Added period-specific category budget editing in Settings and connected Budget reporting
+to exact `monthKey + categoryId` records. Budget writes are optimistic, atomic and exact
+integer pence; one month cannot alter another month. Archived categories retain historical
+budgets, merge conflict handling remains explicit, and spending attribution handles splits,
+refunds, transfers, savings and repayments without input-order dependence.
+
+The local backup boundary now requires a self-identifying V2 envelope whose package and
+state schema versions agree. Preflight validates category/group/budget structure, semantic
+category scope, merged-category references, exact pence, dates, financial flags, reciprocal
+links and canonical balances before any write. Restore retains a complete V2 rollback package
+and restores the previous rollback bytes if the primary storage write fails. Round-trip tests
+prove unchanged financial identity and exact category catalogue/monthly-budget retention.
+
+Full Stage 5 validation is recorded at the implementation gate after typecheck, every test
+and production build pass. No Stage 5 commit has been pushed, merged or deployed.

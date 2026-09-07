@@ -36,6 +36,16 @@ const LOCAL_EVENT = 'mv-local-state-updated';
 const OWNER_EMAIL = 'marius@local.invalid';
 const OWNER_NAME = 'Marius';
 const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
+const LOCAL_BACKUP_FORMAT_VERSION = 2;
+
+interface LocalBackupPackageV2 {
+  app: 'MV';
+  storage: 'local-browser';
+  formatVersion: typeof LOCAL_BACKUP_FORMAT_VERSION;
+  dataSchemaVersion: 2;
+  exportedAt: string;
+  state: HouseholdData;
+}
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -199,26 +209,29 @@ function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
     'transactions',
     'savingsGoals',
     'plannedPayments',
+    'plannedIncomes',
     'auditLogs',
   ] as const) {
     if (!Array.isArray(state[field])) throw new Error(`Saved MV data is missing ${field}.`);
-  }
-  if (state.plannedIncomes !== undefined && !Array.isArray(state.plannedIncomes)) {
-    throw new Error('Saved MV data has invalid planned income.');
   }
   if (!Number.isSafeInteger(state.version) || (state.version ?? 0) < 1) {
     throw new Error('Saved MV data has an invalid version.');
   }
 
   for (const account of state.accounts ?? []) {
-    if (!isSafePence(account.startingBalancePence)) {
-      throw new Error(`Account '${account.name}' has an invalid starting balance.`);
+    for (const [label, amount] of [
+      ['starting balance', account.startingBalancePence],
+      ['current balance', account.currentBalancePence],
+      ['reconciled balance', account.reconciledBalancePence],
+      ['credit limit', account.creditLimitPence],
+      ['balance owed', account.balanceOwedPence],
+    ] as const) {
+      if (amount !== undefined && !isSafePence(amount)) {
+        throw new Error(`Account '${account.name}' has an invalid ${label}.`);
+      }
     }
-    if (
-      account.reconciledBalancePence !== undefined &&
-      !isSafePence(account.reconciledBalancePence)
-    ) {
-      throw new Error(`Account '${account.name}' has an invalid reconciled balance.`);
+    if ((account.creditLimitPence ?? 0) < 0 || (account.balanceOwedPence ?? 0) < 0) {
+      throw new Error(`Account '${account.name}' has an invalid credit value.`);
     }
   }
 
@@ -226,8 +239,31 @@ function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
     if (!isSafePence(tx.amountPence) || tx.amountPence < 0) {
       throw new Error(`Transaction '${tx.description}' has an invalid amount.`);
     }
+    if (!isValidDateKey(tx.date)) throw new Error(`Transaction '${tx.description}' has an invalid date.`);
+    if (!['expense', 'income', 'transfer', 'repayment', 'refund'].includes(tx.type)) {
+      throw new Error(`Transaction '${tx.description}' has an invalid type.`);
+    }
+    if ([tx.isTransfer, tx.isRepayment, tx.isSavings, tx.isRefund].some(flag => typeof flag !== 'boolean')) {
+      throw new Error(`Transaction '${tx.description}' has invalid financial flags.`);
+    }
+    if (
+      tx.isTransfer !== (tx.type === 'transfer') ||
+      tx.isRepayment !== (tx.type === 'repayment') ||
+      tx.isRefund !== (tx.type === 'refund')
+    ) {
+      throw new Error(`Transaction '${tx.description}' has inconsistent financial semantics.`);
+    }
     if (tx.splits?.length) {
-      const splitTotal = tx.splits.reduce((sum, split) => sum + split.amountPence, 0);
+      let splitTotal = 0;
+      for (const split of tx.splits) {
+        if (!isSafePence(split.amountPence) || split.amountPence < 0) {
+          throw new Error(`Transaction '${tx.description}' has an invalid split amount.`);
+        }
+        splitTotal += split.amountPence;
+        if (!isSafePence(splitTotal)) {
+          throw new Error(`Transaction '${tx.description}' split total exceeds safe integer pence.`);
+        }
+      }
       if (splitTotal !== tx.amountPence) {
         throw new Error(`Transaction '${tx.description}' split total does not match its amount.`);
       }
@@ -238,16 +274,34 @@ function assertHouseholdShape(value: unknown): asserts value is HouseholdData {
     if (!isSafePence(payment.amountPence) || payment.amountPence < 0) {
       throw new Error(`Planned payment '${payment.name}' has an invalid amount.`);
     }
+    if (payment.actualAmountPence !== undefined && (!isSafePence(payment.actualAmountPence) || payment.actualAmountPence < 0)) {
+      throw new Error(`Planned payment '${payment.name}' has an invalid actual amount.`);
+    }
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(payment.month)) {
+      throw new Error(`Planned payment '${payment.name}' has an invalid month.`);
+    }
+    for (const value of [payment.dueDate, payment.actualDate]) {
+      if (value !== undefined && !isValidDateKey(value)) throw new Error(`Planned payment '${payment.name}' has an invalid date.`);
+    }
   }
 
   for (const income of state.plannedIncomes ?? []) {
     if (!isSafePence(income.expectedAmountPence) || income.expectedAmountPence < 0) {
       throw new Error(`Planned income '${income.name}' has an invalid amount.`);
     }
+    if (income.actualAmountPence !== undefined && (!isSafePence(income.actualAmountPence) || income.actualAmountPence < 0)) {
+      throw new Error(`Planned income '${income.name}' has an invalid actual amount.`);
+    }
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(income.month)) {
+      throw new Error(`Planned income '${income.name}' has an invalid month.`);
+    }
+    for (const value of [income.expectedDate, income.actualDate, income.receivedDate]) {
+      if (value !== undefined && !isValidDateKey(value)) throw new Error(`Planned income '${income.name}' has an invalid date.`);
+    }
   }
 
   for (const goal of state.savingsGoals ?? []) {
-    if (!isSafePence(goal.targetPence) || !isSafePence(goal.currentPence)) {
+    if (!isSafePence(goal.targetPence) || !isSafePence(goal.currentPence) || goal.targetPence < 0 || goal.currentPence < 0) {
       throw new Error(`Savings goal '${goal.name}' has an invalid amount.`);
     }
   }
@@ -272,10 +326,33 @@ function assertBackupReferentialIntegrity(state: HouseholdData): void {
   assertUniqueIds('Household members', state.members.map((item) => item.id));
 
   const accountIds = new Set(state.accounts.map((item) => item.id));
-  const categoryIds = new Set(state.categories.map((item) => item.id));
   const paymentIds = new Set(state.plannedPayments.map((item) => item.id));
   const incomeIds = new Set((state.plannedIncomes || []).map((item) => item.id));
   const transactionsById = new Map(state.transactions.map((item) => [item.id, item]));
+
+  const categoryFor = (categoryId: string, label: string) => {
+    const category = state.categories.find((item) => item.id === categoryId);
+    if (!category) throw new Error(`${label} references a missing category.`);
+    if (category.supersededById) throw new Error(`${label} references a merged category.`);
+    return category;
+  };
+
+  const assertCategoryScope = (
+    categoryId: string,
+    expectedScope: 'expense' | 'income' | 'system',
+    label: string
+  ) => {
+    const category = categoryFor(categoryId, label);
+    const group = state.categoryGroups.find((item) => item.id === category.groupId);
+    const scope =
+      category.systemRole === 'uncategorised-expense'
+        ? 'expense'
+        : category.systemRole === 'uncategorised-income'
+        ? 'income'
+        : group?.scope;
+    if (scope !== expectedScope) throw new Error(`${label} has an incompatible category scope.`);
+    return category;
+  };
 
   for (const transaction of state.transactions) {
     if (!accountIds.has(transaction.accountId)) {
@@ -288,17 +365,26 @@ function assertBackupReferentialIntegrity(state: HouseholdData): void {
         `Transaction '${transaction.description}' references a missing destination account.`
       );
     }
-    if (!categoryIds.has(transaction.categoryId)) {
-      throw new Error(
-        `Transaction '${transaction.description}' references a missing category.`
-      );
+    const transactionLabel = `Transaction '${transaction.description}'`;
+    const expectedScope =
+      transaction.type === 'income'
+        ? 'income'
+        : transaction.type === 'transfer' || transaction.type === 'repayment'
+        ? 'system'
+        : 'expense';
+    const transactionCategory = assertCategoryScope(
+      transaction.categoryId,
+      expectedScope,
+      transactionLabel
+    );
+    if (
+      expectedScope === 'system' &&
+      transactionCategory.systemRole !== 'internal-transfer'
+    ) {
+      throw new Error(`${transactionLabel} has an incompatible system category.`);
     }
     for (const split of transaction.splits || []) {
-      if (!categoryIds.has(split.categoryId)) {
-        throw new Error(
-          `Transaction '${transaction.description}' has a split referencing a missing category.`
-        );
-      }
+      assertCategoryScope(split.categoryId, expectedScope, `${transactionLabel} split`);
     }
     if (transaction.plannedPaymentId && !paymentIds.has(transaction.plannedPaymentId)) {
       throw new Error(
@@ -316,9 +402,8 @@ function assertBackupReferentialIntegrity(state: HouseholdData): void {
     if (!accountIds.has(payment.accountId)) {
       throw new Error(`Planned payment '${payment.name}' references a missing account.`);
     }
-    if (payment.categoryId && !categoryIds.has(payment.categoryId)) {
-      throw new Error(`Planned payment '${payment.name}' references a missing category.`);
-    }
+    if (!payment.categoryId) throw new Error(`Planned payment '${payment.name}' requires a category.`);
+    assertCategoryScope(payment.categoryId, 'expense', `Planned payment '${payment.name}'`);
 
     const references = state.transactions.filter(
       (transaction) => transaction.plannedPaymentId === payment.id
@@ -347,9 +432,8 @@ function assertBackupReferentialIntegrity(state: HouseholdData): void {
     if (!accountIds.has(income.accountId)) {
       throw new Error(`Planned income '${income.name}' references a missing account.`);
     }
-    if (income.categoryId && !categoryIds.has(income.categoryId)) {
-      throw new Error(`Planned income '${income.name}' references a missing category.`);
-    }
+    if (!income.categoryId) throw new Error(`Planned income '${income.name}' requires a category.`);
+    assertCategoryScope(income.categoryId, 'income', `Planned income '${income.name}'`);
     const linkedId = income.actualTransactionId || income.linkedTransactionId;
     if (linkedId) {
       const transaction = transactionsById.get(linkedId);
@@ -3702,27 +3786,52 @@ export function saveLocalPreferences(preferences: UserPreferences): UserPreferen
   return normalized;
 }
 
-export function createLocalBackupPackage(): any {
+function createBackupPackage(state: HouseholdData): LocalBackupPackageV2 {
   return {
     app: 'MV',
     storage: 'local-browser',
-    formatVersion: 2,
+    formatVersion: LOCAL_BACKUP_FORMAT_VERSION,
+    dataSchemaVersion: 2,
     exportedAt: nowIso(),
-    state: loadLocalHousehold(),
+    state: clone(state),
   };
 }
 
-function extractBackupState(payload: any): HouseholdData {
-  if (payload?.state && payload.formatVersion !== 2) throw new Error('Incompatible backup format. Expected V2.');
-  const candidate = payload?.state ?? payload;
+export function createLocalBackupPackage(): LocalBackupPackageV2 {
+  return createBackupPackage(loadLocalHousehold());
+}
+
+function extractBackupState(payload: unknown): HouseholdData {
   const text = JSON.stringify(payload);
   if (new TextEncoder().encode(text).length > MAX_BACKUP_BYTES) {
     throw new Error('Backup is larger than 5 MB.');
   }
-  if (payload?.app && payload.app !== 'MV') throw new Error('This backup belongs to a different app.');
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Backup package is not a valid object.');
+  }
+  const backup = payload as Partial<LocalBackupPackageV2>;
+  if (backup.app !== 'MV') throw new Error('This backup does not identify MV as its app.');
+  if (backup.storage !== 'local-browser') throw new Error('This backup is not for local-browser storage.');
+  if (backup.formatVersion !== LOCAL_BACKUP_FORMAT_VERSION) {
+    throw new Error('Incompatible backup format. Expected V2.');
+  }
+  if (backup.dataSchemaVersion !== 2) {
+    throw new Error('Incompatible backup package schema. Expected data schema V2.');
+  }
+  if (typeof backup.exportedAt !== 'string' || Number.isNaN(Date.parse(backup.exportedAt))) {
+    throw new Error('Backup has an invalid export timestamp.');
+  }
+  if (!backup.state || backup.state.dataSchemaVersion !== backup.dataSchemaVersion) {
+    throw new Error('Backup package and state schema versions do not match.');
+  }
+  const candidate = backup.state;
   assertHouseholdShape(candidate);
   assertBackupReferentialIntegrity(candidate);
-  return normalizeHousehold(candidate);
+  const normalized = normalizeHousehold(candidate);
+  if (JSON.stringify(normalized) !== JSON.stringify(candidate)) {
+    throw new Error('Backup contains non-canonical state that would change during restore.');
+  }
+  return normalized;
 }
 
 export function preflightLocalRestore(payload: any): {
@@ -3736,7 +3845,9 @@ export function preflightLocalRestore(payload: any): {
     valid: true,
     counts: {
       accounts: state.accounts.length,
+      categoryGroups: state.categoryGroups.length,
       categories: state.categories.length,
+      monthlyCategoryBudgets: state.monthlyCategoryBudgets.length,
       transactions: state.transactions.length,
       savingsGoals: state.savingsGoals.length,
       plannedPayments: state.plannedPayments.length,
@@ -3745,8 +3856,10 @@ export function preflightLocalRestore(payload: any): {
     },
     checks: [
       'Recognised MV backup',
+      'Backup envelope and data schema V2 match',
       'Exact integer-pence fields validated',
       'Transaction split totals validated',
+      'Category scopes, references and monthly budgets validated',
       'Marius-only local owner identity enforced',
     ],
     summary: 'Backup is structurally valid for local MV restore.',
@@ -3759,7 +3872,6 @@ export function restoreLocalBackup(payload: any, expectedVersion: number): { ver
   const restored = extractBackupState(payload);
   const storage = getStorage();
   if (!storage) throw new Error('Browser storage is unavailable.');
-  storage.setItem(ROLLBACK_KEY, JSON.stringify(current));
   restored.version = current.version + 1;
   // An explicit restore is authoritative. Mark the retired legacy source seed
   // as handled so no future compatibility path can overwrite the restored backup.
@@ -3770,7 +3882,23 @@ export function restoreLocalBackup(payload: any, expectedVersion: number): { ver
     entityId: 'household-mv-local',
     summary: 'Local MV backup restored',
   });
-  saveLocalHousehold(restored);
+  assertHouseholdShape(restored);
+  assertBackupReferentialIntegrity(restored);
+
+  const previousRollback = storage.getItem(ROLLBACK_KEY);
+  const rollbackPackage = createBackupPackage(current);
+  try {
+    storage.setItem(ROLLBACK_KEY, JSON.stringify(rollbackPackage));
+    saveLocalHousehold(restored);
+  } catch (error) {
+    try {
+      if (previousRollback === null) storage.removeItem(ROLLBACK_KEY);
+      else storage.setItem(ROLLBACK_KEY, previousRollback);
+    } catch {
+      // The active state is still unchanged. Preserve the original write error.
+    }
+    throw error;
+  }
   return { version: restored.version };
 }
 
@@ -3819,4 +3947,6 @@ export const LOCAL_OWNER = {
 };
 
 export const LOCAL_STORAGE_KEY = STORAGE_KEY;
+export const LOCAL_ROLLBACK_STORAGE_KEY = ROLLBACK_KEY;
+export const LOCAL_BACKUP_VERSION = LOCAL_BACKUP_FORMAT_VERSION;
 export const SOURCE_IMPORT_BACKUP_STORAGE_KEY = SOURCE_IMPORT_BACKUP_KEY;

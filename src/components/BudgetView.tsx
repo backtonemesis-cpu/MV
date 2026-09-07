@@ -1,3 +1,4 @@
+import {categoryBudgetSpending} from '../categories/budgets';
 import type { CategoryGroup, MonthlyCategoryBudget } from '../types';
 import React, { useMemo, useState } from 'react';
 import {
@@ -72,31 +73,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
 
   // Calculate spending per category (accounting for splits and refunds)
   const categorySpendMap = useMemo(() => {
-    const map = new Map<string, number>();
-
-    monthTransactions.forEach((tx) => {
-      // Non-spending transfers, repayments, and savings don't count toward living budget
-      if (tx.isTransfer || tx.isRepayment || tx.isSavings) return;
-
-      if (tx.type === 'expense') {
-        if (tx.splits && tx.splits.length > 0) {
-          // Attribute by split category
-          tx.splits.forEach((split) => {
-            const current = map.get(split.categoryId) || 0;
-            map.set(split.categoryId, current + split.amountPence);
-          });
-        } else {
-          const current = map.get(tx.categoryId) || 0;
-          map.set(tx.categoryId, current + tx.amountPence);
-        }
-      } else if (tx.type === 'refund' || tx.isRefund) {
-        // Refunds restore available budget in that category
-        const current = map.get(tx.categoryId) || 0;
-        map.set(tx.categoryId, Math.max(0, current - tx.amountPence));
-      }
-    });
-
-    return map;
+    return categoryBudgetSpending(monthTransactions);
   }, [monthTransactions]);
 
   // Group categories excluding Income

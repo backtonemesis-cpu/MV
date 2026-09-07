@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createBlankLocalHousehold, saveLocalHousehold, loadLocalHousehold, LOCAL_STORAGE_KEY,
   createLocalPlannedPayment, createLocalPlannedIncome, createLocalTransaction, markLocalPaymentPaid,
-  markLocalPaymentsPaid, markLocalIncomeReceived, updateLocalTransaction, preflightLocalRestore } from '../localStore';
+  markLocalPaymentsPaid, markLocalIncomeReceived, updateLocalTransaction, preflightLocalRestore,
+  createLocalBackupPackage } from '../localStore';
 
 let values: Map<string,string>;
 beforeEach(() => {
@@ -65,7 +66,8 @@ describe('category authoritative write boundary', () => {
     expect(()=>updateLocalTransaction(state.transactions[0].id,{ splits:[{ id:'split',categoryId:'cat-salary-wages',amountPence:1234 }] },state.version)).toThrow();
   });
   it('rejects V1 and future backup schemas without fallback', () => {
-    const state=loadLocalHousehold();
-    for(const dataSchemaVersion of [undefined,1,3,99]) expect(()=>preflightLocalRestore({ ...state,dataSchemaVersion })).toThrow(/schema/);
+    const backup=createLocalBackupPackage();
+    for(const dataSchemaVersion of [undefined,1,3,99]) expect(()=>preflightLocalRestore({ ...backup,dataSchemaVersion })).toThrow(/schema/);
+    for(const dataSchemaVersion of [undefined,1,3,99]) expect(()=>preflightLocalRestore({ ...backup,state:{...backup.state,dataSchemaVersion} })).toThrow(/schema/);
   });
 });
