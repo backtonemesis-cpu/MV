@@ -3,7 +3,7 @@ import { AlertCircle, CheckCircle2, RotateCcw, X } from 'lucide-react';
 import type { Account, Category, PlannedPayment, Transaction } from '../types';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { formatPence } from '../utils/currency';
-import { localDateInputValue } from '../utils/dateInput';
+import { formatDateKeyUk, localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface BulkPaymentStatusModalProps {
@@ -266,7 +266,7 @@ export const BulkPaymentStatusModal: React.FC<BulkPaymentStatusModalProps> = ({
                     )}
                     {mode === 'undo' && evidence && (
                       <div className="mt-0.5 text-[10px] text-subtle">
-                        Paid {evidence.date}
+                        Paid {formatDateKeyUk(evidence.date)}
                       </div>
                     )}
                   </div>

@@ -96,7 +96,7 @@ describe('Transfer Plan bulk payment UI audit contract', () => {
     expect(modalSource).toContain('references.length === 1');
     expect(modalSource).toContain("mode === 'undo' ? evidence?.accountId : payment.accountId");
     expect(modalSource).toContain('evidence?.amountPence');
-    expect(modalSource).toContain('Paid {evidence.date}');
+    expect(modalSource).toContain('Paid {formatDateKeyUk(evidence.date)}');
     expect(modalSource).toContain('hasUnsafeUndoEvidence');
     expect(modalSource).toContain('Undo is blocked because exact reciprocal Activity evidence cannot');
   });
