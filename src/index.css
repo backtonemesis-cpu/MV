@@ -6298,3 +6298,23 @@ body,
     max-width: 100% !important;
   }
 }
+
+
+/* Actual iPhone financial modal safety override.
+   When a payment-status confirmation is open, remove the fixed bottom
+   navigation from the visual stacking context entirely so destructive
+   confirmation actions cannot be obscured by it. */
+@media (max-width: 430px) {
+  .mv-layout-phone:has(.mv-payment-status-modal) .mv-nav-mobile {
+    display: none !important;
+  }
+
+  .mv-layout-phone:has(.mv-payment-status-modal) .mv-modal-backdrop,
+  .mv-layout-phone:has(.mv-payment-status-modal) .fixed.inset-0.z-50 {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .mv-layout-phone:has(.mv-payment-status-modal) .mv-payment-status-modal {
+    max-height: calc(100% - 16px - env(safe-area-inset-bottom)) !important;
+  }
+}
