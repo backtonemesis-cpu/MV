@@ -1,4 +1,5 @@
 import type { Category, TransactionType } from '../types';
+import { RETIRED_LEGACY_CATEGORY_IDS } from './legacyCategoryMigration';
 
 const EXCLUDED_BILL_CATEGORY_GROUPS = new Set(['income', 'transfers', 'savings']);
 
@@ -6,8 +7,15 @@ function normalizedGroup(category: Category): string {
   return category.group.trim().toLowerCase();
 }
 
+function isRetiredLegacyCategory(category: Category): boolean {
+  return RETIRED_LEGACY_CATEGORY_IDS.has(category.id);
+}
+
 export function isBillEligibleCategory(category: Category): boolean {
-  return !EXCLUDED_BILL_CATEGORY_GROUPS.has(normalizedGroup(category));
+  return (
+    !isRetiredLegacyCategory(category) &&
+    !EXCLUDED_BILL_CATEGORY_GROUPS.has(normalizedGroup(category))
+  );
 }
 
 export function getBillCategoryOptions(
@@ -35,6 +43,7 @@ export function isTransactionCategoryEligible(
   category: Category,
   type: TransactionType | ''
 ): boolean {
+  if (isRetiredLegacyCategory(category)) return false;
   if (!type) return true;
   const group = normalizedGroup(category);
   if (type === 'income') return group === 'income';
