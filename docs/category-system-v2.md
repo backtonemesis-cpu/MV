@@ -58,3 +58,17 @@ source-link UI remain separate follow-ups. Payees, tags, automation and investme
 remain out of scope. The Transfer Plan visual redesign remains frozen.
 
 Category-phase completion does not imply global-audit completion.
+
+## Stage 3 checkpoint
+
+Added src/categories/management.ts, management.test.ts and CategorySettings.tsx;
+SettingsView/App wire the management panel to current household data. Commands are
+optimistically versioned and atomic, audit each mutation, reject protected categories,
+reserve archived names and count all current references before hard delete. A runtime
+financial-identity assertion prevents classification operations changing money fields.
+Local typecheck, 354 tests in 48 files and build passed. Visual verification is pending.
+
+Publishing integration commit 6819cfd was blocked by automatic approval review, which
+cited unverified sensitive-code disclosure to the explicitly requested GitHub repository.
+No alternate publishing path was attempted after that rejection. PR #129 still contains
+the isolated foundation commit only. Later local commits remain unpublished.

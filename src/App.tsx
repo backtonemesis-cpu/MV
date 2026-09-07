@@ -1025,6 +1025,8 @@ export default function App() {
 
             {activeTab === 'settings' && (
               <SettingsView
+                household={household}
+                onCategoriesChanged={loadData}
                 currentSession={session}
                 members={household.members}
                 auditLogs={household.auditLogs}
