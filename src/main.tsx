@@ -8,6 +8,11 @@ import './accessibilityContrast.css';
 import './accentContrast.css';
 import './activityFilterRegression.css';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
+import { migrateLegacyCategoriesInBrowserStorage } from './utils/legacyCategoryMigration';
+
+// Repair only deterministic legacy source-category relationships before the
+// household is loaded. The migration makes an exact local rollback copy first.
+migrateLegacyCategoriesInBrowserStorage();
 
 // Apply the saved token set before React paints to prevent theme flash.
 applyThemePreferences(readStoredUserPreferences());
