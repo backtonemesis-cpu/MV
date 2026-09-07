@@ -20,12 +20,30 @@ describe('Actual iPhone transaction date visual frame regression', () => {
     expect(css).toContain('max-width: 100% !important');
   });
 
-  it('draws an MV-owned right edge instead of relying on Safari input paint', () => {
+  it('draws one MV-owned field frame instead of relying on Safari input paint', () => {
     expect(css).toContain('::after');
     expect(css).toContain('right: 0');
     expect(css).toContain('left: 0');
     expect(css).toContain('border: 1px solid var(--border)');
     expect(css).toContain('border-radius: 6px');
+    expect(css).toContain('border: 0 !important');
+    expect(css).toContain('background: transparent !important');
+  });
+
+  it('centres the native date value inside the 40px MV frame', () => {
+    expect(css).toContain('height: 40px !important');
+    expect(css).toContain('line-height: 40px !important');
+    expect(css).toContain('::-webkit-date-and-time-value');
+    expect(css).toContain('min-height: 40px');
+    expect(css).toContain('text-align: left');
+  });
+
+  it('keeps the full date field tappable while hiding native chrome', () => {
+    expect(css).toContain('-webkit-appearance: none');
+    expect(css).toContain('appearance: none');
+    expect(css).toContain('::-webkit-calendar-picker-indicator');
+    expect(css).toContain('inset: 0');
+    expect(css).toContain('opacity: 0');
   });
 
   it('preserves native date input semantics and only changes presentation', () => {
