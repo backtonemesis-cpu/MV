@@ -1,14 +1,18 @@
-/* Unified Add presentation: semantic theme tokens only. */
+/* Unified Add presentation. All visual values come from the shared appearance
+   tokens so theme/accent/radius settings continue to apply consistently. */
+
 .mv-transaction-type-tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
 }
 
 .mv-transaction-type-tab {
   display: inline-flex;
+  box-sizing: border-box;
   min-width: 0;
   min-height: 40px;
   align-items: center;
@@ -23,6 +27,7 @@
   font-size: 0.875rem;
   font-weight: 650;
   line-height: 1.25rem;
+  text-align: center;
   white-space: nowrap;
   cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
@@ -47,18 +52,23 @@
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-/* The helper sentence adds no information once the Paid by / Received by
-   controls are visible. Keep the actual buttons and aria group unchanged. */
+/* The Paid by / Received by buttons already explain the choice. Do not add a
+   second helper sentence below them. */
 .mv-transaction-body [role="group"][aria-labelledby="transaction-person-label"] + .text-subtle {
   display: none !important;
 }
 
-/* Unified + Add starts as a choice launcher, not as an implicit Expense form.
-   The Bill button only exists in the unified launcher, so this rule cannot
-   affect ordinary Transaction create/edit flows. Until one of the five real
-   Transaction types is pressed, keep only the six-choice panel visible and
-   suppress the transaction submit action. display:none also removes the
-   inactive fields from keyboard/accessibility navigation. */
+/* No instructional text is shown inside empty entry/selection boxes in the
+   unified + Add flow. Visible labels remain outside the fields and accessible
+   names remain intact. The runtime bridge also removes placeholder attributes
+   and clears empty native option labels so Safari cannot repaint them. */
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) :is(input, textarea)::placeholder,
+.mv-add-bill-modal[data-unified-add="true"] :is(input, textarea)::placeholder {
+  color: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Unified + Add starts as a choice launcher, not an implicit Expense form. */
 .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab[aria-pressed="true"]))
   .mv-transaction-body > div:has(.mv-transaction-type-tabs) ~ * {
   display: none !important;
@@ -69,25 +79,41 @@
   display: none !important;
 }
 
-/* Bill remains PlannedPayment under the hood, but the unified launcher must
-   use one visual shell. This makes the transaction and Bill shells use the
-   same width/height contract without changing either save path. */
-.mv-add-bill-modal[data-unified-add="true"] {
-  width: min(100%, 520px) !important;
+/* One visual shell for all six creation choices. Bill remains PlannedPayment
+   underneath; this selector only normalises presentation geometry. */
+:is(
+  .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
+  .mv-add-bill-modal[data-unified-add="true"]
+) {
+  box-sizing: border-box;
+  width: min(calc(100vw - 24px), 520px) !important;
   max-width: 520px !important;
-  min-height: min(88vh, 760px);
-  height: min(88vh, 760px);
-  max-height: min(88vh, 760px);
+  min-height: min(88dvh, 760px) !important;
+  height: min(88dvh, 760px) !important;
+  max-height: min(88dvh, 760px) !important;
+  border-radius: var(--card-radius, 12px) !important;
+  overflow: hidden !important;
 }
 
+:is(
+  .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
+  .mv-add-bill-modal[data-unified-add="true"]
+) .mv-modal-header {
+  flex: 0 0 auto;
+}
+
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-transaction-body,
 .mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-scroll {
+  box-sizing: border-box;
+  width: 100%;
   min-width: 0;
+  max-width: 100%;
   overflow-x: clip;
 }
 
-/* Unified Bill fields use the same semantic input surface as Transaction.
-   Date is excluded because its native Safari paint is intentionally drawn by
-   the existing wrapper frame in mobileUx.css. */
+/* Entry and selection fields share the same themed surface across Expense,
+   Income, Transfer, Refund, Repayment and Bill. */
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-transaction-control,
 .mv-add-bill-modal[data-unified-add="true"] :is(
   input:not([type="checkbox"]):not([type="radio"]):not([type="date"]),
   select,
@@ -96,13 +122,27 @@
   .mv-month-picker,
   .mv-month-picker-input
 ) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
   border-color: var(--border) !important;
+  border-radius: var(--card-radius, 6px) !important;
   background: var(--field) !important;
   color: var(--text) !important;
 }
 
-/* Keep the Bill footer visually identical to the Transaction footer while
-   retaining the PlannedPayment submit handler and button semantics. */
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-transaction-control:focus,
+.mv-add-bill-modal[data-unified-add="true"] :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea
+):focus {
+  border-color: var(--primary) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-light) !important;
+}
+
+/* Keep Bill action treatment visually aligned with the Transaction footer. */
 .mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {
   display: grid !important;
   grid-template-columns: 1fr 1fr;
@@ -111,7 +151,8 @@
   background: var(--surface) !important;
 }
 
-.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button {
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button,
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > button {
   min-height: 44px;
   border-radius: var(--card-radius, 8px) !important;
   font-size: 0.875rem !important;
@@ -131,19 +172,17 @@
 }
 
 @media (max-width: 430px) {
-  /* One stable iPhone shell size for Expense / Income / Transfer / Refund /
-     Repayment / Bill. Only the scrollable form body changes. */
+  /* The same iPhone sheet footprint is used before selection and for every
+     selected creation type. Only the scrollable body changes. */
   .mv-layout-phone :is(
-    .mv-transaction-modal,
+    .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
     .mv-add-bill-modal[data-unified-add="true"]
   ) {
-    box-sizing: border-box;
-    width: 100% !important;
-    max-width: 100% !important;
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
     min-height: 92dvh !important;
     height: 92dvh !important;
     max-height: 92dvh !important;
-    overflow: hidden !important;
   }
 
   .mv-layout-phone .mv-transaction-type-tabs {
@@ -154,14 +193,13 @@
 
   .mv-layout-phone .mv-transaction-type-tab {
     min-height: 44px;
-    padding-inline: 6px;
+    padding-inline: 4px;
     font-size: 0.8125rem;
     line-height: 1rem;
   }
 
-  /* The visible date surface is drawn by the wrapper pseudo-element. Put the
-     native date control above that surface so Safari can paint the date value
-     instead of the field appearing blank. */
+  /* Safari date control: keep the native picker, use the same field surface,
+     and vertically centre the displayed value. */
   .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after {
     background: var(--field) !important;
   }
@@ -169,9 +207,11 @@
   .mv-layout-phone .mv-transaction-modal #transaction-date {
     position: relative;
     z-index: 3;
+    box-sizing: border-box !important;
     height: 40px !important;
     min-height: 40px !important;
     max-height: 40px !important;
+    padding-block: 0 !important;
     line-height: 40px !important;
   }
 
@@ -179,6 +219,7 @@
     height: 40px !important;
     min-height: 40px !important;
     max-height: 40px !important;
+    padding-block: 0 !important;
     line-height: 40px !important;
   }
 
