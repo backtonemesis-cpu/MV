@@ -90,18 +90,15 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
   return (
     <div className="mv-modal-backdrop">
-      <div ref={dialogRef} className={`mv-modal-card mv-add-bill-modal ${isUnifiedAdd ? 'mv-unified-add-modal' : ''}`} role="dialog" aria-modal="true" aria-labelledby="planned-payment-title" tabIndex={-1}>
+      <div ref={dialogRef} className="mv-modal-card mv-add-bill-modal" data-unified-add={isUnifiedAdd ? 'true' : undefined} role="dialog" aria-modal="true" aria-labelledby="planned-payment-title" tabIndex={-1}>
         <div className="mv-modal-header">
-          <h3 id="planned-payment-title" className="text-base font-semibold text-main">
-            {isEditing ? 'Edit Bill' : isUnifiedAdd ? 'New Transaction' : 'Add Bill'}
-          </h3>
+          <h3 id="planned-payment-title" className="text-base font-semibold text-main">{isEditing ? 'Edit Bill' : isUnifiedAdd ? 'New Transaction' : 'Add Bill'}</h3>
           <button type="button" onClick={closeModal} className="mv-modal-close" aria-label="Close bill dialog"><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="mv-modal-form mv-add-bill-form">
           <div className="mv-add-bill-scroll">
             {error && <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs" role="alert"><AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" /><span>{error}</span></div>}
-
             {isUnifiedAdd && (
               <div>
                 <div id="planned-payment-type-label" className="block text-xs font-semibold text-muted mb-1.5">What would you like to add?</div>
@@ -115,27 +112,29 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             )}
 
             <div><label htmlFor="planned-payment-name" className="block text-xs font-medium text-muted mb-1">Name *</label><input ref={nameInputRef} id="planned-payment-name" type="text" placeholder="Bill name" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-3 py-2 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none" required /></div>
-
             <div className="mv-modal-grid-2">
               <div><label htmlFor="planned-payment-amount" className="block text-xs font-medium text-muted mb-1">Amount (£) *</label><MoneyInput id="planned-payment-amount" type="text" inputMode="decimal" placeholder="0.00" value={amountStr} onChange={(e) => setAmountStr(e.target.value)} className="w-full text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none" aria-label="Bill amount in pounds sterling" required /></div>
               <div><label htmlFor="planned-payment-month" className="block text-xs font-medium text-muted mb-1">Month *</label><MonthPicker id="planned-payment-month" value={month} onChange={setMonth} ariaLabel="Billing month" className="is-fluid" /></div>
             </div>
 
             <div className="mv-modal-grid-2">
-              <div><label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">Payment Account *</label><select id="planned-payment-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none" required><option value="">Select payment account</option>{paymentAccountOptions.map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}</select></div>
+              <div><label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">Payment Account *</label><select id="planned-payment-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none" required><option value="">Select payment account</option>{paymentAccountOptions.map((acc) => (
+                <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>
+              ))}</select></div>
               <div><label htmlFor="planned-payment-person" className="block text-xs font-medium text-muted mb-1">Responsible Person *</label><select id="planned-payment-person" value={responsiblePerson} onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none" required><option value="">Select person</option>{personOptions.map((person) => <option key={person} value={person}>{person}</option>)}</select></div>
             </div>
 
             <div className="mv-modal-grid-2">
               <div><label htmlFor="planned-payment-due-date" className="block text-xs font-medium text-muted mb-1">Due Date</label><input id="planned-payment-due-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none" /></div>
-              <div><label htmlFor="planned-payment-category" className="block text-xs font-medium text-muted mb-1">Category</label><select id="planned-payment-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"><option value="">Select category</option>{billCategoryOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+              <div><label htmlFor="planned-payment-category" className="block text-xs font-medium text-muted mb-1">Category</label><select id="planned-payment-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"><option value="">Select category</option>{billCategoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}</select></div>
             </div>
 
             <div className="mv-modal-section space-y-2">
               <div className="flex items-center justify-between"><label htmlFor="modal-include-plan-toggle" className="text-xs font-medium text-main cursor-pointer">Include in Transfer Plan</label><input type="checkbox" id="modal-include-plan-toggle" checked={includeInTransferPlan} onChange={(e) => setIncludeInTransferPlan(e.target.checked)} className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer" /></div>
               <div className="flex items-center justify-between pt-2 border-t border-muted"><label htmlFor="modal-recurring-toggle" className="text-xs font-medium text-main cursor-pointer">Recurring Monthly</label><input type="checkbox" id="modal-recurring-toggle" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer" /></div>
             </div>
-
             <div><label htmlFor="planned-payment-notes" className="block text-xs font-medium text-muted mb-1">Notes</label><textarea id="planned-payment-notes" rows={2} placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none" /></div>
           </div>
 
