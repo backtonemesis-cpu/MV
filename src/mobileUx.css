@@ -35,6 +35,33 @@
     max-width: 100% !important;
   }
 
+  /* Step 44 iPhone transaction containment: the transaction form is a vertical
+     scroll surface only. Keep every structural layer and ordinary child inside
+     the real modal content width so Safari has no wider inline scroll range to
+     preserve after a horizontal gesture. overflow-x: clip is the final axis
+     invariant, not a substitute for the width constraints below. */
+  .mv-layout-phone .mv-transaction-modal,
+  .mv-layout-phone .mv-transaction-modal > form,
+  .mv-layout-phone .mv-transaction-body {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mv-layout-phone .mv-transaction-body {
+    overflow-x: clip;
+    overscroll-behavior-inline: none;
+  }
+
+  .mv-layout-phone .mv-transaction-body > *,
+  .mv-layout-phone .mv-transaction-body .mv-modal-grid-2,
+  .mv-layout-phone .mv-transaction-body .mv-modal-grid-2 > * {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   /* Step 44 iPhone containment: keep Safari's native Category select activation
      while fitting the control inside its real container. Reserve only the space
      needed for the native disclosure indicator; never extend the field beyond
