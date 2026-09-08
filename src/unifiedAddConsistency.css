@@ -1,83 +1,20 @@
 /* Unified Add presentation: semantic theme tokens only. */
-.mv-transaction-type-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  width: 100%;
-  min-width: 0;
+.mv-transaction-type-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; min-width:0; }
+.mv-transaction-type-tab { min-width:0; min-height:40px; border:1px solid var(--border-strong)!important; border-radius:var(--card-radius,6px)!important; background:var(--field)!important; color:var(--text-muted)!important; box-shadow:0 1px 2px var(--shadow); font-weight:650; cursor:pointer; transition:border-color 120ms ease,background-color 120ms ease,color 120ms ease,box-shadow 120ms ease; }
+.mv-transaction-type-tab:hover { border-color:var(--primary)!important; background:var(--surface-hover)!important; color:var(--text)!important; }
+.mv-transaction-type-tab:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
+.mv-transaction-type-tab.is-active,.mv-transaction-type-tab[aria-pressed="true"] { border-color:var(--primary)!important; background:var(--primary-light)!important; color:var(--primary-light-text)!important; box-shadow:0 0 0 1px var(--primary); }
+.mv-transaction-body [role="group"][aria-labelledby="transaction-person-label"] + .text-subtle { display:none!important; }
+
+@media (max-width:430px) {
+  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after { background:var(--field)!important; }
+  .mv-layout-phone .mv-transaction-modal #transaction-date,.mv-layout-phone .mv-transaction-modal #transaction-date::-webkit-date-and-time-value { height:40px!important; min-height:40px!important; max-height:40px!important; line-height:40px!important; }
 }
 
-.mv-transaction-type-tab {
-  min-width: 0;
-  min-height: 40px;
-  border: 1px solid var(--border-strong) !important;
-  border-radius: var(--card-radius, 6px) !important;
-  background: var(--field) !important;
-  color: var(--text-muted) !important;
-  box-shadow: 0 1px 2px var(--shadow);
-  font-weight: 650;
-  cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
-}
+.mv-add-bill-modal[data-unified-add="true"] { width:min(100%,540px)!important; }
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-scroll { min-width:0; overflow-x:clip; }
 
-.mv-transaction-type-tab:hover {
-  border-color: var(--primary) !important;
-  background: var(--surface-hover) !important;
-  color: var(--text) !important;
-}
-
-.mv-transaction-type-tab:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-.mv-transaction-type-tab.is-active,
-.mv-transaction-type-tab[aria-pressed="true"] {
-  border-color: var(--primary) !important;
-  background: var(--primary-light) !important;
-  color: var(--primary-light-text) !important;
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-/* The redundant payer/recipient instruction is hidden; the labelled button group remains unchanged. */
-.mv-transaction-body [role="group"][aria-labelledby="transaction-person-label"] + .text-subtle {
-  display: none !important;
-}
-
-/* Match the iPhone transaction date frame to the same themed field surface as other controls. */
-@media (max-width: 430px) {
-  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after {
-    background: var(--field) !important;
-  }
-
-  .mv-layout-phone .mv-transaction-modal #transaction-date,
-  .mv-layout-phone .mv-transaction-modal #transaction-date::-webkit-date-and-time-value {
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
-    line-height: 40px !important;
-  }
-}
-
-/* Unified Bill uses the same modal shell dimensions/rhythm as Transaction without changing bill semantics. */
-.mv-unified-add-modal {
-  width: min(100%, 540px) !important;
-}
-
-.mv-unified-add-modal .mv-add-bill-scroll {
-  min-width: 0;
-  overflow-x: clip;
-}
-
-@media (max-width: 430px) {
-  .mv-layout-phone .mv-transaction-type-tabs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .mv-layout-phone .mv-transaction-type-tab {
-    min-height: 44px;
-    padding-inline: 6px;
-  }
+@media (max-width:430px) {
+  .mv-layout-phone .mv-transaction-type-tabs { grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; max-width:100%; }
+  .mv-layout-phone .mv-transaction-type-tab { min-height:44px; padding-inline:6px; }
 }
