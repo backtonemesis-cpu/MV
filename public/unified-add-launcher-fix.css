@@ -1,0 +1,15 @@
+/* Unified Add launcher: when Home + Add opens with no creation type selected,
+   keep the launcher genuinely unselected. The form body and transaction submit
+   action remain hidden until an ordinary Transaction type is deliberately
+   selected. Bill remains navigation-only and is identified by its existing
+   launcher button; no financial or persistence semantics are changed here. */
+
+.mv-transaction-modal form:has(.mv-transaction-type-tabs button[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab.is-active))
+  .mv-transaction-body > *:not(:has(.mv-transaction-type-tabs)) {
+  display: none;
+}
+
+.mv-transaction-modal form:has(.mv-transaction-type-tabs button[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab.is-active))
+  .mv-modal-fixed-actions button[type="submit"] {
+  display: none;
+}
