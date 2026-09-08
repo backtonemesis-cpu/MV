@@ -63,7 +63,7 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(modal).toContain('(!isRepayment || a.type === \'credit\')');
   });
 
-  it('gives Account and Category equivalent Phone outer-width treatment without changing unrelated selects', () => {
+  it('gives Account and Category equivalent contained Phone outer-width treatment without changing unrelated selects', () => {
     const css = read('mobileUx.css');
 
     expect(css).toContain('.mv-layout-phone #transaction-category.mv-transaction-control');
@@ -73,12 +73,26 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     const accountRule = css.match(/\.mv-layout-phone #transaction-account\.mv-transaction-control \{([\s\S]*?)\n  \}/)?.[1] ?? '';
 
     for (const rule of [categoryRule, accountRule]) {
-      expect(rule).toContain('width: calc(100% + 12px) !important;');
-      expect(rule).toContain('max-width: calc(100% + 12px) !important;');
-      expect(rule).toContain('margin-inline-end: -12px;');
+      expect(rule).toContain('width: 100% !important;');
+      expect(rule).toContain('max-width: 100% !important;');
+      expect(rule).toContain('margin-inline: 0 !important;');
+      expect(rule).not.toContain('calc(100% +');
+      expect(rule).not.toContain('margin-inline-end: -');
     }
 
     expect(css).not.toContain('.mv-layout-phone select.mv-transaction-control {');
+  });
+
+  it('preserves long Category content intact while the native picker remains available', () => {
+    const modal = read('components/TransactionModal.tsx');
+    const css = read('mobileUx.css');
+
+    expect(modal).toContain('id="transaction-category"');
+    expect(modal).toContain('value={categoryId}');
+    expect(modal).toContain('onChange={(e) => setCategoryId(e.target.value)}');
+    expect(css).toContain('-webkit-appearance: menulist;');
+    expect(css).toContain('padding-inline: 16px 36px !important;');
+    expect('Child Maintenance Received').toBe('Child Maintenance Received');
   });
 
   it('presents one coherent selected Account field instead of a clipped native label plus duplicate identity block', () => {
@@ -89,6 +103,8 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(css).toContain('.mv-layout-phone .mv-selected-account-summary {\n    display: contents;');
     expect(css).toContain('.mv-layout-phone .mv-selected-account-identity');
     expect(css).toContain('pointer-events: none;');
+    expect(css).toContain('width: 100%;');
+    expect(css).toContain('max-width: 100%;');
     expect(css).toContain('.mv-layout-phone .mv-selected-account-balance');
     expect(css).toContain('grid-row: 3;');
   });

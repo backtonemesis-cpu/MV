@@ -32,11 +32,25 @@ describe('Step 44 iPhone Account coherent selected-state presentation', () => {
     expect(css).toContain('grid-row: 3;');
   });
 
-  it('matches Account and Category outer width without introducing a generic select override', () => {
+  it('keeps Account and Category inside the real Phone container without negative width extensions', () => {
     const css = read('mobileUx.css');
     expect(css).toContain('#transaction-account.mv-transaction-control');
     expect(css).toContain('#transaction-category.mv-transaction-control');
-    expect((css.match(/width: calc\(100% \+ 12px\) !important;/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    expect(css).not.toContain('width: calc(100% + 12px)');
+    expect(css).not.toContain('max-width: calc(100% + 12px)');
+    expect(css).not.toContain('margin-inline-end: -12px');
+    expect((css.match(/width: 100% !important;/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(css).not.toContain('.mv-layout-phone select.mv-transaction-control {');
+  });
+
+  it('keeps the selected-account overlay contained inside the Account field', () => {
+    const css = read('mobileUx.css');
+    const identityRule = css.match(/\.mv-layout-phone \.mv-selected-account-identity \{([\s\S]*?)\n  \}/)?.[1] ?? '';
+
+    expect(identityRule).toContain('width: 100%;');
+    expect(identityRule).toContain('max-width: 100%;');
+    expect(identityRule).toContain('min-width: 0;');
+    expect(identityRule).toContain('pointer-events: none;');
+    expect(identityRule).not.toContain('calc(100% +');
   });
 });
