@@ -47,22 +47,23 @@ describe('Step 44 iPhone income category readability contract', () => {
     expect(modal).toContain('{cat.name}');
   });
 
-  it('applies the Safari disclosure-width repair only to the Phone Category select', () => {
+  it('keeps native iPhone picker activation while widening only the Phone Category control', () => {
     const mobileCss = read('mobileUx.css');
 
     expect(mobileCss).toContain('.mv-layout-phone #transaction-category.mv-transaction-control');
-    expect(mobileCss).toContain('-webkit-appearance: none;');
-    expect(mobileCss).toContain('appearance: none;');
-    expect(mobileCss).toContain('padding-inline: 12px 18px !important;');
-    expect(mobileCss).toContain('background-image:');
-    expect(mobileCss).toContain('background-size: 4px 4px, 4px 4px;');
+    expect(mobileCss).toContain('-webkit-appearance: menulist;');
+    expect(mobileCss).toContain('appearance: auto;');
+    expect(mobileCss).toContain('width: calc(100% + 12px) !important;');
+    expect(mobileCss).toContain('max-width: calc(100% + 12px) !important;');
+    expect(mobileCss).toContain('margin-inline-end: -12px;');
 
-    // Guard the physical-iPhone regression: do not silently restore the 30px
-    // reservation that clipped the final character of the canonical long name.
-    expect(mobileCss).not.toContain('padding-inline: 12px 30px !important;');
+    // Physical iPhone evidence showed appearance:none made the selected Category
+    // field unreliable to reopen. Do not reintroduce custom select chrome here.
+    expect(mobileCss).not.toContain('#transaction-category.mv-transaction-control {\n    -webkit-appearance: none;');
+    expect(mobileCss).not.toContain('#transaction-category.mv-transaction-control {\n    appearance: none;');
 
-    // Guard against broadening this narrow repair to every select/control.
-    expect(mobileCss).not.toContain('.mv-layout-phone select.mv-transaction-control {\n    -webkit-appearance: none;');
-    expect(mobileCss).not.toContain('.mv-layout-phone select {\n    -webkit-appearance: none;');
+    // Guard against broadening this narrow width treatment to unrelated selects.
+    expect(mobileCss).not.toContain('.mv-layout-phone select.mv-transaction-control {\n    width: calc(100% + 12px)');
+    expect(mobileCss).not.toContain('.mv-layout-phone select {\n    width: calc(100% + 12px)');
   });
 });
