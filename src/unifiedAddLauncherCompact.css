@@ -1,0 +1,16 @@
+/* Initial + Add launcher should be compact. The fixed 92dvh shell remains
+   for selected Transaction modes and unified Bill, where consistent geometry
+   matters while the form body scrolls. */
+
+.mv-layout-phone .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab[aria-pressed="true"])) {
+  width: calc(100vw - 24px) !important;
+  max-width: calc(100vw - 24px) !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: calc(100dvh - 24px) !important;
+  overflow: hidden !important;
+}
+
+.mv-layout-phone .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab[aria-pressed="true"])) .mv-transaction-body {
+  overflow-y: visible !important;
+}
