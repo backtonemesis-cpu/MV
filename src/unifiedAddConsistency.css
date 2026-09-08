@@ -53,6 +53,22 @@
   display: none !important;
 }
 
+/* Unified + Add starts as a choice launcher, not as an implicit Expense form.
+   The Bill button only exists in the unified launcher, so this rule cannot
+   affect ordinary Transaction create/edit flows. Until one of the five real
+   Transaction types is pressed, keep only the six-choice panel visible and
+   suppress the transaction submit action. display:none also removes the
+   inactive fields from keyboard/accessibility navigation. */
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab[aria-pressed="true"]))
+  .mv-transaction-body > div:has(.mv-transaction-type-tabs) ~ * {
+  display: none !important;
+}
+
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]):not(:has(.mv-transaction-type-tab[aria-pressed="true"]))
+  .mv-transaction-primary {
+  display: none !important;
+}
+
 /* Bill remains PlannedPayment under the hood, but the unified launcher must
    use one visual shell. This makes the transaction and Bill shells use the
    same width/height contract without changing either save path. */
