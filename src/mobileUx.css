@@ -35,38 +35,37 @@
     max-width: 100% !important;
   }
 
-  /* Step 44 iPhone regression: keep Safari's native Category select activation.
-     Physical iPhone evidence showed that removing WebKit appearance made the
-     already-selected field unreliable to reopen. Restore native appearance and
-     reclaim only the modal body's spare inline-end space for this one control.
-     The control remains inside the modal while gaining enough text width for
-     the canonical long Income category without changing font size or semantics. */
+  /* Step 44 iPhone containment: keep Safari's native Category select activation
+     while fitting the control inside its real container. Reserve only the space
+     needed for the native disclosure indicator; never extend the field beyond
+     100% or use a negative margin that can create horizontal modal scrolling. */
   .mv-layout-phone #transaction-category.mv-transaction-control {
     -webkit-appearance: menulist;
     appearance: auto;
     box-sizing: border-box;
-    width: calc(100% + 12px) !important;
-    max-width: calc(100% + 12px) !important;
-    margin-inline-end: -12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding-inline: 16px 36px !important;
   }
 
   /* Step 44 selected-account presentation: Account and Category share the same
-     outer width. Keep the native Account select as the actual touch/control
-     surface and preserve its rich picker options, but do not ask Safari's closed
-     one-line face to render identity + balance. When an account is selected,
-     overlay the authoritative name/type/owner inside the select boundary and
-     keep only the exact balance as a compact secondary line below it. */
+     contained outer width. Keep the native Account select as the actual touch
+     surface and preserve its rich picker options. The authoritative identity is
+     overlaid inside the closed field and the exact balance stays secondary. */
   .mv-layout-phone #transaction-account.mv-transaction-control {
     box-sizing: border-box;
-    width: calc(100% + 12px) !important;
-    max-width: calc(100% + 12px) !important;
-    margin-inline-end: -12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
   }
 
   .mv-layout-phone .mv-modal-grid-2 > div:has(> #transaction-account + .mv-selected-account-summary) {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .mv-layout-phone .mv-modal-grid-2 > div:has(> #transaction-account + .mv-selected-account-summary) > label {
@@ -95,7 +94,8 @@
     align-self: center;
     z-index: 1;
     box-sizing: border-box;
-    width: calc(100% + 12px);
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
     padding-inline: 16px 48px;
     color: var(--mv-ds-text-main);
@@ -109,6 +109,8 @@
   .mv-layout-phone .mv-selected-account-balance {
     grid-column: 1;
     grid-row: 3;
+    min-width: 0;
+    max-width: 100%;
     margin-top: 4px;
     padding-inline: 4px;
     color: var(--mv-ds-text-muted);
