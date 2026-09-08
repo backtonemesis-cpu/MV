@@ -10,6 +10,7 @@ import {
   Repeat,
   Search,
   Trash2,
+  X,
 } from 'lucide-react';
 import { Account, Category, Transaction, UserRole, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
@@ -17,6 +18,7 @@ import { formatPence } from '../utils/currency';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { formatMonthLabel } from '../utils/transferPlan';
 import { formatDateKeyUk } from '../utils/dateInput';
+import { useModalAccessibility } from '../utils/modalAccessibility';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -46,6 +48,15 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const [selectedType, setSelectedType] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filterBySelectedMonth, setFilterBySelectedMonth] = useState(true);
+  const [pendingDestructiveAction, setPendingDestructiveAction] = useState<{
+    kind: 'delete' | 'undo-transfer';
+    transaction: Transaction;
+  } | null>(null);
+
+  const destructiveDialogRef = useModalAccessibility<HTMLDivElement>(
+    Boolean(pendingDestructiveAction),
+    () => setPendingDestructiveAction(null)
+  );
 
   const canEdit = userRole === 'owner' || userRole === 'editor';
 
@@ -402,9 +413,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            if (window.confirm(`Delete transaction "${tx.description}"?`)) {
-                              onDeleteTransaction(tx.id);
-                            }
+                            setPendingDestructiveAction({
+                              kind: 'delete',
+                              transaction: tx,
+                            });
                           }}
                           className="finance-action-button is-danger"
                           title="Delete transaction"
@@ -421,13 +433,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            if (
-                              window.confirm(
-                                `Undo transfer "${tx.description}"? This reverses the exact source and destination movement.`
-                              )
-                            ) {
-                              onDeleteTransaction(tx.id);
-                            }
+                            setPendingDestructiveAction({
+                              kind: 'undo-transfer',
+                              transaction: tx,
+                            });
                           }}
                           className="finance-action-button is-danger"
                           title="Undo transfer"
@@ -457,6 +466,118 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           </div>
         )}
       </section>
+
+      {pendingDestructiveAction && (() => {
+        const transaction = pendingDestructiveAction.transaction;
+        const isUndoTransfer = pendingDestructiveAction.kind === 'undo-transfer';
+        const sourceAccount = accountsMap.get(transaction.accountId) || 'Account';
+        const destinationAccount = transaction.targetAccountId
+          ? accountsMap.get(transaction.targetAccountId) || 'Account'
+          : null;
+        const categoryName =
+          categoriesMap.get(transaction.categoryId) || 'Invalid category — review required';
+        const isNegative =
+          transaction.type === 'expense' || transaction.type === 'repayment';
+        const isPositive =
+          transaction.type === 'income' ||
+          transaction.isRefund ||
+          transaction.type === 'refund';
+        const amountPrefix = isNegative ? '-' : isPositive ? '+' : '';
+
+        return (
+          <div className="mv-modal-backdrop">
+            <div
+              ref={destructiveDialogRef}
+              className="mv-modal-card mv-account-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label={isUndoTransfer ? 'Undo transfer' : 'Delete transaction'}
+              tabIndex={-1}
+            >
+              <div className="mv-modal-header">
+                <h3 className="text-base font-bold text-danger">
+                  {isUndoTransfer ? 'Undo transfer' : 'Delete transaction'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setPendingDestructiveAction(null)}
+                  className="mv-modal-close"
+                  aria-label={isUndoTransfer ? 'Cancel transfer undo' : 'Cancel transaction deletion'}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mv-modal-body space-y-3">
+                <p className="text-sm text-main">
+                  {isUndoTransfer
+                    ? 'Undo this transfer? Penny will reverse the exact source and destination movement and remove the transfer record.'
+                    : 'Delete this transaction? This removes the financial record from Activity.'}
+                </p>
+
+                <div className="rounded-lg border border-muted bg-surface-muted p-3">
+                  <div className="text-sm font-bold text-main">{transaction.description}</div>
+                  <div className="mt-1 text-xs text-muted">
+                    {formatDateKeyUk(transaction.date)} · {categoryName}
+                  </div>
+                  <div className="mt-1 text-xs text-muted">
+                    {sourceAccount}
+                    {destinationAccount ? ` → ${destinationAccount}` : ''} · {transaction.payer}
+                  </div>
+                  <div className="mt-2 text-sm font-bold text-main">
+                    {amountPrefix}{formatPence(transaction.amountPence)}
+                  </div>
+                </div>
+
+                {!isUndoTransfer && (transaction.plannedPaymentId || transaction.plannedIncomeId) && (
+                  <p className="text-xs font-semibold text-warning">
+                    This transaction is linked to a planned {transaction.plannedPaymentId ? 'bill' : 'income'}.
+                    Deleting it will update the linked status to match the remaining financial evidence.
+                  </p>
+                )}
+
+                <p className="text-xs text-muted">
+                  {isUndoTransfer
+                    ? 'Transfer Plan funding and Savings-managed transfers must be undone from their own views.'
+                    : 'This action cannot be undone from Activity.'}
+                </p>
+              </div>
+
+              <div className="mv-modal-fixed-actions">
+                <button
+                  type="button"
+                  onClick={() => setPendingDestructiveAction(null)}
+                  className="inline-flex items-center justify-center rounded-lg border border-muted bg-surface-muted px-4 text-sm font-semibold text-main transition-all hover:bg-surface"
+                  data-modal-initial-focus
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const transactionId = transaction.id;
+                    setPendingDestructiveAction(null);
+                    onDeleteTransaction(transactionId);
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-4 text-sm font-semibold text-danger transition-all hover:opacity-80"
+                >
+                  {isUndoTransfer ? (
+                    <>
+                      <Repeat className="h-4 w-4" />
+                      Undo transfer
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Delete transaction
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
