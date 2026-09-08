@@ -8,6 +8,7 @@ import './accessibilityContrast.css';
 import './accentContrast.css';
 import './activityFilterRegression.css';
 import './unifiedAddConsistency.css';
+import './unifiedAddLauncherCompact.css';
 import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
