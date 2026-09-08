@@ -27,18 +27,19 @@ describe('unified Add consistency follow-up', () => {
     expect(bridge).not.toContain('onSave');
   });
 
-  it('makes launcher choices button-like using semantic appearance tokens', () => {
+  it('makes all launcher choices button-like using semantic appearance tokens', () => {
     expect(css).toContain('.mv-transaction-type-tab {');
     expect(css).toContain('var(--border-strong)');
     expect(css).toContain('var(--field)');
     expect(css).toContain('var(--primary)');
+    expect(css).toContain('var(--card-radius');
     expect(css).toContain('[aria-pressed="true"]');
     expect(css).toContain('display: inline-flex');
     expect(css).toContain('white-space: nowrap');
     expect(css).not.toMatch(/#[0-9a-f]{3,8}/i);
   });
 
-  it('keeps the Repayment label contained on Phone without widening the launcher', () => {
+  it('keeps Repayment contained on Phone without widening the launcher', () => {
     expect(css).toMatch(/\.mv-layout-phone \.mv-transaction-type-tab[\s\S]*font-size: 0\.8125rem/);
     expect(css).toContain('overflow: hidden');
     expect(css).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))');
@@ -46,35 +47,73 @@ describe('unified Add consistency follow-up', () => {
     expect(css).not.toContain('margin-right: -');
   });
 
-  it('removes only redundant payer/recipient helper presentation and leaves transfer logic untouched', () => {
+  it('removes redundant helper presentation without changing payer or transfer validation', () => {
     expect(css).toContain('[aria-labelledby="transaction-person-label"] + .text-subtle');
+    expect(css).toContain('display: none !important');
     expect(tx).toContain("if (!isTransfer && !payer)");
     expect(tx).toContain("if (newType === 'transfer')");
   });
 
-  it('keeps native transaction date semantics and paints the value above the themed frame', () => {
+  it('removes in-field helper prompts across both unified Transaction and Bill forms at runtime', () => {
+    expect(bridge).toContain('removeInFieldHelperText');
+    expect(bridge).toContain("querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[placeholder]')");
+    expect(bridge).toContain("control.removeAttribute('placeholder')");
+    expect(bridge).toContain("option.value === ''");
+    expect(bridge).toContain("emptyOption.textContent = ''");
+    expect(bridge).toContain('MutationObserver');
+    expect(css).toContain('::placeholder');
+    expect(css).toContain('color: transparent !important');
+  });
+
+  it('keeps native transaction date semantics and vertically centres its themed surface', () => {
     expect(tx).toContain('id="transaction-date" type="date"');
     expect(css).toContain('background: var(--field) !important');
     expect(css).toContain('position: relative');
     expect(css).toContain('z-index: 3');
     expect(css).toContain('line-height: 40px !important');
+    expect(css).toContain('padding-block: 0 !important');
     expect(css).not.toContain('type="text" value={date}');
   });
 
-  it('uses one fixed Phone shell geometry for transaction choices and unified Bill', () => {
+  it('uses one fixed Phone shell geometry for all five Transaction choices and unified Bill', () => {
+    expect(css).toContain('.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"])');
     expect(css).toContain('.mv-add-bill-modal[data-unified-add="true"]');
-    expect(css).toMatch(/\.mv-layout-phone :is\([\s\S]*\.mv-transaction-modal,[\s\S]*\.mv-add-bill-modal\[data-unified-add="true"\][\s\S]*height: 92dvh !important/);
+    expect(css).toContain('width: calc(100vw - 24px) !important');
     expect(css).toContain('min-height: 92dvh !important');
+    expect(css).toContain('height: 92dvh !important');
     expect(css).toContain('max-height: 92dvh !important');
   });
 
-  it('uses the shared semantic field surface and Transaction-style footer for unified Bill only', () => {
+  it('uses the same semantic field surface for Transaction and unified Bill controls', () => {
+    expect(css).toContain('.mv-transaction-control');
     expect(css).toMatch(/\.mv-add-bill-modal\[data-unified-add="true"\] :is\([\s\S]*background: var\(--field\) !important/);
+    expect(css).toContain('border-color: var(--border) !important');
+    expect(css).toContain('color: var(--text) !important');
+  });
+
+  it('uses Transaction-style footer treatment for unified Bill only', () => {
     expect(css).toContain('.mv-add-bill-actions > button:first-child');
     expect(css).toContain('.mv-add-bill-actions > button:last-child');
     expect(css).toContain('background: var(--primary) !important');
     expect(css).toContain('color: var(--text-on-primary) !important');
     expect(planned).toContain('className="mv-modal-actions mv-add-bill-actions"');
+  });
+
+  it('remounts the unified Transaction form when switching ordinary creation types so drafts cannot leak', () => {
+    expect(bridge).toContain('openFreshUnifiedTransaction');
+    expect(bridge).toContain("document.addEventListener(\n    'click'");
+    expect(bridge).toContain('event.stopImmediatePropagation()');
+    expect(bridge).toContain('[aria-label="Close transaction dialog"]');
+    expect(bridge).toContain('openFreshUnifiedTransaction(nextType)');
+    expect(bridge).toContain("const TRANSACTION_TYPES = ['expense', 'income', 'transfer', 'refund', 'repayment'] as const");
+    expect(bridge).not.toContain('createTransaction');
+    expect(bridge).not.toContain('createPlannedPayment');
+  });
+
+  it('keeps the initial launcher genuinely unselected', () => {
+    expect(css).toContain(':not(:has(.mv-transaction-type-tab[aria-pressed="true"]))');
+    expect(css).toContain('.mv-transaction-primary');
+    expect(css).toContain('display: none !important');
   });
 
   it('keeps phone launcher contained without width hacks', () => {
