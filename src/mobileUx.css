@@ -30,4 +30,25 @@
     min-width: 0 !important;
     max-width: 100% !important;
   }
+
+  /* Step 44 iPhone regression: Safari reserves an implementation-defined
+     disclosure area inside native selects. Keep the Category field as a native
+     select, but remove that unpredictable chrome only for this one control and
+     reserve a known inline-end area for a compact visual disclosure cue. This
+     recovers deterministic text width without shrinking the readable 16px copy
+     or changing any option/value semantics. */
+  .mv-layout-phone #transaction-category.mv-transaction-control {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    padding-inline: 12px 30px !important;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - 17px) calc(50% - 2px),
+      calc(100% - 12px) calc(50% - 2px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
 }
