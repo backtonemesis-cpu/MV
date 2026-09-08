@@ -142,30 +142,36 @@
   box-shadow: 0 0 0 2px var(--primary-light) !important;
 }
 
-/* Keep Bill action treatment visually aligned with the Transaction footer. */
-.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px !important;
+/* All six creation choices use the same footer layout and button contract.
+   Bill remains a PlannedPayment workflow; this only unifies presentation. */
+:is(
+  .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
+  .mv-add-bill-modal[data-unified-add="true"]
+) .mv-modal-fixed-actions {
   border-top: 1px solid var(--border) !important;
   background: var(--surface) !important;
 }
 
-.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button,
-.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > button {
+:is(
+  .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
+  .mv-add-bill-modal[data-unified-add="true"]
+) .mv-modal-fixed-actions > button {
   min-height: 44px;
   border-radius: var(--card-radius, 8px) !important;
   font-size: 0.875rem !important;
   font-weight: 700 !important;
+  white-space: nowrap;
 }
 
-.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button:first-child {
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-transaction-secondary,
+.mv-add-bill-modal[data-unified-add="true"] .mv-transaction-secondary {
   border: 1px solid var(--border-strong) !important;
   background: var(--field) !important;
   color: var(--text-muted) !important;
 }
 
-.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button:last-child {
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-transaction-primary,
+.mv-add-bill-modal[data-unified-add="true"] .mv-transaction-primary {
   border: 1px solid var(--primary) !important;
   background: var(--primary) !important;
   color: var(--text-on-primary) !important;

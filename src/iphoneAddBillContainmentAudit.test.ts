@@ -64,11 +64,11 @@ describe('iPhone Add Bill containment and field geometry', () => {
     expect(modal).toContain('className="mv-modal-card mv-add-bill-modal"');
     expect(modal).toContain('className="mv-modal-form mv-add-bill-form"');
     expect(modal).toContain('className="mv-add-bill-scroll"');
-    expect(modal).toContain('className="mv-modal-actions mv-add-bill-actions"');
+    expect(modal).toContain('className="mv-modal-fixed-actions mv-add-bill-actions"');
 
     const scrollStart = modal.indexOf('className="mv-add-bill-scroll"');
     const notesIndex = modal.indexOf('id="planned-payment-notes"');
-    const actionsIndex = modal.indexOf('className="mv-modal-actions mv-add-bill-actions"');
+    const actionsIndex = modal.indexOf('className="mv-modal-fixed-actions mv-add-bill-actions"');
     expect(scrollStart).toBeGreaterThanOrEqual(0);
     expect(notesIndex).toBeGreaterThan(scrollStart);
     expect(actionsIndex).toBeGreaterThan(notesIndex);
