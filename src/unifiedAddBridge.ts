@@ -22,10 +22,10 @@ function openFreshUnifiedTransaction(type: UnifiedTransactionType): void {
 
   // Open and select in the same browser task whenever React mounts the modal
   // synchronously. If the button is not present until React's queued update,
-  // use a microtask rather than requestAnimationFrame. The old two-frame bridge
-  // deliberately exposed the intermediate unselected launcher for a painted
-  // frame, which caused the visible "New Transaction / What would you like to
-  // add?" flash reported on iPhone when switching creation types.
+  // use a microtask rather than waiting for a painted animation frame. The old
+  // two-frame bridge deliberately exposed the intermediate unselected launcher,
+  // which caused the visible "New Transaction / What would you like to add?"
+  // flash reported on iPhone when switching creation types.
   document.getElementById('dashboard-add-btn')?.click();
   selectUnifiedTransactionType(type);
   queueMicrotask(() => selectUnifiedTransactionType(type));
