@@ -50,25 +50,67 @@
     margin-inline-end: -12px;
   }
 
-  /* Step 44 selected-account readability: native iOS selects can only expose
-     one closed line, so keep the native picker/options unchanged and separate
-     identity from balance in a visible Phone-only summary tied to accountId. */
+  /* Step 44 selected-account presentation: Account and Category share the same
+     outer width. Keep the native Account select as the actual touch/control
+     surface and preserve its rich picker options, but do not ask Safari's closed
+     one-line face to render identity + balance. When an account is selected,
+     overlay the authoritative name/type/owner inside the select boundary and
+     keep only the exact balance as a compact secondary line below it. */
+  .mv-layout-phone #transaction-account.mv-transaction-control {
+    box-sizing: border-box;
+    width: calc(100% + 12px) !important;
+    max-width: calc(100% + 12px) !important;
+    margin-inline-end: -12px;
+  }
+
+  .mv-layout-phone .mv-modal-grid-2 > div:has(> #transaction-account + .mv-selected-account-summary) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+
+  .mv-layout-phone .mv-modal-grid-2 > div:has(> #transaction-account + .mv-selected-account-summary) > label {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .mv-layout-phone .mv-modal-grid-2 > div:has(> #transaction-account + .mv-selected-account-summary) > #transaction-account {
+    grid-column: 1;
+    grid-row: 2;
+    color: transparent !important;
+  }
+
+  /* Keep picker rows readable even though the closed selected face is masked. */
+  .mv-layout-phone #transaction-account > option {
+    color: CanvasText;
+  }
+
   .mv-layout-phone .mv-selected-account-summary {
-    display: block;
-    margin-top: 6px;
-    min-width: 0;
+    display: contents;
   }
 
   .mv-layout-phone .mv-selected-account-identity {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: center;
+    z-index: 1;
+    box-sizing: border-box;
+    width: calc(100% + 12px);
+    min-width: 0;
+    padding-inline: 16px 48px;
     color: var(--mv-ds-text-main);
-    font-size: var(--mv-ds-text-small);
-    font-weight: 700;
+    font-size: var(--mv-ds-text-body);
+    font-weight: 600;
     line-height: var(--mv-ds-leading-body);
-    overflow-wrap: anywhere;
+    pointer-events: none;
+    white-space: nowrap;
   }
 
   .mv-layout-phone .mv-selected-account-balance {
-    margin-top: 2px;
+    grid-column: 1;
+    grid-row: 3;
+    margin-top: 4px;
+    padding-inline: 4px;
     color: var(--mv-ds-text-muted);
     font-size: var(--mv-ds-text-small);
     line-height: var(--mv-ds-leading-body);
