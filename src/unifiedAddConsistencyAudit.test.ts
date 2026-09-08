@@ -98,12 +98,16 @@ describe('unified Add consistency follow-up', () => {
     expect(css).toContain('color: var(--text) !important');
   });
 
-  it('uses Transaction-style footer treatment for unified Bill only', () => {
-    expect(css).toContain('.mv-add-bill-actions > button:first-child');
-    expect(css).toContain('.mv-add-bill-actions > button:last-child');
+  it('uses the exact Transaction footer and button contract for unified Bill', () => {
+    expect(planned).toContain('className="mv-modal-fixed-actions mv-add-bill-actions"');
+    expect(planned).toContain('className="mv-transaction-secondary"');
+    expect(planned).toContain('className="mv-transaction-primary disabled:opacity-50"');
+    expect(planned).toContain("isUnifiedAdd ? 'Record Bill' : 'Add Bill'");
+    expect(css).toContain('.mv-modal-fixed-actions > button');
+    expect(css).toContain('white-space: nowrap');
     expect(css).toContain('background: var(--primary) !important');
     expect(css).toContain('color: var(--text-on-primary) !important');
-    expect(planned).toContain('className="mv-modal-actions mv-add-bill-actions"');
+    expect(css).not.toContain('grid-template-columns: 1fr 1fr');
   });
 
   it('remounts the unified Transaction form when switching ordinary creation types so drafts cannot leak', () => {

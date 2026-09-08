@@ -138,9 +138,9 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
             <div><label htmlFor="planned-payment-notes" className="block text-xs font-medium text-muted mb-1">Notes</label><textarea id="planned-payment-notes" rows={2} placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none" /></div>
           </div>
 
-          <div className="mv-modal-actions mv-add-bill-actions">
-            <button type="button" onClick={closeModal} className="px-4 py-2 text-xs font-medium text-muted hover:bg-surface-muted rounded-md transition-colors">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="bg-accent text-on-accent font-semibold disabled:opacity-50">{isSubmitting ? 'Saving...' : isEditing ? 'Save' : 'Add'}</button>
+          <div className="mv-modal-fixed-actions mv-add-bill-actions">
+            <button type="button" onClick={closeModal} className="mv-transaction-secondary">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="mv-transaction-primary disabled:opacity-50">{isSubmitting ? 'Saving...' : isEditing ? 'Save Bill' : isUnifiedAdd ? 'Record Bill' : 'Add Bill'}</button>
           </div>
         </form>
       </div>
