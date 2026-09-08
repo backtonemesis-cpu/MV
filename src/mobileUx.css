@@ -2,6 +2,10 @@
    Loaded after the global design system so these rules correct mobile-only
    interaction faults without changing financial calculations or desktop layout. */
 
+.mv-selected-account-summary {
+  display: none;
+}
+
 @media (max-width: 40rem) {
   /* Keep the Phone-mode navigation attached to the physical viewport on long
      Activity, Plan, Savings and Settings pages. The workspace already reserves
@@ -44,5 +48,29 @@
     width: calc(100% + 12px) !important;
     max-width: calc(100% + 12px) !important;
     margin-inline-end: -12px;
+  }
+
+  /* Step 44 selected-account readability: native iOS selects can only expose
+     one closed line, so keep the native picker/options unchanged and separate
+     identity from balance in a visible Phone-only summary tied to accountId. */
+  .mv-layout-phone .mv-selected-account-summary {
+    display: block;
+    margin-top: 6px;
+    min-width: 0;
+  }
+
+  .mv-layout-phone .mv-selected-account-identity {
+    color: var(--mv-ds-text-main);
+    font-size: var(--mv-ds-text-small);
+    font-weight: 700;
+    line-height: var(--mv-ds-leading-body);
+    overflow-wrap: anywhere;
+  }
+
+  .mv-layout-phone .mv-selected-account-balance {
+    margin-top: 2px;
+    color: var(--mv-ds-text-muted);
+    font-size: var(--mv-ds-text-small);
+    line-height: var(--mv-ds-leading-body);
   }
 }
