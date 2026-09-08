@@ -1,20 +1,172 @@
 /* Unified Add presentation: semantic theme tokens only. */
-.mv-transaction-type-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; min-width:0; }
-.mv-transaction-type-tab { min-width:0; min-height:40px; border:1px solid var(--border-strong)!important; border-radius:var(--card-radius,6px)!important; background:var(--field)!important; color:var(--text-muted)!important; box-shadow:0 1px 2px var(--shadow); font-weight:650; cursor:pointer; transition:border-color 120ms ease,background-color 120ms ease,color 120ms ease,box-shadow 120ms ease; }
-.mv-transaction-type-tab:hover { border-color:var(--primary)!important; background:var(--surface-hover)!important; color:var(--text)!important; }
-.mv-transaction-type-tab:focus-visible { outline:2px solid var(--primary); outline-offset:2px; }
-.mv-transaction-type-tab.is-active,.mv-transaction-type-tab[aria-pressed="true"] { border-color:var(--primary)!important; background:var(--primary-light)!important; color:var(--primary-light-text)!important; box-shadow:0 0 0 1px var(--primary); }
-.mv-transaction-body [role="group"][aria-labelledby="transaction-person-label"] + .text-subtle { display:none!important; }
-
-@media (max-width:430px) {
-  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after { background:var(--field)!important; }
-  .mv-layout-phone .mv-transaction-modal #transaction-date,.mv-layout-phone .mv-transaction-modal #transaction-date::-webkit-date-and-time-value { height:40px!important; min-height:40px!important; max-height:40px!important; line-height:40px!important; }
+.mv-transaction-type-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
-.mv-add-bill-modal[data-unified-add="true"] { width:min(100%,540px)!important; }
-.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-scroll { min-width:0; overflow-x:clip; }
+.mv-transaction-type-tab {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--card-radius, 6px) !important;
+  padding-inline: 8px;
+  background: var(--field) !important;
+  color: var(--text-muted) !important;
+  box-shadow: 0 1px 2px var(--shadow);
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
 
-@media (max-width:430px) {
-  .mv-layout-phone .mv-transaction-type-tabs { grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; max-width:100%; }
-  .mv-layout-phone .mv-transaction-type-tab { min-height:44px; padding-inline:6px; }
+.mv-transaction-type-tab:hover {
+  border-color: var(--primary) !important;
+  background: var(--surface-hover) !important;
+  color: var(--text) !important;
+}
+
+.mv-transaction-type-tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.mv-transaction-type-tab.is-active,
+.mv-transaction-type-tab[aria-pressed="true"] {
+  border-color: var(--primary) !important;
+  background: var(--primary-light) !important;
+  color: var(--primary-light-text) !important;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* The helper sentence adds no information once the Paid by / Received by
+   controls are visible. Keep the actual buttons and aria group unchanged. */
+.mv-transaction-body [role="group"][aria-labelledby="transaction-person-label"] + .text-subtle {
+  display: none !important;
+}
+
+/* Bill remains PlannedPayment under the hood, but the unified launcher must
+   use one visual shell. This makes the transaction and Bill shells use the
+   same width/height contract without changing either save path. */
+.mv-add-bill-modal[data-unified-add="true"] {
+  width: min(100%, 520px) !important;
+  max-width: 520px !important;
+  min-height: min(88vh, 760px);
+  height: min(88vh, 760px);
+  max-height: min(88vh, 760px);
+}
+
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-scroll {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+/* Unified Bill fields use the same semantic input surface as Transaction.
+   Date is excluded because its native Safari paint is intentionally drawn by
+   the existing wrapper frame in mobileUx.css. */
+.mv-add-bill-modal[data-unified-add="true"] :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="date"]),
+  select,
+  textarea,
+  .mv-money-input-shell,
+  .mv-month-picker,
+  .mv-month-picker-input
+) {
+  border-color: var(--border) !important;
+  background: var(--field) !important;
+  color: var(--text) !important;
+}
+
+/* Keep the Bill footer visually identical to the Transaction footer while
+   retaining the PlannedPayment submit handler and button semantics. */
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px !important;
+  border-top: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+}
+
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button {
+  min-height: 44px;
+  border-radius: var(--card-radius, 8px) !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
+}
+
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button:first-child {
+  border: 1px solid var(--border-strong) !important;
+  background: var(--field) !important;
+  color: var(--text-muted) !important;
+}
+
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions > button:last-child {
+  border: 1px solid var(--primary) !important;
+  background: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+@media (max-width: 430px) {
+  /* One stable iPhone shell size for Expense / Income / Transfer / Refund /
+     Repayment / Bill. Only the scrollable form body changes. */
+  .mv-layout-phone :is(
+    .mv-transaction-modal,
+    .mv-add-bill-modal[data-unified-add="true"]
+  ) {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 92dvh !important;
+    height: 92dvh !important;
+    max-height: 92dvh !important;
+    overflow: hidden !important;
+  }
+
+  .mv-layout-phone .mv-transaction-type-tabs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .mv-layout-phone .mv-transaction-type-tab {
+    min-height: 44px;
+    padding-inline: 6px;
+    font-size: 0.8125rem;
+    line-height: 1rem;
+  }
+
+  /* The visible date surface is drawn by the wrapper pseudo-element. Put the
+     native date control above that surface so Safari can paint the date value
+     instead of the field appearing blank. */
+  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after {
+    background: var(--field) !important;
+  }
+
+  .mv-layout-phone .mv-transaction-modal #transaction-date {
+    position: relative;
+    z-index: 3;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    line-height: 40px !important;
+  }
+
+  .mv-layout-phone .mv-transaction-modal #transaction-date::-webkit-date-and-time-value {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    line-height: 40px !important;
+  }
+
+  .mv-layout-phone .mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)) !important;
+  }
 }
