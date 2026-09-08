@@ -144,4 +144,49 @@
     font-size: var(--mv-ds-text-small);
     line-height: var(--mv-ds-leading-body);
   }
+
+  /* Add Bill iPhone containment: PlannedPaymentModal still uses the generic
+     modal/form shell, so scope the mobile containment contract by its stable
+     field id instead of changing every modal globally. All structural layers,
+     grids and ordinary controls fit the real available width; the form remains
+     a vertical scroll surface only. */
+  .mv-layout-phone .mv-modal-card:has(#planned-payment-name),
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) {
+    overflow-x: clip;
+    overscroll-behavior-inline: none;
+  }
+
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) > *,
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) .mv-modal-grid-2,
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) .mv-modal-grid-2 > * {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) .mv-modal-grid-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .mv-layout-phone .mv-modal-form:has(#planned-payment-name) :is(
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea,
+    .mv-money-input-shell,
+    .mv-month-picker,
+    .mv-month-picker-input
+  ) {
+    box-sizing: border-box;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
 }
