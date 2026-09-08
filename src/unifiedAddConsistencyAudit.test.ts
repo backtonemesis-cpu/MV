@@ -84,6 +84,13 @@ describe('unified Add consistency follow-up', () => {
     expect(css).toContain('max-height: 92dvh !important');
   });
 
+  it('keeps unified Bill inside the iPhone visual safe area like the Transaction shell', () => {
+    expect(css).toContain('.mv-layout-phone:has(.mv-add-bill-modal[data-unified-add="true"]) .mv-nav-mobile');
+    expect(css).toContain('display: none !important');
+    expect(css).toContain('.mv-layout-phone:has(.mv-add-bill-modal[data-unified-add="true"]) .mv-modal-backdrop');
+    expect(css).toContain('calc(8px + env(safe-area-inset-bottom)) !important');
+  });
+
   it('uses the same semantic field surface for Transaction and unified Bill controls', () => {
     expect(css).toContain('.mv-transaction-control');
     expect(css).toMatch(/\.mv-add-bill-modal\[data-unified-add="true"\] :is\([\s\S]*background: var\(--field\) !important/);
