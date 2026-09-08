@@ -10,18 +10,25 @@ function isUnifiedTransactionType(value: string | undefined): value is UnifiedTr
   return Boolean(value && TRANSACTION_TYPES.includes(value as UnifiedTransactionType));
 }
 
+function selectUnifiedTransactionType(type: UnifiedTransactionType): void {
+  document
+    .querySelector<HTMLButtonElement>(`.mv-transaction-type-tab[aria-label="Add ${type}"]`)
+    ?.click();
+}
+
 function openFreshUnifiedTransaction(type: UnifiedTransactionType): void {
   window.sessionStorage.removeItem(UNIFIED_BILL_SESSION_KEY);
   window.sessionStorage.setItem(UNIFIED_ADD_SESSION_KEY, '1');
 
-  window.requestAnimationFrame(() => {
-    document.getElementById('dashboard-add-btn')?.click();
-    window.requestAnimationFrame(() => {
-      document
-        .querySelector<HTMLButtonElement>(`.mv-transaction-type-tab[aria-label="Add ${type}"]`)
-        ?.click();
-    });
-  });
+  // Open and select in the same browser task whenever React mounts the modal
+  // synchronously. If the button is not present until React's queued update,
+  // use a microtask rather than waiting for a painted animation frame. The old
+  // two-frame bridge deliberately exposed the intermediate unselected launcher,
+  // which caused the visible "New Transaction / What would you like to add?"
+  // flash reported on iPhone when switching creation types.
+  document.getElementById('dashboard-add-btn')?.click();
+  selectUnifiedTransactionType(type);
+  queueMicrotask(() => selectUnifiedTransactionType(type));
 }
 
 function removeInFieldHelperText(root: ParentNode = document): void {
