@@ -132,7 +132,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     <div className="mv-modal-backdrop">
       <div
         ref={dialogRef}
-        className="mv-modal-card"
+        className="mv-modal-card mv-add-bill-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="planned-payment-title"
@@ -154,185 +154,186 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mv-modal-form">
-          {error && (
-            <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs" role="alert">
-              <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="mv-modal-form mv-add-bill-form">
+          <div className="mv-add-bill-scroll">
+            {error && (
+              <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs" role="alert">
+                <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
 
-          {/* Payment Name */}
-          <div>
-            <label htmlFor="planned-payment-name" className="block text-xs font-medium text-muted mb-1">
-              Name *
-            </label>
-            <input
-              ref={nameInputRef}
-              id="planned-payment-name"
-              type="text"
-              placeholder="Bill name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-              required
-            />
-          </div>
-
-          {/* Amount & Month */}
-          <div className="mv-modal-grid-2">
+            {/* Payment Name */}
             <div>
-              <label htmlFor="planned-payment-amount" className="block text-xs font-medium text-muted mb-1">
-                Amount (£) *
-              </label>
-              <MoneyInput
-                id="planned-payment-amount"
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amountStr}
-                onChange={(e) => setAmountStr(e.target.value)}
-                className="w-full text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-                aria-label="Bill amount in pounds sterling"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="planned-payment-month" className="block text-xs font-medium text-muted mb-1">
-                Month *
-              </label>
-              <MonthPicker
-                id="planned-payment-month"
-                value={month}
-                onChange={setMonth}
-                ariaLabel="Billing month"
-                className="is-fluid"
-              />
-            </div>
-          </div>
-
-          {/* Payment Account & Responsible */}
-          <div className="mv-modal-grid-2">
-            <div>
-              <label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">
-                Payment Account *
-              </label>
-              <select
-                id="planned-payment-account"
-                value={accountId}
-                onChange={(e) => handleAccountChange(e.target.value)}
-                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
-                required
-              >
-                <option value="">Select payment account</option>
-                {paymentAccountOptions.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {accountOptionLabel(acc)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="planned-payment-person" className="block text-xs font-medium text-muted mb-1">
-                Responsible Person *
-              </label>
-              <select
-                id="planned-payment-person"
-                value={responsiblePerson}
-                onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')}
-                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
-                required
-              >
-                <option value="">Select person</option>
-                {personOptions.map((person) => (
-                  <option key={person} value={person}>
-                    {person}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Due Date & Category */}
-          <div className="mv-modal-grid-2">
-            <div>
-              <label htmlFor="planned-payment-due-date" className="block text-xs font-medium text-muted mb-1">
-                Due Date
+              <label htmlFor="planned-payment-name" className="block text-xs font-medium text-muted mb-1">
+                Name *
               </label>
               <input
-                id="planned-payment-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                ref={nameInputRef}
+                id="planned-payment-name"
+                type="text"
+                placeholder="Bill name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
+                required
+              />
+            </div>
+
+            {/* Amount & Month */}
+            <div className="mv-modal-grid-2">
+              <div>
+                <label htmlFor="planned-payment-amount" className="block text-xs font-medium text-muted mb-1">
+                  Amount (£) *
+                </label>
+                <MoneyInput
+                  id="planned-payment-amount"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={amountStr}
+                  onChange={(e) => setAmountStr(e.target.value)}
+                  className="w-full text-sm border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
+                  aria-label="Bill amount in pounds sterling"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="planned-payment-month" className="block text-xs font-medium text-muted mb-1">
+                  Month *
+                </label>
+                <MonthPicker
+                  id="planned-payment-month"
+                  value={month}
+                  onChange={setMonth}
+                  ariaLabel="Billing month"
+                  className="is-fluid"
+                />
+              </div>
+            </div>
+
+            {/* Payment Account & Responsible */}
+            <div className="mv-modal-grid-2">
+              <div>
+                <label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">
+                  Payment Account *
+                </label>
+                <select
+                  id="planned-payment-account"
+                  value={accountId}
+                  onChange={(e) => handleAccountChange(e.target.value)}
+                  className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
+                  required
+                >
+                  <option value="">Select payment account</option>
+                  {paymentAccountOptions.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {accountOptionLabel(acc)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="planned-payment-person" className="block text-xs font-medium text-muted mb-1">
+                  Responsible Person *
+                </label>
+                <select
+                  id="planned-payment-person"
+                  value={responsiblePerson}
+                  onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')}
+                  className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
+                  required
+                >
+                  <option value="">Select person</option>
+                  {personOptions.map((person) => (
+                    <option key={person} value={person}>
+                      {person}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Due Date & Category */}
+            <div className="mv-modal-grid-2">
+              <div>
+                <label htmlFor="planned-payment-due-date" className="block text-xs font-medium text-muted mb-1">
+                  Due Date
+                </label>
+                <input
+                  id="planned-payment-due-date"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="planned-payment-category" className="block text-xs font-medium text-muted mb-1">Category</label>
+                <select
+                  id="planned-payment-category"
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
+                >
+                  <option value="">Select category</option>
+                  {billCategoryOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Transfer-plan and recurrence settings. Paid state is derived from linked actual payment evidence. */}
+            <div className="mv-modal-section space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label htmlFor="modal-include-plan-toggle" className="text-xs font-medium text-main cursor-pointer">Include in Transfer Plan</label>
+                </div>
+                <input
+                  type="checkbox"
+                  id="modal-include-plan-toggle"
+                  checked={includeInTransferPlan}
+                  onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
+                  className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-muted">
+                <div>
+                  <label htmlFor="modal-recurring-toggle" className="text-xs font-medium text-main cursor-pointer">Recurring Monthly</label>
+                </div>
+                <input
+                  type="checkbox"
+                  id="modal-recurring-toggle"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label htmlFor="planned-payment-notes" className="block text-xs font-medium text-muted mb-1">Notes</label>
+              <textarea
+                id="planned-payment-notes"
+                rows={2}
+                placeholder="Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
                 className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
               />
             </div>
-
-            <div>
-              <label htmlFor="planned-payment-category" className="block text-xs font-medium text-muted mb-1">Category</label>
-              <select
-                id="planned-payment-category"
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none"
-              >
-                <option value="">Select category</option>
-                {billCategoryOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Transfer-plan and recurrence settings. Paid state is derived from linked actual payment evidence. */}
-          <div className="mv-modal-section space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <label htmlFor="modal-include-plan-toggle" className="text-xs font-medium text-main cursor-pointer">Include in Transfer Plan</label>
-              </div>
-              <input
-                type="checkbox"
-                id="modal-include-plan-toggle"
-                checked={includeInTransferPlan}
-                onChange={(e) => setIncludeInTransferPlan(e.target.checked)}
-                className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-muted">
-              <div>
-                <label htmlFor="modal-recurring-toggle" className="text-xs font-medium text-main cursor-pointer">Recurring Monthly</label>
-              </div>
-              <input
-                type="checkbox"
-                id="modal-recurring-toggle"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="w-4 h-4 text-main rounded border-muted focus:ring-muted cursor-pointer"
-              />
-            </div>
-
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label htmlFor="planned-payment-notes" className="block text-xs font-medium text-muted mb-1">Notes</label>
-            <textarea
-              id="planned-payment-notes"
-              rows={2}
-              placeholder="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-muted rounded-md focus:ring-1 focus:ring-muted focus:outline-none"
-            />
           </div>
 
           {/* Actions */}
-          <div className="mv-modal-actions">
+          <div className="mv-modal-actions mv-add-bill-actions">
             <button
               type="button"
               onClick={onClose}
