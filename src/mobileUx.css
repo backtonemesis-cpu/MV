@@ -31,26 +31,18 @@
     max-width: 100% !important;
   }
 
-  /* Step 44 iPhone regression: Safari reserves an implementation-defined
-     disclosure area inside native selects. Keep the Category field as a native
-     select, remove that unpredictable chrome only for this one control, and
-     reserve a compact deterministic inline-end cue area. Physical iPhone 13
-     evidence showed the earlier 30px reservation still clipped the final
-     character of "Child Maintenance Received"; 18px preserves the 16px text
-     while retaining a visible disclosure cue and materially increasing the
-     selected-value text area. */
+  /* Step 44 iPhone regression: keep Safari's native Category select activation.
+     Physical iPhone evidence showed that removing WebKit appearance made the
+     already-selected field unreliable to reopen. Restore native appearance and
+     reclaim only the modal body's spare inline-end space for this one control.
+     The control remains inside the modal while gaining enough text width for
+     the canonical long Income category without changing font size or semantics. */
   .mv-layout-phone #transaction-category.mv-transaction-control {
-    -webkit-appearance: none;
-    appearance: none;
+    -webkit-appearance: menulist;
+    appearance: auto;
     box-sizing: border-box;
-    padding-inline: 12px 18px !important;
-    background-image:
-      linear-gradient(45deg, transparent 50%, currentColor 50%),
-      linear-gradient(135deg, currentColor 50%, transparent 50%);
-    background-position:
-      calc(100% - 10px) calc(50% - 2px),
-      calc(100% - 6px) calc(50% - 2px);
-    background-size: 4px 4px, 4px 4px;
-    background-repeat: no-repeat;
+    width: calc(100% + 12px) !important;
+    max-width: calc(100% + 12px) !important;
+    margin-inline-end: -12px;
   }
 }
