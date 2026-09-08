@@ -3,7 +3,7 @@ import { X, AlertCircle, Plus, Trash2, Split } from 'lucide-react';
 import { Transaction, Account, Category, Payer, TransactionType, TransactionSplit, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
-import { accountOptionLabel } from '../utils/accountDisplay';
+import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
@@ -122,6 +122,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     type,
     preservedHistoricalCategoryIds
   );
+  const selectedAccount = accounts.find((account) => account.id === accountId);
 
   if (!isOpen) return null;
 
@@ -217,7 +218,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setError('Please enter a valid amount greater than £0.00');
       return;
     }
-
     if (!description.trim()) {
       setError('Please enter a description for the transaction');
       return;
@@ -521,6 +521,20 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     </option>
                   ))}
               </select>
+              {selectedAccount && (
+                <div
+                  className="mv-selected-account-summary"
+                  aria-live="polite"
+                  aria-label={`Selected account ${accountIdentityLabel(selectedAccount)}, balance ${formatPence(selectedAccount.currentBalancePence)}`}
+                >
+                  <div className="mv-selected-account-identity">
+                    {accountIdentityLabel(selectedAccount)}
+                  </div>
+                  <div className="mv-selected-account-balance">
+                    Balance: {formatPence(selectedAccount.currentBalancePence)}
+                  </div>
+                </div>
+              )}
             </div>
 
             {(isTransfer || isRepayment) && (
