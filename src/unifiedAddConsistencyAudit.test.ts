@@ -117,6 +117,12 @@ describe('unified Add consistency follow-up', () => {
     expect(bridge).not.toContain('createPlannedPayment');
   });
 
+  it('does not expose an intermediate launcher frame while switching unified Add types', () => {
+    expect(bridge).toContain('selectUnifiedTransactionType');
+    expect(bridge).toContain('queueMicrotask(() => selectUnifiedTransactionType(type))');
+    expect(bridge).not.toContain('requestAnimationFrame');
+  });
+
   it('keeps the initial launcher genuinely unselected', () => {
     expect(css).toContain(':not(:has(.mv-transaction-type-tab[aria-pressed="true"]))');
     expect(css).toContain('.mv-transaction-primary');
