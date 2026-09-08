@@ -42,7 +42,7 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(accountOptionLabel(vestaLloyds)).toBe('Lloyds · Current · Vesta · -£199.95');
   });
 
-  it('derives the Phone selected-account summary from the exact selected accountId and currentBalancePence', () => {
+  it('derives the Phone selected-account presentation from the exact selected accountId and currentBalancePence', () => {
     const modal = read('components/TransactionModal.tsx');
 
     expect(modal).toContain("const selectedAccount = accounts.find((account) => account.id === accountId);");
@@ -63,13 +63,33 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(modal).toContain('(!isRepayment || a.type === \'credit\')');
   });
 
-  it('limits the new visual treatment to the selected-account summary in Phone mode', () => {
+  it('gives Account and Category equivalent Phone outer-width treatment without changing unrelated selects', () => {
     const css = read('mobileUx.css');
 
-    expect(css).toContain('.mv-selected-account-summary {\n  display: none;');
-    expect(css).toContain('.mv-layout-phone .mv-selected-account-summary');
+    expect(css).toContain('.mv-layout-phone #transaction-category.mv-transaction-control');
+    expect(css).toContain('.mv-layout-phone #transaction-account.mv-transaction-control');
+
+    const categoryRule = css.match(/\.mv-layout-phone #transaction-category\.mv-transaction-control \{([\s\S]*?)\n  \}/)?.[1] ?? '';
+    const accountRule = css.match(/\.mv-layout-phone #transaction-account\.mv-transaction-control \{([\s\S]*?)\n  \}/)?.[1] ?? '';
+
+    for (const rule of [categoryRule, accountRule]) {
+      expect(rule).toContain('width: calc(100% + 12px) !important;');
+      expect(rule).toContain('max-width: calc(100% + 12px) !important;');
+      expect(rule).toContain('margin-inline-end: -12px;');
+    }
+
+    expect(css).not.toContain('.mv-layout-phone select.mv-transaction-control {');
+  });
+
+  it('presents one coherent selected Account field instead of a clipped native label plus duplicate identity block', () => {
+    const css = read('mobileUx.css');
+
+    expect(css).toContain('> #transaction-account {\n    grid-column: 1;\n    grid-row: 2;\n    color: transparent !important;');
+    expect(css).toContain('.mv-layout-phone #transaction-account > option {\n    color: CanvasText;');
+    expect(css).toContain('.mv-layout-phone .mv-selected-account-summary {\n    display: contents;');
     expect(css).toContain('.mv-layout-phone .mv-selected-account-identity');
+    expect(css).toContain('pointer-events: none;');
     expect(css).toContain('.mv-layout-phone .mv-selected-account-balance');
-    expect(css).not.toContain('#transaction-account.mv-transaction-control');
+    expect(css).toContain('grid-row: 3;');
   });
 });
