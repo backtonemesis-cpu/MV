@@ -7,6 +7,8 @@ import './mobileUx.css';
 import './accessibilityContrast.css';
 import './accentContrast.css';
 import './activityFilterRegression.css';
+import './unifiedAddConsistency.css';
+import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
 // Apply the saved token set before React paints to prevent theme flash.
