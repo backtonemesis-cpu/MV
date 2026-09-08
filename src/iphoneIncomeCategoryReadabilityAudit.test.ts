@@ -53,8 +53,13 @@ describe('Step 44 iPhone income category readability contract', () => {
     expect(mobileCss).toContain('.mv-layout-phone #transaction-category.mv-transaction-control');
     expect(mobileCss).toContain('-webkit-appearance: none;');
     expect(mobileCss).toContain('appearance: none;');
-    expect(mobileCss).toContain('padding-inline: 12px 30px !important;');
+    expect(mobileCss).toContain('padding-inline: 12px 18px !important;');
     expect(mobileCss).toContain('background-image:');
+    expect(mobileCss).toContain('background-size: 4px 4px, 4px 4px;');
+
+    // Guard the physical-iPhone regression: do not silently restore the 30px
+    // reservation that clipped the final character of the canonical long name.
+    expect(mobileCss).not.toContain('padding-inline: 12px 30px !important;');
 
     // Guard against broadening this narrow repair to every select/control.
     expect(mobileCss).not.toContain('.mv-layout-phone select.mv-transaction-control {\n    -webkit-appearance: none;');
