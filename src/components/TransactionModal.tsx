@@ -10,6 +10,9 @@ import { MoneyInput } from './MoneyInput';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
 import type { CategoryGroup } from '../types';
 
+const UNIFIED_ADD_SESSION_KEY = 'mv-unified-add-launcher';
+const OPEN_BILL_EVENT = 'mv:open-planned-payment';
+
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,6 +51,28 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [isSavings, setIsSavings] = useState(false);
   const [isRefund, setIsRefund] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isUnifiedAddLauncher =
+    !initialTransaction &&
+    typeof window !== 'undefined' &&
+    window.sessionStorage.getItem(UNIFIED_ADD_SESSION_KEY) === '1';
+
+  const clearUnifiedAddState = () => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(UNIFIED_ADD_SESSION_KEY);
+    }
+  };
+
+  const closeModal = () => {
+    clearUnifiedAddState();
+    onClose();
+  };
+
+  const openBillWorkflow = () => {
+    clearUnifiedAddState();
+    onClose();
+    window.dispatchEvent(new CustomEvent(OPEN_BILL_EVENT));
+  };
 
   // Split transaction state
   const [isSplitEnabled, setIsSplitEnabled] = useState(false);
@@ -105,7 +130,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setError(null);
   }, [initialTransaction, isOpen, accounts, categories]);
 
-  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, onClose);
+  useEffect(() => {
+    if (!isOpen) clearUnifiedAddState();
+  }, [isOpen]);
+
+  const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, closeModal);
 
   const personOptions = householdPersonOptions(
     members,
@@ -126,7 +155,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Handle Type change
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
     const preservedForNewType =
@@ -349,7 +377,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         isRefund,
         splits: finalSplits,
       });
-      onClose();
+      closeModal();
     } catch (err: any) {
       setError(err.message || 'Failed to save transaction');
     }
@@ -378,7 +406,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeModal}
             className="mv-modal-close"
             aria-label="Close transaction dialog"
           >
@@ -395,77 +423,55 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             </div>
           )}
 
-          {/* Type Selector Tabs */}
           <div>
             <div id="transaction-type-label" className="block text-xs font-semibold text-muted mb-1.5">
-              Type
+              {isUnifiedAddLauncher ? 'What would you like to add?' : 'Type'}
             </div>
             <div className="mv-transaction-type-tabs" role="group" aria-labelledby="transaction-type-label">
-              {(['expense', 'income', 'transfer', 'repayment', 'refund'] as const).map((t) => (
+              {(['expense', 'income', 'transfer', 'refund', 'repayment'] as const).map((t) => (
                 <button
                   type="button"
                   key={t}
                   onClick={() => handleTypeChange(t)}
                   className={`mv-transaction-type-tab ${type === t ? 'is-active' : ''}`}
                   aria-pressed={type === t}
+                  aria-label={`Add ${t}`}
                 >
                   {t}
                 </button>
               ))}
+              {isUnifiedAddLauncher && (
+                <button
+                  type="button"
+                  onClick={openBillWorkflow}
+                  className="mv-transaction-type-tab"
+                  aria-label="Add bill"
+                  aria-pressed="false"
+                >
+                  bill
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Amount & Date */}
           <div className="mv-modal-grid-2">
             <div>
               <label htmlFor="transaction-amount" className="block text-xs font-semibold text-muted mb-1">
                 Amount (£)
               </label>
-              <MoneyInput
-                id="transaction-amount"
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amountStr}
-                onChange={(e) => setAmountStr(e.target.value)}
-                className="mv-transaction-control w-full"
-                aria-label="Transaction amount in pounds sterling"
-                required
-              />
+              <MoneyInput id="transaction-amount" type="text" inputMode="decimal" placeholder="0.00" value={amountStr} onChange={(e) => setAmountStr(e.target.value)} className="mv-transaction-control w-full" aria-label="Transaction amount in pounds sterling" required />
             </div>
-
             <div>
-              <label htmlFor="transaction-date" className="block text-xs font-semibold text-muted mb-1">
-                Date
-              </label>
-              <input
-                id="transaction-date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mv-transaction-control w-full"
-                required
-              />
+              <label htmlFor="transaction-date" className="block text-xs font-semibold text-muted mb-1">Date</label>
+              <input id="transaction-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mv-transaction-control w-full" required />
             </div>
           </div>
 
-          {/* Description */}
           <div>
-            <label htmlFor="transaction-description" className="block text-xs font-semibold text-muted mb-1">
-              Description
-            </label>
-            <input
-              id="transaction-description"
-              type="text"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="mv-transaction-control w-full"
-              required
-            />
+            <label htmlFor="transaction-description" className="block text-xs font-semibold text-muted mb-1">Description</label>
+            <input id="transaction-description" type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className="mv-transaction-control w-full" required />
           </div>
 
-          {/* Person is a deliberate fact for income/expense/refund. Transfers derive owner from source account. */}
           {!isTransfer && (
             <div>
               <div id="transaction-person-label" className="block text-xs font-semibold text-muted mb-1.5">
@@ -473,274 +479,88 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               </div>
               <div className="flex flex-wrap gap-2" role="group" aria-labelledby="transaction-person-label">
                 {personOptions.map((person) => (
-                  <button
-                    type="button"
-                    key={person}
-                    onClick={() => setPayer(person)}
-                    className={`mv-transaction-selector-pill ${payer === person ? 'is-active' : ''}`}
-                    aria-pressed={payer === person}
-                  >
-                    {person}
-                  </button>
+                  <button type="button" key={person} onClick={() => setPayer(person)} className={`mv-transaction-selector-pill ${payer === person ? 'is-active' : ''}`} aria-pressed={payer === person}>{person}</button>
                 ))}
               </div>
-              {!payer && (
-                <div className="mt-1 text-[10px] text-subtle">
-                  Select a household member.
-                </div>
-              )}
+              {!payer && <div className="mt-1 text-[10px] text-subtle">Select a household member.</div>}
             </div>
           )}
 
           <div className="mv-transaction-dynamic">
-          {/* Account Selection */}
           <div className="mv-modal-grid-2">
             <div>
-              <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">
-                {isTransfer ? 'From Account' : isRepayment ? 'Paid from account' : 'Account'}
-              </label>
-              <select
-                id="transaction-account"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                className="mv-transaction-control w-full"
-                required
-              >
-                <option value="">
-                  {isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}
-                </option>
-                {accounts
-                  .filter(
-                    (acc) =>
-                      (acc.isActive !== false || acc.id === accountId) &&
-                      (!isRepayment || acc.type !== 'credit')
-                  )
-                  .map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {accountOptionLabel(acc)}
-                    </option>
-                  ))}
+              <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">{isTransfer ? 'From Account' : isRepayment ? 'Paid from account' : 'Account'}</label>
+              <select id="transaction-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="mv-transaction-control w-full" required>
+                <option value="">{isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}</option>
+                {accounts.filter((acc) => (acc.isActive !== false || acc.id === accountId) && (!isRepayment || acc.type !== 'credit')).map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
               </select>
               {selectedAccount && (
-                <div
-                  className="mv-selected-account-summary"
-                  aria-live="polite"
-                  aria-label={`Selected account ${accountIdentityLabel(selectedAccount)}, balance ${formatPence(selectedAccount.currentBalancePence)}`}
-                >
-                  <div className="mv-selected-account-identity">
-                    {accountIdentityLabel(selectedAccount)}
-                  </div>
-                  <div className="mv-selected-account-balance">
-                    Balance: {formatPence(selectedAccount.currentBalancePence)}
-                  </div>
+                <div className="mv-selected-account-summary" aria-live="polite" aria-label={`Selected account ${accountIdentityLabel(selectedAccount)}, balance ${formatPence(selectedAccount.currentBalancePence)}`}>
+                  <div className="mv-selected-account-identity">{accountIdentityLabel(selectedAccount)}</div>
+                  <div className="mv-selected-account-balance">Balance: {formatPence(selectedAccount.currentBalancePence)}</div>
                 </div>
               )}
             </div>
 
             {(isTransfer || isRepayment) && (
               <div>
-                <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">
-                  {isRepayment ? 'Credit account' : 'To Account'}
-                </label>
-                <select
-                  id="transaction-target-account"
-                  value={targetAccountId}
-                  onChange={(e) => setTargetAccountId(e.target.value)}
-                  className="mv-transaction-control w-full"
-                  required
-                >
-                  <option value="">
-                    {isRepayment ? 'Select credit account' : 'Select account'}
-                  </option>
-                  {accounts
-                    .filter(
-                      (a) =>
-                        a.id !== accountId &&
-                        (a.isActive !== false || a.id === targetAccountId) &&
-                        (!isRepayment || a.type === 'credit')
-                    )
-                    .map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {accountOptionLabel(acc)}
-                      </option>
-                    ))}
+                <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">{isRepayment ? 'Credit account' : 'To Account'}</label>
+                <select id="transaction-target-account" value={targetAccountId} onChange={(e) => setTargetAccountId(e.target.value)} className="mv-transaction-control w-full" required>
+                  <option value="">{isRepayment ? 'Select credit account' : 'Select account'}</option>
+                  {accounts.filter((a) => a.id !== accountId && (a.isActive !== false || a.id === targetAccountId) && (!isRepayment || a.type === 'credit')).map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
                 </select>
               </div>
             )}
 
             {!isTransfer && !isSplitEnabled && (
               <div>
-                <label htmlFor="transaction-category" className="block text-xs font-semibold text-muted mb-1">
-                  Category
-                </label>
-                <select
-                  id="transaction-category"
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="mv-transaction-control w-full"
-                  required
-                >
+                <label htmlFor="transaction-category" className="block text-xs font-semibold text-muted mb-1">Category</label>
+                <select id="transaction-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="mv-transaction-control w-full" required>
                   <option value="">Select category</option>
-                  {transactionCategoryOptions.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  {transactionCategoryOptions.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
               </div>
             )}
           </div>
 
-          {/* Category Split Option for Expenses & Refunds */}
           {!isTransfer && !isRepayment && (
             <div className="pt-2 border-t border-muted">
               <div className="flex items-center justify-between mb-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isSplitEnabled && splits.length === 0) {
-                      setSplits([
-                        {
-                          categoryId,
-                          originalCategoryId:
-                            initialTransaction?.type === type
-                              ? initialTransaction.categoryId
-                              : undefined,
-                          amountStr,
-                          notes: '',
-                        },
-                      ]);
-                    }
-                    setIsSplitEnabled(!isSplitEnabled);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-success hover:text-success"
-                  aria-expanded={isSplitEnabled}
-                >
-                  <Split className="w-3.5 h-3.5" />
-                  <span>{isSplitEnabled ? 'Remove Splits' : 'Split Categories'}</span>
+                <button type="button" onClick={() => { if (!isSplitEnabled && splits.length === 0) { setSplits([{ categoryId, originalCategoryId: initialTransaction?.type === type ? initialTransaction.categoryId : undefined, amountStr, notes: '' }]); } setIsSplitEnabled(!isSplitEnabled); }} className="inline-flex items-center gap-1.5 text-xs font-semibold text-success hover:text-success" aria-expanded={isSplitEnabled}>
+                  <Split className="w-3.5 h-3.5" /><span>{isSplitEnabled ? 'Remove Splits' : 'Split Categories'}</span>
                 </button>
-
-                {isSplitEnabled && (
-                  <span
-                    className={`text-xs font-bold ${
-                      remainingSplitPence === 0
-                        ? 'text-success'
-                        : remainingSplitPence > 0
-                        ? 'text-warning'
-                        : 'text-danger'
-                    }`}
-                  >
-                    {remainingSplitPence === 0
-                      ? 'Splits balanced'
-                      : remainingSplitPence > 0
-                      ? `${formatPence(remainingSplitPence)} remaining`
-                      : `Over by ${formatPence(Math.abs(remainingSplitPence))}`}
-                  </span>
-                )}
+                {isSplitEnabled && <span className={`text-xs font-bold ${remainingSplitPence === 0 ? 'text-success' : remainingSplitPence > 0 ? 'text-warning' : 'text-danger'}`}>{remainingSplitPence === 0 ? 'Splits balanced' : remainingSplitPence > 0 ? `${formatPence(remainingSplitPence)} remaining` : `Over by ${formatPence(Math.abs(remainingSplitPence))}`}</span>}
               </div>
-
               {isSplitEnabled && (
                 <div className="mv-transaction-splits space-y-2">
-                  <div className="flex justify-end pr-7 text-[10px] font-semibold text-muted">
-                    <span className="w-36">Amount (£)</span>
-                  </div>
+                  <div className="flex justify-end pr-7 text-[10px] font-semibold text-muted"><span className="w-36">Amount (£)</span></div>
                   {splits.map((splitRow, idx) => (
                     <div key={idx} className="mv-hscroll items-center">
-                      <select
-                        aria-label={`Split ${idx + 1} category`}
-                        value={splitRow.categoryId}
-                        onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)}
-                        className="mv-transaction-control flex-1"
-                        required
-                      >
+                      <select aria-label={`Split ${idx + 1} category`} value={splitRow.categoryId} onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)} className="mv-transaction-control flex-1" required>
                         <option value="">Select category</option>
-                        {getTransactionCategoryOptions(
-                          categories,
-                          type,
-                          initialTransaction?.type === type && splitRow.originalCategoryId
-                            ? [splitRow.originalCategoryId]
-                            : []
-                        ).map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
+                        {getTransactionCategoryOptions(categories, type, initialTransaction?.type === type && splitRow.originalCategoryId ? [splitRow.originalCategoryId] : []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
-
-                      <MoneyInput
-                        wrapperClassName="w-36"
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={splitRow.amountStr}
-                        onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)}
-                        className="mv-transaction-control w-full"
-                        aria-label={`Split ${idx + 1} amount in pounds sterling`}
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSplitRow(idx)}
-                        className="p-1 text-muted text-subtle hover:text-danger transition"
-                        title="Remove split"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <MoneyInput wrapperClassName="w-36" type="text" inputMode="decimal" placeholder="0.00" value={splitRow.amountStr} onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)} className="mv-transaction-control w-full" aria-label={`Split ${idx + 1} amount in pounds sterling`} />
+                      <button type="button" onClick={() => handleRemoveSplitRow(idx)} className="p-1 text-muted text-subtle hover:text-danger transition" title="Remove split"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
-
-                  <button
-                    type="button"
-                    onClick={handleAddSplitRow}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-success mt-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Split
-                  </button>
+                  <button type="button" onClick={handleAddSplitRow} className="inline-flex items-center gap-1 text-xs font-semibold text-success mt-1"><Plus className="w-3.5 h-3.5" />Add Split</button>
                 </div>
               )}
             </div>
           )}
           </div>
 
-          {/* Repayment is an explicit type. Savings classification is derived from transfer accounts. */}
-
-          {/* Notes */}
           <div>
-<label htmlFor="transaction-notes" className="block text-xs font-semibold text-muted mb-1">
-              Notes
-            </label>
-            <input
-              id="transaction-notes"
-              type="text"
-              placeholder="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="mv-transaction-control w-full"
-            />
+            <label htmlFor="transaction-notes" className="block text-xs font-semibold text-muted mb-1">Notes</label>
+            <input id="transaction-notes" type="text" placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="mv-transaction-control w-full" />
+          </div>
           </div>
 
-          </div>
-
-          {/* Footer Actions */}
           <div className="mv-modal-fixed-actions">
-            <button
-              type="button"
-              onClick={onClose}
-              className="mv-transaction-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mv-transaction-primary"
-            >
-              {isSubmitting
-                ? 'Saving...'
-                : initialTransaction
-                ? 'Update Transaction'
-                : 'Record Transaction'}
+            <button type="button" onClick={closeModal} className="mv-transaction-secondary">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="mv-transaction-primary">
+              {isSubmitting ? 'Saving...' : initialTransaction ? 'Update Transaction' : 'Record Transaction'}
             </button>
           </div>
         </form>
