@@ -36,7 +36,7 @@ function removeInFieldHelperText(root: ParentNode = document): void {
 
     modal.querySelectorAll<HTMLSelectElement>('select').forEach((select) => {
       const emptyOption = Array.from(select.options).find((option) => option.value === '');
-      if (emptyOption) emptyOption.textContent = '';
+      if (emptyOption && emptyOption.textContent !== '') emptyOption.textContent = '';
     });
   });
 }
