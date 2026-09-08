@@ -164,24 +164,84 @@
     max-width: 100% !important;
   }
 
-  /* Add Bill Due Date: keep Safari's native date input/picker, but force the
-     closed control to use the same contained field box as the adjacent selects.
-     WebKit can otherwise retain an intrinsic inline size for date controls. */
-  .mv-layout-phone #planned-payment-due-date {
-    display: block;
+  /* Add Bill Due Date: Safari can paint its native date UI outside the CSS
+     input box. Contain that native paint in the same 40px field geometry used
+     by the other Add Bill controls, and draw the visible field surface on the
+     wrapper. The input remains type=date and still owns the entire tap target. */
+  .mv-layout-phone .mv-add-bill-scroll .mv-modal-grid-2 > div:has(> #planned-payment-due-date) {
+    position: relative;
     box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .mv-layout-phone .mv-add-bill-scroll .mv-modal-grid-2 > div:has(> #planned-payment-due-date)::after {
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    height: 40px;
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--field);
+    content: "";
+  }
+
+  .mv-layout-phone #planned-payment-due-date {
+    position: relative;
+    z-index: 3;
+    display: block;
+    box-sizing: border-box !important;
     inline-size: 100% !important;
     width: 100% !important;
     min-inline-size: 0 !important;
     min-width: 0 !important;
     max-inline-size: 100% !important;
     max-width: 100% !important;
-    min-height: 44px;
-    margin-inline: 0 !important;
-    padding: 8px 12px !important;
-    border-radius: 0.375rem;
-    background: var(--surface) !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    overflow: hidden;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: var(--text) !important;
+    -webkit-text-fill-color: var(--text) !important;
+    font: inherit;
     font-weight: 500;
+    line-height: 40px !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .mv-layout-phone #planned-payment-due-date::-webkit-date-and-time-value {
+    min-height: 40px;
+    padding: 0;
+    text-align: left;
+    line-height: 40px;
+  }
+
+  .mv-layout-phone #planned-payment-due-date::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .mv-layout-phone .mv-add-bill-scroll .mv-modal-grid-2 > div:has(> #planned-payment-due-date):focus-within::after {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
   }
 
   .mv-layout-phone .mv-add-bill-modal {
