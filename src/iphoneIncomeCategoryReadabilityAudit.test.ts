@@ -47,23 +47,25 @@ describe('Step 44 iPhone income category readability contract', () => {
     expect(modal).toContain('{cat.name}');
   });
 
-  it('keeps native iPhone picker activation while widening only the Phone Category control', () => {
+  it('keeps native iPhone picker activation while containing the Phone Category control', () => {
     const mobileCss = read('mobileUx.css');
 
     expect(mobileCss).toContain('.mv-layout-phone #transaction-category.mv-transaction-control');
     expect(mobileCss).toContain('-webkit-appearance: menulist;');
     expect(mobileCss).toContain('appearance: auto;');
-    expect(mobileCss).toContain('width: calc(100% + 12px) !important;');
-    expect(mobileCss).toContain('max-width: calc(100% + 12px) !important;');
-    expect(mobileCss).toContain('margin-inline-end: -12px;');
+    expect(mobileCss).toContain('width: 100% !important;');
+    expect(mobileCss).toContain('max-width: 100% !important;');
+    expect(mobileCss).toContain('margin-inline: 0 !important;');
+    expect(mobileCss).toContain('padding-inline: 16px 36px !important;');
+    expect(mobileCss).not.toContain('width: calc(100% + 12px)');
+    expect(mobileCss).not.toContain('margin-inline-end: -12px');
 
     // Physical iPhone evidence showed appearance:none made the selected Category
     // field unreliable to reopen. Do not reintroduce custom select chrome here.
     expect(mobileCss).not.toContain('#transaction-category.mv-transaction-control {\n    -webkit-appearance: none;');
     expect(mobileCss).not.toContain('#transaction-category.mv-transaction-control {\n    appearance: none;');
 
-    // Guard against broadening this narrow width treatment to unrelated selects.
-    expect(mobileCss).not.toContain('.mv-layout-phone select.mv-transaction-control {\n    width: calc(100% + 12px)');
-    expect(mobileCss).not.toContain('.mv-layout-phone select {\n    width: calc(100% + 12px)');
+    // Guard against broadening this narrow treatment to unrelated selects.
+    expect(mobileCss).not.toContain('.mv-layout-phone select.mv-transaction-control {');
   });
 });
