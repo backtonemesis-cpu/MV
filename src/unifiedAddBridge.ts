@@ -6,14 +6,28 @@ const TRANSACTION_TYPES = ['expense', 'income', 'transfer', 'refund', 'repayment
 
 type UnifiedTransactionType = (typeof TRANSACTION_TYPES)[number];
 
+let isSelectingUnifiedType = false;
+
 function isUnifiedTransactionType(value: string | undefined): value is UnifiedTransactionType {
   return Boolean(value && TRANSACTION_TYPES.includes(value as UnifiedTransactionType));
 }
 
 function selectUnifiedTransactionType(type: UnifiedTransactionType): void {
-  document
-    .querySelector<HTMLButtonElement>(`.mv-transaction-type-tab[aria-label="Add ${type}"]`)
-    ?.click();
+  const button = document.querySelector<HTMLButtonElement>(
+    `.mv-transaction-type-tab[aria-label="Add ${type}"]`
+  );
+  if (!button) return;
+
+  // This synthetic click must reach React's type handler, but it must not be
+  // mistaken for another user-requested tab switch by the capture listener
+  // below. Without the guard, switching between two populated transaction
+  // forms recursively closes and reopens the modal until the browser locks.
+  isSelectingUnifiedType = true;
+  try {
+    button.click();
+  } finally {
+    isSelectingUnifiedType = false;
+  }
 }
 
 function openFreshUnifiedTransaction(type: UnifiedTransactionType): void {
@@ -72,6 +86,7 @@ if (typeof window !== 'undefined') {
       const target = event.target as Element | null;
       const button = target?.closest<HTMLButtonElement>('.mv-transaction-type-tab');
       if (!button) return;
+      if (isSelectingUnifiedType) return;
 
       const modal = button.closest<HTMLElement>('.mv-transaction-modal');
       if (!modal?.querySelector('.mv-transaction-type-tab[aria-label="Add bill"]')) return;

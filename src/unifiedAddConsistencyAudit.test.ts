@@ -123,6 +123,13 @@ describe('unified Add consistency follow-up', () => {
     expect(bridge).not.toContain('requestAnimationFrame');
   });
 
+  it('does not recursively intercept bridge-generated transaction tab clicks', () => {
+    expect(bridge).toContain('let isSelectingUnifiedType = false');
+    expect(bridge).toContain('isSelectingUnifiedType = true');
+    expect(bridge).toContain('isSelectingUnifiedType = false');
+    expect(bridge).toContain('if (isSelectingUnifiedType) return');
+  });
+
   it('keeps the initial launcher genuinely unselected', () => {
     expect(css).toContain(':not(:has(.mv-transaction-type-tab[aria-pressed="true"]))');
     expect(css).toContain('.mv-transaction-primary');
