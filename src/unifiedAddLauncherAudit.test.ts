@@ -7,6 +7,8 @@ const dashboard = fs.readFileSync(path.join(src, 'components/Dashboard.tsx'), 'u
 const transactionModal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 const plannedPaymentModal = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
+const indexHtml = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf8');
+const launcherStateCss = fs.readFileSync(path.resolve(process.cwd(), 'public/unified-add-launcher-fix.css'), 'utf8');
 
 describe('unified Dashboard Add launcher', () => {
   it('has one primary Dashboard Add action instead of competing transaction and bill actions', () => {
@@ -62,11 +64,23 @@ describe('unified Dashboard Add launcher', () => {
     expect(transactionModal).toContain("if (!type) {");
   });
 
+  it('shows only the six-choice launcher and cancel/close affordances before a type is selected', () => {
+    expect(indexHtml).toContain('./unified-add-launcher-fix.css');
+    expect(launcherStateCss).toContain('button[aria-label="Add bill"]');
+    expect(launcherStateCss).toContain(':not(:has(.mv-transaction-type-tab.is-active))');
+    expect(launcherStateCss).toContain('.mv-transaction-body > *:not(:has(.mv-transaction-type-tabs))');
+    expect(launcherStateCss).toContain('.mv-modal-fixed-actions button[type="submit"]');
+    expect(launcherStateCss).toMatch(/button\[type="submit"\][\s\S]*display:\s*none/);
+    expect(launcherStateCss).not.toContain('visibility: hidden');
+  });
+
   it('does not introduce width hacks or horizontal launcher overflow', () => {
     const selectorStart = transactionModal.indexOf('className="mv-transaction-type-tabs"');
     const selectorBlock = transactionModal.slice(selectorStart, selectorStart + 2200);
     expect(selectorBlock).not.toContain('calc(100% +');
     expect(selectorBlock).not.toContain('margin-right: -');
     expect(selectorBlock).not.toContain('min-w-[');
+    expect(launcherStateCss).not.toContain('width:');
+    expect(launcherStateCss).not.toContain('overflow-x');
   });
 });
