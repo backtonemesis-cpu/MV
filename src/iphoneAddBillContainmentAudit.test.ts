@@ -16,7 +16,7 @@ describe('iPhone Add Bill containment and field geometry', () => {
   });
 
   it('keeps Add Bill controls inside the containing width without oversized hacks', () => {
-    const start = mobileCss.indexOf('/* Add Bill iPhone containment');
+    const start = mobileCss.indexOf('.mv-layout-phone .mv-modal-card:has(#planned-payment-name)');
     expect(start).toBeGreaterThanOrEqual(0);
     const block = mobileCss.slice(start);
     expect(block).toContain('width: 100%');
@@ -26,6 +26,27 @@ describe('iPhone Add Bill containment and field geometry', () => {
     expect(block).not.toContain('calc(100% +');
     expect(block).not.toContain('margin-right: -');
     expect(block).not.toContain('margin-inline: -');
+  });
+
+  it('keeps the native Add Bill Due Date inside the same field geometry', () => {
+    expect(modal).toContain('id="planned-payment-due-date"');
+    expect(modal).toContain('type="date"');
+    expect(modal).toContain('value={dueDate}');
+    expect(modal).toContain('onChange={(e) => setDueDate(e.target.value)}');
+
+    const selector = '.mv-layout-phone #planned-payment-due-date';
+    const start = mobileCss.indexOf(selector);
+    expect(start).toBeGreaterThanOrEqual(0);
+    const end = mobileCss.indexOf('\n  }', start);
+    const block = mobileCss.slice(start, end + 4);
+    expect(block).toContain('inline-size: 100% !important');
+    expect(block).toContain('width: 100% !important');
+    expect(block).toContain('min-inline-size: 0 !important');
+    expect(block).toContain('max-inline-size: 100% !important');
+    expect(block).toContain('box-sizing: border-box');
+    expect(block).toContain('background: var(--surface) !important');
+    expect(block).not.toContain('-webkit-appearance: none');
+    expect(block).not.toContain('appearance: none');
   });
 
   it('separates scrollable bill fields from the non-overlapping action footer', () => {
@@ -71,7 +92,7 @@ describe('iPhone Add Bill containment and field geometry', () => {
   });
 
   it('does not alter New Transaction-specific selectors', () => {
-    const start = mobileCss.indexOf('/* Add Bill iPhone containment');
+    const start = mobileCss.indexOf('.mv-layout-phone .mv-modal-card:has(#planned-payment-name)');
     const block = mobileCss.slice(start);
     expect(block).not.toContain('#transaction-account');
     expect(block).not.toContain('#transaction-category');
