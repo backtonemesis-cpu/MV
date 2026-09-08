@@ -28,13 +28,18 @@ describe('iPhone Add Bill containment and field geometry', () => {
     expect(block).not.toContain('margin-inline: -');
   });
 
-  it('keeps the native Add Bill Due Date inside the same field geometry', () => {
+  it('contains Safari native Due Date paint in the same 40px dark field box', () => {
     expect(modal).toContain('id="planned-payment-due-date"');
     expect(modal).toContain('type="date"');
     expect(modal).toContain('value={dueDate}');
     expect(modal).toContain('onChange={(e) => setDueDate(e.target.value)}');
 
-    const selector = '.mv-layout-phone #planned-payment-due-date';
+    const wrapperSelector = '.mv-layout-phone .mv-add-bill-scroll .mv-modal-grid-2 > div:has(> #planned-payment-due-date)';
+    expect(mobileCss).toContain(wrapperSelector);
+    expect(mobileCss).toContain(`${wrapperSelector}::after`);
+    expect(mobileCss).toContain('background: var(--field);');
+
+    const selector = '.mv-layout-phone #planned-payment-due-date {';
     const start = mobileCss.indexOf(selector);
     expect(start).toBeGreaterThanOrEqual(0);
     const end = mobileCss.indexOf('\n  }', start);
@@ -43,10 +48,16 @@ describe('iPhone Add Bill containment and field geometry', () => {
     expect(block).toContain('width: 100% !important');
     expect(block).toContain('min-inline-size: 0 !important');
     expect(block).toContain('max-inline-size: 100% !important');
-    expect(block).toContain('box-sizing: border-box');
-    expect(block).toContain('background: var(--surface) !important');
-    expect(block).not.toContain('-webkit-appearance: none');
-    expect(block).not.toContain('appearance: none');
+    expect(block).toContain('height: 40px !important');
+    expect(block).toContain('min-height: 40px !important');
+    expect(block).toContain('max-height: 40px !important');
+    expect(block).toContain('box-sizing: border-box !important');
+    expect(block).toContain('background: transparent !important');
+    expect(block).toContain('-webkit-appearance: none');
+    expect(block).toContain('appearance: none');
+
+    expect(mobileCss).toContain('#planned-payment-due-date::-webkit-date-and-time-value');
+    expect(mobileCss).toContain('#planned-payment-due-date::-webkit-calendar-picker-indicator');
   });
 
   it('separates scrollable bill fields from the non-overlapping action footer', () => {
