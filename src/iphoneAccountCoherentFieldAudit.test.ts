@@ -6,30 +6,33 @@ const SRC = path.resolve(process.cwd(), 'src');
 const read = (relativePath: string) => fs.readFileSync(path.join(SRC, relativePath), 'utf8');
 
 describe('Step 44 iPhone Account coherent selected-state presentation', () => {
-  it('keeps the native Account select as the real control and masks only its closed selected text on Phone mode', () => {
+  it('keeps a native select for desktop/state parity and a contained Phone picker for interaction', () => {
     const modal = read('components/TransactionModal.tsx');
-    const css = read('mobileUx.css');
+    const shared = read('components/UnifiedAddUi.tsx');
+    const css = read('unifiedAddConsistency.css');
 
     expect(modal).toContain('id="transaction-account"');
     expect(modal).toContain('value={accountId}');
-    expect(modal).toContain('onChange={(e) => setAccountId(e.target.value)}');
-    expect(css).toContain('> #transaction-account {');
-    expect(css).toContain('color: transparent !important;');
-    expect(css).toContain('#transaction-account > option');
-    expect(css).toContain('color: CanvasText;');
+    expect(modal).toContain('<UnifiedAddAccountField');
+    expect(shared).toContain('<select');
+    expect(shared).toContain('value={value}');
+    expect(shared).toContain('onChange={(event) => onChange(event.target.value)}');
+    expect(shared).toContain('mv-mobile-account-trigger');
+    expect(shared).toContain('mv-mobile-account-picker');
+    expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
+    expect(css).toContain('display: none !important');
+    expect(css).toContain('.mv-layout-phone .mv-mobile-account-trigger');
+    expect(css).toContain('display: flex');
   });
 
-  it('keeps the authoritative account identity inside the Account field face and balance secondary', () => {
-    const modal = read('components/TransactionModal.tsx');
-    const css = read('mobileUx.css');
+  it('keeps the authoritative account identity in the Phone trigger and balance secondary', () => {
+    const shared = read('components/UnifiedAddUi.tsx');
 
-    expect(modal).toContain('{accountIdentityLabel(selectedAccount)}');
-    expect(modal).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
-    expect(css).toContain('.mv-selected-account-identity');
-    expect(css).toContain('grid-row: 2;');
-    expect(css).toContain('pointer-events: none;');
-    expect(css).toContain('.mv-selected-account-balance');
-    expect(css).toContain('grid-row: 3;');
+    expect(shared).toContain('accountIdentityLabel(selectedAccount)');
+    expect(shared).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
+    expect(shared).toContain('mv-mobile-account-trigger');
+    expect(shared).toContain('mv-selected-account-balance');
+    expect(shared).not.toContain('mv-selected-account-identity');
   });
 
   it('keeps Account and Category inside the real Phone container without negative width extensions', () => {
@@ -43,14 +46,11 @@ describe('Step 44 iPhone Account coherent selected-state presentation', () => {
     expect(css).not.toContain('.mv-layout-phone select.mv-transaction-control {');
   });
 
-  it('keeps the selected-account overlay contained inside the Account field', () => {
-    const css = read('mobileUx.css');
-    const identityRule = css.match(/\.mv-layout-phone \.mv-selected-account-identity \{([\s\S]*?)\n  \}/)?.[1] ?? '';
-
-    expect(identityRule).toContain('width: 100%;');
-    expect(identityRule).toContain('max-width: 100%;');
-    expect(identityRule).toContain('min-width: 0;');
-    expect(identityRule).toContain('pointer-events: none;');
-    expect(identityRule).not.toContain('calc(100% +');
+  it('keeps the contained Phone picker scrollable rather than opening the oversized native account sheet', () => {
+    const css = read('unifiedAddConsistency.css');
+    expect(css).toContain('.mv-mobile-account-picker-list');
+    expect(css).toContain('overflow-y: auto');
+    expect(css).toContain('max-height: min(68dvh, 620px)');
+    expect(css).not.toContain('calc(100% +');
   });
 });

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 const src = path.resolve(process.cwd(), 'src');
 const modal = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
 const mobileCss = fs.readFileSync(path.join(src, 'mobileUx.css'), 'utf8');
+const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('iPhone Add Bill containment and field geometry', () => {
   it('uses a dedicated Phone-contained Add Bill contract without changing modal logic', () => {
@@ -62,13 +63,15 @@ describe('iPhone Add Bill containment and field geometry', () => {
 
   it('separates scrollable bill fields from the non-overlapping action footer', () => {
     expect(modal).toContain('className="mv-modal-card mv-add-bill-modal"');
-    expect(modal).toContain('className="mv-modal-form mv-add-bill-form"');
-    expect(modal).toContain('className="mv-add-bill-scroll"');
-    expect(modal).toContain('className="mv-modal-fixed-actions mv-add-bill-actions"');
+    expect(modal).toContain('className="mv-modal-form mv-add-bill-form');
+    expect(modal).toContain('className="mv-add-bill-scroll mv-modal-scroll-body mv-transaction-body"');
+    expect(modal).toContain('<UnifiedAddFooter');
+    expect(modal).toContain('className="mv-add-bill-actions"');
+    expect(sharedUi).toContain('mv-modal-fixed-actions');
 
-    const scrollStart = modal.indexOf('className="mv-add-bill-scroll"');
+    const scrollStart = modal.indexOf('className="mv-add-bill-scroll');
     const notesIndex = modal.indexOf('id="planned-payment-notes"');
-    const actionsIndex = modal.indexOf('className="mv-modal-fixed-actions mv-add-bill-actions"');
+    const actionsIndex = modal.indexOf('<UnifiedAddFooter');
     expect(scrollStart).toBeGreaterThanOrEqual(0);
     expect(notesIndex).toBeGreaterThan(scrollStart);
     expect(actionsIndex).toBeGreaterThan(notesIndex);
@@ -99,8 +102,9 @@ describe('iPhone Add Bill containment and field geometry', () => {
   });
 
   it('preserves exact account and category option IDs and eligibility paths', () => {
-    expect(modal).toContain('<option key={acc.id} value={acc.id}>');
-    expect(modal).toContain('{accountOptionLabel(acc)}');
+    expect(modal).toContain('options={paymentAccountOptions}');
+    expect(sharedUi).toContain('<option key={account.id} value={account.id}>');
+    expect(sharedUi).toContain('{accountOptionLabel(account)}');
     expect(modal).toContain('<option key={c.id} value={c.id}>');
     expect(modal).toContain('getBillCategoryOptions');
     expect(modal).toContain('isBillCategorySelectionAllowed');

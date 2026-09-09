@@ -11,12 +11,18 @@ const launcherCss = fs.readFileSync(
   path.resolve(root, 'public/unified-add-launcher-fix.css'),
   'utf8'
 );
+const sharedUi = fs.readFileSync(
+  path.resolve(root, 'src/components/UnifiedAddUi.tsx'),
+  'utf8'
+);
 
 describe('unified Bill footer proportions', () => {
   it('keeps Bill on the shared footer classes and PlannedPayment workflow', () => {
-    expect(plannedPaymentModal).toContain('className="mv-modal-fixed-actions mv-add-bill-actions"');
-    expect(plannedPaymentModal).toContain('className="mv-transaction-secondary"');
-    expect(plannedPaymentModal).toContain('className="mv-transaction-primary disabled:opacity-50"');
+    expect(plannedPaymentModal).toContain('<UnifiedAddFooter');
+    expect(plannedPaymentModal).toContain('className="mv-add-bill-actions"');
+    expect(sharedUi).toContain('mv-modal-fixed-actions');
+    expect(sharedUi).toContain('className="mv-transaction-secondary"');
+    expect(sharedUi).toContain('className="mv-transaction-primary disabled:opacity-50"');
     expect(plannedPaymentModal).toContain("isUnifiedAdd ? 'Record Bill' : 'Add Bill'");
   });
 

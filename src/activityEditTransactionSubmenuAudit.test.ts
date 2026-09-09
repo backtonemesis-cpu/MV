@@ -6,6 +6,10 @@ const source = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/TransactionModal.tsx'),
   'utf8'
 );
+const sharedUi = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/components/UnifiedAddUi.tsx'),
+  'utf8'
+);
 
 describe('Activity Edit Transaction submenu audit contract', () => {
   it('preloads existing transaction facts without forcing focus and preserves historical attribution when the account is unchanged', () => {
@@ -53,15 +57,19 @@ describe('Activity Edit Transaction submenu audit contract', () => {
       'transaction-amount',
       'transaction-date',
       'transaction-description',
-      'transaction-account',
       'transaction-category',
       'transaction-notes',
     ]) {
       expect(source).toContain(`htmlFor="${id}"`);
       expect(source).toContain(`id="${id}"`);
     }
-    expect(source).toContain('role="group" aria-labelledby="transaction-type-label"');
-    expect(source).toContain('aria-pressed={type === t}');
+    expect(source).toContain('id="transaction-account"');
+    expect(source).toContain('<UnifiedAddAccountField');
+    expect(sharedUi).toContain('<label htmlFor={id}');
+    expect(sharedUi).toContain('id={id}');
+    expect(source).toContain('<UnifiedAddTypeTabs');
+    expect(sharedUi).toContain('role="group" aria-labelledby={labelId}');
+    expect(sharedUi).toContain('aria-pressed={activeType === type}');
     expect(source).not.toContain('transaction-person-label');
     expect(source).not.toContain('aria-pressed={payer === person}');
     expect(source).toContain('aria-label={`Split ${idx + 1} category`}');

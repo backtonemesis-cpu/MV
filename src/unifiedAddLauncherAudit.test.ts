@@ -9,6 +9,7 @@ const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 const plannedPaymentModal = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
 const indexHtml = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf8');
 const launcherStateCss = fs.readFileSync(path.resolve(process.cwd(), 'public/unified-add-launcher-fix.css'), 'utf8');
+const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Dashboard Add launcher', () => {
   it('has one primary Dashboard Add action instead of competing transaction and bill actions', () => {
@@ -19,14 +20,14 @@ describe('unified Dashboard Add launcher', () => {
   });
 
   it('uses the existing transaction type control as a six-choice launcher on Home', () => {
-    for (const label of ['expense', 'income', 'transfer', 'refund', 'repayment']) {
-      expect(transactionModal).toContain(`'${label}'`);
-      expect(transactionModal).toContain('aria-pressed={type === t}');
+    expect(transactionModal).toContain('<UnifiedAddTypeTabs');
+    for (const label of ['expense', 'income', 'transfer', 'refund', 'repayment', 'bill']) {
+      expect(sharedUi).toContain(`'${label}'`);
     }
-    expect(transactionModal).toContain('aria-label="Add bill"');
-    expect(transactionModal).toMatch(/aria-label="Add bill"[^>]*>bill<\/button>/);
-    expect(transactionModal).toContain('mv-transaction-type-tab');
-    expect(transactionModal).toContain('role="group"');
+    expect(sharedUi).toContain('aria-pressed={activeType === type}');
+    expect(sharedUi).toContain('aria-label={`Add ${type}`}');
+    expect(sharedUi).toContain('mv-transaction-type-tab');
+    expect(sharedUi).toContain('role="group"');
   });
 
   it('keeps Bill navigation-only and outside TransactionType/schema semantics', () => {
@@ -41,7 +42,8 @@ describe('unified Dashboard Add launcher', () => {
   it('routes Bill to the existing PlannedPayment workflow without saving on selection', () => {
     expect(dashboard).toContain('window.addEventListener(OPEN_BILL_EVENT, openBill)');
     expect(dashboard).toContain('const openBill = () => onOpenPlannedPaymentModal()');
-    expect(transactionModal).toContain('onClick={openBillWorkflow}');
+    expect(transactionModal).toContain("if (choice === 'bill')");
+    expect(transactionModal).toContain('if (isUnifiedAddLauncher) openBillWorkflow()');
     const billStart = transactionModal.indexOf('const openBillWorkflow');
     const billEnd = transactionModal.indexOf('\n  };', billStart) + 5;
     const billRoute = transactionModal.slice(billStart, billEnd);
@@ -77,8 +79,8 @@ describe('unified Dashboard Add launcher', () => {
   });
 
   it('does not introduce width hacks or horizontal launcher overflow', () => {
-    const selectorStart = transactionModal.indexOf('className="mv-transaction-type-tabs"');
-    const selectorBlock = transactionModal.slice(selectorStart, selectorStart + 2200);
+    const selectorStart = sharedUi.indexOf('className="mv-transaction-type-tabs"');
+    const selectorBlock = sharedUi.slice(selectorStart, selectorStart + 2200);
     expect(selectorBlock).not.toContain('calc(100% +');
     expect(selectorBlock).not.toContain('margin-right: -');
     expect(selectorBlock).not.toContain('min-w-[');

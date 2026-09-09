@@ -1,19 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, AlertCircle, CheckCircle2, Plus, Trash2, Split, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, Split } from 'lucide-react';
 import { Transaction, Account, Category, Payer, TransactionType, TransactionSplit, HouseholdMember } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
-import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
+import { accountIdentityLabel } from '../utils/accountDisplay';
 import { resolveAccountOwnerPayer } from '../utils/accountOwner';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
 import type { CategoryGroup } from '../types';
+import {
+  UnifiedAddAccountField,
+  UnifiedAddFooter,
+  UnifiedAddStatusMessage,
+  UnifiedAddTypeTabs,
+  type UnifiedAddChoice,
+} from './UnifiedAddUi';
 
 const UNIFIED_ADD_SESSION_KEY = 'mv-unified-add-launcher';
 const OPEN_BILL_EVENT = 'mv:open-planned-payment';
 
-type MobileAccountPicker = 'source' | 'target' | null;
 
 function repaymentAffectsCurrentBalance(account: Account, transaction: Transaction | null | undefined): boolean {
   if (!transaction || (!transaction.isRepayment && transaction.type !== 'repayment')) return false;
@@ -99,9 +105,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [isRefund, setIsRefund] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [mobileAccountPicker, setMobileAccountPicker] = useState<MobileAccountPicker>(null);
-  const sourcePickerTriggerRef = useRef<HTMLButtonElement>(null);
-  const targetPickerTriggerRef = useRef<HTMLButtonElement>(null);
 
   const isUnifiedAddLauncher =
     !initialTransaction &&
@@ -111,10 +114,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const clearUnifiedAddState = () => {
     if (typeof window !== 'undefined') window.sessionStorage.removeItem(UNIFIED_ADD_SESSION_KEY);
   };
-  const closeModal = () => { clearUnifiedAddState(); setMobileAccountPicker(null); onClose(); };
+  const closeModal = () => { clearUnifiedAddState(); onClose(); };
   const openBillWorkflow = () => {
     clearUnifiedAddState();
-    setMobileAccountPicker(null);
     onClose();
     window.dispatchEvent(new CustomEvent(OPEN_BILL_EVENT));
   };
@@ -140,7 +142,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setIsSplitEnabled(false);
     setSplits([]);
     setError(null);
-    setMobileAccountPicker(null);
   };
 
   useEffect(() => {
@@ -187,27 +188,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     }
     setError(null);
     setSuccessMessage(null);
-    setMobileAccountPicker(null);
   }, [initialTransaction, isOpen, accounts, categories]);
 
   useEffect(() => {
     if (!isOpen) clearUnifiedAddState();
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!mobileAccountPicker) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      const picker = mobileAccountPicker;
-      setMobileAccountPicker(null);
-      window.requestAnimationFrame(() => {
-        (picker === 'source' ? sourcePickerTriggerRef : targetPickerTriggerRef).current?.focus();
-      });
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [mobileAccountPicker]);
 
   const dialogRef = useModalAccessibility<HTMLDivElement>(isOpen, closeModal);
   const preservedHistoricalCategoryIds =
@@ -256,27 +241,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   if (!isOpen) return null;
 
-  const closeMobileAccountPicker = () => {
-    const picker = mobileAccountPicker;
-    setMobileAccountPicker(null);
-    window.requestAnimationFrame(() => {
-      (picker === 'target' ? targetPickerTriggerRef : sourcePickerTriggerRef).current?.focus();
-    });
-  };
-
-  const chooseMobileAccount = (account: Account) => {
-    if (mobileAccountPicker === 'source') {
-      setAccountId(account.id);
-      if (targetAccountId === account.id) setTargetAccountId('');
-    } else if (mobileAccountPicker === 'target') {
-      setTargetAccountId(account.id);
-    }
-    closeMobileAccountPicker();
-  };
-
   const handleTypeChange = (newType: TransactionType) => {
     setSuccessMessage(null);
-    setMobileAccountPicker(null);
 
     if (!initialTransaction && type && newType !== type) {
       setDescription('');
@@ -423,12 +389,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
   const currentSplitsTotalPence = splits.reduce((sum, split) => sum + parseToPence(split.amountStr), 0);
   const remainingSplitPence = totalPence - currentSplitsTotalPence;
-  const activeMobilePickerOptions = mobileAccountPicker === 'target' ? targetAccountOptions : sourceAccountOptions;
-  const activeMobilePickerValue = mobileAccountPicker === 'target' ? targetAccountId : accountId;
-  const activeMobilePickerTitle = mobileAccountPicker === 'target'
-    ? (isRepayment ? 'Credit card being repaid' : 'To Account')
-    : (isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account');
-
   return (
     <div className="mv-modal-backdrop">
       <div ref={dialogRef} className="mv-modal-card mv-transaction-modal" role="dialog" aria-modal="true" aria-labelledby="transaction-modal-title" tabIndex={-1}>
@@ -439,31 +399,40 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col" noValidate>
           <div className="mv-modal-scroll-body mv-transaction-body">
-          {error && <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2" role="alert"><AlertCircle className="w-4 h-4 shrink-0 text-danger" /><span>{error}</span></div>}
-          {successMessage && <div className="p-3 bg-success-soft border border-success rounded-xl text-xs text-success flex items-center gap-2" role="status" aria-live="polite"><CheckCircle2 className="w-4 h-4 shrink-0 text-success" /><span>{successMessage}</span></div>}
+          {error && <UnifiedAddStatusMessage variant="error">{error}</UnifiedAddStatusMessage>}
+          {successMessage && <UnifiedAddStatusMessage variant="success">{successMessage}</UnifiedAddStatusMessage>}
 
-          <div>
-            <div id="transaction-type-label" className="block text-xs font-semibold text-muted mb-1.5">{isUnifiedAddLauncher ? 'What would you like to add?' : 'Type'}</div>
-            <div className="mv-transaction-type-tabs" role="group" aria-labelledby="transaction-type-label">
-              {(['expense', 'income', 'transfer', 'refund', 'repayment'] as const).map((t) => (
-                <button type="button" key={t} onClick={() => handleTypeChange(t)} className={`mv-transaction-type-tab ${type === t ? 'is-active' : ''}`} aria-pressed={type === t} aria-label={`Add ${t}`}>{t}</button>
-              ))}
-              {isUnifiedAddLauncher && <button type="button" onClick={openBillWorkflow} className="mv-transaction-type-tab" aria-label="Add bill" aria-pressed="false">bill</button>}
-            </div>
-          </div>
+          <UnifiedAddTypeTabs
+            activeType={(type || null) as UnifiedAddChoice | null}
+            onSelect={(choice) => {
+              if (choice === 'bill') {
+                if (isUnifiedAddLauncher) openBillWorkflow();
+                return;
+              }
+              handleTypeChange(choice);
+            }}
+            labelId="transaction-type-label"
+            prompt={isUnifiedAddLauncher ? 'What would you like to add?' : 'Type'}
+          />
 
           <div className="mv-modal-grid-2">
             <div>
               <label htmlFor="transaction-amount" className="block text-xs font-semibold text-muted mb-1">Amount (£)</label>
               <MoneyInput id="transaction-amount" type="text" inputMode="decimal" placeholder="0.00" value={amountStr} onChange={(e) => setAmountStr(e.target.value)} className="mv-transaction-control w-full" aria-label="Transaction amount in pounds sterling" required />
               {repaymentExceedsDebt && repaymentDebtPence !== null && (
-                <div className="mv-repayment-amount-message is-danger" role="alert"><AlertCircle aria-hidden="true" /><span>Repayment exceeds card balance ({formatPence(repaymentDebtPence)}).</span></div>
+                <UnifiedAddStatusMessage variant="error" className="mv-repayment-amount-message">
+                  Repayment exceeds card balance ({formatPence(repaymentDebtPence)}).
+                </UnifiedAddStatusMessage>
               )}
               {repaymentExceedsNonOverdraftSource && selectedAccount && (
-                <div className="mv-repayment-amount-message is-danger" role="alert"><AlertCircle aria-hidden="true" /><span>Repayment exceeds {selectedAccount.type} balance ({formatPence(repaymentSourceBalancePence || 0)}).</span></div>
+                <UnifiedAddStatusMessage variant="error" className="mv-repayment-amount-message">
+                  Repayment exceeds {selectedAccount.type} balance ({formatPence(repaymentSourceBalancePence || 0)}).
+                </UnifiedAddStatusMessage>
               )}
               {repaymentExceedsCurrentVisibleBalance && selectedAccount && (
-                <div className="mv-repayment-amount-message is-warning" role="status"><AlertCircle aria-hidden="true" /><span>Exceeds current balance ({formatPence(repaymentSourceBalancePence || 0)}). Check overdraft.</span></div>
+                <UnifiedAddStatusMessage variant="warning" className="mv-repayment-amount-message">
+                  Exceeds current balance ({formatPence(repaymentSourceBalancePence || 0)}). Check overdraft.
+                </UnifiedAddStatusMessage>
               )}
             </div>
             <div><label htmlFor="transaction-date" className="block text-xs font-semibold text-muted mb-1">Date</label><input id="transaction-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mv-transaction-control w-full" required /></div>
@@ -473,30 +442,28 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
           <div className="mv-transaction-dynamic">
           <div className="mv-modal-grid-2">
-            <div>
-              <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">{isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'}</label>
-              <select id="transaction-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="mv-transaction-control mv-transaction-account-select w-full" aria-required="true">
-                <option value="">{isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}</option>
-                {sourceAccountOptions.map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
-              </select>
-              <button ref={sourcePickerTriggerRef} type="button" className="mv-mobile-account-trigger" onClick={() => setMobileAccountPicker('source')} aria-haspopup="listbox" aria-expanded={mobileAccountPicker === 'source'} aria-label={`${isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'} selector`}>
-                <span>{selectedAccount ? accountIdentityLabel(selectedAccount) : ''}</span><ChevronDown aria-hidden="true" />
-              </button>
-              {selectedAccount && <div className="mv-selected-account-summary" aria-live="polite" aria-label={`Selected account ${accountIdentityLabel(selectedAccount)}, balance ${formatPence(selectedAccount.currentBalancePence)}`}><div className="mv-selected-account-balance">Balance: {formatPence(selectedAccount.currentBalancePence)}</div></div>}
-            </div>
+            <UnifiedAddAccountField
+              id="transaction-account"
+              label={isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'}
+              value={accountId}
+              options={sourceAccountOptions}
+              onChange={(nextAccountId) => {
+                setAccountId(nextAccountId);
+                if (targetAccountId === nextAccountId) setTargetAccountId('');
+              }}
+              placeholder={isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}
+            />
 
             {(isTransfer || isRepayment) && (
-              <div>
-                <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">{isRepayment ? 'Credit card being repaid' : 'To Account'}</label>
-                <select id="transaction-target-account" value={targetAccountId} onChange={(e) => setTargetAccountId(e.target.value)} className="mv-transaction-control mv-transaction-account-select w-full" aria-required="true">
-                  <option value="">{isRepayment ? 'Select credit card' : 'Select account'}</option>
-                  {targetAccountOptions.map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
-                </select>
-                <button ref={targetPickerTriggerRef} type="button" className="mv-mobile-account-trigger" onClick={() => setMobileAccountPicker('target')} aria-haspopup="listbox" aria-expanded={mobileAccountPicker === 'target'} aria-label={`${isRepayment ? 'Credit card being repaid' : 'To Account'} selector`}>
-                  <span>{selectedTargetAccount ? accountIdentityLabel(selectedTargetAccount) : ''}</span><ChevronDown aria-hidden="true" />
-                </button>
-                {selectedTargetAccount && <div className="mv-selected-account-summary" aria-live="polite" aria-label={`Selected destination account ${accountIdentityLabel(selectedTargetAccount)}, balance ${formatPence(selectedTargetAccount.currentBalancePence)}`}><div className="mv-selected-account-balance">Balance: {formatPence(selectedTargetAccount.currentBalancePence)}</div></div>}
-              </div>
+              <UnifiedAddAccountField
+                id="transaction-target-account"
+                label={isRepayment ? 'Credit card being repaid' : 'To Account'}
+                value={targetAccountId}
+                options={targetAccountOptions}
+                onChange={setTargetAccountId}
+                placeholder={isRepayment ? 'Select credit card' : 'Select account'}
+                summaryAriaPrefix="Selected destination account"
+              />
             )}
 
             {!isTransfer && !isSplitEnabled && (
@@ -537,30 +504,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div><label htmlFor="transaction-notes" className="block text-xs font-semibold text-muted mb-1">Notes</label><input id="transaction-notes" type="text" placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="mv-transaction-control w-full" /></div>
           </div>
 
-          <div className="mv-modal-fixed-actions">
-            <button type="button" onClick={closeModal} className="mv-transaction-secondary">Cancel</button>
-            <button type="submit" disabled={isSubmitting || repaymentAmountBlocked} className="mv-transaction-primary">{isSubmitting ? 'Saving...' : initialTransaction ? 'Update Transaction' : 'Record Transaction'}</button>
-          </div>
+          <UnifiedAddFooter
+            onCancel={closeModal}
+            submitLabel={initialTransaction ? 'Update Transaction' : 'Record Transaction'}
+            submitting={isSubmitting}
+            disabled={repaymentAmountBlocked}
+          />
         </form>
 
-        {mobileAccountPicker && (
-          <div className="mv-mobile-account-picker-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) closeMobileAccountPicker(); }}>
-            <div className="mv-mobile-account-picker" role="dialog" aria-modal="true" aria-label={activeMobilePickerTitle}>
-              <div className="mv-mobile-account-picker-header">
-                <span>{activeMobilePickerTitle}</span>
-                <button type="button" onClick={closeMobileAccountPicker} aria-label={`Close ${activeMobilePickerTitle} selector`}><X aria-hidden="true" /></button>
-              </div>
-              <div className="mv-mobile-account-picker-list" role="listbox" aria-label={activeMobilePickerTitle}>
-                {activeMobilePickerOptions.map((account) => (
-                  <button key={account.id} type="button" role="option" aria-selected={account.id === activeMobilePickerValue} className="mv-mobile-account-picker-option" onClick={() => chooseMobileAccount(account)}>
-                    <span className="mv-mobile-account-picker-identity">{accountIdentityLabel(account)}</span>
-                    <span className="mv-mobile-account-picker-balance">{formatPence(account.currentBalancePence)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

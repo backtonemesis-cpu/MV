@@ -6,6 +6,10 @@ const source = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/PlannedPaymentModal.tsx'),
   'utf8'
 );
+const sharedUi = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/components/UnifiedAddUi.tsx'),
+  'utf8'
+);
 
 describe('Add Bill submenu audit contract', () => {
   it('does not prefill or expose a household-specific amount example', () => {
@@ -25,20 +29,21 @@ describe('Add Bill submenu audit contract', () => {
   });
 
   it('associates visible field labels with their controls', () => {
-    const ids = [
+    for (const id of [
       'planned-payment-name',
       'planned-payment-amount',
       'planned-payment-month',
-      'planned-payment-account',
       'planned-payment-due-date',
       'planned-payment-category',
       'planned-payment-notes',
-    ];
-
-    for (const id of ids) {
+    ]) {
       expect(source).toContain(`htmlFor="${id}"`);
       expect(source).toContain(`id="${id}"`);
     }
+    expect(source).toContain('id="planned-payment-account"');
+    expect(source).toContain('label="Payment Account *"');
+    expect(sharedUi).toContain('<label htmlFor={id}');
+    expect(sharedUi).toContain('id={id}');
     expect(source).not.toContain('planned-payment-person');
   });
 
@@ -52,7 +57,8 @@ describe('Add Bill submenu audit contract', () => {
   it('offers active payment accounts while preserving an archived account already linked during edit', () => {
     expect(source).toContain('const paymentAccountOptions = accounts.filter(');
     expect(source).toContain("account.isActive !== false || account.id === payment?.accountId");
-    expect(source).toContain('paymentAccountOptions.map((acc) =>');
+    expect(source).toContain('options={paymentAccountOptions}');
+    expect(sharedUi).toContain('options.map((account) =>');
   });
 
   it('keeps the bill amount numeric-only with explicit GBP semantics', () => {

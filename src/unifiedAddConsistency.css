@@ -151,36 +151,48 @@
   overflow-wrap: anywhere;
 }
 
-.mv-repayment-amount-message {
+.mv-unified-add-status {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 8px;
   border: 1px solid transparent;
-  border-radius: var(--card-radius, 6px);
-  padding: 7px 9px;
+  border-radius: var(--card-radius, 8px);
+  padding: 10px 12px;
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.2rem;
 }
 
-.mv-repayment-amount-message > svg {
+.mv-unified-add-status > svg {
   width: 16px;
   height: 16px;
   flex: 0 0 auto;
   margin-top: 1px;
 }
 
-.mv-repayment-amount-message.is-danger {
+.mv-unified-add-status.is-error {
   border-color: var(--danger-border);
   background: var(--danger-bg);
   color: var(--danger-text);
 }
 
-.mv-repayment-amount-message.is-warning {
+.mv-unified-add-status.is-success {
+  border-color: var(--success-border);
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+.mv-unified-add-status.is-warning {
   border-color: var(--warning-border);
   background: var(--warning-bg);
   color: var(--warning-text);
+}
+
+.mv-repayment-amount-message {
+  margin-top: 6px;
+  gap: 6px;
+  border-radius: var(--card-radius, 6px);
+  padding: 7px 9px;
 }
 
 .mv-mobile-account-trigger {

@@ -44,19 +44,23 @@ describe('Step 44 iPhone selected-account readability contract', () => {
 
   it('derives the Phone selected-account presentation from the exact selected accountId and currentBalancePence', () => {
     const modal = read('components/TransactionModal.tsx');
+    const shared = read('components/UnifiedAddUi.tsx');
 
     expect(modal).toContain("const selectedAccount = accounts.find((account) => account.id === accountId);");
-    expect(modal).toContain('{accountIdentityLabel(selectedAccount)}');
-    expect(modal).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
     expect(modal).toContain('value={accountId}');
-    expect(modal).toContain('onChange={(e) => setAccountId(e.target.value)}');
+    expect(modal).toContain('<UnifiedAddAccountField');
+    expect(shared).toContain('const selectedAccount = options.find((account) => account.id === value)');
+    expect(shared).toContain('accountIdentityLabel(selectedAccount)');
+    expect(shared).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
+    expect(shared).toContain('onChange={(event) => onChange(event.target.value)}');
     expect(formatPence(mariusLloyds.currentBalancePence)).toBe('£3,288.33');
   });
 
   it('keeps the Account picker option labels and repayment filtering semantics unchanged', () => {
     const modal = read('components/TransactionModal.tsx');
+    const shared = read('components/UnifiedAddUi.tsx');
 
-    expect(modal).toContain('{accountOptionLabel(acc)}');
+    expect(shared).toContain('{accountOptionLabel(account)}');
     expect(modal).toContain('(acc.isActive !== false || acc.id === accountId)');
     expect(modal).toContain('(!isRepayment || acc.type !== \'credit\')');
     expect(modal).toContain('a.id !== accountId');
@@ -95,17 +99,17 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect('Child Maintenance Received').toBe('Child Maintenance Received');
   });
 
-  it('presents one coherent selected Account field instead of a clipped native label plus duplicate identity block', () => {
-    const css = read('mobileUx.css');
+  it('presents one coherent selected Account field with a contained Phone picker and balance-only summary', () => {
+    const shared = read('components/UnifiedAddUi.tsx');
+    const css = read('unifiedAddConsistency.css');
 
-    expect(css).toContain('> #transaction-account {\n    grid-column: 1;\n    grid-row: 2;\n    color: transparent !important;');
-    expect(css).toContain('.mv-layout-phone #transaction-account > option {\n    color: CanvasText;');
-    expect(css).toContain('.mv-layout-phone .mv-selected-account-summary {\n    display: contents;');
-    expect(css).toContain('.mv-layout-phone .mv-selected-account-identity');
-    expect(css).toContain('pointer-events: none;');
-    expect(css).toContain('width: 100%;');
-    expect(css).toContain('max-width: 100%;');
-    expect(css).toContain('.mv-layout-phone .mv-selected-account-balance');
-    expect(css).toContain('grid-row: 3;');
+    expect(shared).toContain('mv-mobile-account-trigger');
+    expect(shared).toContain('accountIdentityLabel(selectedAccount)');
+    expect(shared).toContain('mv-selected-account-balance');
+    expect(shared).not.toContain('mv-selected-account-identity');
+    expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
+    expect(css).toContain('display: none !important');
+    expect(css).toContain('.mv-layout-phone .mv-mobile-account-trigger');
+    expect(css).toContain('display: flex');
   });
 });

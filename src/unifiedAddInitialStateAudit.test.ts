@@ -6,12 +6,14 @@ const src = path.resolve(process.cwd(), 'src');
 const tx = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
+const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add initial unselected state', () => {
   it('keeps the six-choice launcher unselected by default', () => {
     expect(tx).toContain("const [type, setType] = useState<TransactionType | ''>('');");
-    expect(tx).toContain('aria-label="Add bill"');
-    expect(tx).toContain('aria-pressed="false"');
+    expect(tx).toContain('<UnifiedAddTypeTabs');
+    expect(sharedUi).toContain(`aria-label={\`Add \${type}\`}`);
+    expect(sharedUi).toContain('aria-pressed={activeType === type}');
     expect(tx).not.toContain("setType('expense')");
   });
 
