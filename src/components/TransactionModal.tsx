@@ -349,7 +349,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       if (!creditAccount || creditAccount.type !== 'credit') { setError('Card repayment destination must be a credit account.'); return; }
       const outstandingDebtPence = repaymentDebtBeforeEditPence(creditAccount, initialTransaction);
       if (pence > outstandingDebtPence) {
-        setError(`Repayment cannot exceed the credit card balance of ${formatPence(outstandingDebtPence)}.`);
+        setError(`Repayment exceeds card balance (${formatPence(outstandingDebtPence)}).`);
         return;
       }
       const sourceBalancePence = repaymentSourceBalanceBeforeEditPence(sourceAccount, initialTransaction);
@@ -358,7 +358,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         sourceAccount?.type !== 'joint' &&
         pence > sourceBalancePence
       ) {
-        setError(`Repayment cannot exceed the available ${sourceAccount?.type || 'source'} account balance of ${formatPence(sourceBalancePence)}.`);
+        setError(`Repayment exceeds ${sourceAccount?.type || 'source'} balance (${formatPence(sourceBalancePence)}).`);
         return;
       }
     }
@@ -457,13 +457,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <label htmlFor="transaction-amount" className="block text-xs font-semibold text-muted mb-1">Amount (£)</label>
               <MoneyInput id="transaction-amount" type="text" inputMode="decimal" placeholder="0.00" value={amountStr} onChange={(e) => setAmountStr(e.target.value)} className="mv-transaction-control w-full" aria-label="Transaction amount in pounds sterling" required />
               {repaymentExceedsDebt && repaymentDebtPence !== null && (
-                <div className="mv-repayment-amount-message is-danger" role="alert">Repayment exceeds the credit card balance of {formatPence(repaymentDebtPence)}.</div>
+                <div className="mv-repayment-amount-message is-danger" role="alert"><AlertCircle aria-hidden="true" /><span>Repayment exceeds card balance ({formatPence(repaymentDebtPence)}).</span></div>
               )}
               {repaymentExceedsNonOverdraftSource && selectedAccount && (
-                <div className="mv-repayment-amount-message is-danger" role="alert">Repayment exceeds the available {selectedAccount.type} account balance of {formatPence(repaymentSourceBalancePence || 0)}.</div>
+                <div className="mv-repayment-amount-message is-danger" role="alert"><AlertCircle aria-hidden="true" /><span>Repayment exceeds {selectedAccount.type} balance ({formatPence(repaymentSourceBalancePence || 0)}).</span></div>
               )}
               {repaymentExceedsCurrentVisibleBalance && selectedAccount && (
-                <div className="mv-repayment-amount-message is-warning" role="status">Repayment exceeds the displayed current-account balance of {formatPence(repaymentSourceBalancePence || 0)}. Check the available overdraft before recording.</div>
+                <div className="mv-repayment-amount-message is-warning" role="status"><AlertCircle aria-hidden="true" /><span>Exceeds current balance ({formatPence(repaymentSourceBalancePence || 0)}). Check overdraft.</span></div>
               )}
             </div>
             <div><label htmlFor="transaction-date" className="block text-xs font-semibold text-muted mb-1">Date</label><input id="transaction-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mv-transaction-control w-full" required /></div>
