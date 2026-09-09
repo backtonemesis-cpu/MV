@@ -1096,10 +1096,12 @@ export default function App() {
             setEditingTx(null);
           }}
           onSave={handleSaveTransaction}
+          onSaveBill={handleCreatePlannedPayment}
           initialTransaction={editingTx}
           accounts={household.accounts}
           categories={household.categories}
           members={household.members}
+          activeMonth={selectedMonth}
           isSubmitting={isSubmitting}
         />
       )}
