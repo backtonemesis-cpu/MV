@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Plus, Trash2, Split } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2, Plus, Trash2, Split } from 'lucide-react';
 import { Transaction, Account, Category, Payer, TransactionType, TransactionSplit, HouseholdMember } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { formatPence, parseToPence } from '../utils/currency';
@@ -51,6 +51,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [isSavings, setIsSavings] = useState(false);
   const [isRefund, setIsRefund] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const isUnifiedAddLauncher =
     !initialTransaction &&
@@ -79,6 +80,25 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [splits, setSplits] = useState<
     { categoryId: string; amountStr: string; notes?: string; originalCategoryId?: string }[]
   >([]);
+
+  const resetForNextTransaction = (nextType: TransactionType) => {
+    setDescription('');
+    setAmountStr('');
+    setType(nextType);
+    setCategoryId('');
+    setAccountId('');
+    setTargetAccountId('');
+    setPayer('');
+    setDate(localDateInputValue());
+    setNotes('');
+    setIsTransfer(nextType === 'transfer');
+    setIsRepayment(nextType === 'repayment');
+    setIsSavings(false);
+    setIsRefund(nextType === 'refund');
+    setIsSplitEnabled(false);
+    setSplits([]);
+    setError(null);
+  };
 
   useEffect(() => {
     if (initialTransaction) {
@@ -128,6 +148,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setSplits([]);
     }
     setError(null);
+    setSuccessMessage(null);
   }, [initialTransaction, isOpen, accounts, categories]);
 
   useEffect(() => {
@@ -156,6 +177,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   if (!isOpen) return null;
 
   const handleTypeChange = (newType: TransactionType) => {
+    setSuccessMessage(null);
     setType(newType);
     const preservedForNewType =
       initialTransaction?.type === newType
@@ -235,6 +257,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
 
     if (!type) {
       setError('Choose the transaction type.');
@@ -359,12 +382,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     const resolvedPayer: Payer = isTransfer
       ? sourceAccount?.ownerPerson || 'Joint'
       : (payer as Payer);
+    const recordedType = type as TransactionType;
 
     try {
       await onSave({
         description: description.trim(),
         amountPence: pence,
-        type: isRepayment ? 'repayment' : (type as TransactionType),
+        type: isRepayment ? 'repayment' : recordedType,
         categoryId: isTransfer ? undefined : categoryId || undefined,
         accountId,
         targetAccountId: isTransfer || isRepayment ? targetAccountId : undefined,
@@ -377,7 +401,23 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         isRefund,
         splits: finalSplits,
       });
-      closeModal();
+
+      if (isUnifiedAddLauncher && !initialTransaction) {
+        resetForNextTransaction(recordedType);
+        const successLabel: Record<TransactionType, string> = {
+          expense: 'Expense',
+          income: 'Income',
+          transfer: 'Transfer',
+          refund: 'Refund',
+          repayment: 'Repayment',
+        };
+        setSuccessMessage(`${successLabel[recordedType]} recorded. Ready for another entry.`);
+        window.requestAnimationFrame(() => {
+          dialogRef.current?.querySelector<HTMLElement>('.mv-modal-scroll-body')?.scrollTo({ top: 0 });
+        });
+      } else {
+        closeModal();
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to save transaction');
     }
@@ -420,6 +460,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             <div className="p-3 bg-danger-soft border border-danger rounded-xl text-xs text-danger flex items-center gap-2" role="alert">
               <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
               <span>{error}</span>
+            </div>
+          )}
+          {successMessage && (
+            <div className="p-3 bg-success-soft border border-success rounded-xl text-xs text-success flex items-center gap-2" role="status" aria-live="polite">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-success" />
+              <span>{successMessage}</span>
             </div>
           )}
 
