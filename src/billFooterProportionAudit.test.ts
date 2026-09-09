@@ -3,8 +3,16 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const root = process.cwd();
+const transactionModal = fs.readFileSync(
+  path.resolve(root, 'src/components/TransactionModal.tsx'),
+  'utf8'
+);
 const plannedPaymentModal = fs.readFileSync(
   path.resolve(root, 'src/components/PlannedPaymentModal.tsx'),
+  'utf8'
+);
+const unifiedCss = fs.readFileSync(
+  path.resolve(root, 'src/unifiedAddConsistency.css'),
   'utf8'
 );
 const launcherCss = fs.readFileSync(
@@ -17,22 +25,24 @@ const sharedUi = fs.readFileSync(
 );
 
 describe('unified Bill footer proportions', () => {
-  it('keeps Bill on the shared footer classes and PlannedPayment workflow', () => {
+  it('keeps both unified creation and direct Bill editing on the shared footer component', () => {
+    expect(transactionModal).toContain('<UnifiedAddFooter');
     expect(plannedPaymentModal).toContain('<UnifiedAddFooter');
-    expect(plannedPaymentModal).toContain('className="mv-add-bill-actions"');
     expect(sharedUi).toContain('mv-modal-fixed-actions');
     expect(sharedUi).toContain('className="mv-transaction-secondary"');
     expect(sharedUi).toContain('className="mv-transaction-primary disabled:opacity-50"');
-    expect(plannedPaymentModal).toContain("isUnifiedAdd ? 'Record Bill' : 'Add Bill'");
+    expect(transactionModal).toContain("'Record Bill'");
   });
 
-  it('content-sizes Cancel and lets Record Bill consume the remaining footer width', () => {
-    expect(launcherCss).toMatch(
-      /\.mv-add-bill-modal\[data-unified-add="true"\][\s\S]*\.mv-transaction-secondary[\s\S]*flex:\s*0 0 auto\s*!important/
+  it('uses the same content-sized Cancel and flexible primary action for all six Add types', () => {
+    expect(unifiedCss).toMatch(
+      /\.mv-transaction-modal:has\(\.mv-transaction-type-tab\[aria-label="Add bill"\]\)[\s\S]*\.mv-modal-fixed-actions > \.mv-transaction-secondary[\s\S]*flex:\s*0 0 auto\s*!important/
     );
-    expect(launcherCss).toMatch(
-      /\.mv-add-bill-modal\[data-unified-add="true"\][\s\S]*\.mv-transaction-primary[\s\S]*flex:\s*1 1 auto\s*!important/
+    expect(unifiedCss).toMatch(
+      /\.mv-transaction-modal:has\(\.mv-transaction-type-tab\[aria-label="Add bill"\]\)[\s\S]*\.mv-modal-fixed-actions > \.mv-transaction-primary[\s\S]*flex:\s*1 1 auto\s*!important/
     );
-    expect(launcherCss).not.toContain('grid-template-columns: 1fr 1fr');
+    expect(launcherCss).not.toContain('.mv-add-bill-actions .mv-transaction-secondary');
+    expect(launcherCss).not.toContain('.mv-add-bill-actions .mv-transaction-primary');
+    expect(unifiedCss).not.toContain('grid-template-columns: 1fr 1fr');
   });
 });
