@@ -87,7 +87,10 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     }
 
     const selectedAccount = accounts.find((account) => account.id === accountId);
-    const responsiblePerson = resolveAccountOwnerPayer(selectedAccount, members);
+    const responsiblePerson =
+      payment && payment.accountId === accountId
+        ? payment.responsiblePerson
+        : resolveAccountOwnerPayer(selectedAccount, members);
     if (!responsiblePerson) {
       setError('The selected payment account has no valid owner. Review the account before recording this bill.');
       return;
