@@ -178,7 +178,7 @@
   align-items: flex-end;
   justify-content: center;
   padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--backdrop, #000) 58%, transparent);
+  background: rgba(0, 0, 0, 0.58);
 }
 
 .mv-mobile-account-picker {
