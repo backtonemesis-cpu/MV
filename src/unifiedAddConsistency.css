@@ -52,10 +52,9 @@
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-/* No instructional text is shown inside empty entry/selection boxes in the
-   unified + Add flow. Visible labels remain outside the fields and accessible
-   names remain intact. The runtime bridge also removes placeholder attributes
-   and clears empty native option labels so Safari cannot repaint them. */
+/* Free-text helper placeholders stay suppressed in the unified + Add flow.
+   Account and Category selectors intentionally retain muted empty-state prompts
+   so blank fields remain understandable without storing prompt text as data. */
 .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) :is(input, textarea)::placeholder,
 .mv-add-bill-modal[data-unified-add="true"] :is(input, textarea)::placeholder {
   color: transparent !important;
