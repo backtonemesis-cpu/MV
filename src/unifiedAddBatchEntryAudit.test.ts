@@ -6,6 +6,7 @@ const src = path.resolve(process.cwd(), 'src');
 const app = fs.readFileSync(path.join(src, 'App.tsx'), 'utf8');
 const transactionModal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const plannedPaymentModal = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
+const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add batch-entry workflow', () => {
   it('does not let the App-level transaction save handler close the modal after a successful save', () => {
@@ -34,7 +35,9 @@ describe('unified Add batch-entry workflow', () => {
     expect(transactionModal).toContain('resetForNextTransaction');
     expect(transactionModal).toContain('if (isUnifiedAddLauncher && !initialTransaction)');
     expect(transactionModal).toContain('setSuccessMessage(`${successLabel[recordedType]} recorded. Ready for another entry.`)');
-    expect(transactionModal).toContain('role="status" aria-live="polite"');
+    expect(transactionModal).toContain('<UnifiedAddStatusMessage variant="success"');
+    expect(sharedUi).toContain("const role = variant === 'error' ? 'alert' : 'status'");
+    expect(sharedUi).toContain("aria-live={variant === 'error' ? undefined : 'polite'}");
     expect(transactionModal).toContain("expense: 'Expense'");
     expect(transactionModal).toContain("income: 'Income'");
     expect(transactionModal).toContain("transfer: 'Transfer'");
@@ -46,7 +49,8 @@ describe('unified Add batch-entry workflow', () => {
     expect(plannedPaymentModal).toContain('resetForNextBill');
     expect(plannedPaymentModal).toContain('if (isUnifiedAdd && !isEditing)');
     expect(plannedPaymentModal).toContain("setSuccessMessage('Bill recorded. Ready for another entry.')");
-    expect(plannedPaymentModal).toContain('role="status" aria-live="polite"');
+    expect(plannedPaymentModal).toContain('<UnifiedAddStatusMessage variant="success"');
+    expect(sharedUi).toContain("aria-live={variant === 'error' ? undefined : 'polite'}");
   });
 
   it('still closes direct and editing workflows after save', () => {
