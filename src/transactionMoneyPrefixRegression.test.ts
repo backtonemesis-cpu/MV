@@ -48,7 +48,7 @@ describe('Shared numeric-only GBP money-input regression guard', () => {
 
   it('does not reintroduce forced autofocus into Transaction monetary fields', () => {
     const blocks = transactionModal.match(/<MoneyInput[\s\S]*?\/>/g) ?? [];
-    expect(blocks).toHaveLength(2);
+    expect(blocks).toHaveLength(3);
     expect(blocks.every((block) => !block.includes('autoFocus'))).toBe(true);
   });
 });
