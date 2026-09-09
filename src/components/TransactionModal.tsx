@@ -756,7 +756,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         id="unified-bill-category"
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
-                        className="mv-transaction-control w-full"
+                        className={`mv-transaction-control w-full ${categoryId ? '' : 'is-placeholder'}`.trim()}
                         required
                       >
                         <option value="">Select category</option>
@@ -940,7 +940,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                           id="transaction-category"
                           value={categoryId}
                           onChange={(e) => setCategoryId(e.target.value)}
-                          className="mv-transaction-control w-full"
+                          className={`mv-transaction-control w-full ${categoryId ? '' : 'is-placeholder'}`.trim()}
                           required
                         >
                           <option value="">Select category</option>
