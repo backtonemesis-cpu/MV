@@ -32,7 +32,7 @@ describe('unified Add consistency follow-up', () => {
     expect(css).toContain('var(--border-strong)');
     expect(css).toContain('var(--field)');
     expect(css).toContain('var(--primary)');
-    expect(css).toContain('var(--card-radius)');
+    expect(css).toContain('var(--card-radius,');
     expect(css).toContain('[aria-pressed="true"]');
     expect(css).toContain('display: inline-flex');
     expect(css).toContain('white-space: nowrap');
