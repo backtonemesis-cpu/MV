@@ -128,15 +128,17 @@ describe('Global finance UI consistency contract', () => {
     expect(income).not.toContain('Select receiving account');
 
     expect(bill).toContain("payment?.accountId || ''");
-    expect(bill).toContain("payment?.responsiblePerson || ''");
     expect(bill).toContain("payment?.categoryId || ''");
     expect(bill).toContain('payment?.includeInTransferPlan === true');
+    expect(bill).not.toContain('planned-payment-person');
+    expect(bill).toContain('resolveAccountOwnerPayer(selectedAccount, members)');
 
     expect(transaction).toContain("useState<TransactionType | ''>('')");
-    expect(transaction).toContain("useState<Payer | ''>('')");
     expect(transaction).toContain("setCategoryId('')");
     expect(transaction).toContain("setAccountId('')");
     expect(transaction).toContain("setTargetAccountId('')");
+    expect(transaction).not.toContain('transaction-person-label');
+    expect(transaction).toContain('resolveAccountOwnerPayer(sourceAccount, members)');
 
     expect(paid).toContain("const [date, setDate] = useState(payment.actualDate || '')");
     expect(paid).toContain("const [accountId, setAccountId] = useState('')");
