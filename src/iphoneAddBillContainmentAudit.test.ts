@@ -82,12 +82,14 @@ describe('iPhone Add Bill containment and field geometry', () => {
     expect(mobileCss).toContain('safe-area-inset-bottom');
   });
 
-  it('preserves PlannedPayment submission semantics while deriving responsibility from the selected account', () => {
+  it('preserves PlannedPayment submission semantics while deriving or preserving responsibility safely', () => {
     expect(modal).toContain('amountPence: pence');
     expect(modal).toContain('month: month.trim()');
     expect(modal).toContain('accountId,');
     expect(modal).toContain('const selectedAccount = accounts.find((account) => account.id === accountId)');
-    expect(modal).toContain('const responsiblePerson = resolveAccountOwnerPayer(selectedAccount, members)');
+    expect(modal).toContain('payment && payment.accountId === accountId');
+    expect(modal).toContain('? payment.responsiblePerson');
+    expect(modal).toContain(': resolveAccountOwnerPayer(selectedAccount, members)');
     expect(modal).toContain('responsiblePerson, dueDate: dueDate || undefined');
     expect(modal).toContain('categoryId: categoryId || undefined');
     expect(modal).toContain('includeInTransferPlan,');
