@@ -10,6 +10,10 @@ const modal = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/TransactionModal.tsx'),
   'utf8'
 );
+const sharedUi = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/components/UnifiedAddUi.tsx'),
+  'utf8'
+);
 
 describe('Actual iPhone transaction modal viewport safety', () => {
   it('removes the fixed bottom navigation while the transaction modal is open', () => {
@@ -34,7 +38,8 @@ describe('Actual iPhone transaction modal viewport safety', () => {
   it('keeps a fixed header/footer structure with only the form body scrolling', () => {
     expect(modal).toContain('className="mv-modal-header"');
     expect(modal).toContain('className="mv-modal-scroll-body mv-transaction-body"');
-    expect(modal).toContain('className="mv-modal-fixed-actions"');
+    expect(modal).toContain('<UnifiedAddFooter');
+    expect(sharedUi).toContain('mv-modal-fixed-actions');
     expect(css).toContain(
       '.mv-layout-phone:has(.mv-transaction-modal) .mv-transaction-body'
     );
