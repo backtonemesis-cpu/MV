@@ -202,7 +202,7 @@
 
 .mv-unified-bill-option {
   display: flex;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
