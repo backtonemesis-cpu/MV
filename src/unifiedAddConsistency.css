@@ -137,25 +137,49 @@
 }
 
 
-/* Bill-specific facts use the same field rhythm as the five Transaction
-   choices instead of a separate mini-card/form language. */
-.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month,
+/* Shared field rhythm for type-specific facts. */
+.mv-unified-add-field-stack {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Month remains a semantic month input, but its visible control uses the same
+   dimensions and typography contract as the transaction Date field. */
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 32px !important;
+  min-height: 32px !important;
+  border-color: var(--border) !important;
+  border-radius: var(--card-radius, 6px) !important;
+  background: var(--field) !important;
+  color: var(--text) !important;
+}
+
 .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  border-color: var(--border) !important;
-  border-radius: var(--card-radius, 6px) !important;
-  background: var(--field) !important;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 6px 12px !important;
+  border: 0 !important;
+  background: transparent !important;
   color: var(--text) !important;
-  font-size: 0.875rem !important;
-  font-weight: 400 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
 }
 
+/* Bill-only boolean facts stay financially separate but use the same compact
+   field-label rhythm and accessible row height as the rest of unified Add. */
 .mv-unified-bill-options {
   display: grid;
-  gap: 8px;
+  gap: 0;
   min-width: 0;
 }
 
@@ -167,9 +191,10 @@
   gap: 12px;
   border-bottom: 1px solid var(--border);
   padding: 6px 0;
-  color: var(--text);
-  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
   font-weight: 600;
+  line-height: 1rem;
   cursor: pointer;
 }
 
@@ -377,6 +402,16 @@
   color: var(--text-on-primary) !important;
 }
 
+/* One footer proportion contract across Expense, Income, Transfer, Refund,
+   Repayment and Bill. This overrides the generic Phone 50/50 modal rule. */
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > .mv-transaction-secondary {
+  flex: 0 0 auto !important;
+}
+
+.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > .mv-transaction-primary {
+  flex: 1 1 auto !important;
+}
+
 @media (max-width: 430px) {
   /* The same iPhone sheet footprint is used before selection and for every
      selected creation type. Only the scrollable body changes. */
@@ -497,9 +532,26 @@
     line-height: 40px !important;
   }
 
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding: 0 12px !important;
+    font-size: var(--mv-ds-text-body) !important;
+    font-weight: 400 !important;
+    line-height: 40px !important;
+  }
+
   .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-bill-option {
-    min-height: 48px;
-    font-size: 0.875rem;
+    min-height: 44px;
+    font-size: 0.75rem;
+    line-height: 1rem;
   }
 
   .mv-layout-phone .mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {

@@ -686,7 +686,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       htmlFor="unified-bill-amount"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Amount (£) *
+                      Amount (£)
                     </label>
                     <MoneyInput
                       id="unified-bill-amount"
@@ -705,7 +705,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       htmlFor="unified-bill-month"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Month *
+                      Month
                     </label>
                     <MonthPicker
                       id="unified-bill-month"
@@ -722,7 +722,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     htmlFor="unified-bill-name"
                     className="block text-xs font-semibold text-muted mb-1"
                   >
-                    Name *
+                    Name
                   </label>
                   <input
                     id="unified-bill-name"
@@ -734,11 +734,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   />
                 </div>
 
-                <div className="mv-transaction-dynamic">
+                <div className="mv-transaction-dynamic mv-unified-add-field-stack">
                   <div className="mv-modal-grid-2">
                     <UnifiedAddAccountField
                       id="unified-bill-account"
-                      label="Payment Account *"
+                      label="Payment Account"
                       value={accountId}
                       options={billAccountOptions}
                       onChange={setAccountId}
@@ -749,7 +749,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         htmlFor="unified-bill-category"
                         className="block text-xs font-semibold text-muted mb-1"
                       >
-                        Category *
+                        Category
                       </label>
                       <select
                         id="unified-bill-category"
@@ -899,7 +899,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   <div className="mv-modal-grid-2">
                     <UnifiedAddAccountField
                       id="transaction-account"
-                      label={isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'}
+                      label={isTransfer ? 'From Account' : isRepayment ? 'Pay From Account' : 'Account'}
                       value={accountId}
                       options={sourceAccountOptions}
                       onChange={(nextAccountId) => {
@@ -918,7 +918,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     {(isTransfer || isRepayment) && (
                       <UnifiedAddAccountField
                         id="transaction-target-account"
-                        label={isRepayment ? 'Credit card being repaid' : 'To Account'}
+                        label={isRepayment ? 'Credit Card Being Repaid' : 'To Account'}
                         value={targetAccountId}
                         options={targetAccountOptions}
                         onChange={setTargetAccountId}
