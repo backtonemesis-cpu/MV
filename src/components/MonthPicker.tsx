@@ -14,6 +14,21 @@ interface MonthPickerProps {
   displayFormat?: MonthPickerDisplayFormat;
 }
 
+const UK_SHORT_MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
 export const formatMonthShortUk = (value: string): string => {
   const match = /^(\d{4})-(\d{2})$/.exec(value);
   if (!match) return '';
@@ -22,11 +37,7 @@ export const formatMonthShortUk = (value: string): string => {
   const month = Number(match[2]);
   if (!Number.isInteger(year) || month < 1 || month > 12) return '';
 
-  return new Intl.DateTimeFormat('en-GB', {
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month - 1, 1)));
+  return `${UK_SHORT_MONTHS[month - 1]} ${year}`;
 };
 
 export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
