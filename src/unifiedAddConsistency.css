@@ -125,6 +125,17 @@
   color: var(--text) !important;
 }
 
+
+/* Empty selectors stay understandable without becoming stored data. */
+.mv-transaction-control.is-placeholder,
+.mv-mobile-account-trigger.is-placeholder {
+  color: var(--text-muted) !important;
+}
+
+.mv-transaction-control.is-placeholder option:not([value=""]) {
+  color: var(--text) !important;
+}
+
 .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-transaction-control:focus,
 .mv-add-bill-modal[data-unified-add="true"] :is(
   input:not([type="checkbox"]):not([type="radio"]),
@@ -144,31 +155,38 @@
   min-width: 0;
 }
 
-/* Month remains a semantic month input, but its visible control uses the same
-   dimensions and typography contract as the transaction Date field. */
+/* Billing Month remains a semantic month input. The wrapper is interaction-only;
+   the input itself reuses mv-transaction-control so its visible geometry is the
+   exact same field contract as Date on desktop and Phone. */
 .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: auto !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month:focus-within {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input.mv-transaction-control {
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   height: 32px !important;
   min-height: 32px !important;
-  border-color: var(--border) !important;
+  padding: 6px 12px !important;
+  border: 1px solid var(--border) !important;
   border-radius: var(--card-radius, 6px) !important;
   background: var(--field) !important;
-  color: var(--text) !important;
-}
-
-.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  height: 30px !important;
-  min-height: 30px !important;
-  padding: 6px 12px !important;
-  border: 0 !important;
-  background: transparent !important;
   color: var(--text) !important;
   font-size: 13px !important;
   font-weight: 500 !important;
@@ -185,12 +203,12 @@
 
 .mv-unified-bill-option {
   display: flex;
-  min-height: 44px;
+  min-height: 40px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   border-bottom: 1px solid var(--border);
-  padding: 6px 0;
+  padding: 4px 0;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
@@ -203,8 +221,8 @@
 }
 
 .mv-unified-bill-option input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   flex: 0 0 auto;
   accent-color: var(--primary);
 }
@@ -402,14 +420,24 @@
   color: var(--text-on-primary) !important;
 }
 
-/* One footer proportion contract across Expense, Income, Transfer, Refund,
-   Repayment and Bill. This overrides the generic Phone 50/50 modal rule. */
-.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > .mv-transaction-secondary {
-  flex: 0 0 auto !important;
+/* One geometry contract for every UnifiedAddFooter. Grid makes the Cancel
+   column content-sized and the primary action consume the identical remainder,
+   independent of whether the label says Expense, Repayment or Bill. */
+.mv-unified-add-footer {
+  display: grid !important;
+  grid-template-columns: max-content minmax(0, 1fr) !important;
+  align-items: center;
+  gap: 8px;
 }
 
-.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > .mv-transaction-primary {
-  flex: 1 1 auto !important;
+.mv-unified-add-footer > .mv-transaction-secondary {
+  width: auto !important;
+  min-width: max-content;
+}
+
+.mv-unified-add-footer > .mv-transaction-primary {
+  width: 100% !important;
+  min-width: 0;
 }
 
 @media (max-width: 430px) {
@@ -533,16 +561,19 @@
   }
 
   .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month {
-    height: 40px !important;
-    min-height: 40px !important;
-    max-height: 40px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
   }
 
-  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input {
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input.mv-transaction-control {
     height: 40px !important;
     min-height: 40px !important;
     max-height: 40px !important;
     padding: 0 12px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--card-radius, 6px) !important;
+    background: var(--field) !important;
     font-size: var(--mv-ds-text-body) !important;
     font-weight: 400 !important;
     line-height: 40px !important;
@@ -552,6 +583,11 @@
     min-height: 44px;
     font-size: 0.75rem;
     line-height: 1rem;
+  }
+
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-bill-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
   }
 
   .mv-layout-phone .mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {
