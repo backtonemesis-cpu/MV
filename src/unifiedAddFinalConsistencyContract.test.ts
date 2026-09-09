@@ -67,7 +67,7 @@ describe('final unified Add consistency contract', () => {
     expect(tx).not.toMatch(/>\s*Month\s*</);
     expect(tx).toContain('ariaLabel="Billing month"');
     expect(types).toContain('month: string;');
-    expect(tx).not.toContain("type="date"\n                      value={billMonth}");
+    expect(tx).not.toContain('type="date"\\n                      value={billMonth}');
   });
 
   it('presents Bill name as Description while preserving PlannedPayment.name storage', () => {
