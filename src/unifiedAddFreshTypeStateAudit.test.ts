@@ -8,8 +8,8 @@ const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8')
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add transaction type isolation', () => {
-  it('clears all non-date transaction entry state when a new creation type is chosen', () => {
-    expect(modal).toContain("if (!initialTransaction && type && newType !== type)");
+  it('clears all non-date draft state when switching Transaction types or crossing into/out of Bill', () => {
+    expect(modal).toContain("if (!initialTransaction && (isBillEntry || (type && newType !== type)))");
     for (const reset of [
       "setDescription('')",
       "setAmountStr('')",
@@ -24,10 +24,13 @@ describe('unified Add transaction type isolation', () => {
       expect(modal).toContain(reset);
     }
     expect(modal).not.toContain("setDate('')");
+    expect(modal).toContain('const handleUnifiedChoiceChange = (choice: UnifiedAddChoice) =>');
+    expect(modal).toContain("if (choice === 'bill')");
+    expect(modal).toContain('setIsBillEntry(true)');
   });
 
   it('keeps edit-mode historical data out of the creation-only reset rule', () => {
-    expect(modal).toContain("if (!initialTransaction && type && newType !== type)");
+    expect(modal).toContain("if (!initialTransaction && (isBillEntry || (type && newType !== type)))");
     expect(modal).toContain('if (initialTransaction) {');
   });
 
@@ -57,7 +60,7 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).toContain('if (pence > outstandingDebtPence)');
     expect(modal).toContain('Repayment exceeds card balance (');
     expect(modal).toContain('const repaymentExceedsDebt = Boolean(');
-    expect(modal).toContain('disabled={repaymentAmountBlocked}');
+    expect(modal).toContain('disabled={!isBillEntry && repaymentAmountBlocked}');
     expect(sharedUi).toContain('disabled={submitting || disabled}');
     expect(modal).toContain('Repayment exceeds card balance (');
   });

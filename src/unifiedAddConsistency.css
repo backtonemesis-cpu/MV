@@ -73,8 +73,8 @@
   display: none !important;
 }
 
-/* One visual shell for all six creation choices. Bill remains PlannedPayment
-   underneath; this selector only normalises presentation geometry. */
+/* One visible shell for all six creation choices. Bill is now rendered inside
+   TransactionModal for unified Add while still saving as PlannedPayment. */
 :is(
   .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
   .mv-add-bill-modal[data-unified-add="true"]
@@ -134,6 +134,54 @@
   border-color: var(--primary) !important;
   outline: none;
   box-shadow: 0 0 0 2px var(--primary-light) !important;
+}
+
+
+/* Bill-specific facts use the same field rhythm as the five Transaction
+   choices instead of a separate mini-card/form language. */
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month,
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border-color: var(--border) !important;
+  border-radius: var(--card-radius, 6px) !important;
+  background: var(--field) !important;
+  color: var(--text) !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+}
+
+.mv-unified-bill-options {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mv-unified-bill-option {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+  padding: 6px 0;
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mv-unified-bill-option:last-child {
+  border-bottom: 0;
+}
+
+.mv-unified-bill-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--primary);
 }
 
 .mv-repayment-flow-summary {
@@ -425,6 +473,33 @@
     max-height: 40px !important;
     padding-block: 0 !important;
     line-height: 40px !important;
+  }
+
+
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] #unified-bill-due-date {
+    position: relative;
+    z-index: 3;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding-block: 0 !important;
+    line-height: 40px !important;
+  }
+
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] #unified-bill-due-date::-webkit-date-and-time-value {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    padding-block: 0 !important;
+    line-height: 40px !important;
+  }
+
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-bill-option {
+    min-height: 48px;
+    font-size: 0.875rem;
   }
 
   .mv-layout-phone .mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions {

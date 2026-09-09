@@ -42,11 +42,13 @@ describe('unified Add shared UI architecture', () => {
     expect(css).toContain('.mv-unified-add-status.is-warning');
   });
 
-  it('keeps Bill financially separate as PlannedPayment while sharing only presentation/interaction', () => {
+  it('keeps Bill financially separate as PlannedPayment while sharing the same visible shell', () => {
     expect(billModal).toContain('Partial<PlannedPayment>');
-    expect(billModal).toContain('responsiblePerson');
-    expect(transactionModal).toContain("const OPEN_BILL_EVENT = 'mv:open-planned-payment';");
+    expect(transactionModal).toContain('onSaveBill?: (paymentData: Partial<PlannedPayment>) => Promise<void>');
+    expect(transactionModal).toContain('await onSaveBill({');
+    expect(transactionModal).toContain('responsiblePerson');
     expect(transactionModal).not.toContain("type: 'bill'");
+    expect(transactionModal).not.toContain('OPEN_BILL_EVENT');
     expect(sharedUi).not.toContain('amountPence');
     expect(sharedUi).not.toContain('responsiblePerson');
   });

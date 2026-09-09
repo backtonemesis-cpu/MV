@@ -23,7 +23,7 @@ const allSurfaceSource = Object.values(surfaces).join('\n');
 
 describe('Global money-input audit contract', () => {
   it('routes every audited editable monetary surface through the shared GBP primitive', () => {
-    expect(surfaces.transaction.match(/<MoneyInput/g)?.length).toBe(2);
+    expect(surfaces.transaction.match(/<MoneyInput/g)?.length).toBe(3);
     expect(surfaces.bills.match(/<MoneyInput/g)?.length).toBe(1);
     expect(surfaces.income.match(/<MoneyInput/g)?.length).toBe(2);
     expect(surfaces.accounts.match(/<MoneyInput/g)?.length).toBe(6);
@@ -105,10 +105,10 @@ describe('Global money-input audit contract', () => {
     expect(css).toContain('.mv-modal-form input:focus');
   });
 
-  it('keeps Transaction main and Split Categories on the same numeric-only rule', () => {
+  it('keeps Transaction, unified Bill and Split Categories on the same numeric-only rule', () => {
     expect(surfaces.transaction).toContain('Transaction amount in pounds sterling');
     expect(surfaces.transaction).toContain('Split ${idx + 1} amount in pounds sterling');
-    expect(surfaces.transaction.match(/<MoneyInput/g)?.length).toBe(2);
+    expect(surfaces.transaction.match(/<MoneyInput/g)?.length).toBe(3);
     expect(surfaces.transaction.match(/Amount \(£\)/g)?.length).toBeGreaterThanOrEqual(2);
   });
 

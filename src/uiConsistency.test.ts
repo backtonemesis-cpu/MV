@@ -43,7 +43,8 @@ describe('Global finance UI consistency contract', () => {
     const plan = component('TransferPlanView.tsx');
 
     expect(billModal).toContain('<MoneyInput');
-    expect(transactionModal.match(/<MoneyInput/g)?.length).toBe(2);
+    expect(transactionModal.match(/<MoneyInput/g)?.length).toBe(3);
+    expect(transactionModal).toContain('id="unified-bill-amount"');
     expect(transactionModal).toContain('Split ${idx + 1} amount in pounds sterling');
 
     expect(plan).toContain('Undo payment');

@@ -5,29 +5,34 @@ import { describe, expect, it } from 'vitest';
 const src = path.resolve(process.cwd(), 'src');
 const planned = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
 const tx = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
+const dashboard = fs.readFileSync(path.join(src, 'components/Dashboard.tsx'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const bridge = fs.readFileSync(path.join(src, 'unifiedAddBridge.ts'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add consistency follow-up', () => {
-  it('keeps Bill as PlannedPayment while preserving the same six-choice launcher shell', () => {
-    expect(planned).toContain('data-unified-add={isUnifiedAdd');
-    expect(planned).toContain('<UnifiedAddTypeTabs');
-    expect(planned).toContain('activeType="bill"');
-    expect(sharedUi).toContain('mv-transaction-type-tabs');
-    for (const label of ['expense', 'income', 'transfer', 'refund', 'repayment', 'bill']) expect(sharedUi).toContain(`'${label}'`);
+  it('keeps one six-choice launcher and renders Bill inside the same visible modal shell', () => {
+    expect(tx).toContain('<UnifiedAddTypeTabs');
+    expect(tx).toContain("isBillEntry ? 'bill'");
+    expect(tx).toContain('data-active-add-type={isBillEntry ? \'bill\'');
+    for (const label of ['expense', 'income', 'transfer', 'refund', 'repayment', 'bill']) {
+      expect(sharedUi).toContain(`'${label}'`);
+    }
     expect(sharedUi).toContain('aria-pressed={activeType === type}');
-    expect(planned).toContain('await onSave({');
-    expect(types).toContain("export type TransactionType = 'expense' | 'income' | 'transfer' | 'repayment' | 'refund';");
+    expect(types).toContain(
+      "export type TransactionType = 'expense' | 'income' | 'transfer' | 'repayment' | 'refund';"
+    );
     expect(types).not.toMatch(/TransactionType[^\n]*bill/);
   });
 
-  it('does not couple Bill to Transaction save semantics', () => {
-    expect(planned).not.toContain('createTransaction');
-    expect(planned).not.toContain("type: 'bill'");
-    expect(tx).not.toContain("handleTypeChange('bill'");
-    expect(bridge).not.toContain('onSave');
+  it('keeps Bill financially separate as PlannedPayment despite sharing the visible shell', () => {
+    expect(planned).toContain('Partial<PlannedPayment>');
+    expect(tx).toContain('onSaveBill?: (paymentData: Partial<PlannedPayment>) => Promise<void>');
+    expect(tx).toContain('await onSaveBill({');
+    expect(tx).not.toContain("type: 'bill'");
+    expect(sharedUi).not.toContain('onSave');
+    expect(sharedUi).not.toContain('PlannedPayment');
   });
 
   it('makes all launcher choices button-like using semantic appearance tokens', () => {
@@ -57,86 +62,81 @@ describe('unified Add consistency follow-up', () => {
     expect(tx).toContain("if (newType === 'transfer')");
   });
 
-  it('removes in-field helper prompts across both unified Transaction and Bill forms at runtime', () => {
+  it('removes in-field helper prompts without owning tab navigation in the bridge', () => {
     expect(bridge).toContain('removeInFieldHelperText');
-    expect(bridge).toContain("querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[placeholder]')");
+    expect(bridge).toContain(
+      "querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[placeholder]')"
+    );
     expect(bridge).toContain("control.removeAttribute('placeholder')");
     expect(bridge).toContain("option.value === ''");
     expect(bridge).toContain("emptyOption.textContent = ''");
     expect(bridge).toContain('MutationObserver');
+    expect(bridge).not.toContain('openFreshUnifiedTransaction');
+    expect(bridge).not.toContain('stopImmediatePropagation');
     expect(css).toContain('::placeholder');
     expect(css).toContain('color: transparent !important');
   });
 
   it('keeps native transaction date semantics and vertically centres its themed surface', () => {
-    expect(tx).toContain('id="transaction-date" type="date"');
+    expect(tx).toContain('id="transaction-date"');
+    expect(tx).toContain('type="date"');
+    expect(tx).toContain('value={date}');
+    expect(tx).toContain('onChange={(e) => setDate(e.target.value)}');
     expect(css).toContain('background: var(--field) !important');
     expect(css).toContain('position: relative');
     expect(css).toContain('z-index: 3');
     expect(css).toContain('line-height: 40px !important');
     expect(css).toContain('padding-block: 0 !important');
-    expect(css).not.toContain('type="text" value={date}');
   });
 
-  it('uses one fixed Phone shell geometry for all five Transaction choices and unified Bill', () => {
-    expect(css).toContain('.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"])');
-    expect(css).toContain('.mv-add-bill-modal[data-unified-add="true"]');
+  it('uses one fixed Phone shell geometry for all six Add choices', () => {
+    expect(tx).toContain('className="mv-modal-card mv-transaction-modal"');
+    expect(tx).toContain('data-active-add-type={isBillEntry ? \'bill\'');
+    expect(css).toContain(
+      '.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"])'
+    );
     expect(css).toContain('width: calc(100vw - 24px) !important');
     expect(css).toContain('min-height: 92dvh !important');
     expect(css).toContain('height: 92dvh !important');
     expect(css).toContain('max-height: 92dvh !important');
   });
 
-  it('keeps unified Bill inside the iPhone visual safe area like the Transaction shell', () => {
-    expect(css).toContain('.mv-layout-phone:has(.mv-add-bill-modal[data-unified-add="true"]) .mv-nav-mobile');
-    expect(css).toContain('display: none !important');
-    expect(css).toContain('.mv-layout-phone:has(.mv-add-bill-modal[data-unified-add="true"]) .mv-modal-backdrop');
-    expect(css).toContain('calc(8px + env(safe-area-inset-bottom)) !important');
-  });
-
-  it('uses the same semantic field surface for Transaction and unified Bill controls', () => {
-    expect(css).toContain('.mv-transaction-control');
-    expect(css).toMatch(/\.mv-add-bill-modal\[data-unified-add="true"\] :is\([\s\S]*background: var\(--field\) !important/);
+  it('uses the same field surface and fixed footer for Transaction and Bill content', () => {
+    expect(tx).toContain('id="unified-bill-amount"');
+    expect(tx).toContain('id="unified-bill-name"');
+    expect(tx).toContain('id="unified-bill-account"');
+    expect(tx).toContain('className="mv-transaction-control w-full"');
+    expect(tx).toContain('<UnifiedAddFooter');
+    expect(sharedUi).toContain('mv-modal-fixed-actions');
+    expect(sharedUi).toContain('className="mv-transaction-secondary"');
+    expect(sharedUi).toContain('className="mv-transaction-primary disabled:opacity-50"');
+    expect(css).toContain('background: var(--field) !important');
     expect(css).toContain('border-color: var(--border) !important');
     expect(css).toContain('color: var(--text) !important');
   });
 
-  it('uses the exact Transaction footer and button contract for unified Bill', () => {
-    expect(planned).toContain('<UnifiedAddFooter');
-    expect(planned).toContain('className="mv-add-bill-actions"');
-    expect(sharedUi).toContain('mv-modal-fixed-actions');
-    expect(sharedUi).toContain('className="mv-transaction-secondary"');
-    expect(sharedUi).toContain('className="mv-transaction-primary disabled:opacity-50"');
-    expect(planned).toContain("isUnifiedAdd ? 'Record Bill' : 'Add Bill'");
-    expect(css).toContain('.mv-modal-fixed-actions > button');
-    expect(css).toContain('white-space: nowrap');
-    expect(css).toContain('background: var(--primary) !important');
-    expect(css).toContain('color: var(--text-on-primary) !important');
-    expect(css).not.toContain('grid-template-columns: 1fr 1fr');
+  it('switches all six choices in place instead of closing and reopening another modal', () => {
+    expect(tx).toContain('const handleUnifiedChoiceChange = (choice: UnifiedAddChoice) =>');
+    expect(tx).toContain("if (choice === 'bill')");
+    expect(tx).toContain('setIsBillEntry(true)');
+    expect(tx).toContain('handleTypeChange(choice)');
+    expect(tx).not.toContain('OPEN_BILL_EVENT');
+    expect(tx).not.toContain('dispatchEvent(new CustomEvent');
+    expect(dashboard).not.toContain('OPEN_BILL_EVENT');
+    expect(bridge).not.toContain('document.addEventListener');
   });
 
-  it('remounts the unified Transaction form when switching ordinary creation types so drafts cannot leak', () => {
-    expect(bridge).toContain('openFreshUnifiedTransaction');
-    expect(bridge).toContain("document.addEventListener(\n    'click'");
-    expect(bridge).toContain('event.stopImmediatePropagation()');
-    expect(bridge).toContain('[aria-label="Close transaction dialog"]');
-    expect(bridge).toContain('openFreshUnifiedTransaction(nextType)');
-    expect(bridge).toContain("const TRANSACTION_TYPES = ['expense', 'income', 'transfer', 'refund', 'repayment'] as const");
-    expect(bridge).not.toContain('createTransaction');
-    expect(bridge).not.toContain('createPlannedPayment');
-  });
-
-  it('does not expose an intermediate launcher frame while switching unified Add types', () => {
-    expect(bridge).toContain('selectUnifiedTransactionType');
-    expect(bridge).toContain('queueMicrotask(() => selectUnifiedTransactionType(type))');
+  it('keeps fresh-state isolation inside the modal while preserving Date across tab switches', () => {
+    expect(tx).toContain('const clearSharedDraft = () =>');
+    expect(tx).toContain("setDescription('')");
+    expect(tx).toContain("setAmountStr('')");
+    expect(tx).toContain("setAccountId('')");
+    expect(tx).toContain("setCategoryId('')");
+    expect(tx).toContain("setNotes('')");
+    const clearDraftStart = tx.indexOf('const clearSharedDraft = () =>');
+    const clearDraftEnd = tx.indexOf('\n  };', clearDraftStart);
+    expect(tx.slice(clearDraftStart, clearDraftEnd)).not.toContain('setDate(');
     expect(bridge).not.toContain('requestAnimationFrame');
-  });
-
-  it('does not recursively intercept bridge-generated transaction tab clicks', () => {
-    expect(bridge).toContain('let isSelectingUnifiedType = false');
-    expect(bridge).toContain('isSelectingUnifiedType = true');
-    expect(bridge).toContain('isSelectingUnifiedType = false');
-    expect(bridge).toContain('if (isSelectingUnifiedType) return');
   });
 
   it('keeps the initial launcher genuinely unselected', () => {

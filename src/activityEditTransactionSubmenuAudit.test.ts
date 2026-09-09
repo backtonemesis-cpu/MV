@@ -77,7 +77,7 @@ describe('Activity Edit Transaction submenu audit contract', () => {
 
   it('keeps monetary entry numeric-only and spinner-free', () => {
     const blocks = source.match(/<MoneyInput[\s\S]*?\/>/g) ?? [];
-    expect(blocks).toHaveLength(2);
+    expect(blocks).toHaveLength(3);
     expect(blocks.every((block) => block.includes('type="text"'))).toBe(true);
     expect(blocks.every((block) => block.includes('inputMode="decimal"'))).toBe(true);
     expect(blocks.every((block) => !block.includes('type="number"'))).toBe(true);

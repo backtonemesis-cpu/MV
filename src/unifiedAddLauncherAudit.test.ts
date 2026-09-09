@@ -30,26 +30,23 @@ describe('unified Dashboard Add launcher', () => {
     expect(sharedUi).toContain('role="group"');
   });
 
-  it('keeps Bill navigation-only and outside TransactionType/schema semantics', () => {
+  it('keeps Bill outside TransactionType/schema semantics while rendering it in the same launcher shell', () => {
     expect(types).toContain("export type TransactionType = 'expense' | 'income' | 'transfer' | 'repayment' | 'refund';");
     expect(types).not.toMatch(/TransactionType[^\n]*bill/);
-    expect(transactionModal).toContain("const OPEN_BILL_EVENT = 'mv:open-planned-payment';");
-    expect(transactionModal).toContain('window.dispatchEvent(new CustomEvent(OPEN_BILL_EVENT))');
-    expect(transactionModal).not.toContain("handleTypeChange('bill'");
+    expect(transactionModal).toContain("if (choice === 'bill')");
+    expect(transactionModal).toContain('setIsBillEntry(true)');
     expect(transactionModal).not.toContain("type: 'bill'");
+    expect(transactionModal).not.toContain('OPEN_BILL_EVENT');
   });
 
-  it('routes Bill to the existing PlannedPayment workflow without saving on selection', () => {
-    expect(dashboard).toContain('window.addEventListener(OPEN_BILL_EVENT, openBill)');
-    expect(dashboard).toContain('const openBill = () => onOpenPlannedPaymentModal()');
+  it('keeps Bill selection in place and only saves PlannedPayment data on submit', () => {
+    expect(dashboard).not.toContain('OPEN_BILL_EVENT');
+    expect(transactionModal).toContain('const handleUnifiedChoiceChange = (choice: UnifiedAddChoice) =>');
     expect(transactionModal).toContain("if (choice === 'bill')");
-    expect(transactionModal).toContain('if (isUnifiedAddLauncher) openBillWorkflow()');
-    const billStart = transactionModal.indexOf('const openBillWorkflow');
-    const billEnd = transactionModal.indexOf('\n  };', billStart) + 5;
-    const billRoute = transactionModal.slice(billStart, billEnd);
-    expect(billRoute).toContain('onClose()');
-    expect(billRoute).toContain('dispatchEvent');
-    expect(billRoute).not.toContain('onSave');
+    expect(transactionModal).toContain('setIsBillEntry(true)');
+    expect(transactionModal).toContain('onSaveBill?: (paymentData: Partial<PlannedPayment>) => Promise<void>');
+    expect(transactionModal).toContain('await onSaveBill({');
+    expect(transactionModal).not.toContain('dispatchEvent');
     expect(plannedPaymentModal).toContain('await onSave({');
   });
 

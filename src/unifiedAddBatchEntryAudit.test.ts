@@ -45,11 +45,12 @@ describe('unified Add batch-entry workflow', () => {
     expect(transactionModal).toContain("repayment: 'Repayment'");
   });
 
-  it('keeps unified Bill entry open, clears the form, and reports success', () => {
-    expect(plannedPaymentModal).toContain('resetForNextBill');
-    expect(plannedPaymentModal).toContain('if (isUnifiedAdd && !isEditing)');
-    expect(plannedPaymentModal).toContain("setSuccessMessage('Bill recorded. Ready for another entry.')");
-    expect(plannedPaymentModal).toContain('<UnifiedAddStatusMessage variant="success"');
+  it('keeps unified Bill entry inside the same modal, clears the Bill draft, and reports success', () => {
+    expect(transactionModal).toContain('const resetForNextBill = () =>');
+    expect(transactionModal).toContain('await onSaveBill({');
+    expect(transactionModal).toContain('resetForNextBill();');
+    expect(transactionModal).toContain("setSuccessMessage('Bill recorded. Ready for another entry.')");
+    expect(transactionModal).toContain('<UnifiedAddStatusMessage variant="success"');
     expect(sharedUi).toContain("aria-live={variant === 'error' ? undefined : 'polite'}");
   });
 
@@ -58,9 +59,11 @@ describe('unified Add batch-entry workflow', () => {
     expect(plannedPaymentModal).toMatch(/if \(isUnifiedAdd && !isEditing\)[\s\S]*else \{\s*clearUnifiedState\(\);\s*onClose\(\);/);
   });
 
-  it('preserves Bill as a PlannedPayment workflow rather than a Transaction type', () => {
+  it('preserves Bill as PlannedPayment data even though creation now shares the Transaction modal shell', () => {
     expect(plannedPaymentModal).toContain('Partial<PlannedPayment>');
-    expect(transactionModal).toContain("const OPEN_BILL_EVENT = 'mv:open-planned-payment';");
+    expect(transactionModal).toContain('onSaveBill?: (paymentData: Partial<PlannedPayment>) => Promise<void>');
+    expect(transactionModal).toContain('await onSaveBill({');
+    expect(app).toContain('onSaveBill={handleCreatePlannedPayment}');
     expect(transactionModal).not.toContain("type: 'bill'");
   });
 });
