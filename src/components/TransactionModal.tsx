@@ -401,7 +401,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       return;
     }
     if (!description.trim()) {
-      setError('Bill name is required.');
+      setError('Description is required.');
       return;
     }
     if (!accountId) {
@@ -652,7 +652,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       >
         <div className="mv-modal-header">
           <h2 id="transaction-modal-title" className="text-base font-bold text-main">
-            {initialTransaction ? 'Edit Transaction' : 'New Transaction'}
+            {initialTransaction ? 'Edit Transaction' : isUnifiedAddLauncher ? 'Add Entry' : 'New Transaction'}
           </h2>
           <button
             type="button"
@@ -705,7 +705,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       htmlFor="unified-bill-month"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Month
+                      Billing Month
                     </label>
                     <MonthPicker
                       id="unified-bill-month"
@@ -713,6 +713,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       onChange={setBillMonth}
                       ariaLabel="Billing month"
                       className="is-fluid mv-unified-add-month"
+                      inputClassName="mv-transaction-control"
                     />
                   </div>
                 </div>
@@ -722,7 +723,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     htmlFor="unified-bill-name"
                     className="block text-xs font-semibold text-muted mb-1"
                   >
-                    Name
+                    Description
                   </label>
                   <input
                     id="unified-bill-name"
@@ -773,7 +774,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       htmlFor="unified-bill-due-date"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Due Date
+                      Due Date (optional)
                     </label>
                     <input
                       id="unified-bill-due-date"
@@ -811,7 +812,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     htmlFor="unified-bill-notes"
                     className="block text-xs font-semibold text-muted mb-1"
                   >
-                    Notes
+                    Notes (optional)
                   </label>
                   <input
                     id="unified-bill-notes"
@@ -922,7 +923,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         value={targetAccountId}
                         options={targetAccountOptions}
                         onChange={setTargetAccountId}
-                        placeholder={isRepayment ? 'Select credit card' : 'Select account'}
+                        placeholder={isRepayment ? 'Select credit card' : 'Select destination account'}
                         summaryAriaPrefix="Selected destination account"
                       />
                     )}
@@ -1077,7 +1078,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     htmlFor="transaction-notes"
                     className="block text-xs font-semibold text-muted mb-1"
                   >
-                    Notes
+                    Notes (optional)
                   </label>
                   <input
                     id="transaction-notes"
@@ -1094,11 +1095,21 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <UnifiedAddFooter
             onCancel={closeModal}
             submitLabel={
-              isBillEntry
-                ? 'Record Bill'
-                : initialTransaction
-                  ? 'Update Transaction'
-                  : 'Record Transaction'
+              initialTransaction
+                ? 'Update Transaction'
+                : isBillEntry
+                  ? 'Record Bill'
+                  : type === 'expense'
+                    ? 'Record Expense'
+                    : type === 'income'
+                      ? 'Record Income'
+                      : type === 'transfer'
+                        ? 'Record Transfer'
+                        : type === 'refund'
+                          ? 'Record Refund'
+                          : type === 'repayment'
+                            ? 'Record Repayment'
+                            : 'Record Entry'
             }
             submitting={isSubmitting}
             disabled={!isBillEntry && repaymentAmountBlocked}
