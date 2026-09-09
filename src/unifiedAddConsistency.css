@@ -152,18 +152,35 @@
 }
 
 .mv-repayment-amount-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin-top: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--card-radius, 6px);
+  padding: 7px 9px;
   font-size: 0.75rem;
-  font-weight: 650;
-  line-height: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2rem;
+}
+
+.mv-repayment-amount-message > svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .mv-repayment-amount-message.is-danger {
-  color: var(--danger);
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger-text);
 }
 
 .mv-repayment-amount-message.is-warning {
-  color: var(--warning);
+  border-color: var(--warning-border);
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
 .mv-mobile-account-trigger {
