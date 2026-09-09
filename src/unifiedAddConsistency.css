@@ -52,12 +52,6 @@
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-/* The Paid by / Received by buttons already explain the choice. Do not add a
-   second helper sentence below them. */
-.mv-transaction-body [role="group"][aria-labelledby="transaction-person-label"] + .text-subtle {
-  display: none !important;
-}
-
 /* No instructional text is shown inside empty entry/selection boxes in the
    unified + Add flow. Visible labels remain outside the fields and accessible
    names remain intact. The runtime bridge also removes placeholder attributes
@@ -142,6 +136,21 @@
   box-shadow: 0 0 0 2px var(--primary-light) !important;
 }
 
+.mv-repayment-flow-summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius, 6px);
+  padding: 10px 12px;
+  background: var(--field);
+}
+
+.mv-repayment-flow-summary > :last-child {
+  overflow-wrap: anywhere;
+}
+
 /* All six creation choices use the same footer layout and button contract.
    Bill remains a PlannedPayment workflow; this only unifies presentation. */
 :is(
@@ -202,6 +211,23 @@
     padding-inline: 4px;
     font-size: 0.8125rem;
     line-height: 1rem;
+  }
+
+  .mv-layout-phone .mv-transaction-account-select {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline-end: 34px !important;
+    font-size: 0.8125rem !important;
+    -webkit-appearance: menulist !important;
+    appearance: auto !important;
+  }
+
+  .mv-layout-phone .mv-selected-account-summary,
+  .mv-layout-phone .mv-selected-account-identity {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 
   /* Safari date control: keep the native picker, use the same field surface,
