@@ -62,19 +62,22 @@ describe('unified Add consistency follow-up', () => {
     expect(tx).toContain("if (newType === 'transfer')");
   });
 
-  it('removes in-field helper prompts without owning tab navigation in the bridge', () => {
-    expect(bridge).toContain('removeInFieldHelperText');
+  it('suppresses text-input helper placeholders while preserving selector prompts and in-place tab navigation', () => {
+    expect(bridge).toContain('removeTextInputHelperText');
     expect(bridge).toContain(
       "querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[placeholder]')"
     );
     expect(bridge).toContain("control.removeAttribute('placeholder')");
-    expect(bridge).toContain("option.value === ''");
-    expect(bridge).toContain("emptyOption.textContent = ''");
+    expect(bridge).not.toContain("option.value === ''");
+    expect(bridge).not.toContain("emptyOption.textContent = ''");
     expect(bridge).toContain('MutationObserver');
     expect(bridge).not.toContain('openFreshUnifiedTransaction');
     expect(bridge).not.toContain('stopImmediatePropagation');
+    expect(sharedUi).toContain("<option value=\"\">{placeholder}</option>");
+    expect(sharedUi).toContain("selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder");
     expect(css).toContain('::placeholder');
     expect(css).toContain('color: transparent !important');
+    expect(css).toContain('.mv-mobile-account-trigger.is-placeholder');
   });
 
   it('keeps native transaction date semantics and vertically centres its themed surface', () => {
