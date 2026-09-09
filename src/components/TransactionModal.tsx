@@ -205,11 +205,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setIsBillEntry(false);
       if (initialTransaction.splits && initialTransaction.splits.length > 0) {
         setIsSplitEnabled(true);
-        setSplits(initialTransaction.splits.map((split) => ({
-          categoryId: split.categoryId,
-          originalCategoryId: split.categoryId,
-          amountStr: (split.amountPence / 100).toFixed(2),
-          notes: split.notes || '',
+        setSplits(initialTransaction.splits.map((s) => ({
+          categoryId: s.categoryId,
+          originalCategoryId: s.categoryId,
+          amountStr: (s.amountPence / 100).toFixed(2),
+          notes: s.notes || '',
         })));
       } else {
         setIsSplitEnabled(false);
@@ -262,10 +262,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   );
   const billAccountOptions = accounts.filter((account) => account.isActive !== false);
   const targetAccountOptions = accounts.filter(
-    (account) =>
-      account.id !== accountId &&
-      (account.isActive !== false || account.id === targetAccountId) &&
-      (!isRepayment || account.type === 'credit')
+    (a) =>
+      a.id !== accountId &&
+      (a.isActive !== false || a.id === targetAccountId) &&
+      (!isRepayment || a.type === 'credit')
   );
 
   const totalPence = parseToPence(amountStr);
@@ -512,11 +512,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       }
       const sourceBalancePence = repaymentSourceBalanceBeforeEditPence(sourceAccount, initialTransaction);
       if (
-        sourceAccount.type !== 'current' &&
-        sourceAccount.type !== 'joint' &&
+        sourceAccount?.type !== 'current' &&
+        sourceAccount?.type !== 'joint' &&
         pence > sourceBalancePence
       ) {
-        setError(`Repayment exceeds ${sourceAccount.type || 'source'} balance (${formatPence(sourceBalancePence)}).`);
+        setError(`Repayment exceeds ${sourceAccount?.type || 'source'} balance (${formatPence(sourceBalancePence)}).`);
         return;
       }
     }
@@ -754,7 +754,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       <select
                         id="unified-bill-category"
                         value={categoryId}
-                        onChange={(event) => setCategoryId(event.target.value)}
+                        onChange={(e) => setCategoryId(e.target.value)}
                         className="mv-transaction-control w-full"
                         required
                       >
@@ -872,7 +872,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       id="transaction-date"
                       type="date"
                       value={date}
-                      onChange={(event) => setDate(event.target.value)}
+                      onChange={(e) => setDate(e.target.value)}
                       className="mv-transaction-control w-full"
                       required
                     />
@@ -1013,13 +1013,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                           <div className="flex justify-end pr-7 text-[10px] font-semibold text-muted">
                             <span className="w-36">Amount (£)</span>
                           </div>
-                          {splits.map((splitRow, index) => (
-                            <div key={index} className="mv-hscroll items-center">
+                          {splits.map((splitRow, idx) => (
+                            <div key={idx} className="mv-hscroll items-center">
                               <select
-                                aria-label={`Split ${index + 1} category`}
+                                aria-label={`Split ${idx + 1} category`}
                                 value={splitRow.categoryId}
                                 onChange={(event) =>
-                                  handleUpdateSplitRow(index, 'categoryId', event.target.value)
+                                  handleUpdateSplitRow(idx, 'categoryId', event.target.value)
                                 }
                                 className="mv-transaction-control flex-1"
                                 required
@@ -1044,14 +1044,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                                 placeholder="0.00"
                                 value={splitRow.amountStr}
                                 onChange={(event) =>
-                                  handleUpdateSplitRow(index, 'amountStr', event.target.value)
+                                  handleUpdateSplitRow(idx, 'amountStr', event.target.value)
                                 }
                                 className="mv-transaction-control w-full"
-                                aria-label={`Split ${index + 1} amount in pounds sterling`}
+                                aria-label={`Split ${idx + 1} amount in pounds sterling`}
                               />
                               <button
                                 type="button"
-                                onClick={() => handleRemoveSplitRow(index)}
+                                onClick={() => handleRemoveSplitRow(idx)}
                                 className="p-1 text-muted text-subtle hover:text-danger transition"
                                 title="Remove split"
                               >
