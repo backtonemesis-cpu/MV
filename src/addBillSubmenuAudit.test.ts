@@ -15,12 +15,13 @@ describe('Add Bill submenu audit contract', () => {
     expect(source).not.toContain('(e.g. 349.79)');
   });
 
-  it('visually marks every required bill fact as required', () => {
+  it('visually marks every user-entered required bill fact as required', () => {
     expect(source).toContain('Name *');
     expect(source).toContain('Amount (£) *');
     expect(source).toContain('Month *');
     expect(source).toContain('Payment Account *');
-    expect(source).toContain('Responsible Person *');
+    expect(source).not.toContain('Responsible Person *');
+    expect(source).toContain('resolveAccountOwnerPayer(selectedAccount, members)');
   });
 
   it('associates visible field labels with their controls', () => {
@@ -29,7 +30,6 @@ describe('Add Bill submenu audit contract', () => {
       'planned-payment-amount',
       'planned-payment-month',
       'planned-payment-account',
-      'planned-payment-person',
       'planned-payment-due-date',
       'planned-payment-category',
       'planned-payment-notes',
@@ -39,6 +39,7 @@ describe('Add Bill submenu audit contract', () => {
       expect(source).toContain(`htmlFor="${id}"`);
       expect(source).toContain(`id="${id}"`);
     }
+    expect(source).not.toContain('planned-payment-person');
   });
 
   it('associates Transfer Plan and recurring checkbox text with the actual controls', () => {
@@ -51,7 +52,7 @@ describe('Add Bill submenu audit contract', () => {
   it('offers active payment accounts while preserving an archived account already linked during edit', () => {
     expect(source).toContain('const paymentAccountOptions = accounts.filter(');
     expect(source).toContain("account.isActive !== false || account.id === payment?.accountId");
-    expect(source).toContain('{paymentAccountOptions.map((acc) => (');
+    expect(source).toContain('paymentAccountOptions.map((acc) =>');
   });
 
   it('keeps the bill amount numeric-only with explicit GBP semantics', () => {
@@ -79,7 +80,7 @@ describe('Add Bill submenu audit contract', () => {
 
   it('filters new bill categories by authoritative category group metadata', () => {
     expect(source).toContain('getBillCategoryOptions(');
-    expect(source).toContain('{billCategoryOptions.map((c) => (');
+    expect(source).toContain('billCategoryOptions.map((c) =>');
     expect(source).toContain('isBillCategorySelectionAllowed(');
     expect(source).not.toContain('{categories.map((c) => (');
   });
@@ -89,5 +90,4 @@ describe('Add Bill submenu audit contract', () => {
     expect(source).toContain('getBillCategoryOptions(');
     expect(source).toContain('isBillCategorySelectionAllowed(');
   });
-
 });
