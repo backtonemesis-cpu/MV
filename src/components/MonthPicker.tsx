@@ -8,6 +8,7 @@ interface MonthPickerProps {
   autoFocus?: boolean;
   disabled?: boolean;
   className?: string;
+  inputClassName?: string;
 }
 
 export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
@@ -20,6 +21,7 @@ export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
       autoFocus = false,
       disabled = false,
       className = '',
+      inputClassName = '',
     },
     forwardedRef
   ) => {
@@ -72,7 +74,7 @@ export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
           aria-label={ariaLabel}
           autoFocus={autoFocus}
           disabled={disabled}
-          className="mv-month-picker-input"
+          className={`mv-month-picker-input ${inputClassName}`.trim()}
         />
       </span>
     );
