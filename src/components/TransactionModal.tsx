@@ -939,7 +939,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         <select
                           id="transaction-category"
                           value={categoryId}
-                          onChange={(event) => setCategoryId(event.target.value)}
+                          onChange={(e) => setCategoryId(e.target.value)}
                           className="mv-transaction-control w-full"
                           required
                         >
