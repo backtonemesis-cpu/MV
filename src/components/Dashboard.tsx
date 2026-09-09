@@ -13,7 +13,6 @@ import { generateTransferPlan } from '../utils/transferPlan';
 import { accountIdentityLabel, accountOwnerLabel, accountTypeLabel } from '../utils/accountDisplay';
 
 const UNIFIED_ADD_SESSION_KEY = 'mv-unified-add-launcher';
-const OPEN_BILL_EVENT = 'mv:open-planned-payment';
 
 interface DashboardProps {
   household: HouseholdData;
@@ -22,7 +21,6 @@ interface DashboardProps {
   onSelectMonth: (month: string) => void;
   onOpenMonthImport: () => void;
   onOpenAddTransaction: () => void;
-  onOpenPlannedPaymentModal: () => void;
   onNavigateToTab: (tab: NavTab) => void;
 }
 
@@ -35,19 +33,13 @@ function AccountIcon({ account }: { account: Account }) {
 
 export const Dashboard: React.FC<DashboardProps> = ({
   household, userRole, selectedMonth, onSelectMonth, onOpenMonthImport,
-  onOpenAddTransaction, onOpenPlannedPaymentModal, onNavigateToTab,
+  onOpenAddTransaction, onNavigateToTab,
 }) => {
   const monthTransactions = useMemo(() => household.transactions.filter((tx) => tx.date.startsWith(selectedMonth)), [household.transactions, selectedMonth]);
   const monthPlannedPayments = useMemo(() => (household.plannedPayments || []).filter((p) => p.month === selectedMonth), [household.plannedPayments, selectedMonth]);
   const totalLiquidBalancePence = useMemo(() => calculateLiquidFundsPence(household.accounts), [household.accounts]);
   const surplusCalculation = useMemo(() => calculateMonthlySurplus(household.transactions, household.plannedPayments || [], selectedMonth, household.plannedIncomes || []), [household.transactions, household.plannedPayments, household.plannedIncomes, selectedMonth]);
   const savingsPosition = useMemo(() => calculateSavingsPosition(household.accounts, household.transactions, household.plannedPayments || [], selectedMonth, household.plannedIncomes || []), [household.accounts, household.transactions, household.plannedPayments, household.plannedIncomes, selectedMonth]);
-
-  useEffect(() => {
-    const openBill = () => onOpenPlannedPaymentModal();
-    window.addEventListener(OPEN_BILL_EVENT, openBill);
-    return () => window.removeEventListener(OPEN_BILL_EVENT, openBill);
-  }, [onOpenPlannedPaymentModal]);
 
   const openUnifiedAdd = () => {
     window.sessionStorage.setItem(UNIFIED_ADD_SESSION_KEY, '1');
