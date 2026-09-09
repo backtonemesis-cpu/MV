@@ -66,6 +66,10 @@ describe('final unified Add consistency contract', () => {
     expect(tx).toContain('Billing Month');
     expect(tx).not.toMatch(/>\s*Month\s*</);
     expect(tx).toContain('ariaLabel="Billing month"');
+    expect(tx).toContain('displayFormat="short-uk"');
+    expect(monthPicker).toContain("type MonthPickerDisplayFormat = 'native' | 'short-uk'");
+    expect(monthPicker).toContain('formatMonthShortUk');
+    expect(monthPicker).toContain('mv-month-picker-short-display');
     expect(types).toContain('month: string;');
     expect(tx).not.toContain('type="date"\\n                      value={billMonth}');
   });
