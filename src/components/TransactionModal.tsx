@@ -344,6 +344,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       const sourceAccount = accounts.find((account) => account.id === accountId);
       const creditAccount = accounts.find((account) => account.id === targetAccountId);
       if (!targetAccountId || targetAccountId === accountId) { setError('Choose the credit card being repaid.'); return; }
+      if (!sourceAccount) { setError('Choose the paying account.'); return; }
       if (sourceAccount?.type === 'credit') { setError('Card repayments must be funded from a cash-capable account.'); return; }
       if (!creditAccount || creditAccount.type !== 'credit') { setError('Card repayment destination must be a credit account.'); return; }
       const outstandingDebtPence = repaymentDebtBeforeEditPence(creditAccount, initialTransaction);
