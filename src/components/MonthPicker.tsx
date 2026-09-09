@@ -1,5 +1,7 @@
 import React, { forwardRef, useRef } from 'react';
 
+type MonthPickerDisplayFormat = 'native' | 'short-uk';
+
 interface MonthPickerProps {
   value: string;
   onChange: (month: string) => void;
@@ -9,7 +11,23 @@ interface MonthPickerProps {
   disabled?: boolean;
   className?: string;
   inputClassName?: string;
+  displayFormat?: MonthPickerDisplayFormat;
 }
+
+export const formatMonthShortUk = (value: string): string => {
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!match) return '';
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (!Number.isInteger(year) || month < 1 || month > 12) return '';
+
+  return new Intl.DateTimeFormat('en-GB', {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, 1)));
+};
 
 export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
   (
@@ -22,10 +40,12 @@ export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
       disabled = false,
       className = '',
       inputClassName = '',
+      displayFormat = 'native',
     },
     forwardedRef
   ) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const shortDisplayValue = displayFormat === 'short-uk' ? formatMonthShortUk(value) : '';
 
     const setInputRef = (node: HTMLInputElement | null) => {
       inputRef.current = node;
@@ -55,9 +75,10 @@ export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
 
     return (
       <span
-        className={`mv-month-picker ${className}`}
+        className={`mv-month-picker ${displayFormat === 'short-uk' ? 'has-short-uk-display' : ''} ${className}`.trim()}
         onClick={openPicker}
         data-disabled={disabled ? 'true' : 'false'}
+        data-display-format={displayFormat}
       >
         <input
           ref={setInputRef}
@@ -76,6 +97,11 @@ export const MonthPicker = forwardRef<HTMLInputElement, MonthPickerProps>(
           disabled={disabled}
           className={`mv-month-picker-input ${inputClassName}`.trim()}
         />
+        {displayFormat === 'short-uk' && shortDisplayValue && (
+          <span className="mv-month-picker-short-display" aria-hidden="true">
+            {shortDisplayValue}
+          </span>
+        )}
       </span>
     );
   }
