@@ -147,22 +147,41 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       : [];
   const transactionCategoryOptions = getTransactionCategoryOptions(categories, type, preservedHistoricalCategoryIds);
   const selectedAccount = accounts.find((account) => account.id === accountId);
+  const selectedTargetAccount = accounts.find((account) => account.id === targetAccountId);
 
   if (!isOpen) return null;
 
   const handleTypeChange = (newType: TransactionType) => {
     setSuccessMessage(null);
-    setType(newType);
-    const preservedForNewType = initialTransaction?.type === newType ? [initialTransaction.categoryId].filter(Boolean) : [];
-    if (categoryId && !isTransactionCategorySelectionAllowed(categories, newType, categoryId, preservedForNewType)) {
+
+    if (!initialTransaction && type && newType !== type) {
+      setDescription('');
+      setAmountStr('');
       setCategoryId('');
+      setAccountId('');
+      setTargetAccountId('');
+      setNotes('');
+      setIsSavings(false);
+      setIsSplitEnabled(false);
+      setSplits([]);
+      setError(null);
     }
-    setSplits((previous) => previous.map((row) => {
-      const preservedSplit = initialTransaction?.type === newType && row.originalCategoryId ? [row.originalCategoryId] : [];
-      return row.categoryId && !isTransactionCategorySelectionAllowed(categories, newType, row.categoryId, preservedSplit)
-        ? { ...row, categoryId: '' }
-        : row;
-    }));
+
+    setType(newType);
+
+    if (initialTransaction) {
+      const preservedForNewType = initialTransaction.type === newType ? [initialTransaction.categoryId].filter(Boolean) : [];
+      if (categoryId && !isTransactionCategorySelectionAllowed(categories, newType, categoryId, preservedForNewType)) {
+        setCategoryId('');
+      }
+      setSplits((previous) => previous.map((row) => {
+        const preservedSplit = initialTransaction.type === newType && row.originalCategoryId ? [row.originalCategoryId] : [];
+        return row.categoryId && !isTransactionCategorySelectionAllowed(categories, newType, row.categoryId, preservedSplit)
+          ? { ...row, categoryId: '' }
+          : row;
+      }));
+    }
+
     if (newType === 'transfer') {
       setIsTransfer(true); setIsRepayment(false); setIsRefund(false); setIsSplitEnabled(false);
     } else if (newType === 'repayment') {
@@ -189,7 +208,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     const pence = parseToPence(amountStr);
     if (pence <= 0) { setError('Please enter a valid amount greater than £0.00'); return; }
     if (!description.trim()) { setError('Please enter a description for the transaction'); return; }
-    if (!accountId) { setError(isTransfer ? 'Choose the source account.' : 'Choose the account.'); return; }
+    if (!accountId) { setError(isTransfer ? 'Choose the source account.' : isRepayment ? 'Choose the paying account.' : 'Choose the account.'); return; }
     if (!isTransfer && !isSplitEnabled && !categoryId) { setError('Choose a category.'); return; }
     if (!isTransfer && !isSplitEnabled && !isTransactionCategorySelectionAllowed(categories, type, categoryId, preservedHistoricalCategoryIds)) {
       setError('Choose a category that matches the transaction type.'); return;
@@ -200,7 +219,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     if (isRepayment) {
       const sourceAccount = accounts.find((account) => account.id === accountId);
       const creditAccount = accounts.find((account) => account.id === targetAccountId);
-      if (!targetAccountId || targetAccountId === accountId) { setError('Choose the credit account being repaid.'); return; }
+      if (!targetAccountId || targetAccountId === accountId) { setError('Choose the credit card being repaid.'); return; }
       if (sourceAccount?.type === 'credit') { setError('Card repayments must be funded from a cash-capable account.'); return; }
       if (!creditAccount || creditAccount.type !== 'credit') { setError('Card repayment destination must be a credit account.'); return; }
     }
@@ -300,8 +319,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div className="mv-transaction-dynamic">
           <div className="mv-modal-grid-2">
             <div>
-              <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">{isTransfer ? 'From Account' : isRepayment ? 'Paid from account' : 'Account'}</label>
-              <select id="transaction-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="mv-transaction-control w-full" required>
+              <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">{isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'}</label>
+              <select id="transaction-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="mv-transaction-control mv-transaction-account-select w-full" required>
                 <option value="">{isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}</option>
                 {accounts.filter((acc) => (acc.isActive !== false || acc.id === accountId) && (!isRepayment || acc.type !== 'credit')).map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
               </select>
@@ -310,11 +329,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
             {(isTransfer || isRepayment) && (
               <div>
-                <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">{isRepayment ? 'Credit account' : 'To Account'}</label>
-                <select id="transaction-target-account" value={targetAccountId} onChange={(e) => setTargetAccountId(e.target.value)} className="mv-transaction-control w-full" required>
-                  <option value="">{isRepayment ? 'Select credit account' : 'Select account'}</option>
+                <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">{isRepayment ? 'Credit card being repaid' : 'To Account'}</label>
+                <select id="transaction-target-account" value={targetAccountId} onChange={(e) => setTargetAccountId(e.target.value)} className="mv-transaction-control mv-transaction-account-select w-full" required>
+                  <option value="">{isRepayment ? 'Select credit card' : 'Select account'}</option>
                   {accounts.filter((a) => a.id !== accountId && (a.isActive !== false || a.id === targetAccountId) && (!isRepayment || a.type === 'credit')).map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
                 </select>
+                {selectedTargetAccount && <div className="mv-selected-account-summary" aria-live="polite" aria-label={`Selected destination account ${accountIdentityLabel(selectedTargetAccount)}, balance ${formatPence(selectedTargetAccount.currentBalancePence)}`}><div className="mv-selected-account-identity">{accountIdentityLabel(selectedTargetAccount)}</div><div className="mv-selected-account-balance">Balance: {formatPence(selectedTargetAccount.currentBalancePence)}</div></div>}
               </div>
             )}
 
@@ -322,6 +342,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <div><label htmlFor="transaction-category" className="block text-xs font-semibold text-muted mb-1">Category</label><select id="transaction-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="mv-transaction-control w-full" required><option value="">Select category</option>{transactionCategoryOptions.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}</select></div>
             )}
           </div>
+
+          {isRepayment && selectedAccount && selectedTargetAccount && (
+            <div className="mv-repayment-flow-summary" aria-live="polite">
+              <span className="text-xs font-semibold text-muted">Repayment path</span>
+              <span className="text-xs font-bold text-main">{accountIdentityLabel(selectedAccount)} → {accountIdentityLabel(selectedTargetAccount)}</span>
+            </div>
+          )}
 
           {!isTransfer && !isRepayment && (
             <div className="pt-2 border-t border-muted">
