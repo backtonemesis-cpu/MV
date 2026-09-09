@@ -191,13 +191,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     totalPence > 0 &&
     selectedAccount &&
     selectedAccount.type !== 'current' &&
+    selectedAccount.type !== 'joint' &&
     selectedAccount.type !== 'credit' &&
     totalPence > Math.max(0, selectedAccount.currentBalancePence)
   );
   const repaymentExceedsCurrentVisibleBalance = Boolean(
     isRepayment &&
     totalPence > 0 &&
-    selectedAccount?.type === 'current' &&
+    (selectedAccount?.type === 'current' || selectedAccount?.type === 'joint') &&
     totalPence > Math.max(0, selectedAccount.currentBalancePence)
   );
   const repaymentAmountBlocked = repaymentExceedsDebt || repaymentExceedsNonOverdraftSource;
@@ -299,7 +300,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         setError(`Repayment cannot exceed the credit card balance of ${formatPence(outstandingDebtPence)}.`);
         return;
       }
-      if (sourceAccount?.type !== 'current' && pence > Math.max(0, sourceAccount?.currentBalancePence || 0)) {
+      if (
+        sourceAccount?.type !== 'current' &&
+        sourceAccount?.type !== 'joint' &&
+        pence > Math.max(0, sourceAccount?.currentBalancePence || 0)
+      ) {
         setError(`Repayment cannot exceed the available ${sourceAccount?.type || 'source'} account balance of ${formatPence(Math.max(0, sourceAccount?.currentBalancePence || 0))}.`);
         return;
       }
@@ -387,8 +392,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div>
             <div id="transaction-type-label" className="block text-xs font-semibold text-muted mb-1.5">{isUnifiedAddLauncher ? 'What would you like to add?' : 'Type'}</div>
             <div className="mv-transaction-type-tabs" role="group" aria-labelledby="transaction-type-label">
-              {(['expense', 'income', 'transfer', 'refund', 'repayment'] as const).map((transactionType) => (
-                <button type="button" key={transactionType} onClick={() => handleTypeChange(transactionType)} className={`mv-transaction-type-tab ${type === transactionType ? 'is-active' : ''}`} aria-pressed={type === transactionType} aria-label={`Add ${transactionType}`}>{transactionType}</button>
+              {(['expense', 'income', 'transfer', 'refund', 'repayment'] as const).map((t) => (
+                <button type="button" key={t} onClick={() => handleTypeChange(t)} className={`mv-transaction-type-tab ${type === t ? 'is-active' : ''}`} aria-pressed={type === t} aria-label={`Add ${t}`}>{t}</button>
               ))}
               {isUnifiedAddLauncher && <button type="button" onClick={openBillWorkflow} className="mv-transaction-type-tab" aria-label="Add bill" aria-pressed="false">bill</button>}
             </div>
@@ -419,7 +424,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               <label htmlFor="transaction-account" className="block text-xs font-semibold text-muted mb-1">{isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'}</label>
               <select id="transaction-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="mv-transaction-control mv-transaction-account-select w-full" aria-required="true">
                 <option value="">{isTransfer ? 'Select source account' : isRepayment ? 'Select paying account' : 'Select account'}</option>
-                {sourceAccountOptions.map((account) => <option key={account.id} value={account.id}>{accountOptionLabel(account)}</option>)}
+                {sourceAccountOptions.map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
               </select>
               <button ref={sourcePickerTriggerRef} type="button" className="mv-mobile-account-trigger" onClick={() => setMobileAccountPicker('source')} aria-haspopup="listbox" aria-expanded={mobileAccountPicker === 'source'} aria-label={`${isTransfer ? 'From Account' : isRepayment ? 'Pay from account' : 'Account'} selector`}>
                 <span>{selectedAccount ? accountIdentityLabel(selectedAccount) : ''}</span><ChevronDown aria-hidden="true" />
@@ -432,7 +437,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 <label htmlFor="transaction-target-account" className="block text-xs font-semibold text-muted mb-1">{isRepayment ? 'Credit card being repaid' : 'To Account'}</label>
                 <select id="transaction-target-account" value={targetAccountId} onChange={(e) => setTargetAccountId(e.target.value)} className="mv-transaction-control mv-transaction-account-select w-full" aria-required="true">
                   <option value="">{isRepayment ? 'Select credit card' : 'Select account'}</option>
-                  {targetAccountOptions.map((account) => <option key={account.id} value={account.id}>{accountOptionLabel(account)}</option>)}
+                  {targetAccountOptions.map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
                 </select>
                 <button ref={targetPickerTriggerRef} type="button" className="mv-mobile-account-trigger" onClick={() => setMobileAccountPicker('target')} aria-haspopup="listbox" aria-expanded={mobileAccountPicker === 'target'} aria-label={`${isRepayment ? 'Credit card being repaid' : 'To Account'} selector`}>
                   <span>{selectedTargetAccount ? accountIdentityLabel(selectedTargetAccount) : ''}</span><ChevronDown aria-hidden="true" />
@@ -442,7 +447,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             )}
 
             {!isTransfer && !isSplitEnabled && (
-              <div><label htmlFor="transaction-category" className="block text-xs font-semibold text-muted mb-1">Category</label><select id="transaction-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="mv-transaction-control w-full" required><option value="">Select category</option>{transactionCategoryOptions.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></div>
+              <div><label htmlFor="transaction-category" className="block text-xs font-semibold text-muted mb-1">Category</label><select id="transaction-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="mv-transaction-control w-full" required><option value="">Select category</option>{transactionCategoryOptions.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}</select></div>
             )}
           </div>
 
@@ -462,11 +467,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               {isSplitEnabled && (
                 <div className="mv-transaction-splits space-y-2">
                   <div className="flex justify-end pr-7 text-[10px] font-semibold text-muted"><span className="w-36">Amount (£)</span></div>
-                  {splits.map((splitRow, index) => (
-                    <div key={index} className="mv-hscroll items-center">
-                      <select aria-label={`Split ${index + 1} category`} value={splitRow.categoryId} onChange={(e) => handleUpdateSplitRow(index, 'categoryId', e.target.value)} className="mv-transaction-control flex-1" required><option value="">Select category</option>{getTransactionCategoryOptions(categories, type, initialTransaction?.type === type && splitRow.originalCategoryId ? [splitRow.originalCategoryId] : []).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
-                      <MoneyInput wrapperClassName="w-36" type="text" inputMode="decimal" placeholder="0.00" value={splitRow.amountStr} onChange={(e) => handleUpdateSplitRow(index, 'amountStr', e.target.value)} className="mv-transaction-control w-full" aria-label={`Split ${index + 1} amount in pounds sterling`} />
-                      <button type="button" onClick={() => handleRemoveSplitRow(index)} className="p-1 text-muted text-subtle hover:text-danger transition" title="Remove split"><Trash2 className="w-3.5 h-3.5" /></button>
+                  {splits.map((splitRow, idx) => (
+                    <div key={idx} className="mv-hscroll items-center">
+                      <select aria-label={`Split ${idx + 1} category`} value={splitRow.categoryId} onChange={(e) => handleUpdateSplitRow(idx, 'categoryId', e.target.value)} className="mv-transaction-control flex-1" required><option value="">Select category</option>{getTransactionCategoryOptions(categories, type, initialTransaction?.type === type && splitRow.originalCategoryId ? [splitRow.originalCategoryId] : []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+                      <MoneyInput wrapperClassName="w-36" type="text" inputMode="decimal" placeholder="0.00" value={splitRow.amountStr} onChange={(e) => handleUpdateSplitRow(idx, 'amountStr', e.target.value)} className="mv-transaction-control w-full" aria-label={`Split ${idx + 1} amount in pounds sterling`} />
+                      <button type="button" onClick={() => handleRemoveSplitRow(idx)} className="p-1 text-muted text-subtle hover:text-danger transition" title="Remove split"><Trash2 className="w-3.5 h-3.5" /></button>
                     </div>
                   ))}
                   <button type="button" onClick={handleAddSplitRow} className="inline-flex items-center gap-1 text-xs font-semibold text-success mt-1"><Plus className="w-3.5 h-3.5" />Add Split</button>
