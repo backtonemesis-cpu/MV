@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { PlannedPayment, Account, Category, Payer, HouseholdMember, TransactionType } from '../types';
 import { householdPersonOptions } from '../utils/householdPeople';
 import { parseToPence } from '../utils/currency';
@@ -43,6 +43,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const [notes, setNotes] = useState(payment?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   const personOptions = householdPersonOptions(members, responsiblePerson ? [responsiblePerson] : []);
@@ -55,7 +56,22 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const closeModal = () => { clearUnifiedState(); onClose(); };
   const dialogRef = useModalAccessibility<HTMLDivElement>(true, closeModal);
 
+  const resetForNextBill = () => {
+    setName('');
+    setAmountStr('');
+    setMonth(activeMonth || '2026-09');
+    setAccountId('');
+    setResponsiblePerson('');
+    setDueDate('');
+    setCategoryId('');
+    setIncludeInTransferPlan(false);
+    setIsRecurring(false);
+    setNotes('');
+    setError(null);
+  };
+
   const switchToTransactionType = (type: TransactionType) => {
+    setSuccessMessage(null);
     clearUnifiedState();
     onClose();
     window.dispatchEvent(new CustomEvent(SWITCH_UNIFIED_TYPE_EVENT, { detail: { type } }));
@@ -63,6 +79,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage(null);
     if (!name.trim()) { setError('Payment / Bill name is required.'); return; }
     const pence = parseToPence(amountStr);
     if (pence <= 0) { setError('Please enter a valid amount in pounds and pence.'); return; }
@@ -81,8 +98,17 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
         categoryId: categoryId || undefined, includeInTransferPlan, isRecurring,
         notes: notes.trim() || undefined,
       });
-      clearUnifiedState();
-      onClose();
+
+      if (isUnifiedAdd && !isEditing) {
+        resetForNextBill();
+        setSuccessMessage('Bill recorded. Ready for another entry.');
+        window.requestAnimationFrame(() => {
+          dialogRef.current?.querySelector<HTMLElement>('.mv-add-bill-scroll')?.scrollTo({ top: 0 });
+        });
+      } else {
+        clearUnifiedState();
+        onClose();
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to save scheduled payment');
     } finally { setIsSubmitting(false); }
@@ -99,6 +125,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
         <form onSubmit={handleSubmit} className="mv-modal-form mv-add-bill-form">
           <div className="mv-add-bill-scroll">
             {error && <div className="p-3 bg-danger-soft border border-danger rounded-lg flex items-start gap-2 text-danger text-xs" role="alert"><AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" /><span>{error}</span></div>}
+            {successMessage && <div className="p-3 bg-success-soft border border-success rounded-lg flex items-start gap-2 text-success text-xs" role="status" aria-live="polite"><CheckCircle2 className="w-4 h-4 text-success shrink-0 mt-0.5" /><span>{successMessage}</span></div>}
             {isUnifiedAdd && (
               <div>
                 <div id="planned-payment-type-label" className="block text-xs font-semibold text-muted mb-1.5">What would you like to add?</div>
