@@ -19,4 +19,11 @@ describe('account-derived person entry UI', () => {
     expect(source).not.toContain('planned-payment-person');
     expect(source).toContain('resolveAccountOwnerPayer(selectedAccount, members)');
   });
+
+  it('preserves a Bill historical responsible person when its payment account is unchanged', () => {
+    const source = read('src/components/PlannedPaymentModal.tsx');
+    expect(source).toContain('payment && payment.accountId === accountId');
+    expect(source).toContain('? payment.responsiblePerson');
+    expect(source).toContain(': resolveAccountOwnerPayer(selectedAccount, members)');
+  });
 });
