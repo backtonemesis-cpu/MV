@@ -1,0 +1,26 @@
+/* Unified Add Bill typography parity.
+   Bill remains a PlannedPayment workflow underneath; these rules only align
+   its visible field-label and control typography with the five Transaction
+   entry forms in the shared Add experience. */
+
+.mv-add-bill-modal[data-unified-add="true"] label[for^="planned-payment-"] {
+  color: var(--text-muted) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  line-height: 1rem !important;
+}
+
+.mv-add-bill-modal[data-unified-add="true"] :is(
+  #planned-payment-name,
+  #planned-payment-amount,
+  #planned-payment-account,
+  #planned-payment-person,
+  #planned-payment-due-date,
+  #planned-payment-category,
+  #planned-payment-notes,
+  .mv-month-picker-input
+) {
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  line-height: 1.25rem !important;
+}

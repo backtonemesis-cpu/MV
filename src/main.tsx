@@ -10,6 +10,7 @@ import './activityFilterRegression.css';
 import './unifiedAddConsistency.css';
 import './unifiedAddLauncherCompact.css';
 import './unifiedAddSelectIndicator.css';
+import './unifiedAddBillTypography.css';
 import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
