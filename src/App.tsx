@@ -911,10 +911,6 @@ export default function App() {
                   setEditingTx(null);
                   setShowTxModal(true);
                 }}
-                onOpenPlannedPaymentModal={() => {
-                  setEditingPlannedPayment(null);
-                  setShowPlannedPaymentModal(true);
-                }}
                 onNavigateToTab={handlePrimaryTabChange}
               />
             )}
