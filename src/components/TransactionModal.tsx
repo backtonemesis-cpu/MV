@@ -15,6 +15,52 @@ const OPEN_BILL_EVENT = 'mv:open-planned-payment';
 
 type MobileAccountPicker = 'source' | 'target' | null;
 
+function repaymentAffectsCurrentBalance(account: Account, transaction: Transaction | null | undefined): boolean {
+  if (!transaction || (!transaction.isRepayment && transaction.type !== 'repayment')) return false;
+  if (transaction.date > localDateInputValue()) return false;
+  const hasReconciliation =
+    Boolean(account.reconciliationDate) && Number.isSafeInteger(account.reconciledBalancePence);
+  return !hasReconciliation || transaction.date > account.reconciliationDate!;
+}
+
+function repaymentDebtBeforeEditPence(
+  account: Account,
+  initialTransaction: Transaction | null | undefined
+): number {
+  const sameTarget = Boolean(
+    initialTransaction &&
+    (initialTransaction.isRepayment || initialTransaction.type === 'repayment') &&
+    initialTransaction.targetAccountId === account.id
+  );
+  const restoredPence =
+    sameTarget && repaymentAffectsCurrentBalance(account, initialTransaction)
+      ? initialTransaction!.amountPence
+      : 0;
+  const debtBeforeEditPence = Math.max(0, -(account.currentBalancePence - restoredPence));
+  return sameTarget && initialTransaction
+    ? Math.max(debtBeforeEditPence, initialTransaction.amountPence)
+    : debtBeforeEditPence;
+}
+
+function repaymentSourceBalanceBeforeEditPence(
+  account: Account,
+  initialTransaction: Transaction | null | undefined
+): number {
+  const sameSource = Boolean(
+    initialTransaction &&
+    (initialTransaction.isRepayment || initialTransaction.type === 'repayment') &&
+    initialTransaction.accountId === account.id
+  );
+  const restoredPence =
+    sameSource && repaymentAffectsCurrentBalance(account, initialTransaction)
+      ? initialTransaction!.amountPence
+      : 0;
+  const balanceBeforeEditPence = Math.max(0, account.currentBalancePence + restoredPence);
+  return sameSource && initialTransaction
+    ? Math.max(balanceBeforeEditPence, initialTransaction.amountPence)
+    : balanceBeforeEditPence;
+}
+
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -181,7 +227,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   );
   const totalPence = parseToPence(amountStr);
   const repaymentDebtPence = isRepayment && selectedTargetAccount?.type === 'credit'
-    ? Math.max(0, -selectedTargetAccount.currentBalancePence)
+    ? repaymentDebtBeforeEditPence(selectedTargetAccount, initialTransaction)
+    : null;
+  const repaymentSourceBalancePence = selectedAccount
+    ? repaymentSourceBalanceBeforeEditPence(selectedAccount, initialTransaction)
     : null;
   const repaymentExceedsDebt = Boolean(
     isRepayment && totalPence > 0 && repaymentDebtPence !== null && totalPence > repaymentDebtPence
@@ -193,13 +242,15 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     selectedAccount.type !== 'current' &&
     selectedAccount.type !== 'joint' &&
     selectedAccount.type !== 'credit' &&
-    totalPence > Math.max(0, selectedAccount.currentBalancePence)
+    repaymentSourceBalancePence !== null &&
+    totalPence > repaymentSourceBalancePence
   );
   const repaymentExceedsCurrentVisibleBalance = Boolean(
     isRepayment &&
     totalPence > 0 &&
     (selectedAccount?.type === 'current' || selectedAccount?.type === 'joint') &&
-    totalPence > Math.max(0, selectedAccount.currentBalancePence)
+    repaymentSourceBalancePence !== null &&
+    totalPence > repaymentSourceBalancePence
   );
   const repaymentAmountBlocked = repaymentExceedsDebt || repaymentExceedsNonOverdraftSource;
 
@@ -295,17 +346,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       if (!targetAccountId || targetAccountId === accountId) { setError('Choose the credit card being repaid.'); return; }
       if (sourceAccount?.type === 'credit') { setError('Card repayments must be funded from a cash-capable account.'); return; }
       if (!creditAccount || creditAccount.type !== 'credit') { setError('Card repayment destination must be a credit account.'); return; }
-      const outstandingDebtPence = Math.max(0, -creditAccount.currentBalancePence);
+      const outstandingDebtPence = repaymentDebtBeforeEditPence(creditAccount, initialTransaction);
       if (pence > outstandingDebtPence) {
         setError(`Repayment cannot exceed the credit card balance of ${formatPence(outstandingDebtPence)}.`);
         return;
       }
+      const sourceBalancePence = repaymentSourceBalanceBeforeEditPence(sourceAccount, initialTransaction);
       if (
         sourceAccount?.type !== 'current' &&
         sourceAccount?.type !== 'joint' &&
-        pence > Math.max(0, sourceAccount?.currentBalancePence || 0)
+        pence > sourceBalancePence
       ) {
-        setError(`Repayment cannot exceed the available ${sourceAccount?.type || 'source'} account balance of ${formatPence(Math.max(0, sourceAccount?.currentBalancePence || 0))}.`);
+        setError(`Repayment cannot exceed the available ${sourceAccount?.type || 'source'} account balance of ${formatPence(sourceBalancePence)}.`);
         return;
       }
     }
@@ -407,10 +459,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                 <div className="mv-repayment-amount-message is-danger" role="alert">Repayment exceeds the credit card balance of {formatPence(repaymentDebtPence)}.</div>
               )}
               {repaymentExceedsNonOverdraftSource && selectedAccount && (
-                <div className="mv-repayment-amount-message is-danger" role="alert">Repayment exceeds the available {selectedAccount.type} account balance of {formatPence(Math.max(0, selectedAccount.currentBalancePence))}.</div>
+                <div className="mv-repayment-amount-message is-danger" role="alert">Repayment exceeds the available {selectedAccount.type} account balance of {formatPence(repaymentSourceBalancePence || 0)}.</div>
               )}
               {repaymentExceedsCurrentVisibleBalance && selectedAccount && (
-                <div className="mv-repayment-amount-message is-warning" role="status">Repayment exceeds the displayed current-account balance of {formatPence(Math.max(0, selectedAccount.currentBalancePence))}. Check the available overdraft before recording.</div>
+                <div className="mv-repayment-amount-message is-warning" role="status">Repayment exceeds the displayed current-account balance of {formatPence(repaymentSourceBalancePence || 0)}. Check the available overdraft before recording.</div>
               )}
             </div>
             <div><label htmlFor="transaction-date" className="block text-xs font-semibold text-muted mb-1">Date</label><input id="transaction-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mv-transaction-control w-full" required /></div>
