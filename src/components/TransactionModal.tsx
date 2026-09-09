@@ -714,6 +714,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       ariaLabel="Billing month"
                       className="is-fluid mv-unified-add-month"
                       inputClassName="mv-transaction-control"
+                      displayFormat="short-uk"
                     />
                   </div>
                 </div>
