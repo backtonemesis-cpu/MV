@@ -192,6 +192,33 @@
   line-height: 1.2 !important;
 }
 
+/* The unified Bill keeps a real native month input for interaction/storage,
+   but overlays a UK-short display (for example "Sep 2026") so its visible
+   date language matches the other Add tabs without inventing a day. */
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month.has-short-uk-display {
+  position: relative;
+}
+
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month.has-short-uk-display .mv-month-picker-input.mv-transaction-control {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-short-display {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 6px 36px 6px 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
 /* Bill-only boolean facts stay financially separate but use the same compact
    field-label rhythm and accessible row height as the rest of unified Add. */
 .mv-unified-bill-options {
@@ -576,6 +603,13 @@
     font-size: var(--mv-ds-text-body) !important;
     font-weight: 400 !important;
     line-height: 40px !important;
+  }
+
+  .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-short-display {
+    padding: 0 36px 0 12px;
+    font-size: var(--mv-ds-text-body);
+    font-weight: 400;
+    line-height: 40px;
   }
 
   .mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-bill-option {
