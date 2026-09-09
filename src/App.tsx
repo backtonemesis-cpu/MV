@@ -253,15 +253,12 @@ export default function App() {
       } else {
         await createTransaction(txData, household.version, selectedMonth);
       }
-      setShowTxModal(false);
-      setEditingTx(null);
       await loadData();
     } catch (err: any) {
       if (err.status === 409) {
         setConflictServerVersion(err.serverVersion || household.version + 1);
-      } else {
-        throw err;
       }
+      throw err;
     } finally {
       setIsSubmitting(false);
     }
