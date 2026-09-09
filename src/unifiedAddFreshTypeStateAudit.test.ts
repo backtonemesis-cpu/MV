@@ -54,10 +54,10 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).toContain('repaymentAffectsCurrentBalance(account, initialTransaction)');
     expect(modal).toContain('Math.max(debtBeforeEditPence, initialTransaction.amountPence)');
     expect(modal).toContain('if (pence > outstandingDebtPence)');
-    expect(modal).toContain('Repayment cannot exceed the credit card balance of');
+    expect(modal).toContain('Repayment exceeds card balance (');
     expect(modal).toContain('const repaymentExceedsDebt = Boolean(');
     expect(modal).toContain('disabled={isSubmitting || repaymentAmountBlocked}');
-    expect(modal).toContain('Repayment exceeds the credit card balance of');
+    expect(modal).toContain('Repayment exceeds card balance (');
   });
 
   it('blocks non-overdraft source overspend and treats legacy joint-current accounts like current accounts', () => {
@@ -67,9 +67,22 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).toContain('repaymentSourceBalanceBeforeEditPence(selectedAccount, initialTransaction)');
     expect(modal).toContain('repaymentSourceBalanceBeforeEditPence(sourceAccount, initialTransaction)');
     expect(modal).toContain('Math.max(balanceBeforeEditPence, initialTransaction.amountPence)');
-    expect(modal).toContain('Repayment cannot exceed the available');
+    expect(modal).toContain('Repayment exceeds ${sourceAccount?.type || \'source\'} balance (');
     expect(modal).toContain('const repaymentExceedsCurrentVisibleBalance = Boolean(');
-    expect(modal).toContain('Check the available overdraft before recording.');
+    expect(modal).toContain('Exceeds current balance (');
+    expect(modal).toContain('Check overdraft.');
+  });
+
+  it('renders repayment blocking errors and overdraft warnings with distinct semantic severity styling', () => {
+    expect(modal).toContain('mv-repayment-amount-message is-danger');
+    expect(modal).toContain('mv-repayment-amount-message is-warning');
+    expect(modal).toContain('<AlertCircle aria-hidden="true" />');
+    expect(css).toContain('background: var(--danger-bg)');
+    expect(css).toContain('color: var(--danger-text)');
+    expect(css).toContain('border-color: var(--danger-border)');
+    expect(css).toContain('background: var(--warning-bg)');
+    expect(css).toContain('color: var(--warning-text)');
+    expect(css).toContain('border-color: var(--warning-border)');
   });
 
   it('replaces the oversized iOS native account menu with a contained in-app phone picker', () => {
