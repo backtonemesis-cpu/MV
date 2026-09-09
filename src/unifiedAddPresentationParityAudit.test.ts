@@ -31,18 +31,16 @@ describe('unified Add presentation parity after physical iPhone audit', () => {
     expect(tx).toContain('isBillCategorySelectionAllowed(categories, categoryId)');
   });
 
-  it('uses one explicit footer proportion contract across all six Add types', () => {
+  it('uses one exact shared footer geometry contract across all six Add types', () => {
     expect(tx).toContain('<UnifiedAddFooter');
+    expect(sharedUi).toContain('mv-unified-add-footer');
     expect(sharedUi).toContain('className="mv-transaction-secondary"');
     expect(sharedUi).toContain('className="mv-transaction-primary disabled:opacity-50"');
-    expect(css).toContain(
-      '.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > .mv-transaction-secondary'
-    );
-    expect(css).toContain('flex: 0 0 auto !important');
-    expect(css).toContain(
-      '.mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]) .mv-modal-fixed-actions > .mv-transaction-primary'
-    );
-    expect(css).toContain('flex: 1 1 auto !important');
+    expect(css).toContain('.mv-unified-add-footer {');
+    expect(css).toContain('display: grid !important');
+    expect(css).toContain('grid-template-columns: max-content minmax(0, 1fr) !important');
+    expect(css).toContain('.mv-unified-add-footer > .mv-transaction-primary');
+    expect(css).toContain('width: 100% !important');
     expect(launcherCss).not.toContain('.mv-add-bill-actions .mv-transaction-secondary');
     expect(launcherCss).not.toContain('.mv-add-bill-actions .mv-transaction-primary');
   });
@@ -53,7 +51,7 @@ describe('unified Add presentation parity after physical iPhone audit', () => {
     expect(tx).toContain('id="transaction-date"');
     expect(tx).toContain('type="date"');
 
-    expect(css).toContain('.mv-unified-add-month .mv-month-picker-input');
+    expect(tx).toContain('inputClassName="mv-transaction-control"');\n    expect(css).toContain('.mv-unified-add-month .mv-month-picker-input.mv-transaction-control');
     expect(css).toContain('height: 32px !important');
     expect(css).toContain('min-height: 32px !important');
     expect(css).toContain('font-size: 13px !important');
@@ -84,7 +82,7 @@ describe('unified Add presentation parity after physical iPhone audit', () => {
     expect(tx).toContain('setBillIsRecurring(event.target.checked)');
 
     expect(css).toContain('.mv-unified-bill-option');
-    expect(css).toContain('min-height: 44px');
+    expect(css).toContain('min-height: 40px');
     expect(css).toContain('font-size: 0.75rem');
     expect(css).toContain('font-weight: 600');
     expect(css).not.toContain('min-height: 48px');
