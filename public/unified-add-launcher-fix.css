@@ -13,3 +13,16 @@
   .mv-modal-fixed-actions button[type="submit"] {
   display: none;
 }
+
+/* Physical iPhone verification after PR #153 showed unified Bill still giving
+   Cancel and Record Bill equal flex shares. The five Transaction forms keep the
+   secondary action content-sized and allow the primary action to consume the
+   remaining footer space. Override only the unified PlannedPayment footer so
+   Bill matches that same geometry without changing PlannedPayment semantics. */
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions .mv-transaction-secondary {
+  flex: 0 0 auto !important;
+}
+
+.mv-add-bill-modal[data-unified-add="true"] .mv-add-bill-actions .mv-transaction-primary {
+  flex: 1 1 auto !important;
+}
