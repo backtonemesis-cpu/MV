@@ -172,12 +172,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const selectedAccount = accounts.find((account) => account.id === accountId);
   const selectedTargetAccount = accounts.find((account) => account.id === targetAccountId);
   const sourceAccountOptions = accounts.filter(
-    (account) => (account.isActive !== false || account.id === accountId) && (!isRepayment || account.type !== 'credit')
+    (acc) => (acc.isActive !== false || acc.id === accountId) && (!isRepayment || acc.type !== 'credit')
   );
   const targetAccountOptions = accounts.filter(
-    (account) => account.id !== accountId &&
-      (account.isActive !== false || account.id === targetAccountId) &&
-      (!isRepayment || account.type === 'credit')
+    (a) => a.id !== accountId &&
+      (a.isActive !== false || a.id === targetAccountId) &&
+      (!isRepayment || a.type === 'credit')
   );
   const totalPence = parseToPence(amountStr);
   const repaymentDebtPence = isRepayment && selectedTargetAccount?.type === 'credit'
