@@ -24,7 +24,7 @@ describe('unified Dashboard Add launcher', () => {
       expect(transactionModal).toContain('aria-pressed={type === t}');
     }
     expect(transactionModal).toContain('aria-label="Add bill"');
-    expect(transactionModal).toContain('>\n                  bill\n                </button>');
+    expect(transactionModal).toMatch(/aria-label="Add bill"[^>]*>bill<\/button>/);
     expect(transactionModal).toContain('mv-transaction-type-tab');
     expect(transactionModal).toContain('role="group"');
   });
@@ -42,7 +42,9 @@ describe('unified Dashboard Add launcher', () => {
     expect(dashboard).toContain('window.addEventListener(OPEN_BILL_EVENT, openBill)');
     expect(dashboard).toContain('const openBill = () => onOpenPlannedPaymentModal()');
     expect(transactionModal).toContain('onClick={openBillWorkflow}');
-    const billRoute = transactionModal.slice(transactionModal.indexOf('const openBillWorkflow'), transactionModal.indexOf('// Split transaction state'));
+    const billStart = transactionModal.indexOf('const openBillWorkflow');
+    const billEnd = transactionModal.indexOf('\n  };', billStart) + 5;
+    const billRoute = transactionModal.slice(billStart, billEnd);
     expect(billRoute).toContain('onClose()');
     expect(billRoute).toContain('dispatchEvent');
     expect(billRoute).not.toContain('onSave');
