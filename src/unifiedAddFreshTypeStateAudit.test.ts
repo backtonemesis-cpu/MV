@@ -48,8 +48,11 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).not.toContain('<div className="mv-selected-account-identity">');
   });
 
-  it('hard-blocks repayments that exceed the outstanding credit-card debt', () => {
-    expect(modal).toContain('const outstandingDebtPence = Math.max(0, -creditAccount.currentBalancePence)');
+  it('hard-blocks repayments that exceed debt while preserving valid edits of an existing repayment', () => {
+    expect(modal).toContain('repaymentDebtBeforeEditPence(selectedTargetAccount, initialTransaction)');
+    expect(modal).toContain('repaymentDebtBeforeEditPence(creditAccount, initialTransaction)');
+    expect(modal).toContain('repaymentAffectsCurrentBalance(account, initialTransaction)');
+    expect(modal).toContain('Math.max(debtBeforeEditPence, initialTransaction.amountPence)');
     expect(modal).toContain('if (pence > outstandingDebtPence)');
     expect(modal).toContain('Repayment cannot exceed the credit card balance of');
     expect(modal).toContain('const repaymentExceedsDebt = Boolean(');
@@ -61,6 +64,9 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).toContain("sourceAccount?.type !== 'current'");
     expect(modal).toContain("sourceAccount?.type !== 'joint'");
     expect(modal).toContain("selectedAccount?.type === 'joint'");
+    expect(modal).toContain('repaymentSourceBalanceBeforeEditPence(selectedAccount, initialTransaction)');
+    expect(modal).toContain('repaymentSourceBalanceBeforeEditPence(sourceAccount, initialTransaction)');
+    expect(modal).toContain('Math.max(balanceBeforeEditPence, initialTransaction.amountPence)');
     expect(modal).toContain('Repayment cannot exceed the available');
     expect(modal).toContain('const repaymentExceedsCurrentVisibleBalance = Boolean(');
     expect(modal).toContain('Check the available overdraft before recording.');
