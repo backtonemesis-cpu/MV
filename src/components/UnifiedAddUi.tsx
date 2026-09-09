@@ -104,7 +104,7 @@ export const UnifiedAddAccountField: React.FC<UnifiedAddAccountFieldProps> = ({
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mv-transaction-control mv-transaction-account-select w-full"
+        className={`mv-transaction-control mv-transaction-account-select w-full ${value ? '' : 'is-placeholder'}`.trim()}
         aria-required={required ? 'true' : undefined}
       >
         <option value="">{placeholder}</option>
@@ -118,13 +118,13 @@ export const UnifiedAddAccountField: React.FC<UnifiedAddAccountFieldProps> = ({
       <button
         ref={triggerRef}
         type="button"
-        className="mv-mobile-account-trigger"
+        className={`mv-mobile-account-trigger ${selectedAccount ? '' : 'is-placeholder'}`.trim()}
         onClick={() => setIsPickerOpen(true)}
         aria-haspopup="listbox"
         aria-expanded={isPickerOpen}
         aria-label={`${label.replace(/\s*\*$/, '')} selector`}
       >
-        <span>{selectedAccount ? accountIdentityLabel(selectedAccount) : ''}</span>
+        <span>{selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder}</span>
         <ChevronDown aria-hidden="true" />
       </button>
 
@@ -236,7 +236,7 @@ export const UnifiedAddFooter: React.FC<UnifiedAddFooterProps> = ({
   disabled = false,
   className = '',
 }) => (
-  <div className={`mv-modal-fixed-actions ${className}`.trim()}>
+  <div className={`mv-modal-fixed-actions mv-unified-add-footer ${className}`.trim()}>
     <button type="button" onClick={onCancel} className="mv-transaction-secondary">
       Cancel
     </button>
