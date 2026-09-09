@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 const src = path.resolve(process.cwd(), 'src');
 const modal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
+const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add transaction type isolation', () => {
   it('clears all non-date transaction entry state when a new creation type is chosen', () => {
@@ -41,11 +42,11 @@ describe('unified Add transaction type isolation', () => {
   });
 
   it('shows balance only below both selected account controls so identity is not duplicated', () => {
-    expect(modal).toContain('Selected account ${accountIdentityLabel(selectedAccount)}, balance');
-    expect(modal).toContain('Selected destination account ${accountIdentityLabel(selectedTargetAccount)}, balance');
-    expect(modal).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
-    expect(modal).toContain('Balance: {formatPence(selectedTargetAccount.currentBalancePence)}');
-    expect(modal).not.toContain('<div className="mv-selected-account-identity">');
+    expect(modal).toContain('<UnifiedAddAccountField');
+    expect(modal).toContain('summaryAriaPrefix="Selected destination account"');
+    expect(sharedUi).toContain('${summaryAriaPrefix} ${accountIdentityLabel(selectedAccount)}, balance');
+    expect(sharedUi).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
+    expect(sharedUi).not.toContain('mv-selected-account-identity');
   });
 
   it('hard-blocks repayments that exceed debt while preserving valid edits of an existing repayment', () => {
@@ -56,7 +57,8 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).toContain('if (pence > outstandingDebtPence)');
     expect(modal).toContain('Repayment exceeds card balance (');
     expect(modal).toContain('const repaymentExceedsDebt = Boolean(');
-    expect(modal).toContain('disabled={isSubmitting || repaymentAmountBlocked}');
+    expect(modal).toContain('disabled={repaymentAmountBlocked}');
+    expect(sharedUi).toContain('disabled={submitting || disabled}');
     expect(modal).toContain('Repayment exceeds card balance (');
   });
 
@@ -74,9 +76,10 @@ describe('unified Add transaction type isolation', () => {
   });
 
   it('renders repayment blocking errors and overdraft warnings with distinct semantic severity styling', () => {
-    expect(modal).toContain('mv-repayment-amount-message is-danger');
-    expect(modal).toContain('mv-repayment-amount-message is-warning');
-    expect(modal).toContain('<AlertCircle aria-hidden="true" />');
+    expect(modal).toContain('variant="error" className="mv-repayment-amount-message"');
+    expect(modal).toContain('variant="warning" className="mv-repayment-amount-message"');
+    expect(sharedUi).toContain('const Icon = variant === \'success\' ? CheckCircle2 : AlertCircle');
+    expect(css).toContain('.mv-unified-add-status.is-error');
     expect(css).toContain('background: var(--danger-bg)');
     expect(css).toContain('color: var(--danger-text)');
     expect(css).toContain('border-color: var(--danger-border)');
@@ -86,11 +89,12 @@ describe('unified Add transaction type isolation', () => {
   });
 
   it('replaces the oversized iOS native account menu with a contained in-app phone picker', () => {
-    expect(modal).toContain('mv-mobile-account-trigger');
-    expect(modal).toContain('mv-mobile-account-picker-backdrop');
-    expect(modal).toContain('mv-mobile-account-picker-list');
-    expect(modal).toContain('role="listbox"');
-    expect(modal).toContain('role="option"');
+    expect(modal).toContain('<UnifiedAddAccountField');
+    expect(sharedUi).toContain('mv-mobile-account-trigger');
+    expect(sharedUi).toContain('mv-mobile-account-picker-backdrop');
+    expect(sharedUi).toContain('mv-mobile-account-picker-list');
+    expect(sharedUi).toContain('role="listbox"');
+    expect(sharedUi).toContain('role="option"');
     expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
     expect(css).toContain('display: none !important');
     expect(css).toContain('.mv-layout-phone .mv-mobile-account-trigger');
