@@ -35,8 +35,8 @@ describe('unified Add transaction type isolation', () => {
   });
 
   it('makes repayment direction explicit while preserving two-account financial semantics', () => {
-    expect(modal).toContain("isRepayment ? 'Pay from account' : 'Account'");
-    expect(modal).toContain("isRepayment ? 'Credit card being repaid' : 'To Account'");
+    expect(modal).toContain("isRepayment ? 'Pay From Account' : 'Account'");
+    expect(modal).toContain("isRepayment ? 'Credit Card Being Repaid' : 'To Account'");
     expect(modal).toContain("acc.type !== 'credit'");
     expect(modal).toContain("a.type === 'credit'");
     expect(modal).toContain('mv-repayment-flow-summary');
