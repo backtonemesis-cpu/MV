@@ -151,6 +151,120 @@
   overflow-wrap: anywhere;
 }
 
+.mv-repayment-amount-message {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.25rem;
+}
+
+.mv-repayment-amount-message.is-danger {
+  color: var(--danger);
+}
+
+.mv-repayment-amount-message.is-warning {
+  color: var(--warning);
+}
+
+.mv-mobile-account-trigger {
+  display: none;
+}
+
+.mv-mobile-account-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.mv-mobile-account-picker {
+  display: flex;
+  width: min(100%, 520px);
+  max-height: min(68dvh, 620px);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--card-radius, 14px);
+  background: var(--surface);
+  box-shadow: 0 18px 50px var(--shadow);
+}
+
+.mv-mobile-account-picker-header {
+  display: flex;
+  min-height: 52px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 750;
+}
+
+.mv-mobile-account-picker-header button {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--card-radius, 8px);
+  color: var(--text-muted);
+}
+
+.mv-mobile-account-picker-header svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mv-mobile-account-picker-list {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+}
+
+.mv-mobile-account-picker-option {
+  display: grid;
+  width: 100%;
+  min-height: 52px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--card-radius, 8px);
+  padding: 10px 12px;
+  color: var(--text);
+  text-align: left;
+}
+
+.mv-mobile-account-picker-option + .mv-mobile-account-picker-option {
+  border-top: 1px solid var(--border);
+}
+
+.mv-mobile-account-picker-option[aria-selected="true"] {
+  background: var(--primary-light);
+}
+
+.mv-mobile-account-picker-identity {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2rem;
+}
+
+.mv-mobile-account-picker-balance {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* All six creation choices use the same footer layout and button contract.
    Bill remains a PlannedPayment workflow; this only unifies presentation. */
 :is(
@@ -213,18 +327,47 @@
     line-height: 1rem;
   }
 
+  /* iOS native select menus take over most of the viewport for long account
+     lists. In Phone layout, keep the real select for desktop/state parity but
+     replace its interaction surface with a contained in-app account sheet. */
   .mv-layout-phone .mv-transaction-account-select {
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-inline-end: 34px !important;
-    font-size: 0.8125rem !important;
-    -webkit-appearance: menulist !important;
-    appearance: auto !important;
+    display: none !important;
   }
 
-  .mv-layout-phone .mv-selected-account-summary,
-  .mv-layout-phone .mv-selected-account-identity {
+  .mv-layout-phone .mv-mobile-account-trigger {
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius, 6px);
+    padding: 8px 12px;
+    background: var(--field);
+    color: var(--text);
+    text-align: left;
+  }
+
+  .mv-layout-phone .mv-mobile-account-trigger > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    font-weight: 650;
+  }
+
+  .mv-layout-phone .mv-mobile-account-trigger svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    color: var(--text-muted);
+  }
+
+  .mv-layout-phone .mv-selected-account-summary {
     min-width: 0;
     max-width: 100%;
     overflow-wrap: anywhere;
