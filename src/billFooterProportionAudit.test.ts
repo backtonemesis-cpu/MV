@@ -34,13 +34,13 @@ describe('unified Bill footer proportions', () => {
     expect(transactionModal).toContain("'Record Bill'");
   });
 
-  it('uses the same content-sized Cancel and flexible primary action for all six Add types', () => {
-    expect(unifiedCss).toMatch(
-      /\.mv-transaction-modal:has\(\.mv-transaction-type-tab\[aria-label="Add bill"\]\)[\s\S]*\.mv-modal-fixed-actions > \.mv-transaction-secondary[\s\S]*flex:\s*0 0 auto\s*!important/
-    );
-    expect(unifiedCss).toMatch(
-      /\.mv-transaction-modal:has\(\.mv-transaction-type-tab\[aria-label="Add bill"\]\)[\s\S]*\.mv-modal-fixed-actions > \.mv-transaction-primary[\s\S]*flex:\s*1 1 auto\s*!important/
-    );
+  it('uses the same grid-based Cancel/primary geometry for all six Add types', () => {
+    expect(sharedUi).toContain('mv-unified-add-footer');
+    expect(unifiedCss).toContain('.mv-unified-add-footer {');
+    expect(unifiedCss).toContain('grid-template-columns: max-content minmax(0, 1fr) !important');
+    expect(unifiedCss).toContain('.mv-unified-add-footer > .mv-transaction-secondary');
+    expect(unifiedCss).toContain('.mv-unified-add-footer > .mv-transaction-primary');
+    expect(unifiedCss).toContain('width: 100% !important');
     expect(launcherCss).not.toContain('.mv-add-bill-actions .mv-transaction-secondary');
     expect(launcherCss).not.toContain('.mv-add-bill-actions .mv-transaction-primary');
     expect(unifiedCss).not.toContain('grid-template-columns: 1fr 1fr');
