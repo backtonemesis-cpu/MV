@@ -856,8 +856,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                     )}
                     {repaymentExceedsCurrentVisibleBalance && selectedAccount && (
                       <UnifiedAddStatusMessage variant="warning" className="mv-repayment-amount-message">
-                        Exceeds current balance ({formatPence(repaymentSourceBalancePence || 0)}). Check
-                        overdraft.
+                        Exceeds current balance ({formatPence(repaymentSourceBalancePence || 0)}). Check overdraft.
                       </UnifiedAddStatusMessage>
                     )}
                   </div>
@@ -944,9 +943,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                           required
                         >
                           <option value="">Select category</option>
-                          {transactionCategoryOptions.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
+                          {transactionCategoryOptions.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
                             </option>
                           ))}
                         </select>
