@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { X, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { PlannedPayment, Account, Category, Payer, HouseholdMember, TransactionType } from '../types';
-import { householdPersonOptions } from '../utils/householdPeople';
+import { PlannedPayment, Account, Category, HouseholdMember, TransactionType } from '../types';
 import { parseToPence } from '../utils/currency';
 import { accountOptionLabel } from '../utils/accountDisplay';
+import { resolveAccountOwnerPayer } from '../utils/accountOwner';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
 import type { CategoryGroup } from '../types';
 import { MonthPicker } from './MonthPicker';
@@ -35,7 +35,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const [amountStr, setAmountStr] = useState(payment ? (payment.amountPence / 100).toFixed(2) : '');
   const [month, setMonth] = useState(payment?.month || activeMonth || '2026-09');
   const [accountId, setAccountId] = useState(payment?.accountId || '');
-  const [responsiblePerson, setResponsiblePerson] = useState<Payer | ''>(payment?.responsiblePerson || '');
   const [dueDate, setDueDate] = useState(payment?.dueDate || '');
   const [categoryId, setCategoryId] = useState(payment?.categoryId || '');
   const [includeInTransferPlan, setIncludeInTransferPlan] = useState<boolean>(payment?.includeInTransferPlan === true);
@@ -46,7 +45,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const personOptions = householdPersonOptions(members, responsiblePerson ? [responsiblePerson] : []);
   const paymentAccountOptions = accounts.filter((account) => account.isActive !== false || account.id === payment?.accountId);
   const billCategoryOptions = getBillCategoryOptions(categories, payment?.categoryId);
 
@@ -61,7 +59,6 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     setAmountStr('');
     setMonth(activeMonth || '2026-09');
     setAccountId('');
-    setResponsiblePerson('');
     setDueDate('');
     setCategoryId('');
     setIncludeInTransferPlan(false);
@@ -84,17 +81,23 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
     const pence = parseToPence(amountStr);
     if (pence <= 0) { setError('Please enter a valid amount in pounds and pence.'); return; }
     if (!accountId) { setError('Choose the account that will pay this bill.'); return; }
-    if (!responsiblePerson) { setError('Choose the responsible person.'); return; }
     if (!month.trim()) { setError('Billing month is required.'); return; }
     if (!isBillCategorySelectionAllowed(categories, categoryId, payment?.categoryId)) {
       setError('Choose a spending category that is valid for bills.'); return;
+    }
+
+    const selectedAccount = accounts.find((account) => account.id === accountId);
+    const responsiblePerson = resolveAccountOwnerPayer(selectedAccount, members);
+    if (!responsiblePerson) {
+      setError('The selected payment account has no valid owner. Review the account before recording this bill.');
+      return;
     }
 
     try {
       setIsSubmitting(true); setError(null);
       await onSave({
         name: name.trim(), amountPence: pence, month: month.trim(), accountId,
-        responsiblePerson: responsiblePerson as Payer, dueDate: dueDate || undefined,
+        responsiblePerson, dueDate: dueDate || undefined,
         categoryId: categoryId || undefined, includeInTransferPlan, isRecurring,
         notes: notes.trim() || undefined,
       });
@@ -144,11 +147,12 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
               <div><label htmlFor="planned-payment-month" className="block text-xs font-medium text-muted mb-1">Month *</label><MonthPicker id="planned-payment-month" value={month} onChange={setMonth} ariaLabel="Billing month" className="is-fluid" /></div>
             </div>
 
-            <div className="mv-modal-grid-2">
-              <div><label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">Payment Account *</label><select id="planned-payment-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none" required><option value="">Select payment account</option>{paymentAccountOptions.map((acc) => (
-                <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>
-              ))}</select></div>
-              <div><label htmlFor="planned-payment-person" className="block text-xs font-medium text-muted mb-1">Responsible Person *</label><select id="planned-payment-person" value={responsiblePerson} onChange={(e) => setResponsiblePerson(e.target.value as Payer | '')} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none" required><option value="">Select person</option>{personOptions.map((person) => <option key={person} value={person}>{person}</option>)}</select></div>
+            <div>
+              <label htmlFor="planned-payment-account" className="block text-xs font-medium text-muted mb-1">Payment Account *</label>
+              <select id="planned-payment-account" value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full text-xs font-medium border border-muted rounded-md p-2 bg-surface focus:ring-1 focus:ring-muted focus:outline-none" required>
+                <option value="">Select payment account</option>
+                {paymentAccountOptions.map((acc) => <option key={acc.id} value={acc.id}>{accountOptionLabel(acc)}</option>)}
+              </select>
             </div>
 
             <div className="mv-modal-grid-2">
