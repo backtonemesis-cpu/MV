@@ -8,12 +8,15 @@ const source = fs.readFileSync(
 );
 
 describe('Activity Edit Transaction submenu audit contract', () => {
-  it('preloads existing transaction facts without forcing focus', () => {
+  it('preloads existing transaction facts without forcing focus and preserves historical attribution when the account is unchanged', () => {
     expect(source).toContain('setDescription(initialTransaction.description)');
     expect(source).toContain('setAmountStr((initialTransaction.amountPence / 100).toFixed(2))');
     expect(source).toContain('setCategoryId(initialTransaction.categoryId)');
     expect(source).toContain('setAccountId(initialTransaction.accountId)');
-    expect(source).toContain('setPayer(initialTransaction.payer)');
+    expect(source).toContain('initialTransaction && initialTransaction.accountId === accountId');
+    expect(source).toContain('? initialTransaction.payer');
+    expect(source).toContain(': resolveAccountOwnerPayer(sourceAccount, members)');
+    expect(source).not.toContain('setPayer(initialTransaction.payer)');
     expect(source).not.toContain('autoFocus');
   });
 
@@ -45,7 +48,7 @@ describe('Activity Edit Transaction submenu audit contract', () => {
     expect(source).toContain('splitRow.originalCategoryId');
   });
 
-  it('associates standard field labels and selector groups accessibly', () => {
+  it('associates standard field labels and the transaction type selector accessibly without a redundant person selector', () => {
     for (const id of [
       'transaction-amount',
       'transaction-date',
@@ -58,9 +61,9 @@ describe('Activity Edit Transaction submenu audit contract', () => {
       expect(source).toContain(`id="${id}"`);
     }
     expect(source).toContain('role="group" aria-labelledby="transaction-type-label"');
-    expect(source).toContain('role="group" aria-labelledby="transaction-person-label"');
     expect(source).toContain('aria-pressed={type === t}');
-    expect(source).toContain('aria-pressed={payer === person}');
+    expect(source).not.toContain('transaction-person-label');
+    expect(source).not.toContain('aria-pressed={payer === person}');
     expect(source).toContain('aria-label={`Split ${idx + 1} category`}');
   });
 

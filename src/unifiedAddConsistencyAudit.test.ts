@@ -32,7 +32,7 @@ describe('unified Add consistency follow-up', () => {
     expect(css).toContain('var(--border-strong)');
     expect(css).toContain('var(--field)');
     expect(css).toContain('var(--primary)');
-    expect(css).toContain('var(--card-radius');
+    expect(css).toContain('var(--card-radius,');
     expect(css).toContain('[aria-pressed="true"]');
     expect(css).toContain('display: inline-flex');
     expect(css).toContain('white-space: nowrap');
@@ -47,10 +47,10 @@ describe('unified Add consistency follow-up', () => {
     expect(css).not.toContain('margin-right: -');
   });
 
-  it('removes redundant helper presentation without changing payer or transfer validation', () => {
-    expect(css).toContain('[aria-labelledby="transaction-person-label"] + .text-subtle');
-    expect(css).toContain('display: none !important');
-    expect(tx).toContain("if (!isTransfer && !payer)");
+  it('removes redundant person entry while preserving account-derived attribution and transfer validation', () => {
+    expect(tx).not.toContain('transaction-person-label');
+    expect(tx).not.toContain("if (!isTransfer && !payer)");
+    expect(tx).toContain('resolveAccountOwnerPayer(sourceAccount, members)');
     expect(tx).toContain("if (newType === 'transfer')");
   });
 
