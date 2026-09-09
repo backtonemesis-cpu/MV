@@ -8,13 +8,16 @@ const tx = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'u
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const bridge = fs.readFileSync(path.join(src, 'unifiedAddBridge.ts'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
+const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add consistency follow-up', () => {
   it('keeps Bill as PlannedPayment while preserving the same six-choice launcher shell', () => {
     expect(planned).toContain('data-unified-add={isUnifiedAdd');
-    expect(planned).toContain('mv-transaction-type-tabs');
-    for (const label of ['expense', 'income', 'transfer', 'refund', 'repayment', 'bill']) expect(planned).toContain(label);
-    expect(planned).toContain('aria-pressed="true"');
+    expect(planned).toContain('<UnifiedAddTypeTabs');
+    expect(planned).toContain('activeType="bill"');
+    expect(sharedUi).toContain('mv-transaction-type-tabs');
+    for (const label of ['expense', 'income', 'transfer', 'refund', 'repayment', 'bill']) expect(sharedUi).toContain(`'${label}'`);
+    expect(sharedUi).toContain('aria-pressed={activeType === type}');
     expect(planned).toContain('await onSave({');
     expect(types).toContain("export type TransactionType = 'expense' | 'income' | 'transfer' | 'repayment' | 'refund';");
     expect(types).not.toMatch(/TransactionType[^\n]*bill/);
@@ -99,9 +102,11 @@ describe('unified Add consistency follow-up', () => {
   });
 
   it('uses the exact Transaction footer and button contract for unified Bill', () => {
-    expect(planned).toContain('className="mv-modal-fixed-actions mv-add-bill-actions"');
-    expect(planned).toContain('className="mv-transaction-secondary"');
-    expect(planned).toContain('className="mv-transaction-primary disabled:opacity-50"');
+    expect(planned).toContain('<UnifiedAddFooter');
+    expect(planned).toContain('className="mv-add-bill-actions"');
+    expect(sharedUi).toContain('mv-modal-fixed-actions');
+    expect(sharedUi).toContain('className="mv-transaction-secondary"');
+    expect(sharedUi).toContain('className="mv-transaction-primary disabled:opacity-50"');
     expect(planned).toContain("isUnifiedAdd ? 'Record Bill' : 'Add Bill'");
     expect(css).toContain('.mv-modal-fixed-actions > button');
     expect(css).toContain('white-space: nowrap');
