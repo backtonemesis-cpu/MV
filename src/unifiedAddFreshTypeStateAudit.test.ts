@@ -33,24 +33,48 @@ describe('unified Add transaction type isolation', () => {
   it('makes repayment direction explicit while preserving two-account financial semantics', () => {
     expect(modal).toContain("isRepayment ? 'Pay from account' : 'Account'");
     expect(modal).toContain("isRepayment ? 'Credit card being repaid' : 'To Account'");
-    expect(modal).toContain("acc.type !== 'credit'");
-    expect(modal).toContain("a.type === 'credit'");
+    expect(modal).toContain("account.type !== 'credit'");
+    expect(modal).toContain("account.type === 'credit'");
     expect(modal).toContain('mv-repayment-flow-summary');
     expect(modal).toContain('Repayment path');
     expect(modal).toContain('accountIdentityLabel(selectedAccount)} → {accountIdentityLabel(selectedTargetAccount)');
   });
 
-  it('shows the destination account identity and balance instead of relying on a clipped native selection alone', () => {
-    expect(modal).toContain('const selectedTargetAccount = accounts.find((account) => account.id === targetAccountId)');
-    expect(modal).toContain('Selected destination account');
-    expect(modal).toContain('formatPence(selectedTargetAccount.currentBalancePence)');
+  it('shows balance only below both selected account controls so identity is not duplicated', () => {
+    expect(modal).toContain('Selected account ${accountIdentityLabel(selectedAccount)}, balance');
+    expect(modal).toContain('Selected destination account ${accountIdentityLabel(selectedTargetAccount)}, balance');
+    expect(modal).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
+    expect(modal).toContain('Balance: {formatPence(selectedTargetAccount.currentBalancePence)}');
+    expect(modal).not.toContain('<div className="mv-selected-account-identity">');
   });
 
-  it('keeps phone account selects contained and visibly native-select affordanced', () => {
+  it('hard-blocks repayments that exceed the outstanding credit-card debt', () => {
+    expect(modal).toContain('const outstandingDebtPence = Math.max(0, -creditAccount.currentBalancePence)');
+    expect(modal).toContain('if (pence > outstandingDebtPence)');
+    expect(modal).toContain('Repayment cannot exceed the credit card balance of');
+    expect(modal).toContain('const repaymentExceedsDebt = Boolean(');
+    expect(modal).toContain('disabled={isSubmitting || repaymentAmountBlocked}');
+    expect(modal).toContain('Repayment exceeds the credit card balance of');
+  });
+
+  it('blocks non-overdraft source overspend and warns rather than guessing for current-account overdrafts', () => {
+    expect(modal).toContain("sourceAccount?.type !== 'current'");
+    expect(modal).toContain('Repayment cannot exceed the available');
+    expect(modal).toContain('const repaymentExceedsCurrentVisibleBalance = Boolean(');
+    expect(modal).toContain('Check the available overdraft before recording.');
+  });
+
+  it('replaces the oversized iOS native account menu with a contained in-app phone picker', () => {
+    expect(modal).toContain('mv-mobile-account-trigger');
+    expect(modal).toContain('mv-mobile-account-picker-backdrop');
+    expect(modal).toContain('mv-mobile-account-picker-list');
+    expect(modal).toContain('role="listbox"');
+    expect(modal).toContain('role="option"');
     expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
-    expect(css).toContain('padding-inline-end: 34px !important');
-    expect(css).toContain('font-size: 0.8125rem !important');
-    expect(css).toContain('-webkit-appearance: menulist !important');
-    expect(css).toContain('appearance: auto !important');
+    expect(css).toContain('display: none !important');
+    expect(css).toContain('.mv-layout-phone .mv-mobile-account-trigger');
+    expect(css).toContain('display: flex');
+    expect(css).toContain('max-height: min(68dvh, 620px)');
+    expect(css).toContain('overflow-y: auto');
   });
 });
