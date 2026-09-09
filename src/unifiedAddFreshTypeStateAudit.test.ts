@@ -57,8 +57,10 @@ describe('unified Add transaction type isolation', () => {
     expect(modal).toContain('Repayment exceeds the credit card balance of');
   });
 
-  it('blocks non-overdraft source overspend and warns rather than guessing for current-account overdrafts', () => {
+  it('blocks non-overdraft source overspend and treats legacy joint-current accounts like current accounts', () => {
     expect(modal).toContain("sourceAccount?.type !== 'current'");
+    expect(modal).toContain("sourceAccount?.type !== 'joint'");
+    expect(modal).toContain("selectedAccount?.type === 'joint'");
     expect(modal).toContain('Repayment cannot exceed the available');
     expect(modal).toContain('const repaymentExceedsCurrentVisibleBalance = Boolean(');
     expect(modal).toContain('Check the available overdraft before recording.');
