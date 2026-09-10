@@ -1,10 +1,11 @@
 /* Actual iPhone Safari transaction date containment.
    Safari may paint the native date control beyond its CSS box even when the
-   input reports width:100%. The parent clips native paint, while this
-   MV-owned frame draws the one visible field border. The native input remains
-   type=date so the iPhone date picker and stored date semantics are unchanged.
-   The layout selector is user-controlled, so the same iPhone-sized containment
-   must apply in both PC and Phone layout modes. */
+   input reports width:100%. The parent clips native paint, while the native
+   date input itself owns the same visible field border/background contract as
+   the neighbouring MV controls. The input remains type=date so the iPhone
+   date picker and stored date semantics are unchanged. The layout selector is
+   user-controlled, so the same iPhone-sized containment applies in both PC
+   and Phone layout modes. */
 @media (max-width: 430px) {
   .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]) {
     position: relative;
@@ -16,20 +17,6 @@
     max-inline-size: 100%;
     max-width: 100%;
     overflow: hidden;
-  }
-
-  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after {
-    pointer-events: none;
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 2;
-    height: 40px;
-    box-sizing: border-box;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    content: "";
   }
 
   .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal #transaction-date {
@@ -44,8 +31,8 @@
     box-sizing: border-box !important;
     margin: 0 !important;
     overflow: hidden;
-    border: 0 !important;
-    border-radius: 6px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--card-radius, 6px) !important;
     padding: 0 12px !important;
     background-color: var(--field) !important;
     color: var(--text) !important;
@@ -72,10 +59,5 @@
     padding: 0;
     opacity: 0;
     cursor: pointer;
-  }
-
-  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]):focus-within::after {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--primary-light);
   }
 }
