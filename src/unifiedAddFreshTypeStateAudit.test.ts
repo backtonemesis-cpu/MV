@@ -8,7 +8,7 @@ const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8')
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Add transaction type isolation', () => {
-  it('clears all non-date draft state when switching Transaction types or crossing into/out of Bill', () => {
+  it('clears all creation draft state including Date when switching Transaction types or crossing into/out of Bill', () => {
     expect(modal).toContain("if (!initialTransaction && (isBillEntry || (type && newType !== type)))");
     for (const reset of [
       "setDescription('')",
@@ -16,6 +16,7 @@ describe('unified Add transaction type isolation', () => {
       "setCategoryId('')",
       "setAccountId('')",
       "setTargetAccountId('')",
+      "setDate('')",
       "setNotes('')",
       'setIsSavings(false)',
       'setIsSplitEnabled(false)',
@@ -23,15 +24,15 @@ describe('unified Add transaction type isolation', () => {
     ]) {
       expect(modal).toContain(reset);
     }
-    expect(modal).not.toContain("setDate('')");
     expect(modal).toContain('const handleUnifiedChoiceChange = (choice: UnifiedAddChoice) =>');
     expect(modal).toContain("if (choice === 'bill')");
     expect(modal).toContain('setIsBillEntry(true)');
   });
 
-  it('keeps edit-mode historical data out of the creation-only reset rule', () => {
+  it('keeps edit-mode historical Date and data out of the creation-only reset rule', () => {
     expect(modal).toContain("if (!initialTransaction && (isBillEntry || (type && newType !== type)))");
     expect(modal).toContain('if (initialTransaction) {');
+    expect(modal).toContain('setDate(initialTransaction.date)');
   });
 
   it('makes repayment direction explicit while preserving two-account financial semantics', () => {

@@ -16,7 +16,6 @@ import { resolveAccountOwnerPayer } from '../utils/accountOwner';
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
-import { MonthPicker } from './MonthPicker';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
 import type { CategoryGroup } from '../types';
 import {
@@ -115,7 +114,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [categoryId, setCategoryId] = useState('');
   const [accountId, setAccountId] = useState('');
   const [targetAccountId, setTargetAccountId] = useState('');
-  const [date, setDate] = useState(localDateInputValue());
+  const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
   const [isTransfer, setIsTransfer] = useState(false);
   const [isRepayment, setIsRepayment] = useState(false);
@@ -153,6 +152,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setCategoryId('');
     setAccountId('');
     setTargetAccountId('');
+    setDate('');
     setNotes('');
     setIsSavings(false);
     setIsSplitEnabled(false);
@@ -171,7 +171,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     clearSharedDraft();
     clearBillOnlyDraft();
     setType(nextType);
-    setDate(localDateInputValue());
     setIsBillEntry(false);
     setIsTransfer(nextType === 'transfer');
     setIsRepayment(nextType === 'repayment');
@@ -222,7 +221,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setCategoryId('');
       setAccountId('');
       setTargetAccountId('');
-      setDate(localDateInputValue());
+      setDate('');
       setNotes('');
       setIsTransfer(false);
       setIsRepayment(false);
@@ -456,8 +455,12 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setError('Please enter a valid amount greater than £0.00');
       return;
     }
+    if (!date) {
+      setError('Date is required.');
+      return;
+    }
     if (!description.trim()) {
-      setError('Please enter a description for the transaction');
+      setError('Description is required.');
       return;
     }
     if (!accountId) {
@@ -702,18 +705,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   </div>
                   <div>
                     <label
-                      htmlFor="unified-bill-month"
+                      htmlFor="unified-bill-due-date"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Billing Month
+                      Due Date (optional)
                     </label>
-                    <MonthPicker
-                      id="unified-bill-month"
-                      value={billMonth}
-                      onChange={setBillMonth}
-                      ariaLabel="Billing month"
-                      className="is-fluid mv-unified-add-month"
-                      inputClassName="mv-transaction-control"
+                    <input
+                      id="unified-bill-due-date"
+                      type="date"
+                      value={billDueDate}
+                      onChange={(event) => setBillDueDate(event.target.value)}
+                      className="mv-transaction-control w-full"
                     />
                   </div>
                 </div>
@@ -767,22 +769,6 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         ))}
                       </select>
                     </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="unified-bill-due-date"
-                      className="block text-xs font-semibold text-muted mb-1"
-                    >
-                      Due Date (optional)
-                    </label>
-                    <input
-                      id="unified-bill-due-date"
-                      type="date"
-                      value={billDueDate}
-                      onChange={(event) => setBillDueDate(event.target.value)}
-                      className="mv-transaction-control w-full"
-                    />
                   </div>
 
                   <div className="mv-unified-bill-options" aria-label="Bill options">

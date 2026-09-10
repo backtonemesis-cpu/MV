@@ -18,11 +18,12 @@ describe('iPhone unified Add Bill Due Date containment', () => {
       .toBeGreaterThan(main.indexOf("import './unifiedAddConsistency.css';"));
   });
 
-  it('uses the established Safari native-date paint containment pattern on Phone', () => {
+  it('uses the established Safari native-date paint containment pattern in the top Bill grid', () => {
     expect(mobileCss).toContain('#planned-payment-due-date');
     expect(mobileCss).toContain('-webkit-appearance: none');
     expect(css).toContain('@media (max-width: 430px)');
     expect(css).toContain('.mv-transaction-modal[data-active-add-type="bill"]');
+    expect(css).toContain('.mv-modal-grid-2');
     expect(css).toContain('> div:has(> label[for="unified-bill-due-date"])');
     expect(css).toContain('overflow: hidden;');
     expect(css).toContain('> div:has(> label[for="unified-bill-due-date"])::after');
@@ -39,16 +40,19 @@ describe('iPhone unified Add Bill Due Date containment', () => {
     expect(css).toContain('opacity: 0;');
   });
 
-  it('keeps a real optional date input separate from month-only Billing Month persistence', () => {
+  it('keeps a real optional Due Date separate from an invisible active-month Bill value', () => {
     expect(tx).toMatch(/htmlFor="unified-bill-due-date"[\s\S]{0,180}>\s*Due Date \(optional\)\s*<\/label>/);
     expect(tx).toMatch(/id="unified-bill-due-date"[\s\S]{0,120}type="date"/);
+    expect(tx).toContain("const [billDueDate, setBillDueDate] = useState('')");
     expect(tx).toContain('value={billDueDate}');
     expect(tx).toContain('onChange={(event) => setBillDueDate(event.target.value)}');
     expect(tx).toContain('dueDate: billDueDate || undefined');
-    expect(tx).toContain('Billing Month');
-    expect(tx).toContain('value={billMonth}');
-    expect(tx).toContain('onChange={setBillMonth}');
+    expect(tx).toContain('const [billMonth, setBillMonth] = useState(activeMonth);');
+    expect(tx).toContain("setBillMonth(activeMonth || '2026-09')");
     expect(tx).toContain('month: billMonth.trim()');
+    expect(tx).not.toContain('Billing Month');
+    expect(tx).not.toContain('id="unified-bill-month"');
+    expect(tx).not.toContain('<MonthPicker');
     expect(types).toContain('month: string;');
     expect(types).toContain('dueDate?: string;');
     expect(types).toContain("export type TransactionType = 'expense' | 'income' | 'transfer' | 'repayment' | 'refund';");
