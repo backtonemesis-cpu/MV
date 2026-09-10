@@ -12,6 +12,7 @@ import './unifiedAddDesktopTransferPromptBalance.css';
 import './unifiedAddLauncherCompact.css';
 import './unifiedAddSelectIndicator.css';
 import './unifiedAddIphoneDateContainment.css';
+import './globalControlSurface.css';
 import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 

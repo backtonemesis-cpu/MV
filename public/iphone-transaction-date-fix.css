@@ -47,7 +47,7 @@
     border: 0 !important;
     border-radius: 6px !important;
     padding: 0 12px !important;
-    background: transparent !important;
+    background-color: var(--field) !important;
     color: var(--text) !important;
     -webkit-text-fill-color: var(--text) !important;
     font: inherit;

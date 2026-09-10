@@ -39,14 +39,15 @@ describe('Actual iPhone transaction date visual frame regression', () => {
     expect(css).toContain('max-width: 100% !important');
   });
 
-  it('draws one MV-owned field frame instead of relying on Safari input paint', () => {
+  it('draws one MV-owned field frame and uses the shared field surface', () => {
     expect(css).toContain('::after');
     expect(css).toContain('right: 0');
     expect(css).toContain('left: 0');
     expect(css).toContain('border: 1px solid var(--border)');
     expect(css).toContain('border-radius: 6px');
     expect(css).toContain('border: 0 !important');
-    expect(css).toContain('background: transparent !important');
+    expect(css).toContain('background-color: var(--field) !important');
+    expect(css).not.toContain('background: transparent !important');
   });
 
   it('centres the native date value inside the 40px MV frame', () => {
