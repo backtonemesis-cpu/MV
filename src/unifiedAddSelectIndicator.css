@@ -15,3 +15,15 @@
   background-position: right 14px center !important;
   background-size: 16px 16px !important;
 }
+
+/* Physical PC verification showed that the shared 42px chevron reserve costs
+   the Transfer account row the final character of its approved prompts even
+   after the columns are balanced. Keep the iPhone/shared contract above
+   unchanged, but use a tighter desktop-only reserve for Transfer. The 16px
+   chevron remains separated from text by 8px and from the field edge by 10px. */
+@media (min-width: 431px) {
+  .mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-control {
+    padding-right: 34px !important;
+    background-position: right 10px center !important;
+  }
+}

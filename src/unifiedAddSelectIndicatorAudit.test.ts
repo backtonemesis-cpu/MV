@@ -20,4 +20,11 @@ describe('unified Add select indicator repair', () => {
     expect(css).toContain('background-repeat: no-repeat !important');
     expect(css).toContain('padding-right: 42px !important');
   });
+
+  it('keeps the shared/iPhone reserve unchanged but recovers desktop Transfer prompt space', () => {
+    expect(css).toContain('@media (min-width: 431px)');
+    expect(css).toContain('.mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-control');
+    expect(css).toContain('padding-right: 34px !important');
+    expect(css).toContain('background-position: right 10px center !important');
+  });
 });
