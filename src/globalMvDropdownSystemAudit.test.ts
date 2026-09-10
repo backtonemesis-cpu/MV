@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { Account } from './types';
+import { accountIdentityLabel } from './utils/accountDisplay';
 
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
@@ -79,6 +81,49 @@ describe('global MV dropdown system', () => {
     expect(selectCss).toContain('font-variant-numeric: tabular-nums');
   });
 
+  it('keeps same-name Marius and Vesta Lloyds accounts distinct by stable ID and owner/type identity', () => {
+    const mariusLloyds: Account = {
+      id: 'lloyds-current-marius-test',
+      name: 'Lloyds',
+      type: 'current',
+      currency: 'GBP',
+      startingBalancePence: 0,
+      currentBalancePence: 125000,
+      ownerMemberId: 'member-marius-test',
+      ownerPerson: 'Marius',
+      isActive: true,
+    };
+    const vestaLloyds: Account = {
+      id: 'lloyds-current-vesta-test',
+      name: 'Lloyds',
+      type: 'current',
+      currency: 'GBP',
+      startingBalancePence: 0,
+      currentBalancePence: 0,
+      ownerMemberId: 'member-vesta-test',
+      ownerPerson: 'Vesta',
+      isActive: true,
+    };
+
+    const options = [mariusLloyds, vestaLloyds].map((account) => ({
+      value: account.id,
+      label: accountIdentityLabel(account),
+    }));
+
+    expect(options).toEqual([
+      { value: 'lloyds-current-marius-test', label: 'Lloyds · Current · Marius' },
+      { value: 'lloyds-current-vesta-test', label: 'Lloyds · Current · Vesta' },
+    ]);
+    expect(new Set(options.map((option) => option.value)).size).toBe(2);
+    expect(new Set(options.map((option) => option.label)).size).toBe(2);
+    expect(unified).toContain('value: account.id');
+    expect(unified).toContain('label: accountIdentityLabel(account)');
+    expect(unified).toContain('onValueChange={onChange}');
+    expect(selectSource).toContain('onValueChange(option.value)');
+    expect(transaction).toContain('setAccountId(nextAccountId)');
+    expect(transaction).toContain('accountId,');
+  });
+
   it('uses select-only listbox semantics rather than falsely exposing a text combobox', () => {
     expect(selectSource).toContain('aria-haspopup="listbox"');
     expect(selectSource).toContain('role="listbox"');
@@ -86,6 +131,14 @@ describe('global MV dropdown system', () => {
     expect(selectSource).toContain('aria-selected={selected}');
     expect(selectSource).toContain('aria-disabled={option.disabled || undefined}');
     expect(selectSource).not.toContain('role="combobox"');
+  });
+
+  it('keeps the portalled listbox named by the explicit field label or native select label', () => {
+    expect(selectSource).toContain('labelledBy?: string');
+    expect(selectSource).toContain("aria-label={label || (!labelledBy ? 'Options' : undefined)}");
+    expect(selectSource).toContain('aria-labelledby={label ? undefined : labelledBy}');
+    expect(selectSource).toContain('labelledBy={ariaLabelledBy}');
+    expect(selectSource).toContain('label={snapshot.label}');
   });
 
   it('supports keyboard opening, navigation, selection, Escape, Tab and focus restoration', () => {
