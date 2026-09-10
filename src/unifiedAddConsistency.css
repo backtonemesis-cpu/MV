@@ -439,6 +439,14 @@
   min-width: 0;
 }
 
+/* On desktop, Transfer keeps both account selectors on one row but gives the
+   longer destination prompt enough room without changing modal width or text. */
+@media (min-width: 431px) {
+  .mv-transaction-modal[data-active-add-type="transfer"] .mv-transaction-dynamic > .mv-modal-grid-2 {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+}
+
 @media (max-width: 430px) {
   /* The same iPhone sheet footprint is used before selection and for every
      selected creation type. Only the scrollable body changes. */
