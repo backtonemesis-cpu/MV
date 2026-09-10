@@ -6,6 +6,7 @@ const src = path.resolve(process.cwd(), 'src');
 const modal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const consistencyCss = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const balanceCss = fs.readFileSync(path.join(src, 'unifiedAddDesktopTransferPromptBalance.css'), 'utf8');
+const typographyCss = fs.readFileSync(path.join(src, 'unifiedAddFieldTypography.css'), 'utf8');
 const main = fs.readFileSync(path.join(src, 'main.tsx'), 'utf8');
 
 describe('desktop Transfer account prompt readability', () => {
@@ -21,21 +22,24 @@ describe('desktop Transfer account prompt readability', () => {
     expect(balanceCss).toContain('grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);');
   });
 
-  it('fits only the desktop Transfer empty-state account prompts without changing selected values', () => {
-    expect(balanceCss).toContain('.mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-account-select.is-placeholder');
-    expect(balanceCss).toContain('font-size: 13px !important;');
-    expect(balanceCss).not.toContain('.mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-account-select:not(.is-placeholder)');
+  it('uses the shared 13px unified Add field contract instead of a Transfer-only font exception', () => {
+    expect(balanceCss).not.toContain('select.mv-transaction-account-select.is-placeholder');
+    expect(balanceCss).not.toContain('font-size: 13px !important;');
+    expect(typographyCss).toContain('font-size: 13px !important;');
+    expect(typographyCss).toContain('.mv-mobile-account-trigger');
   });
 
-  it('loads the final balance override after the shared unified Add contract', () => {
+  it('loads the final balance and shared typography overrides after the shared unified Add contract', () => {
     const sharedIndex = main.indexOf("import './unifiedAddConsistency.css';");
     const balanceIndex = main.indexOf("import './unifiedAddDesktopTransferPromptBalance.css';");
+    const typographyIndex = main.indexOf("import './unifiedAddFieldTypography.css';");
     expect(sharedIndex).toBeGreaterThanOrEqual(0);
     expect(balanceIndex).toBeGreaterThan(sharedIndex);
+    expect(typographyIndex).toBeGreaterThan(balanceIndex);
     expect(consistencyCss).toContain('max-width: 520px !important;');
   });
 
-  it('does not alter the Phone account-picker contract', () => {
+  it('does not alter the Phone account-picker visibility contract', () => {
     expect(consistencyCss).toContain('@media (max-width: 430px)');
     expect(consistencyCss).toContain('.mv-layout-phone .mv-transaction-account-select');
     expect(consistencyCss).toContain('display: none !important;');

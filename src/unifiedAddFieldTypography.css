@@ -1,0 +1,17 @@
+/* Shared unified Add field/control typography.
+   Expense, Income, Transfer, Refund, Repayment and Bill use exactly the same
+   13px text size for editable fields, native selectors and Phone account
+   triggers. This replaces the prior Transfer-only empty-prompt exception.
+   Labels, Add Entry heading/type tabs and footer actions intentionally retain
+   their separate hierarchy sizes. */
+:is(
+  .mv-transaction-modal:has(.mv-transaction-type-tab[aria-label="Add bill"]),
+  .mv-add-bill-modal[data-unified-add="true"]
+) :is(
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .mv-mobile-account-trigger
+) {
+  font-size: 13px !important;
+}
