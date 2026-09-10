@@ -1,0 +1,9 @@
+/* Final desktop Transfer account-column balance.
+   Physical PC verification showed 50/50 clipped the destination prompt, while
+   the earlier 45/55 repair clipped the source prompt. Keep both selectors on
+   one row and preserve the shared modal width with a small 47.5/52.5 bias. */
+@media (min-width: 431px) {
+  .mv-transaction-modal[data-active-add-type="transfer"] .mv-transaction-dynamic > .mv-modal-grid-2 {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+}

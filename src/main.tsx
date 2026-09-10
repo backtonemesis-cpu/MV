@@ -8,6 +8,7 @@ import './accessibilityContrast.css';
 import './accentContrast.css';
 import './activityFilterRegression.css';
 import './unifiedAddConsistency.css';
+import './unifiedAddDesktopTransferPromptBalance.css';
 import './unifiedAddLauncherCompact.css';
 import './unifiedAddSelectIndicator.css';
 import './unifiedAddBillTypography.css';
