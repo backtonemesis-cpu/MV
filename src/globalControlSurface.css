@@ -1,0 +1,14 @@
+/* Global value-entry / value-selection surface contract.
+   The Account field is the visual reference: every genuine field box uses the
+   shared theme field surface on both PC and Phone. This changes only the
+   background colour; control geometry, indicators, typography and semantics
+   remain owned by their existing layers. */
+.mv-density-root:is(.mv-layout-pc, .mv-layout-phone) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+  select,
+  textarea,
+  button[aria-haspopup="listbox"],
+  [role="combobox"]
+) {
+  background-color: var(--field) !important;
+}
