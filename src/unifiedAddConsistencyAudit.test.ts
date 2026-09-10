@@ -129,7 +129,7 @@ describe('unified Add consistency follow-up', () => {
     expect(bridge).not.toContain('document.addEventListener');
   });
 
-  it('keeps fresh-state isolation inside the modal while preserving Date across tab switches', () => {
+  it('keeps fresh-state isolation inside the modal and clears Date across creation tab switches', () => {
     expect(tx).toContain('const clearSharedDraft = () =>');
     expect(tx).toContain("setDescription('')");
     expect(tx).toContain("setAmountStr('')");
@@ -138,7 +138,8 @@ describe('unified Add consistency follow-up', () => {
     expect(tx).toContain("setNotes('')");
     const clearDraftStart = tx.indexOf('const clearSharedDraft = () =>');
     const clearDraftEnd = tx.indexOf('\n  };', clearDraftStart);
-    expect(tx.slice(clearDraftStart, clearDraftEnd)).not.toContain('setDate(');
+    expect(tx.slice(clearDraftStart, clearDraftEnd)).toContain("setDate('')");
+    expect(tx).toContain('setDate(initialTransaction.date)');
     expect(bridge).not.toContain('requestAnimationFrame');
   });
 
