@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Category, Transaction, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
+import { localMonthInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
 
 interface BudgetViewProps {
@@ -34,7 +35,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({
   selectedMonth: propSelectedMonth,
   onSelectMonth,
 }) => {
-  const [internalSelectedMonth, setInternalSelectedMonth] = useState('2026-09');
+  const [internalSelectedMonth, setInternalSelectedMonth] = useState(() => localMonthInputValue());
   const activeMonth = propSelectedMonth || internalSelectedMonth;
 
   const handleMonthChange = (month: string) => {
