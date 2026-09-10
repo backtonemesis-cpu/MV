@@ -24,8 +24,11 @@ describe('global field-surface contract', () => {
     expect(surfaceCss).toContain('background-color: var(--field) !important;');
   });
 
-  it('covers native entry fields and native selectors globally in PC and Phone modes', () => {
-    expect(surfaceCss).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
+  it('covers native entry fields and selectors regardless of selected layout mode', () => {
+    expect(surfaceCss).toContain('.mv-density-root :is(');
+    expect(surfaceCss).not.toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
+    expect(surfaceCss).not.toContain('.mv-layout-pc');
+    expect(surfaceCss).not.toContain('.mv-layout-phone');
     expect(surfaceCss).toContain('input:not([type="checkbox"])');
     expect(surfaceCss).toContain('select,');
     expect(surfaceCss).toContain('textarea,');
