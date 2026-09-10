@@ -2,16 +2,18 @@
    Safari may paint the native date control beyond its CSS box even when the
    input reports width:100%. The parent clips native paint, while this
    MV-owned frame draws the one visible field border. The native input remains
-   type=date so the iPhone date picker and stored date semantics are unchanged. */
+   type=date so the iPhone date picker and stored date semantics are unchanged.
+   The layout selector is user-controlled, so the same iPhone-sized containment
+   must apply in both PC and Phone layout modes. */
 @media (max-width: 430px) {
-  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]) {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]) {
     position: relative;
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
   }
 
-  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"])::after {
     pointer-events: none;
     position: absolute;
     right: 0;
@@ -25,7 +27,7 @@
     content: "";
   }
 
-  .mv-layout-phone .mv-transaction-modal #transaction-date {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal #transaction-date {
     display: block;
     width: 100% !important;
     min-width: 0 !important;
@@ -45,14 +47,14 @@
     appearance: none;
   }
 
-  .mv-layout-phone .mv-transaction-modal #transaction-date::-webkit-date-and-time-value {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal #transaction-date::-webkit-date-and-time-value {
     min-height: 40px;
     padding: 0;
     text-align: left;
     line-height: 40px;
   }
 
-  .mv-layout-phone .mv-transaction-modal #transaction-date::-webkit-calendar-picker-indicator {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal #transaction-date::-webkit-calendar-picker-indicator {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -63,7 +65,7 @@
     cursor: pointer;
   }
 
-  .mv-layout-phone .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]):focus-within::after {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]):focus-within::after {
     border-color: var(--primary);
     box-shadow: 0 0 0 2px var(--primary-light);
   }
