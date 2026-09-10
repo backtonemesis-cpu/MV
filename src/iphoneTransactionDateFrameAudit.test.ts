@@ -18,8 +18,17 @@ describe('Actual iPhone transaction date visual frame regression', () => {
   it('applies the iPhone-sized containment layer in both user-selectable layout modes', () => {
     expect(css).toContain('@media (max-width: 430px)');
     expect(css).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
+  });
+
+  it('makes the Date wrapper consume exactly its available grid width like sibling fields', () => {
     expect(css).toMatch(
-      /\.mv-density-root:is\(\.mv-layout-pc, \.mv-layout-phone\) \.mv-transaction-modal #transaction-date\s*\{[\s\S]*?width:\s*100% !important;[\s\S]*?min-width:\s*0 !important;[\s\S]*?max-width:\s*100% !important;[\s\S]*?box-sizing:\s*border-box !important;/
+      /div:has\(> label\[for="transaction-date"\]\)\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?inline-size:\s*100%;[\s\S]*?width:\s*100%;[\s\S]*?min-inline-size:\s*0;[\s\S]*?min-width:\s*0;[\s\S]*?max-inline-size:\s*100%;[\s\S]*?max-width:\s*100%;[\s\S]*?overflow:\s*hidden;/
+    );
+  });
+
+  it('prevents the native Date input from exceeding that wrapper in either dimension model', () => {
+    expect(css).toMatch(
+      /\.mv-density-root:is\(\.mv-layout-pc, \.mv-layout-phone\) \.mv-transaction-modal #transaction-date\s*\{[\s\S]*?inline-size:\s*100% !important;[\s\S]*?width:\s*100% !important;[\s\S]*?min-inline-size:\s*0 !important;[\s\S]*?min-width:\s*0 !important;[\s\S]*?max-inline-size:\s*100% !important;[\s\S]*?max-width:\s*100% !important;[\s\S]*?box-sizing:\s*border-box !important;[\s\S]*?margin:\s*0 !important;/
     );
   });
 
