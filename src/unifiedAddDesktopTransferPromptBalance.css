@@ -6,4 +6,13 @@
   .mv-transaction-modal[data-active-add-type="transfer"] .mv-transaction-dynamic > .mv-modal-grid-2 {
     grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   }
+
+  /* At the verified 1920×1200 / Chrome 100% PC baseline, Windows still clips
+     the final character of the longer destination empty-state string even
+     after the column and chevron-space repairs. Tighten only the empty-state
+     account prompt typography by 1px; selected account values and Phone mode
+     retain the shared control typography. */
+  .mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-account-select.is-placeholder {
+    font-size: 13px !important;
+  }
 }

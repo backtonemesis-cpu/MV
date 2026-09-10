@@ -21,6 +21,12 @@ describe('desktop Transfer account prompt readability', () => {
     expect(balanceCss).toContain('grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);');
   });
 
+  it('fits only the desktop Transfer empty-state account prompts without changing selected values', () => {
+    expect(balanceCss).toContain('.mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-account-select.is-placeholder');
+    expect(balanceCss).toContain('font-size: 13px !important;');
+    expect(balanceCss).not.toContain('.mv-transaction-modal[data-active-add-type="transfer"] select.mv-transaction-account-select:not(.is-placeholder)');
+  });
+
   it('loads the final balance override after the shared unified Add contract', () => {
     const sharedIndex = main.indexOf("import './unifiedAddConsistency.css';");
     const balanceIndex = main.indexOf("import './unifiedAddDesktopTransferPromptBalance.css';");
