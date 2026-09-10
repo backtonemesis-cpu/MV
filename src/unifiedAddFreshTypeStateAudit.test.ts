@@ -6,6 +6,8 @@ const src = path.resolve(process.cwd(), 'src');
 const modal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
+const selectSource = fs.readFileSync(path.join(src, 'components/MVSelect.tsx'), 'utf8');
+const selectCss = fs.readFileSync(path.join(src, 'mvSelect.css'), 'utf8');
 
 describe('unified Add transaction type isolation', () => {
   it('clears all creation draft state including Date when switching Transaction types or crossing into/out of Bill', () => {
@@ -92,18 +94,19 @@ describe('unified Add transaction type isolation', () => {
     expect(css).toContain('border-color: var(--warning-border)');
   });
 
-  it('replaces the oversized iOS native account menu with a contained in-app phone picker', () => {
+  it('uses the shared contained MVSelect account picker in every layout mode', () => {
     expect(modal).toContain('<UnifiedAddAccountField');
-    expect(sharedUi).toContain('mv-mobile-account-trigger');
-    expect(sharedUi).toContain('mv-mobile-account-picker-backdrop');
-    expect(sharedUi).toContain('mv-mobile-account-picker-list');
-    expect(sharedUi).toContain('role="listbox"');
-    expect(sharedUi).toContain('role="option"');
-    expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
-    expect(css).toContain('display: none !important');
-    expect(css).toContain('.mv-layout-phone .mv-mobile-account-trigger');
-    expect(css).toContain('display: flex');
-    expect(css).toContain('max-height: min(68dvh, 620px)');
-    expect(css).toContain('overflow-y: auto');
+    expect(sharedUi).toContain('<MVSelect');
+    expect(sharedUi).toContain('value: account.id');
+    expect(sharedUi).toContain('label: accountIdentityLabel(account)');
+    expect(sharedUi).not.toContain('mv-mobile-account-trigger');
+    expect(sharedUi).not.toContain('mv-mobile-account-picker');
+    expect(selectSource).toContain('role="listbox"');
+    expect(selectSource).toContain('role="option"');
+    expect(selectSource).toContain('window.visualViewport');
+    expect(selectCss).toContain('position: fixed');
+    expect(selectCss).toContain('overflow-y: auto');
+    expect(selectCss).toContain('@media (max-width: 47.999rem)');
+    expect(selectCss).toContain('min-height: 44px');
   });
 });

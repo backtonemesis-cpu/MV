@@ -15,6 +15,7 @@ const transactionDateCss = fs.readFileSync(
 const billDateCss = read('unifiedAddIphoneDateContainment.css');
 const unifiedAddUi = read('components/UnifiedAddUi.tsx');
 const fundingModal = read('components/ExecuteTransferModal.tsx');
+const mvSelect = read('components/MVSelect.tsx');
 
 describe('global field-surface contract', () => {
   it('uses the Account-field theme token as the global value-entry surface', () => {
@@ -37,8 +38,9 @@ describe('global field-surface contract', () => {
   it('covers semantic custom value selectors without recolouring general buttons or menu panels', () => {
     expect(surfaceCss).toContain('button[aria-haspopup="listbox"]');
     expect(surfaceCss).toContain('[role="combobox"]');
-    expect(unifiedAddUi).toContain('aria-haspopup="listbox"');
-    expect(fundingModal).toContain('aria-haspopup="listbox"');
+    expect(unifiedAddUi).toContain('<MVSelect');
+    expect(fundingModal).toContain('<MVSelect');
+    expect(mvSelect).toContain('aria-haspopup="listbox"');
     expect(surfaceCss).not.toMatch(/(?:^|\n)\s*button\s*[,\{]/);
     expect(surfaceCss).not.toContain('[role="option"]');
     expect(surfaceCss).not.toContain('[role="menuitem"]');

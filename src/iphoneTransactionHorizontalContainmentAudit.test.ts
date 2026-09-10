@@ -47,7 +47,8 @@ describe('Step 44 iPhone transaction horizontal containment contract', () => {
     expect(modal).toContain('value={accountId}');
     expect(modal).toContain('onChange={(nextAccountId) =>');
     expect(modal).toContain('setAccountId(nextAccountId)');
-    expect(shared).toContain('onChange={(event) => onChange(event.target.value)}');
+    expect(shared).toContain('value: account.id');
+    expect(shared).toContain('onValueChange={onChange}');
     expect(modal).toContain('id="transaction-category"');
     expect(modal).toContain('value={categoryId}');
     expect(modal).toContain('onChange={(e) => setCategoryId(e.target.value)}');

@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { MVNativeSelectBridge } from './components/MVSelect';
 import './index.css';
 import './globalDesignSystem.css';
 import './mobileUx.css';
@@ -13,6 +14,7 @@ import './unifiedAddLauncherCompact.css';
 import './unifiedAddSelectIndicator.css';
 import './unifiedAddIphoneDateContainment.css';
 import './globalControlSurface.css';
+import './mvSelect.css';
 import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
@@ -22,5 +24,6 @@ applyThemePreferences(readStoredUserPreferences());
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
+    <MVNativeSelectBridge />
   </React.StrictMode>
 );

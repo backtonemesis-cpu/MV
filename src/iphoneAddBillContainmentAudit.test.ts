@@ -103,8 +103,9 @@ describe('iPhone Add Bill containment and field geometry', () => {
 
   it('preserves exact account and category option IDs and eligibility paths', () => {
     expect(modal).toContain('options={paymentAccountOptions}');
-    expect(sharedUi).toContain('<option key={account.id} value={account.id}>');
-    expect(sharedUi).toContain('{accountOptionLabel(account)}');
+    expect(sharedUi).toContain('value: account.id');
+    expect(sharedUi).toContain('label: accountIdentityLabel(account)');
+    expect(sharedUi).toContain('onValueChange={onChange}');
     expect(modal).toContain('<option key={c.id} value={c.id}>');
     expect(modal).toContain('getBillCategoryOptions');
     expect(modal).toContain('isBillCategorySelectionAllowed');

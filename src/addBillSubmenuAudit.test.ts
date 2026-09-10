@@ -42,8 +42,9 @@ describe('Add Bill submenu audit contract', () => {
     }
     expect(source).toContain('id="planned-payment-account"');
     expect(source).toContain('label="Payment Account *"');
-    expect(sharedUi).toContain('<label htmlFor={id}');
+    expect(sharedUi).toContain('htmlFor={id}');
     expect(sharedUi).toContain('id={id}');
+    expect(sharedUi).toContain('ariaLabelledBy={labelId}');
     expect(source).not.toContain('planned-payment-person');
   });
 

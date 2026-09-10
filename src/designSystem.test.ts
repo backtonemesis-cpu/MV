@@ -197,6 +197,7 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('font-size: 15px !important');
     expect(navigation).toContain('mobile-nav-tab-more');
   });
+
   it('locks the global mathematical design-system contract', () => {
     const main = fs.readFileSync(path.join(SRC_DIR, 'main.tsx'), 'utf8');
     const css = fs.readFileSync(path.join(SRC_DIR, 'globalDesignSystem.css'), 'utf8');
@@ -263,6 +264,10 @@ describe('semantic design system enforcement', () => {
       path.join(SRC_DIR, 'components', 'ExecuteTransferModal.tsx'),
       'utf8'
     );
+    const selectSource = fs.readFileSync(
+      path.join(SRC_DIR, 'components', 'MVSelect.tsx'),
+      'utf8'
+    );
 
     expect(source).toContain('role="dialog"');
     expect(source).toContain('aria-modal="true"');
@@ -277,9 +282,8 @@ describe('semantic design system enforcement', () => {
     expect(source).toContain("account.id !== targetAccount.id");
     expect(source).toContain("Credit/liability account — not a cash funding source");
     expect(source).toContain("No safe-to-move balance");
-    expect(source).toContain('role="listbox"');
+    expect(source).toContain('<MVSelect');
+    expect(selectSource).toContain('role="listbox"');
     expect(source).not.toContain('<select');
   });
-
-
 });

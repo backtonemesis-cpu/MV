@@ -37,12 +37,12 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(accountIdentityLabel(mariusLloyds)).not.toBe(accountIdentityLabel(vestaLloyds));
   });
 
-  it('keeps picker options rich with the exact authoritative balance', () => {
+  it('keeps authoritative rich account labels available', () => {
     expect(accountOptionLabel(mariusLloyds)).toBe('Lloyds · Current · Marius · £3,288.33');
     expect(accountOptionLabel(vestaLloyds)).toBe('Lloyds · Current · Vesta · -£199.95');
   });
 
-  it('derives the Phone selected-account presentation from the exact selected accountId and currentBalancePence', () => {
+  it('derives the selected-account presentation from exact accountId and currentBalancePence', () => {
     const modal = read('components/TransactionModal.tsx');
     const shared = read('components/UnifiedAddUi.tsx');
 
@@ -50,66 +50,52 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(modal).toContain('value={accountId}');
     expect(modal).toContain('<UnifiedAddAccountField');
     expect(shared).toContain('const selectedAccount = options.find((account) => account.id === value)');
-    expect(shared).toContain('accountIdentityLabel(selectedAccount)');
-    expect(shared).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
-    expect(shared).toContain('onChange={(event) => onChange(event.target.value)}');
+    expect(shared).toContain('label: accountIdentityLabel(account)');
+    expect(shared).toContain('trailing: formatPence(account.currentBalancePence)');
+    expect(shared).toContain('onValueChange={onChange}');
     expect(formatPence(mariusLloyds.currentBalancePence)).toBe('£3,288.33');
   });
 
-  it('keeps the Account picker option labels and repayment filtering semantics unchanged', () => {
+  it('keeps repayment account filtering semantics unchanged', () => {
     const modal = read('components/TransactionModal.tsx');
-    const shared = read('components/UnifiedAddUi.tsx');
 
-    expect(shared).toContain('{accountOptionLabel(account)}');
     expect(modal).toContain('(acc.isActive !== false || acc.id === accountId)');
     expect(modal).toContain('(!isRepayment || acc.type !== \'credit\')');
     expect(modal).toContain('a.id !== accountId');
     expect(modal).toContain('(!isRepayment || a.type === \'credit\')');
   });
 
-  it('gives Account and Category equivalent contained Phone outer-width treatment without changing unrelated selects', () => {
-    const css = read('mobileUx.css');
+  it('uses one shared account dropdown rather than Phone-only/native split architectures', () => {
+    const shared = read('components/UnifiedAddUi.tsx');
+    const select = read('components/MVSelect.tsx');
+    const css = read('mvSelect.css');
 
-    expect(css).toContain('.mv-layout-phone #transaction-category.mv-transaction-control');
-    expect(css).toContain('.mv-layout-phone #transaction-account.mv-transaction-control');
-
-    const categoryRule = css.match(/\.mv-layout-phone #transaction-category\.mv-transaction-control \{([\s\S]*?)\n  \}/)?.[1] ?? '';
-    const accountRule = css.match(/\.mv-layout-phone #transaction-account\.mv-transaction-control \{([\s\S]*?)\n  \}/)?.[1] ?? '';
-
-    for (const rule of [categoryRule, accountRule]) {
-      expect(rule).toContain('width: 100% !important;');
-      expect(rule).toContain('max-width: 100% !important;');
-      expect(rule).toContain('margin-inline: 0 !important;');
-      expect(rule).not.toContain('calc(100% +');
-      expect(rule).not.toContain('margin-inline-end: -');
-    }
-
-    expect(css).not.toContain('.mv-layout-phone select.mv-transaction-control {');
+    expect(shared).toContain('<MVSelect');
+    expect(shared).not.toContain('<select');
+    expect(shared).not.toContain('mv-mobile-account-trigger');
+    expect(shared).not.toContain('mv-mobile-account-picker');
+    expect(select).toContain('aria-haspopup="listbox"');
+    expect(select).toContain('role="option"');
+    expect(css).toContain('background: var(--field)');
   });
 
-  it('preserves long Category content intact while the native picker remains available', () => {
-    const modal = read('components/TransactionModal.tsx');
-    const css = read('mobileUx.css');
+  it('keeps long option content intact inside a bounded scrollable popover', () => {
+    const select = read('components/MVSelect.tsx');
+    const css = read('mvSelect.css');
 
-    expect(modal).toContain('id="transaction-category"');
-    expect(modal).toContain('value={categoryId}');
-    expect(modal).toContain('onChange={(e) => setCategoryId(e.target.value)}');
-    expect(css).toContain('-webkit-appearance: menulist;');
-    expect(css).toContain('padding-inline: 16px 36px !important;');
+    expect(select).toContain('maxHeight');
+    expect(css).toContain('overflow-y: auto');
+    expect(css).toContain('overflow-wrap: anywhere');
     expect('Child Maintenance Received').toBe('Child Maintenance Received');
   });
 
-  it('presents one coherent selected Account field with a contained Phone picker and balance-only summary', () => {
+  it('retains balance as subordinate information instead of collapsing identity', () => {
     const shared = read('components/UnifiedAddUi.tsx');
-    const css = read('unifiedAddConsistency.css');
+    const css = read('mvSelect.css');
 
-    expect(shared).toContain('mv-mobile-account-trigger');
-    expect(shared).toContain('accountIdentityLabel(selectedAccount)');
     expect(shared).toContain('mv-selected-account-balance');
-    expect(shared).not.toContain('mv-selected-account-identity');
-    expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
-    expect(css).toContain('display: none !important');
-    expect(css).toContain('.mv-layout-phone .mv-mobile-account-trigger');
-    expect(css).toContain('display: flex');
+    expect(shared).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
+    expect(css).toContain('.mv-select-option-trailing');
+    expect(css).toContain('font-variant-numeric: tabular-nums');
   });
 });

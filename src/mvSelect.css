@@ -1,0 +1,224 @@
+/*
+ * MV shared select-only listbox system.
+ * One visual/interaction contract is used on PC mode, Phone mode and small
+ * physical viewports. Native Date/month/file/colour/boolean controls are not
+ * part of this layer.
+ */
+
+.mv-select-trigger {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius, 6px);
+  padding: 7px 34px 7px 12px;
+  background-color: var(--field);
+  color: var(--text);
+  font-size: var(--mv-control-value-size);
+  line-height: var(--mv-control-value-leading);
+  text-align: left;
+  position: relative;
+}
+
+.mv-select-trigger:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.mv-select-trigger:focus-visible,
+.mv-select-trigger[aria-expanded="true"] {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.mv-select-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mv-select-trigger.is-placeholder {
+  color: var(--text-muted);
+}
+
+.mv-select-trigger-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mv-select-trigger-primary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-select-trigger-secondary {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mv-select-chevron {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.mv-select-popover {
+  position: fixed;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--card-radius, 8px);
+  padding: 4px;
+  background: var(--field);
+  color: var(--text);
+  box-shadow: 0 14px 34px var(--shadow);
+  font-size: var(--mv-control-value-size);
+  line-height: var(--mv-control-value-leading);
+  outline: none;
+}
+
+.mv-select-option {
+  display: grid;
+  box-sizing: border-box;
+  min-height: 40px;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  border-radius: calc(var(--card-radius, 8px) - 2px);
+  padding: 7px 8px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.mv-select-option + .mv-select-option {
+  border-top: 1px solid color-mix(in srgb, var(--border) 62%, transparent);
+}
+
+.mv-select-option.is-active:not(.is-disabled) {
+  background: var(--surface-hover);
+}
+
+.mv-select-option.is-selected:not(.is-disabled) {
+  background: var(--primary-light);
+}
+
+.mv-select-option.is-disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.mv-select-option-check {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
+.mv-select-option-check svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mv-select-option-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mv-select-option-primary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.mv-select-option-secondary {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.mv-select-option-trailing {
+  min-width: max-content;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Native selects remain the option/value source of truth. MVNativeSelectBridge
+   mediates opening through the same popover, while the closed control keeps its
+   existing form geometry and one consistent authored indicator. */
+.mv-density-root select:not([data-mv-native="true"]) {
+  cursor: pointer;
+}
+
+/* The obsolete large Unified Add mobile account sheet is no longer a valid
+   interaction surface. The explicit MVSelect account trigger is used in every
+   layout mode after migration. */
+.mv-mobile-account-picker-backdrop,
+.mv-mobile-account-trigger,
+.mv-transaction-account-select {
+  /* These legacy classes are retained only so older CSS cannot resurrect a
+     second phone-only selector architecture. */
+}
+
+@media (max-width: 47.999rem) {
+  .mv-select-trigger,
+  .mv-select-popover {
+    font-size: var(--mv-control-value-phone-size);
+    line-height: var(--mv-control-value-phone-leading);
+  }
+
+  .mv-select-trigger {
+    min-height: 44px;
+  }
+
+  .mv-select-option {
+    min-height: 44px;
+    padding-block: 9px;
+  }
+
+  .mv-select-option-secondary,
+  .mv-select-trigger-secondary {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-select-trigger,
+  .mv-select-popover,
+  .mv-select-option {
+    scroll-behavior: auto;
+  }
+}

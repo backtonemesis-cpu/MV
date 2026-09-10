@@ -17,6 +17,8 @@ const transactionDateCss = fs.readFileSync(
 );
 const sharedUi = read('components/UnifiedAddUi.tsx');
 const fundingModal = read('components/ExecuteTransferModal.tsx');
+const sharedSelect = read('components/MVSelect.tsx');
+const selectCss = read('mvSelect.css');
 const plannedPaymentModal = read('components/PlannedPaymentModal.tsx');
 const main = read('main.tsx');
 
@@ -32,17 +34,11 @@ describe('global control-value typography contract', () => {
   });
 
   it('protects all four desktop/Phone and wide/iPhone-sized combinations', () => {
-    // Normal desktop/laptop PC mode inherits the root 13px / 20px value tokens.
     expect(design).toContain('--mv-control-value-size: 0.8125rem;');
     expect(design).toContain('--mv-control-value-leading: 1.25rem;');
-
-    // Phone mode uses 16px / 24px even on a wide desktop viewport.
     expect(design).toMatch(
       /\.mv-density-root\.mv-layout-phone\s*\{[\s\S]*?--mv-control-value-size:\s*var\(--mv-control-value-phone-size\);[\s\S]*?--mv-control-value-leading:\s*var\(--mv-control-value-phone-leading\);[\s\S]*?\}/
     );
-
-    // At an iPhone-sized viewport, both user-selectable layout modes retain the
-    // 16px / 24px anti-focus-zoom token instead of allowing PC mode back to 13px.
     const narrowViewportGuard = mobileCss.match(
       /@media \(max-width: 47\.999rem\)\s*\{[\s\S]*?\.mv-density-root:is\(\.mv-layout-pc, \.mv-layout-phone\)\s*\{[\s\S]*?--mv-control-value-size:\s*var\(--mv-control-value-phone-size\);[\s\S]*?--mv-control-value-leading:\s*var\(--mv-control-value-phone-leading\);[\s\S]*?\}[\s\S]*?\}/
     );
@@ -59,7 +55,6 @@ describe('global control-value typography contract', () => {
     expect(design).toContain('[data-mv-value-primary]');
     expect(design).toContain('font-size: var(--mv-control-value-size);');
     expect(design).toContain('line-height: var(--mv-control-value-leading);');
-    expect(design).not.toContain('font-size: var(--mv-control-value-size) !important;');
   });
 
   it('keeps placeholders and native option text on the same value token', () => {
@@ -68,17 +63,14 @@ describe('global control-value typography contract', () => {
     expect(design).toContain('select option');
   });
 
-  it('marks both closed triggers and primary listbox options without marking metadata', () => {
-    expect(sharedUi).toMatch(/mv-mobile-account-trigger[\s\S]*?<span data-mv-value-primary>/);
-    expect(sharedUi).toMatch(/mv-mobile-account-picker-identity" data-mv-value-primary/);
-    expect(sharedUi).not.toMatch(/mv-mobile-account-picker-balance" data-mv-value-primary/);
-
-    expect(fundingModal).toMatch(/mv-funding-source-trigger[\s\S]*?<strong data-mv-value-primary>/);
-    expect(fundingModal).toMatch(/mv-funding-source-option[\s\S]*?<strong data-mv-value-primary>/);
-    expect(fundingModal).not.toMatch(/Safe to move[^<]*<[^>]+data-mv-value-primary/);
-    expect(design).toContain('font-size: var(--mv-ds-text-meta);');
-    expect(consistencyCss).toContain('.mv-mobile-account-picker-balance');
-    expect(consistencyCss).toContain('font-size: 0.8125rem;');
+  it('uses shared primary-value markers while keeping option metadata subordinate', () => {
+    expect(sharedUi).toContain('label: accountIdentityLabel(account)');
+    expect(sharedUi).toContain('trailing: formatPence(account.currentBalancePence)');
+    expect(fundingModal).toContain('label: accountIdentityLabel(account)');
+    expect(fundingModal).toContain('disabledReason: disabledReason || undefined');
+    expect(sharedSelect).toContain('data-mv-value-primary');
+    expect(selectCss).toContain('.mv-select-option-secondary');
+    expect(selectCss).toContain('font-size: 0.75rem;');
   });
 
   it('keeps money controls on the shared size while retaining numeric emphasis', () => {
@@ -98,12 +90,13 @@ describe('global control-value typography contract', () => {
     expect(plannedPaymentModal).toContain('<UnifiedAddAccountField');
   });
 
-  it('retires unified-only typography patches without adding another stylesheet', () => {
+  it('retires unified-only typography patches without adding a new local typography exception', () => {
     expect(main).not.toContain("import './unifiedAddFieldTypography.css';");
     expect(main).not.toContain("import './unifiedAddBillTypography.css';");
     expect(fs.existsSync(path.join(src, 'unifiedAddFieldTypography.css'))).toBe(false);
     expect(fs.existsSync(path.join(src, 'unifiedAddBillTypography.css'))).toBe(false);
     expect(consistencyCss).not.toContain('font-size: 13px !important;');
+    expect(selectCss).toContain('font-size: var(--mv-control-value-size);');
   });
 
   it('does not opt labels, tabs, navigation, metrics or action buttons into the field-value marker', () => {
@@ -113,24 +106,22 @@ describe('global control-value typography contract', () => {
     expect(design).not.toMatch(/(?:button|\.finance-amount|\.mv-layout-switcher-option)[^,{]*,?\s*\[data-mv-value-primary\]/);
   });
 
-  it('retains iPhone date containment and unified select indicators as separate browser contracts', () => {
+  it('retains iPhone date containment and native date indicators as separate browser contracts', () => {
     expect(transactionDateCss).toContain('input remains');
     expect(transactionDateCss).toContain('line-height: 40px !important;');
     expect(iphoneDueDateCss).toContain('#unified-bill-due-date');
     expect(iphoneDueDateCss).toContain('::-webkit-calendar-picker-indicator');
     expect(selectIndicatorCss).toContain('-webkit-appearance: none !important;');
     expect(selectIndicatorCss).toContain('background-position: right 14px center !important;');
-    expect(consistencyCss).toContain('.mv-layout-phone .mv-transaction-account-select');
-    expect(consistencyCss).toContain('display: none !important;');
+    expect(sharedUi).toContain('<MVSelect');
+    expect(sharedUi).not.toContain('mv-mobile-account-picker');
   });
 
-  it('keeps mobileUx limited to containment plus shared-token viewport safeguards', () => {
-    expect(mobileCss).toContain('.mv-layout-phone :is(input, select, textarea)');
-    expect(mobileCss).toContain('min-width: 0 !important;');
-    expect(mobileCss).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
-    expect(mobileCss).toContain('--mv-control-value-size: var(--mv-control-value-phone-size);');
-    expect(mobileCss).toContain('--mv-control-value-leading: var(--mv-control-value-phone-leading);');
-    expect(mobileCss).not.toContain('font-size: var(--mv-ds-text-body) !important;');
-    expect(mobileCss).not.toContain('line-height: var(--mv-ds-leading-body) !important;');
+  it('keeps iPhone dropdown values at 16px without tying them to selected layout mode', () => {
+    expect(selectCss).toContain('@media (max-width: 47.999rem)');
+    expect(selectCss).toContain('font-size: var(--mv-control-value-phone-size);');
+    expect(selectCss).toContain('line-height: var(--mv-control-value-phone-leading);');
+    expect(selectCss).not.toContain('.mv-layout-phone .mv-select');
+    expect(selectCss).not.toContain('.mv-layout-pc .mv-select');
   });
 });
