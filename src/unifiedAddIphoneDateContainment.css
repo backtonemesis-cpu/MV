@@ -1,12 +1,11 @@
 /* Physical iPhone verification after PR #170 confirmed that width constraints
-   alone do not contain Safari's native date-control paint. Mirror MV's existing
-   proven PlannedPayment Due Date pattern: clip the field wrapper and draw the
-   visible 40px field surface inside it while keeping the underlying control as
-   a real type=date input with the whole field remaining tappable. */
+   alone do not contain Safari's native date-control paint. The unified Bill
+   Due Date now sits in the top two-column row, so keep the proven clipped
+   wrapper pattern there while retaining a real type=date control. */
 @media (max-width: 430px) {
   .mv-layout-phone
     .mv-transaction-modal[data-active-add-type="bill"]
-    .mv-unified-add-field-stack
+    .mv-modal-grid-2
     > div:has(> label[for="unified-bill-due-date"]) {
     position: relative;
     box-sizing: border-box;
@@ -18,7 +17,7 @@
 
   .mv-layout-phone
     .mv-transaction-modal[data-active-add-type="bill"]
-    .mv-unified-add-field-stack
+    .mv-modal-grid-2
     > div:has(> label[for="unified-bill-due-date"])::after {
     pointer-events: none;
     position: absolute;
@@ -87,7 +86,7 @@
 
   .mv-layout-phone
     .mv-transaction-modal[data-active-add-type="bill"]
-    .mv-unified-add-field-stack
+    .mv-modal-grid-2
     > div:has(> label[for="unified-bill-due-date"]):focus-within::after {
     border-color: var(--primary);
     box-shadow: 0 0 0 2px var(--primary-light);
