@@ -17,9 +17,11 @@ import './globalControlSurface.css';
 import './mvSelect.css';
 import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
+import { installMVNativeSelectTouchGuard } from './nativeSelectTouchGuard';
 
 // Apply the saved token set before React paints to prevent theme flash.
 applyThemePreferences(readStoredUserPreferences());
+installMVNativeSelectTouchGuard();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
