@@ -3,6 +3,10 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const css = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
+const designCss = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/globalDesignSystem.css'),
+  'utf8'
+);
 const moneyInput = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/MoneyInput.tsx'),
   'utf8'
@@ -43,7 +47,10 @@ describe('Shared numeric-only GBP money-input regression guard', () => {
 
     expect(phoneRule).toContain('padding-left: 12px !important');
     expect(phoneRule).toContain('padding-right: 12px !important');
-    expect(phoneRule).toContain('font-size: 16px !important');
+    expect(phoneRule).not.toContain('font-size:');
+    expect(designCss).toContain('--mv-control-value-phone-size: 1rem;');
+    expect(designCss).toContain('.mv-density-root.mv-layout-phone');
+    expect(designCss).toContain('font-size: var(--mv-control-value-size);');
   });
 
   it('does not reintroduce forced autofocus into Transaction monetary fields', () => {

@@ -425,7 +425,7 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                               }}
                             >
                               <span className="mv-funding-source-trigger-copy">
-                                <strong>
+                                <strong data-mv-value-primary>
                                   {source ? accountIdentityLabel(source) : 'Choose account'}
                                 </strong>
                                 <span>
@@ -508,7 +508,9 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                                       }}
                                     >
                                       <span className="mv-funding-source-option-copy">
-                                        <strong>{accountIdentityLabel(account)}</strong>
+                                        <strong data-mv-value-primary>
+                                          {accountIdentityLabel(account)}
+                                        </strong>
                                         <span
                                           className={
                                             disabledReason

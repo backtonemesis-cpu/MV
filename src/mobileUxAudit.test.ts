@@ -23,10 +23,13 @@ describe('Stage 6 mobile and iPhone regression contract', () => {
     expect(css).toContain('width: 100vw !important');
   });
 
-  it('keeps routine mobile form controls at the 16px body token and width-safe', () => {
+  it('keeps routine mobile form controls on the 16px shared token and width-safe', () => {
     const css = read('mobileUx.css');
-    expect(css).toContain('input:not([type="checkbox"]):not([type="radio"])');
-    expect(css).toContain('font-size: var(--mv-ds-text-body) !important');
+    const design = read('globalDesignSystem.css');
+    expect(design).toContain('--mv-control-value-phone-size: 1rem;');
+    expect(design).toContain('--mv-control-value-phone-leading: 1.5rem;');
+    expect(design).toContain('.mv-density-root.mv-layout-phone');
+    expect(css).toContain('.mv-layout-phone :is(input, select, textarea)');
     expect(css).toContain('min-width: 0 !important');
     expect(css).toContain('max-width: 100% !important');
   });

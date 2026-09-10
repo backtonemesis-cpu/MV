@@ -224,6 +224,10 @@ describe('semantic design system enforcement', () => {
     expect(css).toContain('--mv-ds-text-section: 1.5rem');
     expect(css).toContain('--mv-ds-text-section-lg: 1.875rem');
     expect(css).toContain('--mv-ds-text-page: 2.25rem');
+    expect(css).toContain('--mv-control-value-size: 0.8125rem');
+    expect(css).toContain('--mv-control-value-leading: 1.25rem');
+    expect(css).toContain('--mv-control-value-phone-size: 1rem');
+    expect(css).toContain('--mv-control-value-phone-leading: 1.5rem');
 
     expect(css).toContain('.mv-density-root .mv-app-header-row');
     expect(css).toContain('height: var(--mv-ds-top-nav-height) !important');
