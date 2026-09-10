@@ -31,6 +31,26 @@ describe('global control-value typography contract', () => {
     expect(design).toContain('--mv-control-value-leading: var(--mv-control-value-phone-leading);');
   });
 
+  it('protects all four desktop/Phone and wide/iPhone-sized combinations', () => {
+    // Normal desktop/laptop PC mode inherits the root 13px / 20px value tokens.
+    expect(design).toContain('--mv-control-value-size: 0.8125rem;');
+    expect(design).toContain('--mv-control-value-leading: 1.25rem;');
+
+    // Phone mode uses 16px / 24px even on a wide desktop viewport.
+    expect(design).toMatch(
+      /\.mv-density-root\.mv-layout-phone\s*\{[\s\S]*?--mv-control-value-size:\s*var\(--mv-control-value-phone-size\);[\s\S]*?--mv-control-value-leading:\s*var\(--mv-control-value-phone-leading\);[\s\S]*?\}/
+    );
+
+    // At an iPhone-sized viewport, both user-selectable layout modes retain the
+    // 16px / 24px anti-focus-zoom token instead of allowing PC mode back to 13px.
+    const narrowViewportGuard = mobileCss.match(
+      /@media \(max-width: 47\.999rem\)\s*\{[\s\S]*?\.mv-density-root:is\(\.mv-layout-pc, \.mv-layout-phone\)\s*\{[\s\S]*?--mv-control-value-size:\s*var\(--mv-control-value-phone-size\);[\s\S]*?--mv-control-value-leading:\s*var\(--mv-control-value-phone-leading\);[\s\S]*?\}[\s\S]*?\}/
+    );
+    expect(narrowViewportGuard).not.toBeNull();
+    expect(narrowViewportGuard?.[0]).not.toContain('--mv-control-value-size: 0.8125rem');
+    expect(mobileCss).not.toMatch(/@media \(max-width: 47\.999rem\)[\s\S]*?font-size:\s*13px/);
+  });
+
   it('applies one rule to editable controls, native selected values and custom primary values', () => {
     expect(design).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone) :where(');
     expect(design).toContain('input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),');
@@ -104,9 +124,12 @@ describe('global control-value typography contract', () => {
     expect(consistencyCss).toContain('display: none !important;');
   });
 
-  it('leaves mobile containment in mobileUx while typography comes from the shared tokens', () => {
+  it('keeps mobileUx limited to containment plus shared-token viewport safeguards', () => {
     expect(mobileCss).toContain('.mv-layout-phone :is(input, select, textarea)');
     expect(mobileCss).toContain('min-width: 0 !important;');
+    expect(mobileCss).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
+    expect(mobileCss).toContain('--mv-control-value-size: var(--mv-control-value-phone-size);');
+    expect(mobileCss).toContain('--mv-control-value-leading: var(--mv-control-value-phone-leading);');
     expect(mobileCss).not.toContain('font-size: var(--mv-ds-text-body) !important;');
     expect(mobileCss).not.toContain('line-height: var(--mv-ds-leading-body) !important;');
   });
