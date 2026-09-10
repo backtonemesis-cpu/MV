@@ -5,6 +5,10 @@ export function localDateInputValue(date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+export function localMonthInputValue(date = new Date()): string {
+  return localDateInputValue(date).slice(0, 7);
+}
+
 export function formatDateKeyUk(value: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return value;

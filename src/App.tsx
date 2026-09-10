@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { localDateInputValue } from './utils/dateInput';
+import { localDateInputValue, localMonthInputValue } from './utils/dateInput';
 import {
   fetchSession,
   switchSession,
@@ -97,7 +97,7 @@ export default function App() {
   >([]);
   const [household, setHousehold] = useState<HouseholdData | null>(null);
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
-  const [selectedMonth, setSelectedMonth] = useState<string>('2026-09');
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => localMonthInputValue());
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
