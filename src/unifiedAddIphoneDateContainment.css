@@ -1,0 +1,27 @@
+/* Physical iPhone verification found Safari allowing the native Bill Due Date
+   control to expand its direct grid item beyond the unified Add content width.
+   Keep the native date picker and semantic value unchanged; only constrain the
+   grid item and native control to the existing Phone form width. */
+@media (max-width: 430px) {
+  .mv-layout-phone
+    .mv-transaction-modal[data-active-add-type="bill"]
+    .mv-unified-add-field-stack
+    > div:has(> label[for="unified-bill-due-date"]) {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mv-layout-phone
+    .mv-transaction-modal[data-active-add-type="bill"]
+    #unified-bill-due-date {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    inline-size: 100% !important;
+    min-inline-size: 0 !important;
+    max-inline-size: 100% !important;
+  }
+}
