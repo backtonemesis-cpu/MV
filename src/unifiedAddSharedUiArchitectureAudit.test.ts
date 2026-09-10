@@ -24,9 +24,13 @@ describe('unified Add shared UI architecture', () => {
     expect(billModal).toContain('<UnifiedAddAccountField');
     expect(billModal).toContain('id="planned-payment-account"');
     expect(transactionModal).toContain('id="transaction-account"');
-    expect(sharedUi).toContain('mv-transaction-account-select');
-    expect(sharedUi).toContain('mv-mobile-account-trigger');
-    expect(sharedUi).toContain('mv-mobile-account-picker');
+    expect(sharedUi).toContain("from './MVSelect'");
+    expect(sharedUi).toContain('<MVSelect');
+    expect(sharedUi).toContain('value: account.id');
+    expect(sharedUi).toContain('label: accountIdentityLabel(account)');
+    expect(sharedUi).toContain('onValueChange={onChange}');
+    expect(sharedUi).not.toContain('mv-mobile-account-picker');
+    expect(sharedUi).not.toContain('mv-mobile-account-trigger');
     expect(sharedUi).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
   });
 

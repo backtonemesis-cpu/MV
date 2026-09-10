@@ -65,8 +65,9 @@ describe('Activity Edit Transaction submenu audit contract', () => {
     }
     expect(source).toContain('id="transaction-account"');
     expect(source).toContain('<UnifiedAddAccountField');
-    expect(sharedUi).toContain('<label htmlFor={id}');
+    expect(sharedUi).toContain('htmlFor={id}');
     expect(sharedUi).toContain('id={id}');
+    expect(sharedUi).toContain('ariaLabelledBy={labelId}');
     expect(source).toContain('<UnifiedAddTypeTabs');
     expect(sharedUi).toContain('role="group" aria-labelledby={labelId}');
     expect(sharedUi).toContain('aria-pressed={activeType === type}');

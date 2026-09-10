@@ -8,6 +8,8 @@ const tx = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'u
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const bridge = fs.readFileSync(path.join(src, 'unifiedAddBridge.ts'), 'utf8');
+const selectSource = fs.readFileSync(path.join(src, 'components/MVSelect.tsx'), 'utf8');
+const selectCss = fs.readFileSync(path.join(src, 'mvSelect.css'), 'utf8');
 const launcherCss = fs.readFileSync(path.join(root, 'public/unified-add-launcher-fix.css'), 'utf8');
 const app = fs.readFileSync(path.join(src, 'App.tsx'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
@@ -130,14 +132,12 @@ describe('final unified Add consistency contract', () => {
     ]) {
       expect(tx + sharedUi).toContain(prompt);
     }
-    expect(sharedUi).toContain("<option value=\"\">{placeholder}</option>");
-    expect(sharedUi).toContain("selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder");
-    expect(sharedUi).toContain("value ? '' : 'is-placeholder'");
-    expect(sharedUi).toContain("selectedAccount ? '' : 'is-placeholder'");
+    expect(sharedUi).toContain('placeholder={placeholder}');
+    expect(selectSource).toContain('selectedOption?.label ?? placeholder');
+    expect(selectSource).toContain("selectedOption ? '' : 'is-placeholder'");
     expect(bridge).not.toContain("emptyOption.textContent = ''");
     expect(bridge).not.toContain("option.value === ''");
-    expect(css).toContain('.mv-transaction-control.is-placeholder');
-    expect(css).toContain('.mv-mobile-account-trigger.is-placeholder');
+    expect(selectCss).toContain('.mv-select-trigger.is-placeholder');
   });
 
   it('uses one no-asterisk convention and keeps required validation explicit', () => {
@@ -169,15 +169,19 @@ describe('final unified Add consistency contract', () => {
     expect(tx).toContain('disabled={!isBillEntry && repaymentAmountBlocked}');
   });
 
-  it('preserves the contained Phone account picker and balance evidence', () => {
-    expect(sharedUi).toContain('mv-mobile-account-trigger');
-    expect(sharedUi).toContain('mv-mobile-account-picker-backdrop');
-    expect(sharedUi).toContain('role="listbox"');
-    expect(sharedUi).toContain('role="option"');
+  it('preserves the shared contained account selector and balance evidence', () => {
+    expect(sharedUi).toContain('<MVSelect');
+    expect(sharedUi).toContain('value: account.id');
+    expect(sharedUi).toContain('label: accountIdentityLabel(account)');
+    expect(sharedUi).not.toContain('mv-mobile-account-trigger');
+    expect(sharedUi).not.toContain('mv-mobile-account-picker');
+    expect(selectSource).toContain('role="listbox"');
+    expect(selectSource).toContain('role="option"');
+    expect(selectSource).toContain('window.visualViewport');
     expect(sharedUi).toContain('Balance: {formatPence(selectedAccount.currentBalancePence)}');
-    expect(css).toContain('.mv-layout-phone .mv-transaction-account-select');
-    expect(css).toContain('display: none !important');
-    expect(css).toContain('max-height: min(68dvh, 620px)');
+    expect(selectCss).toContain('position: fixed');
+    expect(selectCss).toContain('overflow-y: auto');
+    expect(selectCss).toContain('@media (max-width: 47.999rem)');
   });
 
   it('keeps Bill as PlannedPayment and the other five as Transaction with no schema migration', () => {

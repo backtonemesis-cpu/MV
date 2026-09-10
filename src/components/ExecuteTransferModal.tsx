@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { X, ArrowRight, AlertCircle, Plus, Trash2, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, ArrowRight, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { Account, AccountFundingRequirement, HouseholdMember } from '../types';
 import { formatPence, parseToPence } from '../utils/currency';
 import {
@@ -10,6 +10,7 @@ import {
 import { localDateInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
+import { MVSelect, type MVSelectOption } from './MVSelect';
 
 interface ExecuteTransferModalProps {
   fundingRequirement: AccountFundingRequirement;
@@ -78,55 +79,8 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
   const [description, setDescription] = useState<string>(defaultDescription);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [openSourcePickerId, setOpenSourcePickerId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!(event.target instanceof Element)) return;
-      if (!event.target.closest('[data-funding-source-picker]')) {
-        setOpenSourcePickerId(null);
-      }
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, []);
-
-  const dialogRef = useModalAccessibility<HTMLDivElement>(true, () => {
-    if (openSourcePickerId) {
-      const trigger = document.getElementById(
-        `funding-source-${openSourcePickerId}`
-      ) as HTMLButtonElement | null;
-      setOpenSourcePickerId(null);
-      requestAnimationFrame(() => trigger?.focus({ preventScroll: true }));
-      return;
-    }
-    onClose();
-  });
-
-  const focusSourceOption = (
-    allocationId: string,
-    position: 'first' | 'last' | 'next' | 'previous',
-    current?: HTMLElement
-  ) => {
-    const listbox = document.getElementById(
-      `funding-source-listbox-${allocationId}`
-    );
-    if (!listbox) return;
-
-    const options = Array.from(
-      listbox.querySelectorAll<HTMLButtonElement>('[role="option"]')
-    );
-    if (options.length === 0) return;
-
-    let index = current ? options.indexOf(current as HTMLButtonElement) : -1;
-    if (position === 'first') index = 0;
-    else if (position === 'last') index = options.length - 1;
-    else if (position === 'next') index = index < 0 ? 0 : (index + 1) % options.length;
-    else index = index <= 0 ? options.length - 1 : index - 1;
-
-    options[index]?.focus({ preventScroll: true });
-  };
+  const dialogRef = useModalAccessibility<HTMLDivElement>(true, onClose);
 
   const allocatedTotalPence = allocations.reduce(
     (sum, allocation) => sum + parseToPence(allocation.amountStr || '0'),
@@ -387,150 +341,40 @@ export const ExecuteTransferModal: React.FC<ExecuteTransferModalProps> = ({
                     (account) => account.id === allocation.sourceAccountId
                   );
                   const allocationPence = parseToPence(allocation.amountStr || '0');
+                  const sourceSelectOptions: MVSelectOption[] = sourceAccounts.map((account) => {
+                    const disabledReason = sourceDisabledReason(account, allocation.id);
+                    return {
+                      value: account.id,
+                      label: accountIdentityLabel(account),
+                      secondary: disabledReason || `Safe to move ${formatPence(safeToMovePence(account))}`,
+                      trailing: disabledReason ? undefined : formatPence(safeToMovePence(account)),
+                      disabled: Boolean(disabledReason),
+                      disabledReason: disabledReason || undefined,
+                    };
+                  });
+                  const sourceLabelId = `funding-source-label-${allocation.id}`;
 
                   return (
                     <div key={allocation.id} className="mv-funding-allocation-card">
                       <div className="mv-funding-allocation-grid">
                         <div className="min-w-0">
-                          <label htmlFor={`funding-source-${allocation.id}`}>
+                          <label id={sourceLabelId} htmlFor={`funding-source-${allocation.id}`}>
                             {index === 0 ? 'Money from' : `Money from ${index + 1}`}
                           </label>
-                          <div
-                            className="mv-funding-source-picker"
-                            data-funding-source-picker
-                          >
-                            <button
-                              id={`funding-source-${allocation.id}`}
-                              type="button"
-                              autoFocus={index === 0}
-                              className="mv-funding-source-trigger"
-                              aria-haspopup="listbox"
-                              aria-expanded={openSourcePickerId === allocation.id}
-                              aria-controls={`funding-source-listbox-${allocation.id}`}
-                              onClick={() =>
-                                setOpenSourcePickerId((current) =>
-                                  current === allocation.id ? null : allocation.id
-                                )
-                              }
-                              onKeyDown={(event) => {
-                                if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-                                event.preventDefault();
-                                setOpenSourcePickerId(allocation.id);
-                                requestAnimationFrame(() =>
-                                  focusSourceOption(
-                                    allocation.id,
-                                    event.key === 'ArrowDown' ? 'first' : 'last'
-                                  )
-                                );
-                              }}
-                            >
-                              <span className="mv-funding-source-trigger-copy">
-                                <strong data-mv-value-primary>
-                                  {source ? accountIdentityLabel(source) : 'Choose account'}
-                                </strong>
-                                <span>
-                                  {source
-                                    ? `Safe to move ${formatPence(safeToMovePence(source))}`
-                                    : `${sourceAccounts.length} account${sourceAccounts.length === 1 ? '' : 's'} available`}
-                                </span>
-                              </span>
-                              <ChevronDown className="h-4 w-4 shrink-0" />
-                            </button>
-
-                            {openSourcePickerId === allocation.id && (
-                              <div
-                                id={`funding-source-listbox-${allocation.id}`}
-                                className="mv-funding-source-menu"
-                                role="listbox"
-                                aria-labelledby={`funding-source-${allocation.id}`}
-                              >
-                                {sourceAccounts.map((account) => {
-                                  const disabledReason = sourceDisabledReason(
-                                    account,
-                                    allocation.id
-                                  );
-                                  const isSelected =
-                                    allocation.sourceAccountId === account.id;
-
-                                  return (
-                                    <button
-                                      key={account.id}
-                                      type="button"
-                                      role="option"
-                                      aria-selected={isSelected}
-                                      aria-disabled={Boolean(disabledReason)}
-                                      className="mv-funding-source-option"
-                                      onClick={(event) => {
-                                        if (disabledReason) {
-                                          event.preventDefault();
-                                          return;
-                                        }
-                                        updateAllocation(allocation.id, {
-                                          sourceAccountId: account.id,
-                                        });
-                                        setOpenSourcePickerId(null);
-                                        setError(null);
-                                        requestAnimationFrame(() =>
-                                          document
-                                            .getElementById(`funding-source-${allocation.id}`)
-                                            ?.focus({ preventScroll: true })
-                                        );
-                                      }}
-                                      onKeyDown={(event) => {
-                                        if (event.key === 'ArrowDown') {
-                                          event.preventDefault();
-                                          focusSourceOption(
-                                            allocation.id,
-                                            'next',
-                                            event.currentTarget
-                                          );
-                                        } else if (event.key === 'ArrowUp') {
-                                          event.preventDefault();
-                                          focusSourceOption(
-                                            allocation.id,
-                                            'previous',
-                                            event.currentTarget
-                                          );
-                                        } else if (event.key === 'Home') {
-                                          event.preventDefault();
-                                          focusSourceOption(allocation.id, 'first');
-                                        } else if (event.key === 'End') {
-                                          event.preventDefault();
-                                          focusSourceOption(allocation.id, 'last');
-                                        } else if (event.key === 'Escape') {
-                                          event.preventDefault();
-                                          event.stopPropagation();
-                                          setOpenSourcePickerId(null);
-                                          document
-                                            .getElementById(`funding-source-${allocation.id}`)
-                                            ?.focus({ preventScroll: true });
-                                        }
-                                      }}
-                                    >
-                                      <span className="mv-funding-source-option-copy">
-                                        <strong data-mv-value-primary>
-                                          {accountIdentityLabel(account)}
-                                        </strong>
-                                        <span
-                                          className={
-                                            disabledReason
-                                              ? 'text-subtle'
-                                              : 'finance-semantic-positive'
-                                          }
-                                        >
-                                          {disabledReason ||
-                                            `Safe to move ${formatPence(safeToMovePence(account))}`}
-                                        </span>
-                                      </span>
-                                      {isSelected && (
-                                        <span className="mv-funding-source-selected">Selected</span>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
+                          <MVSelect
+                            id={`funding-source-${allocation.id}`}
+                            value={allocation.sourceAccountId}
+                            options={sourceSelectOptions}
+                            onValueChange={(accountId) => {
+                              updateAllocation(allocation.id, { sourceAccountId: accountId });
+                              setError(null);
+                            }}
+                            placeholder="Choose account"
+                            ariaLabelledBy={sourceLabelId}
+                            autoFocus={index === 0}
+                            className="mv-funding-source-mvselect"
+                            showSelectedSecondary
+                          />
                         </div>
 
                         <div className="min-w-0">
