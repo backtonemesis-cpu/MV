@@ -6,6 +6,17 @@
   display: none;
 }
 
+/* The layout selector is user-controlled, so an iPhone-sized viewport must not
+   opt focusable controls back into the desktop 13px token merely because PC
+   mode is selected. Reassign only the shared control-value tokens here; the
+   actual typography rule remains owned by globalDesignSystem.css. */
+@media (max-width: 47.999rem) {
+  .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) {
+    --mv-control-value-size: var(--mv-control-value-phone-size);
+    --mv-control-value-leading: var(--mv-control-value-phone-leading);
+  }
+}
+
 @media (max-width: 40rem) {
   .mv-layout-phone .mv-nav-mobile {
     position: fixed !important;
