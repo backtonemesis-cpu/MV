@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 const src = path.resolve(process.cwd(), 'src');
 const tx = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
-const monthPicker = fs.readFileSync(path.join(src, 'components/MonthPicker.tsx'), 'utf8');
 const bridge = fs.readFileSync(path.join(src, 'unifiedAddBridge.ts'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const launcherCss = fs.readFileSync(path.resolve(process.cwd(), 'public/unified-add-launcher-fix.css'), 'utf8');
@@ -36,25 +35,44 @@ describe('final unified Add presentation consistency', () => {
     );
   });
 
-  it('uses Billing Month and Description visibly while retaining the safe stored Bill name', () => {
-    expect(tx).toContain('Billing Month');
+  it('shows Description but derives the Bill month invisibly from the active working month', () => {
     expect(tx).toContain('Description');
-    expect(tx).toContain('id="unified-bill-month"');
     expect(tx).toContain('id="unified-bill-name"');
     expect(tx).toContain('name: description.trim()');
+    expect(tx).toContain('month: billMonth.trim()');
+    expect(tx).toContain('const [billMonth, setBillMonth] = useState(activeMonth);');
+    expect(tx).toContain("setBillMonth(activeMonth || '2026-09')");
+    expect(tx).not.toContain('Billing Month');
+    expect(tx).not.toContain('id="unified-bill-month"');
+    expect(tx).not.toContain('<MonthPicker');
   });
 
-  it('shares the Date field contract with the semantic Billing Month input on desktop and Phone', () => {
+  it('puts the real optional Bill Due Date in the same top-row position as transaction Date', () => {
     expect(tx).toContain('id="transaction-date"');
     expect(tx).toContain('type="date"');
-    expect(tx).toContain('inputClassName="mv-transaction-control"');
-    expect(monthPicker).toContain('inputClassName?: string;');
-    expect(monthPicker).toContain('mv-month-picker-input');
-    expect(css).toContain('.mv-unified-add-month .mv-month-picker-input.mv-transaction-control');
-    expect(css).toContain('height: 32px !important');
-    expect(css).toContain('min-height: 32px !important');
-    expect(css).toContain('height: 40px !important');
-    expect(css).toContain('line-height: 40px !important');
+    expect(tx).toContain('id="unified-bill-due-date"');
+    expect(tx).toContain('Due Date (optional)');
+    const billStart = tx.indexOf('{isBillEntry ? (');
+    const descriptionStart = tx.indexOf('htmlFor="unified-bill-name"', billStart);
+    const billTop = tx.slice(billStart, descriptionStart);
+    expect(billTop).toContain('id="unified-bill-amount"');
+    expect(billTop).toContain('id="unified-bill-due-date"');
+    expect(billTop).toContain('value={billDueDate}');
+  });
+
+  it('starts new transaction dates blank while preserving existing dates in edit mode', () => {
+    expect(tx).toContain("const [date, setDate] = useState('')");
+    expect(tx).toContain("setDate('')");
+    expect(tx).toContain('setDate(initialTransaction.date)');
+    expect(tx).not.toContain('setDate(localDateInputValue())');
+    expect(tx).toContain("setError('Date is required.')");
+  });
+
+  it('uses consistent wording where Bill and Transaction fields have the same meaning', () => {
+    expect(tx).toMatch(/htmlFor="unified-bill-name"[\s\S]{0,180}>\s*Description\s*<\/label>/);
+    expect(tx).toMatch(/htmlFor="transaction-description"[\s\S]{0,180}>\s*Description\s*<\/label>/);
+    expect(tx).toMatch(/htmlFor="unified-bill-notes"[\s\S]{0,180}>\s*Notes \(optional\)\s*<\/label>/);
+    expect(tx).toMatch(/htmlFor="transaction-notes"[\s\S]{0,180}>\s*Notes \(optional\)\s*<\/label>/);
   });
 
   it('uses one footer geometry component and has no Bill-only proportional override', () => {
@@ -88,10 +106,11 @@ describe('final unified Add presentation consistency', () => {
   });
 
   it('uses one no-asterisk convention without weakening required validation', () => {
-    for (const label of ['Amount (£) *', 'Month *', 'Name *', 'Payment Account *', 'Category *']) {
+    for (const label of ['Amount (£) *', 'Description *', 'Payment Account *', 'Category *', 'Date *']) {
       expect(tx).not.toContain(label);
     }
     expect(tx).toContain('if (!billMonth.trim())');
+    expect(tx).toContain('if (!date)');
     expect(tx).toContain('if (!description.trim())');
     expect(tx).toContain('if (!accountId)');
     expect(tx).toContain('isBillCategorySelectionAllowed(categories, categoryId)');
