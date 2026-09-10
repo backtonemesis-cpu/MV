@@ -7,10 +7,29 @@ const css = fs.readFileSync(
   path.resolve(process.cwd(), 'public/iphone-transaction-date-fix.css'),
   'utf8'
 );
+const mobileCss = fs.readFileSync(path.resolve(process.cwd(), 'src/mobileUx.css'), 'utf8');
+const designCss = fs.readFileSync(path.resolve(process.cwd(), 'src/globalDesignSystem.css'), 'utf8');
 
 describe('Actual iPhone transaction date visual frame regression', () => {
   it('loads the dedicated iPhone transaction date containment layer', () => {
     expect(html).toContain('./iphone-transaction-date-fix.css');
+  });
+
+  it('applies the iPhone-sized containment layer in both user-selectable layout modes', () => {
+    expect(css).toContain('@media (max-width: 430px)');
+    expect(css).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
+  });
+
+  it('makes the Date wrapper consume exactly its available grid width like sibling fields', () => {
+    expect(css).toMatch(
+      /div:has\(> label\[for="transaction-date"\]\)\s*\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?inline-size:\s*100%;[\s\S]*?width:\s*100%;[\s\S]*?min-inline-size:\s*0;[\s\S]*?min-width:\s*0;[\s\S]*?max-inline-size:\s*100%;[\s\S]*?max-width:\s*100%;[\s\S]*?overflow:\s*hidden;/
+    );
+  });
+
+  it('prevents the native Date input from exceeding that wrapper in either dimension model', () => {
+    expect(css).toMatch(
+      /\.mv-density-root:is\(\.mv-layout-pc, \.mv-layout-phone\) \.mv-transaction-modal #transaction-date\s*\{[\s\S]*?inline-size:\s*100% !important;[\s\S]*?width:\s*100% !important;[\s\S]*?min-inline-size:\s*0 !important;[\s\S]*?min-width:\s*0 !important;[\s\S]*?max-inline-size:\s*100% !important;[\s\S]*?max-width:\s*100% !important;[\s\S]*?box-sizing:\s*border-box !important;[\s\S]*?margin:\s*0 !important;/
+    );
   });
 
   it('clips native Safari date paint inside the transaction field container', () => {
@@ -46,6 +65,15 @@ describe('Actual iPhone transaction date visual frame regression', () => {
     expect(css).toContain('opacity: 0');
   });
 
+  it('preserves the PR #178 16px anti-focus-zoom contract in both iPhone layout modes', () => {
+    expect(designCss).toContain('--mv-control-value-phone-size: 1rem;');
+    expect(designCss).toContain('--mv-control-value-phone-leading: 1.5rem;');
+    expect(mobileCss).toContain('@media (max-width: 47.999rem)');
+    expect(mobileCss).toContain('.mv-density-root:is(.mv-layout-pc, .mv-layout-phone)');
+    expect(mobileCss).toContain('--mv-control-value-size: var(--mv-control-value-phone-size);');
+    expect(mobileCss).toContain('--mv-control-value-leading: var(--mv-control-value-phone-leading);');
+  });
+
   it('preserves native date input semantics and only changes presentation', () => {
     const tx = fs.readFileSync(
       path.resolve(process.cwd(), 'src/components/TransactionModal.tsx'),
@@ -55,5 +83,6 @@ describe('Actual iPhone transaction date visual frame regression', () => {
     expect(tx).toContain('type="date"');
     expect(tx).toContain('value={date}');
     expect(tx).toContain('onChange={(e) => setDate(e.target.value)}');
+    expect(tx).toContain("const [date, setDate] = useState('')");
   });
 });
