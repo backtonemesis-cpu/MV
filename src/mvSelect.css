@@ -182,6 +182,17 @@
   cursor: pointer;
 }
 
+/* Mobile Safari can present its native picker even when script cancels the
+   select's activation event. On coarse/touch input the real select therefore
+   stays visible and focusable but does not receive direct pointer hit-testing.
+   nativeSelectTouchGuard resolves the field under the tap and asks the shared
+   bridge to open the MV listbox instead. */
+@media (pointer: coarse) {
+  .mv-density-root select:not([data-mv-native="true"]) {
+    pointer-events: none;
+  }
+}
+
 /* The obsolete large Unified Add mobile account sheet is no longer a valid
    interaction surface. The explicit MVSelect account trigger is used in every
    layout mode after migration. */
