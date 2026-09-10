@@ -14,15 +14,6 @@
     max-width: 100vw !important;
   }
 
-  .mv-layout-phone :is(
-    input:not([type="checkbox"]):not([type="radio"]),
-    select,
-    textarea
-  ) {
-    font-size: var(--mv-ds-text-body) !important;
-    line-height: var(--mv-ds-leading-body) !important;
-  }
-
   .mv-layout-phone :is(input, select, textarea) {
     min-width: 0 !important;
     max-width: 100% !important;
@@ -105,9 +96,9 @@
     min-width: 0;
     padding-inline: 16px 48px;
     color: var(--mv-ds-text-main);
-    font-size: var(--mv-ds-text-body);
+    font-size: var(--mv-control-value-size);
     font-weight: 600;
-    line-height: var(--mv-ds-leading-body);
+    line-height: var(--mv-control-value-leading);
     pointer-events: none;
     white-space: nowrap;
   }

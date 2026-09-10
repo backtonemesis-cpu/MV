@@ -6,7 +6,7 @@ const src = path.resolve(process.cwd(), 'src');
 const modal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const consistencyCss = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const balanceCss = fs.readFileSync(path.join(src, 'unifiedAddDesktopTransferPromptBalance.css'), 'utf8');
-const typographyCss = fs.readFileSync(path.join(src, 'unifiedAddFieldTypography.css'), 'utf8');
+const designCss = fs.readFileSync(path.join(src, 'globalDesignSystem.css'), 'utf8');
 const main = fs.readFileSync(path.join(src, 'main.tsx'), 'utf8');
 
 describe('desktop Transfer account prompt readability', () => {
@@ -25,17 +25,16 @@ describe('desktop Transfer account prompt readability', () => {
   it('uses the shared 13px unified Add field contract instead of a Transfer-only font exception', () => {
     expect(balanceCss).not.toContain('select.mv-transaction-account-select.is-placeholder');
     expect(balanceCss).not.toContain('font-size: 13px !important;');
-    expect(typographyCss).toContain('font-size: 13px !important;');
-    expect(typographyCss).toContain('.mv-mobile-account-trigger');
+    expect(designCss).toContain('--mv-control-value-size: 0.8125rem;');
+    expect(designCss).toContain('[data-mv-value-primary]');
   });
 
-  it('loads the final balance and shared typography overrides after the shared unified Add contract', () => {
+  it('loads the final balance after the shared unified Add geometry contract', () => {
     const sharedIndex = main.indexOf("import './unifiedAddConsistency.css';");
     const balanceIndex = main.indexOf("import './unifiedAddDesktopTransferPromptBalance.css';");
-    const typographyIndex = main.indexOf("import './unifiedAddFieldTypography.css';");
     expect(sharedIndex).toBeGreaterThanOrEqual(0);
     expect(balanceIndex).toBeGreaterThan(sharedIndex);
-    expect(typographyIndex).toBeGreaterThan(balanceIndex);
+    expect(main).not.toContain("import './unifiedAddFieldTypography.css';");
     expect(consistencyCss).toContain('max-width: 520px !important;');
   });
 

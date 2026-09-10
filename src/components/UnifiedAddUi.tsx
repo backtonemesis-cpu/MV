@@ -124,7 +124,9 @@ export const UnifiedAddAccountField: React.FC<UnifiedAddAccountFieldProps> = ({
         aria-expanded={isPickerOpen}
         aria-label={`${label.replace(/\s*\*$/, '')} selector`}
       >
-        <span>{selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder}</span>
+        <span data-mv-value-primary>
+          {selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder}
+        </span>
         <ChevronDown aria-hidden="true" />
       </button>
 
@@ -177,7 +179,7 @@ export const UnifiedAddAccountField: React.FC<UnifiedAddAccountFieldProps> = ({
                   className="mv-mobile-account-picker-option"
                   onClick={() => chooseAccount(account)}
                 >
-                  <span className="mv-mobile-account-picker-identity">
+                  <span className="mv-mobile-account-picker-identity" data-mv-value-primary>
                     {accountIdentityLabel(account)}
                   </span>
                   <span className="mv-mobile-account-picker-balance">

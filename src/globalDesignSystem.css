@@ -50,6 +50,13 @@
   --mv-ds-leading-section: 2rem;       /* 32px */
   --mv-ds-leading-section-lg: 2.25rem; /* 36px */
   --mv-ds-leading-page: 2.5rem;        /* 40px */
+
+  /* Shared field-value typography. Labels, tabs, navigation, actions and
+     financial display values intentionally keep their own hierarchy. */
+  --mv-control-value-size: 0.8125rem;          /* 13px desktop */
+  --mv-control-value-leading: 1.25rem;         /* 20px desktop */
+  --mv-control-value-phone-size: 1rem;         /* 16px iPhone anti-zoom */
+  --mv-control-value-phone-leading: 1.5rem;    /* 24px iPhone */
 }
 
 html {
@@ -63,6 +70,11 @@ body,
   width: 100%;
   font-size: var(--mv-ds-text-body);
   line-height: var(--mv-ds-leading-body);
+}
+
+.mv-density-root.mv-layout-phone {
+  --mv-control-value-size: var(--mv-control-value-phone-size);
+  --mv-control-value-leading: var(--mv-control-value-phone-leading);
 }
 
 /* ==========================================================================
@@ -281,6 +293,30 @@ body,
    3. COMPONENT HEIGHTS + CLICK TARGETS
    ========================================================================== */
 
+/* One typography contract for entered values, empty-state prompts, native
+   selected values and the primary text in custom value selectors. The two
+   layout classes only change the inherited tokens above; they do not create
+   feature-specific typography. Native option menus may still use the host
+   operating system's rendering, especially on iOS. */
+.mv-density-root:is(.mv-layout-pc, .mv-layout-phone) :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea,
+  [data-mv-value-primary]
+) {
+  font-size: var(--mv-control-value-size);
+  line-height: var(--mv-control-value-leading);
+}
+
+.mv-density-root:is(.mv-layout-pc, .mv-layout-phone) :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"])::placeholder,
+  textarea::placeholder,
+  select option
+) {
+  font-size: var(--mv-control-value-size);
+  line-height: var(--mv-control-value-leading);
+}
+
 .mv-density-root :is(
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
   select
@@ -289,16 +325,12 @@ body,
   min-height: var(--mv-ds-control-large) !important;
   padding: 0 var(--mv-ds-space-3) !important;
   border-radius: var(--mv-ds-radius-md) !important;
-  font-size: var(--mv-ds-text-body) !important;
-  line-height: var(--mv-ds-leading-body) !important;
 }
 
 .mv-density-root textarea {
   min-height: calc(var(--mv-ds-control-large) * 2) !important;
   padding: var(--mv-ds-space-3) !important;
   border-radius: var(--mv-ds-radius-md) !important;
-  font-size: var(--mv-ds-text-body) !important;
-  line-height: var(--mv-ds-leading-body) !important;
 }
 
 .mv-density-root button,
@@ -709,8 +741,6 @@ body,
   min-height: var(--mv-ds-control-large) !important;
   padding-left: var(--mv-ds-space-10) !important;
   padding-right: var(--mv-ds-space-3) !important;
-  font-size: var(--mv-ds-text-body) !important;
-  line-height: var(--mv-ds-leading-body) !important;
 }
 
 .mv-density-root .mv-month-picker-input::-webkit-calendar-picker-indicator {
@@ -984,7 +1014,6 @@ body,
     min-height: var(--mv-ds-control-large) !important;
     padding-left: var(--mv-ds-space-10) !important;
     padding-right: var(--mv-ds-space-3) !important;
-    font-size: var(--mv-ds-text-body) !important;
   }
 
   /* Activity: keep search prominent and collapse the four selectors into a
@@ -1443,8 +1472,6 @@ body,
   min-height: var(--mv-ds-control-large) !important;
   padding: 0 var(--mv-ds-space-3) !important;
   border-radius: var(--mv-ds-radius-md) !important;
-  font-size: var(--mv-ds-text-body) !important;
-  line-height: var(--mv-ds-leading-body) !important;
 }
 
 .mv-funding-money-field {
@@ -1862,8 +1889,6 @@ body,
 .mv-funding-source-option-copy strong {
   overflow: hidden;
   color: var(--text);
-  font-size: var(--mv-ds-text-compact);
-  line-height: var(--mv-ds-leading-compact);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
