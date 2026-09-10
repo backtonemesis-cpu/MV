@@ -8,7 +8,12 @@
 @media (max-width: 430px) {
   .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal .mv-modal-grid-2 > div:has(> label[for="transaction-date"]) {
     position: relative;
+    box-sizing: border-box;
+    inline-size: 100%;
+    width: 100%;
+    min-inline-size: 0;
     min-width: 0;
+    max-inline-size: 100%;
     max-width: 100%;
     overflow: hidden;
   }
@@ -29,11 +34,15 @@
 
   .mv-density-root:is(.mv-layout-pc, .mv-layout-phone) .mv-transaction-modal #transaction-date {
     display: block;
+    inline-size: 100% !important;
     width: 100% !important;
+    min-inline-size: 0 !important;
     min-width: 0 !important;
+    max-inline-size: 100% !important;
     max-width: 100% !important;
     height: 40px !important;
     box-sizing: border-box !important;
+    margin: 0 !important;
     overflow: hidden;
     border: 0 !important;
     border-radius: 6px !important;
