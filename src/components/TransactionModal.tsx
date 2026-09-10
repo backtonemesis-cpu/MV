@@ -397,7 +397,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       return;
     }
     if (!billMonth.trim()) {
-      setError('Billing month is required.');
+      setError('Billing period is required.');
       return;
     }
     if (!description.trim()) {
@@ -702,19 +702,18 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                   </div>
                   <div>
                     <label
-                      htmlFor="unified-bill-month"
+                      htmlFor="unified-bill-due-date"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Billing Month
+                      Date
                     </label>
-                    <MonthPicker
-                      id="unified-bill-month"
-                      value={billMonth}
-                      onChange={setBillMonth}
-                      ariaLabel="Billing month"
-                      className="is-fluid mv-unified-add-month"
-                      inputClassName="mv-transaction-control"
-                      displayFormat="short-uk"
+                    <input
+                      id="unified-bill-due-date"
+                      type="date"
+                      value={billDueDate}
+                      onChange={(event) => setBillDueDate(event.target.value)}
+                      className="mv-transaction-control w-full"
+                      aria-label="Bill due date"
                     />
                   </div>
                 </div>
@@ -772,17 +771,19 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
                   <div>
                     <label
-                      htmlFor="unified-bill-due-date"
+                      htmlFor="unified-bill-month"
                       className="block text-xs font-semibold text-muted mb-1"
                     >
-                      Due Date (optional)
+                      Billing Period
                     </label>
-                    <input
-                      id="unified-bill-due-date"
-                      type="date"
-                      value={billDueDate}
-                      onChange={(event) => setBillDueDate(event.target.value)}
-                      className="mv-transaction-control w-full"
+                    <MonthPicker
+                      id="unified-bill-month"
+                      value={billMonth}
+                      onChange={setBillMonth}
+                      ariaLabel="Billing period month"
+                      className="is-fluid mv-unified-add-month"
+                      inputClassName="mv-transaction-control"
+                      displayFormat="short-uk"
                     />
                   </div>
 
