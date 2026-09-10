@@ -22,6 +22,7 @@ export interface MVSelectOption {
 interface MVSelectPopoverProps {
   listboxId: string;
   label?: string;
+  labelledBy?: string;
   options: MVSelectOption[];
   value: string;
   activeIndex: number;
@@ -123,6 +124,7 @@ function focusRelativeTo(anchor: HTMLElement, reverse: boolean): void {
 const MVSelectPopover: React.FC<MVSelectPopoverProps> = ({
   listboxId,
   label,
+  labelledBy,
   options,
   value,
   activeIndex,
@@ -234,7 +236,8 @@ const MVSelectPopover: React.FC<MVSelectPopoverProps> = ({
       className="mv-select-popover"
       data-mv-select-popover
       role="listbox"
-      aria-label={label || 'Options'}
+      aria-label={label || (!labelledBy ? 'Options' : undefined)}
+      aria-labelledby={label ? undefined : labelledBy}
       aria-activedescendant={activeId}
       tabIndex={0}
       onKeyDown={handleKeyDown}
@@ -402,6 +405,7 @@ export const MVSelect: React.FC<MVSelectProps> = ({
         <MVSelectPopover
           listboxId={listboxId}
           label={ariaLabel}
+          labelledBy={ariaLabelledBy}
           options={options}
           value={value}
           activeIndex={activeIndex}
