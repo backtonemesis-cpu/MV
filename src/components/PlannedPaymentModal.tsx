@@ -4,6 +4,7 @@ import { PlannedPayment, Account, Category, HouseholdMember, TransactionType } f
 import { parseToPence } from '../utils/currency';
 import { resolveAccountOwnerPayer } from '../utils/accountOwner';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
+import { localMonthInputValue } from '../utils/dateInput';
 import type { CategoryGroup } from '../types';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
@@ -38,7 +39,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
   const [name, setName] = useState(payment?.name || '');
   const [amountStr, setAmountStr] = useState(payment ? (payment.amountPence / 100).toFixed(2) : '');
-  const [month, setMonth] = useState(payment?.month || activeMonth || '2026-09');
+  const [month, setMonth] = useState(payment?.month || activeMonth || localMonthInputValue());
   const [accountId, setAccountId] = useState(payment?.accountId || '');
   const [dueDate, setDueDate] = useState(payment?.dueDate || '');
   const [categoryId, setCategoryId] = useState(payment?.categoryId || '');
@@ -62,7 +63,7 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
   const resetForNextBill = () => {
     setName('');
     setAmountStr('');
-    setMonth(activeMonth || '2026-09');
+    setMonth(activeMonth || localMonthInputValue());
     setAccountId('');
     setDueDate('');
     setCategoryId('');
