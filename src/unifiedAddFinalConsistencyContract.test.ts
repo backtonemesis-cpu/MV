@@ -30,48 +30,64 @@ describe('final unified Add consistency contract', () => {
     expect(css).not.toContain('grid-template-columns: 1fr 1fr');
   });
 
-  it('makes Billing Month reuse the transaction control contract on desktop', () => {
-    expect(tx).toContain('Billing Month');
-    expect(tx).toContain('inputClassName="mv-transaction-control"');
-    expect(monthPicker).toContain('inputClassName?: string;');
-    expect(monthPicker).toContain('className={\`mv-month-picker-input \${inputClassName}\`.trim()}');
+  it('puts a real Bill Date in the same common slot and control contract as Transaction Date', () => {
+    expect(tx).toContain('id="unified-bill-due-date"');
+    expect(tx).toMatch(/htmlFor="unified-bill-due-date"[\s\S]{0,180}>\s*Date\s*<\/label>/);
+    expect(tx).toMatch(/id="unified-bill-due-date"[\s\S]{0,160}type="date"/);
+    expect(tx).toContain('value={billDueDate}');
+    expect(tx).toContain('onChange={(event) => setBillDueDate(event.target.value)}');
+    expect(tx).toContain('aria-label="Bill due date"');
     expect(tx).toContain('id="transaction-date"');
-    expect(tx).toContain('className="mv-transaction-control w-full"');
-    expect(css).toContain('.mv-unified-add-month .mv-month-picker-input.mv-transaction-control');
-    expect(css).toContain('height: 32px !important');
-    expect(css).toContain('min-height: 32px !important');
-    expect(css).toContain('padding: 6px 12px !important');
-    expect(css).toContain('font-size: 13px !important');
-    expect(css).toContain('font-weight: 500 !important');
+    expect(tx).toMatch(/id="transaction-date"[\s\S]{0,160}type="date"/);
+    expect(tx).toMatch(/id="unified-bill-due-date"[\s\S]{0,300}className="mv-transaction-control w-full"/);
+    expect(tx).toMatch(/id="transaction-date"[\s\S]{0,300}className="mv-transaction-control w-full"/);
     expect(indexCss).toContain('.mv-transaction-control,');
   });
 
-  it('makes Billing Month match the Phone Date geometry without changing month semantics', () => {
+  it('keeps Billing Period separate, month-only and visually compact on desktop and Phone', () => {
+    expect(tx).toContain('Billing Period');
+    expect(tx).not.toContain('Billing Month');
     expect(tx).toContain('id="unified-bill-month"');
-    expect(tx).toContain('<MonthPicker');
-    expect(tx).toContain('value={billMonth}');
-    expect(tx).toContain('onChange={setBillMonth}');
-    expect(tx).toContain('month: billMonth.trim()');
-    expect(css).toContain('.mv-layout-phone .mv-transaction-modal[data-active-add-type="bill"] .mv-unified-add-month .mv-month-picker-input.mv-transaction-control');
-    expect(css).toContain('height: 40px !important');
-    expect(css).toContain('min-height: 40px !important');
-    expect(css).toContain('max-height: 40px !important');
-    expect(css).toContain('padding: 0 12px !important');
-    expect(css).toContain('font-size: var(--mv-ds-text-body) !important');
-    expect(css).toContain('line-height: 40px !important');
-    expect(mobileCss).toContain('.mv-layout-phone');
-  });
-
-  it('uses Billing Month wording and keeps exact month-only storage', () => {
-    expect(tx).toContain('Billing Month');
-    expect(tx).not.toMatch(/>\s*Month\s*</);
-    expect(tx).toContain('ariaLabel="Billing month"');
+    expect(tx).toContain('ariaLabel="Billing period month"');
     expect(tx).toContain('displayFormat="short-uk"');
+    expect(tx).toContain('inputClassName="mv-transaction-control"');
+    expect(tx).toContain('month: billMonth.trim()');
     expect(monthPicker).toContain("type MonthPickerDisplayFormat = 'native' | 'short-uk'");
+    expect(monthPicker).toContain('type="month"');
     expect(monthPicker).toContain('formatMonthShortUk');
     expect(monthPicker).toContain('mv-month-picker-short-display');
+    expect(css).toContain('.mv-unified-add-month .mv-month-picker-input.mv-transaction-control');
+    expect(css).toContain('height: 32px !important');
+    expect(css).toContain('min-height: 32px !important');
+    expect(css).toContain('height: 40px !important');
+    expect(css).toContain('line-height: 40px !important');
+    expect(mobileCss).toContain('.mv-layout-phone');
     expect(types).toContain('month: string;');
-    expect(tx).not.toContain('type="date"\\n                      value={billMonth}');
+  });
+
+  it('does not fabricate a Bill day and preserves optional dueDate semantics', () => {
+    expect(tx).toContain("setBillDueDate('')");
+    expect(tx).not.toContain("setBillDueDate(localDateInputValue())");
+    expect(tx).not.toContain("billMonth + '-01'");
+    expect(tx).toContain('dueDate: billDueDate || undefined');
+    const billDateStart = tx.indexOf('id="unified-bill-due-date"');
+    const billDateEnd = tx.indexOf('</div>', billDateStart);
+    expect(tx.slice(billDateStart, billDateEnd)).not.toContain('required');
+  });
+
+  it('keeps the common Bill field order Amount → Date → Description → Payment Account → Category before Billing Period', () => {
+    const amountIndex = tx.indexOf('id="unified-bill-amount"');
+    const dateIndex = tx.indexOf('id="unified-bill-due-date"');
+    const descriptionIndex = tx.indexOf('id="unified-bill-name"');
+    const accountIndex = tx.indexOf('id="unified-bill-account"');
+    const categoryIndex = tx.indexOf('id="unified-bill-category"');
+    const periodIndex = tx.indexOf('id="unified-bill-month"');
+    expect(amountIndex).toBeGreaterThan(-1);
+    expect(amountIndex).toBeLessThan(dateIndex);
+    expect(dateIndex).toBeLessThan(descriptionIndex);
+    expect(descriptionIndex).toBeLessThan(accountIndex);
+    expect(accountIndex).toBeLessThan(categoryIndex);
+    expect(categoryIndex).toBeLessThan(periodIndex);
   });
 
   it('presents Bill name as Description while preserving PlannedPayment.name storage', () => {
@@ -140,14 +156,14 @@ describe('final unified Add consistency contract', () => {
     expect(css).toContain('.mv-mobile-account-trigger.is-placeholder');
   });
 
-  it('uses one no-asterisk required convention and marks only genuinely optional text/date fields', () => {
-    for (const label of ['Amount (£) *', 'Billing Month *', 'Description *', 'Payment Account *', 'Category *']) {
+  it('uses one no-asterisk required convention without changing validation', () => {
+    for (const label of ['Amount (£) *', 'Billing Period *', 'Description *', 'Payment Account *', 'Category *']) {
       expect(tx).not.toContain(label);
     }
-    expect(tx).toContain('Due Date (optional)');
-    expect((tx.match(/Notes \(optional\)/g) ?? []).length).toBe(2);
+    expect(tx).toContain('Notes (optional)');
     expect(tx).toContain('required');
     expect(tx).toContain("if (!billMonth.trim())");
+    expect(tx).toContain("setError('Billing period is required.')");
     expect(tx).toContain("if (!description.trim())");
     expect(tx).toContain("if (!accountId)");
     expect(tx).toContain('isBillCategorySelectionAllowed(categories, categoryId)');
