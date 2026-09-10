@@ -74,7 +74,8 @@ describe('Step 44 iPhone selected-account readability contract', () => {
     expect(shared).not.toContain('<select');
     expect(shared).not.toContain('mv-mobile-account-trigger');
     expect(shared).not.toContain('mv-mobile-account-picker');
-    expect(select).toContain('aria-haspopup="listbox"');
+    expect(select).toContain("aria-haspopup={hasOptions ? 'listbox' : undefined}");
+    expect(select).toContain('aria-disabled={disabled || !hasOptions || undefined}');
     expect(select).toContain('role="option"');
     expect(css).toContain('background: var(--field)');
   });
