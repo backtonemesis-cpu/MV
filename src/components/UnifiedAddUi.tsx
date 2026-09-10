@@ -90,6 +90,7 @@ export const UnifiedAddAccountField: React.FC<UnifiedAddAccountFieldProps> = ({
         options={selectOptions}
         onValueChange={onChange}
         placeholder={placeholder}
+        emptyMessage="No accounts available"
         ariaLabelledBy={labelId}
         required={required}
         className="mv-transaction-control"

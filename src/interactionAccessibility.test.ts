@@ -61,7 +61,8 @@ describe('Global interaction accessibility contract', () => {
     expect(funding).toContain('disabledReason: disabledReason || undefined');
     expect(funding).toContain('Credit/liability account — not a cash funding source');
     expect(funding).toContain('No safe-to-move balance');
-    expect(select).toContain('aria-haspopup="listbox"');
+    expect(select).toContain("aria-haspopup={hasOptions ? 'listbox' : undefined}");
+    expect(select).toContain('aria-disabled={disabled || !hasOptions || undefined}');
     expect(select).toContain('role="listbox"');
     expect(select).toContain('role="option"');
     expect(select).toContain('aria-disabled={option.disabled || undefined}');

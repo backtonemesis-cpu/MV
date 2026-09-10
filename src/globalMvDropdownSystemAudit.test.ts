@@ -31,6 +31,7 @@ describe('global MV dropdown system', () => {
     expect(inventory).toContain('TransactionList / Activity');
     expect(inventory).toContain('CategoryCorrection');
     expect(inventory).toContain('Deliberately native/system controls');
+    expect(inventory).toContain('Direct MVSelect empty-state contract');
   });
 
   it('mounts one shared native-select bridge and one shared explicit MVSelect implementation', () => {
@@ -125,12 +126,21 @@ describe('global MV dropdown system', () => {
   });
 
   it('uses select-only listbox semantics rather than falsely exposing a text combobox', () => {
-    expect(selectSource).toContain('aria-haspopup="listbox"');
+    expect(selectSource).toContain("aria-haspopup={hasOptions ? 'listbox' : undefined}");
     expect(selectSource).toContain('role="listbox"');
     expect(selectSource).toContain('role="option"');
     expect(selectSource).toContain('aria-selected={selected}');
     expect(selectSource).toContain('aria-disabled={option.disabled || undefined}');
     expect(selectSource).not.toContain('role="combobox"');
+  });
+
+  it('keeps zero-option direct selectors explicit and prevents empty listbox slivers', () => {
+    expect(selectSource).toContain("emptyMessage = 'No options available'");
+    expect(selectSource).toContain('const hasOptions = options.length > 0;');
+    expect(selectSource).toContain('if (disabled || !hasOptions) return;');
+    expect(selectSource).toContain('if (open && !hasOptions) close(false);');
+    expect(selectSource).toContain('open && hasOptions && triggerRef.current');
+    expect(unified).toContain('emptyMessage="No accounts available"');
   });
 
   it('keeps the portalled listbox named by the explicit field label or native select label', () => {
