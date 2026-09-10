@@ -40,7 +40,8 @@ describe('global field-surface contract', () => {
     expect(surfaceCss).toContain('[role="combobox"]');
     expect(unifiedAddUi).toContain('<MVSelect');
     expect(fundingModal).toContain('<MVSelect');
-    expect(mvSelect).toContain('aria-haspopup="listbox"');
+    expect(mvSelect).toContain("aria-haspopup={hasOptions ? 'listbox' : undefined}");
+    expect(mvSelect).toContain('aria-disabled={disabled || !hasOptions || undefined}');
     expect(surfaceCss).not.toMatch(/(?:^|\n)\s*button\s*[,\{]/);
     expect(surfaceCss).not.toContain('[role="option"]');
     expect(surfaceCss).not.toContain('[role="menuitem"]');
