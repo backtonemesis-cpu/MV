@@ -9,6 +9,10 @@ const css = fs.readFileSync(
 );
 const mobileCss = fs.readFileSync(path.resolve(process.cwd(), 'src/mobileUx.css'), 'utf8');
 const designCss = fs.readFileSync(path.resolve(process.cwd(), 'src/globalDesignSystem.css'), 'utf8');
+const unifiedAddCss = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/unifiedAddConsistency.css'),
+  'utf8'
+);
 
 describe('Actual iPhone transaction date visual frame regression', () => {
   it('loads the dedicated iPhone transaction date containment layer', () => {
@@ -39,18 +43,18 @@ describe('Actual iPhone transaction date visual frame regression', () => {
     expect(css).toContain('max-width: 100% !important');
   });
 
-  it('draws one MV-owned field frame and uses the shared field surface', () => {
-    expect(css).toContain('::after');
-    expect(css).toContain('right: 0');
-    expect(css).toContain('left: 0');
-    expect(css).toContain('border: 1px solid var(--border)');
-    expect(css).toContain('border-radius: 6px');
-    expect(css).toContain('border: 0 !important');
-    expect(css).toContain('background-color: var(--field) !important');
+  it('uses the same normal field border contract instead of a separate pseudo-frame', () => {
+    expect(unifiedAddCss).toContain('border-color: var(--border) !important;');
+    expect(unifiedAddCss).toContain('border-radius: var(--card-radius, 6px) !important;');
+    expect(css).toContain('border: 1px solid var(--border) !important;');
+    expect(css).toContain('border-radius: var(--card-radius, 6px) !important;');
+    expect(css).toContain('background-color: var(--field) !important;');
+    expect(css).not.toContain('::after');
+    expect(css).not.toContain('border: 0 !important');
     expect(css).not.toContain('background: transparent !important');
   });
 
-  it('centres the native date value inside the 40px MV frame', () => {
+  it('centres the native date value inside the 40px MV field', () => {
     expect(css).toContain('height: 40px !important');
     expect(css).toContain('line-height: 40px !important');
     expect(css).toContain('::-webkit-date-and-time-value');
