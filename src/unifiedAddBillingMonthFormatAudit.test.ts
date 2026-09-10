@@ -9,7 +9,7 @@ const monthPicker = fs.readFileSync(path.join(src, 'components/MonthPicker.tsx')
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 
-describe('unified Add Billing Month UK-short display', () => {
+describe('unified Add Bill Billing Period UK-short display', () => {
   it('formats a YYYY-MM value as abbreviated UK month plus year', () => {
     expect(formatMonthShortUk('2026-09')).toBe('Sep 2026');
     expect(formatMonthShortUk('2026-01')).toBe('Jan 2026');
@@ -17,10 +17,11 @@ describe('unified Add Billing Month UK-short display', () => {
     expect(formatMonthShortUk('2026-13')).toBe('');
   });
 
-  it('uses the short display only for the unified Bill Billing Month', () => {
+  it('uses the short month display only for the separate Bill Billing Period', () => {
     expect(tx).toContain('id="unified-bill-month"');
     expect(tx).toContain('displayFormat="short-uk"');
-    expect(tx).toContain('Billing Month');
+    expect(tx).toContain('Billing Period');
+    expect(tx).not.toContain('Billing Month');
     expect(monthPicker).toContain("type MonthPickerDisplayFormat = 'native' | 'short-uk'");
     expect(monthPicker).toContain("displayFormat = 'native'");
     expect(monthPicker).toContain('mv-month-picker-short-display');
@@ -36,7 +37,16 @@ describe('unified Add Billing Month UK-short display', () => {
     expect(tx).not.toContain('Date.UTC');
   });
 
-  it('overlays only the visible month text and preserves the existing field geometry', () => {
+  it('uses a separate real date input for the Bill date shown in the common Date slot', () => {
+    expect(tx).toContain('id="unified-bill-due-date"');
+    expect(tx).toMatch(/htmlFor="unified-bill-due-date"[\s\S]{0,180}>\s*Date\s*<\/label>/);
+    expect(tx).toMatch(/id="unified-bill-due-date"[\s\S]{0,120}type="date"/);
+    expect(tx).toContain('value={billDueDate}');
+    expect(tx).toContain('dueDate: billDueDate || undefined');
+    expect(tx).not.toContain("setBillDueDate(localDateInputValue())");
+  });
+
+  it('preserves the Billing Period overlay geometry independently from Date', () => {
     expect(css).toContain('.mv-unified-add-month.has-short-uk-display');
     expect(css).toContain('-webkit-text-fill-color: transparent !important');
     expect(css).toContain('.mv-month-picker-short-display');

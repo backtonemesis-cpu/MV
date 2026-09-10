@@ -36,25 +36,36 @@ describe('final unified Add presentation consistency', () => {
     );
   });
 
-  it('uses Billing Month and Description visibly while retaining the safe stored Bill name', () => {
-    expect(tx).toContain('Billing Month');
+  it('uses Date and Description visibly for Bill while retaining separate month storage', () => {
+    expect(tx).toContain('htmlFor="unified-bill-due-date"');
+    expect(tx).toMatch(/htmlFor="unified-bill-due-date"[\s\S]{0,180}>\s*Date\s*<\/label>/);
+    expect(tx).toContain('id="unified-bill-due-date"');
+    expect(tx).toContain('value={billDueDate}');
+    expect(tx).toContain('dueDate: billDueDate || undefined');
     expect(tx).toContain('Description');
-    expect(tx).toContain('id="unified-bill-month"');
-    expect(tx).toContain('id="unified-bill-name"');
+    expect(tx).toContain('Billing Period');
+    expect(tx).toContain('month: billMonth.trim()');
     expect(tx).toContain('name: description.trim()');
   });
 
-  it('shares the Date field contract with the semantic Billing Month input on desktop and Phone', () => {
+  it('gives Bill Date the same native date/control contract as every Transaction date', () => {
     expect(tx).toContain('id="transaction-date"');
-    expect(tx).toContain('type="date"');
-    expect(tx).toContain('inputClassName="mv-transaction-control"');
-    expect(monthPicker).toContain('inputClassName?: string;');
-    expect(monthPicker).toContain('mv-month-picker-input');
-    expect(css).toContain('.mv-unified-add-month .mv-month-picker-input.mv-transaction-control');
-    expect(css).toContain('height: 32px !important');
-    expect(css).toContain('min-height: 32px !important');
-    expect(css).toContain('height: 40px !important');
-    expect(css).toContain('line-height: 40px !important');
+    expect(tx).toContain('id="unified-bill-due-date"');
+    expect((tx.match(/type="date"/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(tx).toMatch(/id="unified-bill-due-date"[\s\S]{0,300}className="mv-transaction-control w-full"/);
+    expect(tx).toMatch(/id="transaction-date"[\s\S]{0,300}className="mv-transaction-control w-full"/);
+    expect(tx.indexOf('id="unified-bill-due-date"')).toBeLessThan(tx.indexOf('id="unified-bill-name"'));
+    expect(tx.indexOf('id="unified-bill-month"')).toBeGreaterThan(tx.indexOf('id="unified-bill-category"'));
+  });
+
+  it('keeps Billing Period explicitly month-only rather than fabricating a date', () => {
+    expect(tx).toContain('Billing Period');
+    expect(tx).toContain('id="unified-bill-month"');
+    expect(tx).toContain('displayFormat="short-uk"');
+    expect(monthPicker).toContain('type="month"');
+    expect(tx).toContain("setBillDueDate('')");
+    expect(tx).not.toContain("setBillDueDate(localDateInputValue())");
+    expect(tx).not.toContain("billMonth + '-01'");
   });
 
   it('uses one footer geometry component and has no Bill-only proportional override', () => {
@@ -87,7 +98,7 @@ describe('final unified Add presentation consistency', () => {
     expect(css).toContain('.mv-transaction-control.is-placeholder');
   });
 
-  it('uses one no-asterisk convention without weakening required validation', () => {
+  it('uses one no-asterisk convention without weakening Bill validation', () => {
     for (const label of ['Amount (£) *', 'Month *', 'Name *', 'Payment Account *', 'Category *']) {
       expect(tx).not.toContain(label);
     }
@@ -95,8 +106,8 @@ describe('final unified Add presentation consistency', () => {
     expect(tx).toContain('if (!description.trim())');
     expect(tx).toContain('if (!accountId)');
     expect(tx).toContain('isBillCategorySelectionAllowed(categories, categoryId)');
-    expect(tx).toContain('Due Date (optional)');
     expect(tx).toContain('Notes (optional)');
+    expect(tx).not.toContain('Due Date (optional)');
   });
 
   it('keeps Bill boolean semantics, repayment labels, and repayment protections unchanged', () => {
