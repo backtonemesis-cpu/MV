@@ -300,6 +300,7 @@ export interface MVSelectProps {
   options: MVSelectOption[];
   onValueChange: (value: string) => void;
   placeholder?: string;
+  emptyMessage?: string;
   ariaLabel?: string;
   ariaLabelledBy?: string;
   required?: boolean;
@@ -316,6 +317,7 @@ export const MVSelect: React.FC<MVSelectProps> = ({
   options,
   onValueChange,
   placeholder = 'Select',
+  emptyMessage = 'No options available',
   ariaLabel,
   ariaLabelledBy,
   required = false,
@@ -331,11 +333,7 @@ export const MVSelect: React.FC<MVSelectProps> = ({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(() => initialActiveIndex(options, value));
   const selectedOption = options.find((option) => option.value === value);
-
-  useEffect(() => {
-    if (!open) return;
-    setActiveIndex(initialActiveIndex(options, value));
-  }, [open, options, value]);
+  const hasOptions = options.length > 0;
 
   const close = useCallback((restoreFocus = true) => {
     setOpen(false);
@@ -344,8 +342,17 @@ export const MVSelect: React.FC<MVSelectProps> = ({
     }
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    setActiveIndex(initialActiveIndex(options, value));
+  }, [open, options, value]);
+
+  useEffect(() => {
+    if (open && !hasOptions) close(false);
+  }, [open, hasOptions, close]);
+
   const openList = (edge?: 'first' | 'last') => {
-    if (disabled) return;
+    if (disabled || !hasOptions) return;
     const next = edge
       ? edgeEnabledIndex(options, edge)
       : initialActiveIndex(options, value);
@@ -372,6 +379,8 @@ export const MVSelect: React.FC<MVSelectProps> = ({
     }
   };
 
+  const triggerText = hasOptions ? selectedOption?.label ?? placeholder : emptyMessage;
+
   return (
     <>
       <button
@@ -379,29 +388,36 @@ export const MVSelect: React.FC<MVSelectProps> = ({
         id={id}
         type="button"
         autoFocus={autoFocus}
-        className={`mv-select-trigger ${selectedOption ? '' : 'is-placeholder'} ${className}`.trim()}
+        className={`mv-select-trigger ${selectedOption ? '' : 'is-placeholder'} ${
+          hasOptions ? '' : 'is-empty'
+        } ${className}`.trim()}
         disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={open ? listboxId : undefined}
+        aria-haspopup={hasOptions ? 'listbox' : undefined}
+        aria-expanded={hasOptions ? open : undefined}
+        aria-controls={open && hasOptions ? listboxId : undefined}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
         aria-required={required || undefined}
         aria-invalid={invalid || undefined}
-        onClick={() => (open ? close(false) : openList())}
+        aria-disabled={disabled || !hasOptions || undefined}
+        onClick={() => {
+          if (!hasOptions) return;
+          if (open) close(false);
+          else openList();
+        }}
         onKeyDown={handleTriggerKeyDown}
       >
         <span className="mv-select-trigger-copy">
           <span className="mv-select-trigger-primary" data-mv-value-primary>
-            {selectedOption?.label ?? placeholder}
+            {triggerText}
           </span>
-          {showSelectedSecondary && selectedOption?.secondary && (
+          {hasOptions && showSelectedSecondary && selectedOption?.secondary && (
             <span className="mv-select-trigger-secondary">{selectedOption.secondary}</span>
           )}
         </span>
-        <ChevronDown className="mv-select-chevron" aria-hidden="true" />
+        {hasOptions && <ChevronDown className="mv-select-chevron" aria-hidden="true" />}
       </button>
-      {open && triggerRef.current && (
+      {open && hasOptions && triggerRef.current && (
         <MVSelectPopover
           listboxId={listboxId}
           label={ariaLabel}
@@ -477,6 +493,7 @@ export const MVNativeSelectBridge: React.FC = () => {
   const open = useCallback((select: HTMLSelectElement, edge?: 'first' | 'last') => {
     if (!isBridgeEligible(select)) return;
     const options = nativeSelectOptions(select);
+    if (options.length === 0) return;
     const value = select.value;
     const activeIndex = edge
       ? edgeEnabledIndex(options, edge)
@@ -535,6 +552,10 @@ export const MVNativeSelectBridge: React.FC = () => {
         return;
       }
       const options = nativeSelectOptions(snapshot.select);
+      if (options.length === 0) {
+        close(false);
+        return;
+      }
       setSnapshot((current) =>
         current && current.select === snapshot.select
           ? {
