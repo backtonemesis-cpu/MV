@@ -10,6 +10,8 @@ const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8')
 const bridge = fs.readFileSync(path.join(src, 'unifiedAddBridge.ts'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
+const selectSource = fs.readFileSync(path.join(src, 'components/MVSelect.tsx'), 'utf8');
+const selectCss = fs.readFileSync(path.join(src, 'mvSelect.css'), 'utf8');
 
 describe('unified Add consistency follow-up', () => {
   it('keeps one six-choice launcher and renders Bill inside the same visible modal shell', () => {
@@ -73,11 +75,12 @@ describe('unified Add consistency follow-up', () => {
     expect(bridge).toContain('MutationObserver');
     expect(bridge).not.toContain('openFreshUnifiedTransaction');
     expect(bridge).not.toContain('stopImmediatePropagation');
-    expect(sharedUi).toContain("<option value=\"\">{placeholder}</option>");
-    expect(sharedUi).toContain("selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder");
+    expect(sharedUi).toContain('placeholder={placeholder}');
+    expect(selectSource).toContain('selectedOption?.label ?? placeholder');
+    expect(selectSource).toContain("selectedOption ? '' : 'is-placeholder'");
     expect(css).toContain('::placeholder');
     expect(css).toContain('color: transparent !important');
-    expect(css).toContain('.mv-mobile-account-trigger.is-placeholder');
+    expect(selectCss).toContain('.mv-select-trigger.is-placeholder');
   });
 
   it('keeps native transaction date semantics and vertically centres its themed surface', () => {
