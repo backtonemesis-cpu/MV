@@ -7,6 +7,8 @@ const tx = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'u
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 const bridge = fs.readFileSync(path.join(src, 'unifiedAddBridge.ts'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'unifiedAddConsistency.css'), 'utf8');
+const selectSource = fs.readFileSync(path.join(src, 'components/MVSelect.tsx'), 'utf8');
+const selectCss = fs.readFileSync(path.join(src, 'mvSelect.css'), 'utf8');
 const launcherCss = fs.readFileSync(path.resolve(process.cwd(), 'public/unified-add-launcher-fix.css'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 
@@ -98,11 +100,12 @@ describe('final unified Add presentation consistency', () => {
     ]) {
       expect(tx + sharedUi).toContain(prompt);
     }
-    expect(sharedUi).toContain('selectedAccount ? accountIdentityLabel(selectedAccount) : placeholder');
-    expect(sharedUi).toContain("value ? '' : 'is-placeholder'");
+    expect(sharedUi).toContain('placeholder={placeholder}');
+    expect(selectSource).toContain('selectedOption?.label ?? placeholder');
+    expect(selectSource).toContain("selectedOption ? '' : 'is-placeholder'");
     expect(tx).toContain("categoryId ? '' : 'is-placeholder'");
     expect(bridge).not.toContain('querySelectorAll<HTMLSelectElement>');
-    expect(css).toContain('.mv-transaction-control.is-placeholder');
+    expect(selectCss).toContain('.mv-select-trigger.is-placeholder');
   });
 
   it('uses one no-asterisk convention without weakening required validation', () => {
