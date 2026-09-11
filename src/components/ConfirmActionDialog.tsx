@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 
@@ -6,8 +6,10 @@ interface ConfirmActionDialogProps {
   title: string;
   description: React.ReactNode;
   confirmLabel: string;
-  onCancel: () => void;
   onConfirm: () => void | Promise<void>;
+  onCancel?: () => void;
+  onClose?: () => void;
+  open?: boolean;
   busy?: boolean;
   danger?: boolean;
   ariaLabel?: string;
@@ -18,16 +20,32 @@ export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
   title,
   description,
   confirmLabel,
-  onCancel,
   onConfirm,
+  onCancel,
+  onClose,
+  open = true,
   busy = false,
   danger = true,
   ariaLabel,
   error,
 }) => {
-  const dialogRef = useModalAccessibility<HTMLElement>(true, onCancel);
+  const [internalError, setInternalError] = useState<string | null>(null);
+  const cancel = onCancel ?? onClose ?? (() => {});
+  const dialogRef = useModalAccessibility<HTMLElement>(open, cancel);
   const titleId = 'mv-confirm-action-title';
   const descriptionId = 'mv-confirm-action-description';
+  const visibleError = error || internalError;
+
+  if (!open) return null;
+
+  const handleConfirm = async () => {
+    try {
+      setInternalError(null);
+      await onConfirm();
+    } catch (err: any) {
+      setInternalError(err?.message || 'The action could not be completed.');
+    }
+  };
 
   return (
     <div className="mv-modal-backdrop">
@@ -50,7 +68,7 @@ export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
           </div>
           <button
             type="button"
-            onClick={onCancel}
+            onClick={cancel}
             disabled={busy}
             className="mv-modal-close"
             aria-label="Close confirmation"
@@ -67,19 +85,19 @@ export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
             {description}
           </div>
 
-          {error && (
+          {visibleError && (
             <div
               role="alert"
               className="rounded-lg border border-danger bg-danger-soft px-3 py-3 text-xs leading-5 text-danger"
             >
-              {error}
+              {visibleError}
             </div>
           )}
 
           <div className="mv-modal-actions">
             <button
               type="button"
-              onClick={onCancel}
+              onClick={cancel}
               disabled={busy}
               data-modal-initial-focus
               className="min-h-11 px-4 py-2 text-xs font-semibold text-muted disabled:opacity-50"
@@ -88,7 +106,7 @@ export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => void onConfirm()}
+              onClick={() => void handleConfirm()}
               disabled={busy}
               className={
                 danger
