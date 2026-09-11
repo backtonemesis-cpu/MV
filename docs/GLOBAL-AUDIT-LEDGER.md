@@ -46,6 +46,16 @@ Allowed status labels in this ledger are: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`
 - The earlier Accounts fixed-bottom-navigation occlusion concern is physically `PASS`: a follow-up iPhone screenshot showed Activity, Reconcile, Edit, Archive and Delete permanently can all be scrolled fully above the bottom navigation.
 - `GA-TP-002` per-bill Undo Funding attribution remains `BLOCKED`; PHONE-TP-001 does not change funding attribution, payment evidence, balances, transactions or storage semantics.
 
+
+### 2026-09-11 PHONE-DENSITY-001 corrective reconciliation
+
+- PR #200 merged and deployed at `eeb19554e0bc5434534ae867ee45cec843392615`; automated CI passed `90/90` test files and `614/614` tests.
+- Physical iPhone 13 Safari verification after a genuine page reload still showed the Income summary and Savings summary as single-column stacks. Therefore PR #200 is recorded as technical/deployment `PASS` but physical `FAIL` for the intended density outcome.
+- Source trace found the decisive cascade: `src/index.css` forces `.mv-layout-phone .mv-workspace .grid:not(.mv-mobile-nav-grid)` to one column with `!important`. PR #200 changed Tailwind utility classes only, so those utilities could not override the stronger Phone-mode default.
+- Corrective branch `repair/phone-summary-density-cascade` adds explicit semantic summary-grid classes and later `src/mobileUx.css` Phone-mode exceptions: Income = three columns, Savings = two columns. The regression test now checks both the component semantic hooks and the stylesheet/import-order cascade rather than only utility class strings.
+- No financial calculations, amounts, transactions, storage, income receipt semantics, savings classification, desktop layout, navigation or theme semantics are changed.
+- Physical status remains `FAIL` until the corrective PR is merged/deployed and the live iPhone is reverified.
+
 ---
 
 ## 2. Device and environment baselines

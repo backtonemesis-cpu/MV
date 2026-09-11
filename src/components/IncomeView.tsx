@@ -362,7 +362,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       </header>
 
       <section
-        className="grid grid-cols-3 gap-2 sm:grid-cols-3"
+        className="mv-income-summary-grid grid grid-cols-3 gap-2 sm:grid-cols-3"
         aria-label="Income summary"
       >
         <article className="finance-summary-card p-4">

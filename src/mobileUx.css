@@ -314,3 +314,15 @@
     background: var(--surface);
   }
 }
+
+
+/* PHONE-DENSITY-001 physical correction: explicit summary-grid cascade. */
+@media (max-width: 40rem) {
+  .mv-layout-phone .mv-workspace .grid.mv-income-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
