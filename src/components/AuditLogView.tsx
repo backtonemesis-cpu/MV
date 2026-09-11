@@ -40,8 +40,12 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
       {/* Filter and Search Bar */}
       <div className="bg-surface p-4 rounded-2xl border border-muted shadow-xs flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
+          <label htmlFor="audit-log-search" className="sr-only">
+            Search audit trail
+          </label>
           <Search className="w-4 h-4 text-muted text-subtle absolute left-3 top-2.5" />
           <input
+            id="audit-log-search"
             type="text"
             placeholder="Search..."
             value={search}
@@ -50,7 +54,11 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
           />
         </div>
 
+        <label htmlFor="audit-log-type-filter" className="sr-only">
+          Filter audit trail by type
+        </label>
         <select
+          id="audit-log-type-filter"
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
           className="px-3 py-1.5 text-xs rounded-xl border border-muted text-muted bg-surface"
