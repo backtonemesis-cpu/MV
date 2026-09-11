@@ -8,8 +8,10 @@ const SRC = path.join(ROOT, 'src');
 const read = (relativePath: string) => fs.readFileSync(path.join(SRC, relativePath), 'utf8');
 
 const appSource = read('App.tsx');
+const transactionModalSource = read('components/TransactionModal.tsx');
 const plannedPaymentSource = read('components/PlannedPaymentModal.tsx');
 const budgetSource = read('components/BudgetView.tsx');
+const transferPlanSource = read('components/TransferPlanView.tsx');
 const localStoreSource = read('localStore.ts');
 
 describe('dynamic UK-local active month', () => {
@@ -33,11 +35,19 @@ describe('dynamic UK-local active month', () => {
     expect(appSource).toContain('setSelectedMonth(params.targetMonth)');
   });
 
-  it('keeps standalone bill and budget fallbacks dynamic rather than September-fixed', () => {
+  it('keeps standalone month-aware fallbacks dynamic rather than September-fixed', () => {
+    expect(transactionModalSource).toContain('activeMonth = localMonthInputValue()');
+    expect(transactionModalSource).toContain('setBillMonth(activeMonth || localMonthInputValue())');
+    expect(transactionModalSource).not.toContain("'2026-09'");
+
     expect(plannedPaymentSource).toContain('activeMonth || localMonthInputValue()');
     expect(plannedPaymentSource).not.toContain("activeMonth || '2026-09'");
+
     expect(budgetSource).toContain('useState(() => localMonthInputValue())');
     expect(budgetSource).not.toContain("useState('2026-09')");
+
+    expect(transferPlanSource).toContain('useState<string>(() => localMonthInputValue())');
+    expect(transferPlanSource).not.toContain("useState<string>('2026-09')");
   });
 
   it('preserves the historical September migration identifier', () => {
