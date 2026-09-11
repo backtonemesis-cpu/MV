@@ -1,0 +1,112 @@
+name: One-time month rollover patch
+
+on:
+  push:
+    branches:
+      - repair/month-rollover-identity
+
+permissions:
+  contents: write
+
+jobs:
+  patch-local-store:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: repair/month-rollover-identity
+
+      - name: Apply guarded localStore patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('src/localStore.ts')
+          text = path.read_text()
+
+          import_anchor = "} from './utils/transferPlanFunding';\n"
+          helper_import = """} from './utils/transferPlanFunding';
+          import {
+            isRolloverIncomeDuplicate,
+            isRolloverPaymentDuplicate,
+            shiftRolloverDateToMonth,
+          } from './utils/monthRolloverIdentity';
+          """
+          if text.count(import_anchor) != 1:
+              raise SystemExit('Expected transferPlanFunding import anchor exactly once.')
+          text = text.replace(import_anchor, helper_import, 1)
+
+          shift_pattern = re.compile(
+              r"function shiftDateToMonth\(date: string \| undefined, targetMonth: string\): string \| undefined \{.*?\n\}\n\nexport function markLocalPaymentPaid",
+              re.S,
+          )
+          shift_replacement = """function shiftDateToMonth(date: string | undefined, targetMonth: string): string | undefined {
+            return shiftRolloverDateToMonth(date, targetMonth);
+          }
+
+          export function markLocalPaymentPaid"""
+          text, count = shift_pattern.subn(shift_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('Expected shiftDateToMonth implementation exactly once.')
+
+          payment_pattern = re.compile(
+              r"        const copiedFromId = String\(payment\.metadata\?\.copiedFromId \|\| payment\.id\);\n"
+              r"        const normalizedName = payment\.name\.trim\(\)\.toLowerCase\(\);\n"
+              r"        const exists = state\.plannedPayments\.some\(\n"
+              r"          \(candidate\) =>\n"
+              r"            candidate\.month === params\.targetMonth &&\n"
+              r"            \(.*?\n"
+              r"        \);\n"
+              r"        if \(exists\) continue;",
+              re.S,
+          )
+          payment_replacement = """        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
+          const exists = state.plannedPayments.some((candidate) =>
+            isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
+          );
+          if (exists) continue;"""
+          text, count = payment_pattern.subn(payment_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('Expected planned-payment duplicate block exactly once.')
+
+          income_pattern = re.compile(
+              r"        const copiedFromId = String\(income\.metadata\?\.copiedFromId \|\| income\.id\);\n"
+              r"        const normalizedName = income\.name\.trim\(\)\.toLowerCase\(\);\n"
+              r"        const exists = incomes\.some\(\n"
+              r"          \(candidate\) =>\n"
+              r"            candidate\.month === params\.targetMonth &&\n"
+              r"            \(.*?\n"
+              r"        \);\n"
+              r"        if \(exists\) continue;",
+              re.S,
+          )
+          income_replacement = """        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
+          const exists = incomes.some((candidate) =>
+            isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
+          );
+          if (exists) continue;"""
+          text, count = income_pattern.subn(income_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('Expected planned-income duplicate block exactly once.')
+
+          path.write_text(text)
+          PY
+
+          git diff --check
+          git diff -- src/localStore.ts
+
+      - name: Commit guarded patch
+        shell: bash
+        run: |
+          if git diff --quiet -- src/localStore.ts; then
+            echo 'No localStore change produced.'
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/localStore.ts
+          git commit -m 'Use canonical rollover identity in local store'
+          git push origin HEAD:repair/month-rollover-identity
