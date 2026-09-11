@@ -1,4 +1,4 @@
-name: One-time month rollover patch
+name: One-time month rollover cleanup
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  patch-local-store:
+  cleanup-rollover-branch:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -17,96 +17,115 @@ jobs:
         with:
           ref: repair/month-rollover-identity
 
-      - name: Apply guarded localStore patch
+      - name: Apply guarded cleanup
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
 
-          path = Path('src/localStore.ts')
-          text = path.read_text()
+          store = Path('src/localStore.ts')
+          text = store.read_text()
 
-          import_anchor = "} from './utils/transferPlanFunding';\n"
-          helper_import = """} from './utils/transferPlanFunding';
-          import {
-            isRolloverIncomeDuplicate,
-            isRolloverPaymentDuplicate,
-            shiftRolloverDateToMonth,
-          } from './utils/monthRolloverIdentity';
-          """
-          if text.count(import_anchor) != 1:
-              raise SystemExit('Expected transferPlanFunding import anchor exactly once.')
-          text = text.replace(import_anchor, helper_import, 1)
+          payment_old = """        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
+const exists = state.plannedPayments.some((candidate) =>
+  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
+);
+if (exists) continue;
+"""
+          payment_new = """        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
+        const exists = state.plannedPayments.some((candidate) =>
+          isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
+        );
+        if (exists) continue;
+"""
+          if text.count(payment_old) != 1:
+              raise SystemExit('Expected unindented payment block exactly once.')
+          text = text.replace(payment_old, payment_new, 1)
 
-          shift_pattern = re.compile(
-              r"function shiftDateToMonth\(date: string \| undefined, targetMonth: string\): string \| undefined \{.*?\n\}\n\nexport function markLocalPaymentPaid",
-              re.S,
-          )
-          shift_replacement = """function shiftDateToMonth(date: string | undefined, targetMonth: string): string | undefined {
-            return shiftRolloverDateToMonth(date, targetMonth);
-          }
+          income_old = """        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
+const exists = incomes.some((candidate) =>
+  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
+);
+if (exists) continue;
+"""
+          income_new = """        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
+        const exists = incomes.some((candidate) =>
+          isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
+        );
+        if (exists) continue;
+"""
+          if text.count(income_old) != 1:
+              raise SystemExit('Expected unindented income block exactly once.')
+          text = text.replace(income_old, income_new, 1)
+          store.write_text(text)
 
-          export function markLocalPaymentPaid"""
-          text, count = shift_pattern.subn(shift_replacement, text, count=1)
-          if count != 1:
-              raise SystemExit('Expected shiftDateToMonth implementation exactly once.')
+          api = Path('src/utils/api.ts')
+          text = api.read_text()
+          canonical_import = "import { importCanonicalLocalMonth } from '../monthRolloverStore';\n"
+          if text.count(canonical_import) != 1:
+              raise SystemExit('Expected canonical rollover-store import exactly once.')
+          text = text.replace(canonical_import, '', 1)
+          anchor = "  getLocalPreferences,\n  loadLocalHousehold,"
+          replacement = "  getLocalPreferences,\n  importLocalMonth,\n  loadLocalHousehold,"
+          if text.count(anchor) != 1:
+              raise SystemExit('Expected localStore import anchor exactly once.')
+          text = text.replace(anchor, replacement, 1)
+          call_old = 'return importCanonicalLocalMonth(request, expectedVersion);'
+          call_new = 'return importLocalMonth(request, expectedVersion);'
+          if text.count(call_old) != 1:
+              raise SystemExit('Expected canonical API call exactly once.')
+          text = text.replace(call_old, call_new, 1)
+          api.write_text(text)
 
-          payment_pattern = re.compile(
-              r"        const copiedFromId = String\(payment\.metadata\?\.copiedFromId \|\| payment\.id\);\n"
-              r"        const normalizedName = payment\.name\.trim\(\)\.toLowerCase\(\);\n"
-              r"        const exists = state\.plannedPayments\.some\(\n"
-              r"          \(candidate\) =>\n"
-              r"            candidate\.month === params\.targetMonth &&\n"
-              r"            \(.*?\n"
-              r"        \);\n"
-              r"        if \(exists\) continue;",
-              re.S,
-          )
-          payment_replacement = """        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
-          const exists = state.plannedPayments.some((candidate) =>
-            isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
-          );
-          if (exists) continue;"""
-          text, count = payment_pattern.subn(payment_replacement, text, count=1)
-          if count != 1:
-              raise SystemExit('Expected planned-payment duplicate block exactly once.')
-
-          income_pattern = re.compile(
-              r"        const copiedFromId = String\(income\.metadata\?\.copiedFromId \|\| income\.id\);\n"
-              r"        const normalizedName = income\.name\.trim\(\)\.toLowerCase\(\);\n"
-              r"        const exists = incomes\.some\(\n"
-              r"          \(candidate\) =>\n"
-              r"            candidate\.month === params\.targetMonth &&\n"
-              r"            \(.*?\n"
-              r"        \);\n"
-              r"        if \(exists\) continue;",
-              re.S,
-          )
-          income_replacement = """        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
-          const exists = incomes.some((candidate) =>
-            isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
-          );
-          if (exists) continue;"""
-          text, count = income_pattern.subn(income_replacement, text, count=1)
-          if count != 1:
-              raise SystemExit('Expected planned-income duplicate block exactly once.')
-
-          path.write_text(text)
+          test = Path('src/monthRolloverIdentityAudit.test.ts')
+          text = test.read_text()
+          imports_old = """import {
+  createBlankLocalHousehold,
+  loadLocalHousehold,
+  saveLocalHousehold,
+} from './localStore';
+import { importCanonicalLocalMonth } from './monthRolloverStore';
+"""
+          imports_new = """import {
+  createBlankLocalHousehold,
+  importLocalMonth,
+  loadLocalHousehold,
+  saveLocalHousehold,
+} from './localStore';
+"""
+          if text.count(imports_old) != 1:
+              raise SystemExit('Expected rollover test imports exactly once.')
+          text = text.replace(imports_old, imports_new, 1)
+          text = text.replace('importCanonicalLocalMonth(', 'importLocalMonth(')
+          store_path_old = "path.resolve(process.cwd(), 'src/monthRolloverStore.ts')"
+          store_path_new = "path.resolve(process.cwd(), 'src/localStore.ts')"
+          if text.count(store_path_old) != 1:
+              raise SystemExit('Expected rollover store source path exactly once.')
+          text = text.replace(store_path_old, store_path_new, 1)
+          expectations_old = """    expect(apiSource).toContain(\"import { importCanonicalLocalMonth } from '../monthRolloverStore';\");
+    expect(apiSource).toContain('return importCanonicalLocalMonth(request, expectedVersion);');
+    expect(apiSource).not.toContain('importLocalMonth,');
+"""
+          expectations_new = """    expect(apiSource).toContain('importLocalMonth,');
+    expect(apiSource).toContain('return importLocalMonth(request, expectedVersion);');
+    expect(apiSource).not.toContain('monthRolloverStore');
+"""
+          if text.count(expectations_old) != 1:
+              raise SystemExit('Expected rollover API assertions exactly once.')
+          text = text.replace(expectations_old, expectations_new, 1)
+          test.write_text(text)
           PY
 
+          git rm src/monthRolloverStore.ts
+          git rm .github/workflows/patch-month-rollover.yml
           git diff --check
-          git diff -- src/localStore.ts
+          git diff -- src/localStore.ts src/utils/api.ts src/monthRolloverIdentityAudit.test.ts
 
-      - name: Commit guarded patch
+      - name: Commit cleaned single-source implementation
         shell: bash
         run: |
-          if git diff --quiet -- src/localStore.ts; then
-            echo 'No localStore change produced.'
-            exit 1
-          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/localStore.ts
-          git commit -m 'Use canonical rollover identity in local store'
+          git add -A
+          git commit -m 'Keep month rollover on the single local-store path'
           git push origin HEAD:repair/month-rollover-identity
