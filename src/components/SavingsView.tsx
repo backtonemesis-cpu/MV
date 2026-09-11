@@ -693,6 +693,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 type="button"
                 onClick={() => setShowGoalModal(false)}
                 className="mv-modal-close"
+                aria-label="Close add savings goal"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -709,7 +710,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 <label htmlFor="savings-goal-create-name" className="mb-1 block text-xs font-semibold text-muted">Goal Name</label>
                 <input
                   id="savings-goal-create-name"
-                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(event) => setGoalName(event.target.value)}
@@ -946,7 +946,6 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 </label>
                 <input
                   id="savings-goal-edit-name"
-                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}

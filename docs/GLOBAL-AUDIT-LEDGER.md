@@ -34,6 +34,16 @@ Allowed status labels in this ledger are: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`
 
 **Mandatory freshness rule:** the baseline above is historical as soon as `main` advances. At the start of every audit session, verify `main`, current workflows, deployment and open/draft PRs again.
 
+### 2026-09-11 current-main reconciliation
+
+- Verified deployed `main` before this accessibility stage: `624787be8a5541e804040e04c848eaade4988a12` (PR #193).
+- Main workflow run #857: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS`.
+- PRs #188–#193 are merged and deployed. They respectively repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, and Prepare Next Month identity.
+- `GA-INC-001` optional-category wording defect is technically resolved by PR #188; physical current-main regression remains governed by the device matrix.
+- `GA-MONTH-001` broad rollover duplicate identity is technically resolved by PR #193 with shared UI/storage identity and lineage idempotency; physical current-main regression remains governed by the device matrix.
+- `GA-A11Y-001` remains `OPEN` during `repair/reachable-control-accessibility`. Current source inventory found mobile More disclosure forward-tab order, focusable non-semantic Activity/Income articles, forced text-field autofocus in Income/Savings/Accounts dialogs, and unnamed icon-only Savings Goal close controls. This branch repairs only those proven interaction/name/focus defects and adds source-level regression coverage; physical verification is not claimed.
+- `GA-TP-002` per-bill Undo Funding attribution remains `BLOCKED`; this accessibility stage does not change Transfer Plan attribution or financial semantics.
+
 ---
 
 ## 2. Device and environment baselines

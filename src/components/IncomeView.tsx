@@ -474,18 +474,10 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                     return (
                       <article
                         key={income.id}
-                        tabIndex={canEdit ? 0 : undefined}
                         onClick={(event) => {
                           if (!canEdit) return;
                           if ((event.target as HTMLElement).closest('button, input, a, select, textarea')) return;
                           openEdit(income);
-                        }}
-                        onKeyDown={(event) => {
-                          if (!canEdit || event.target !== event.currentTarget) return;
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            openEdit(income);
-                          }
                         }}
                         className={`finance-row finance-ledger-row group ${canEdit ? 'is-clickable' : ''}`}
                       >
@@ -618,7 +610,6 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 <label htmlFor="income-source" className="mb-1 block text-xs font-semibold text-muted">Income source</label>
                 <input
                   id="income-source"
-                  autoFocus
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="e.g. Marius salary"

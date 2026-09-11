@@ -325,18 +325,10 @@ export const TransactionList: React.FC<TransactionListProps> = ({
               return (
                 <article
                   key={tx.id}
-                  tabIndex={canEditRow ? 0 : undefined}
                   onClick={(event) => {
                     if (!canEditRow) return;
                     if ((event.target as HTMLElement).closest('button, input, a, select, textarea')) return;
                     onEditTransaction(tx);
-                  }}
-                  onKeyDown={(event) => {
-                    if (!canEditRow || event.target !== event.currentTarget) return;
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      onEditTransaction(tx);
-                    }
                   }}
                   className={`finance-row finance-ledger-row group ${canEditRow ? 'is-clickable' : ''}`}
                 >

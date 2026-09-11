@@ -198,37 +198,6 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
       <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors" aria-label="Mobile navigation">
-        {isMoreOpen && (
-          <div
-            ref={morePanelRef}
-            id="mobile-more-navigation"
-            className="mv-mobile-more-menu"
-            aria-label="More navigation"
-          >
-            {mobileMoreTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = canonicalActiveTab === tab.id;
-              return (
-                <a
-                  key={tab.id}
-                  href={navHrefForTab(tab.id)}
-                  onClick={(event) => handleNavLinkClick(event, tab.id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`mv-mobile-more-item ${isActive ? 'is-active' : ''}`}
-                >
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{tab.mobileLabel}</span>
-                  {tab.badge && (
-                    <span className="mv-mobile-more-badge" aria-label={`${tab.badge} pending`}>
-                      {tab.badge}
-                    </span>
-                  )}
-                </a>
-              );
-            })}
-          </div>
-        )}
-
         <div className="mv-mobile-nav-grid grid grid-cols-5 h-14">
           {mobilePrimaryTabs.map((tab) => {
             const Icon = tab.icon;
@@ -266,6 +235,37 @@ export const Navigation: React.FC<NavigationProps> = ({
             {moreBadge && <span className="mv-mobile-nav-badge" aria-hidden="true" />}
           </button>
         </div>
+        {isMoreOpen && (
+          <div
+            ref={morePanelRef}
+            id="mobile-more-navigation"
+            className="mv-mobile-more-menu"
+            aria-label="More navigation"
+          >
+            {mobileMoreTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = canonicalActiveTab === tab.id;
+              return (
+                <a
+                  key={tab.id}
+                  href={navHrefForTab(tab.id)}
+                  onClick={(event) => handleNavLinkClick(event, tab.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`mv-mobile-more-item ${isActive ? 'is-active' : ''}`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{tab.mobileLabel}</span>
+                  {tab.badge && (
+                    <span className="mv-mobile-more-badge" aria-label={`${tab.badge} pending`}>
+                      {tab.badge}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        )}
+
       </nav>
     </>
   );
