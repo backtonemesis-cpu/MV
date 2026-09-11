@@ -1,0 +1,31 @@
+name: Patch PHONE-TP-001 audit ledger
+
+on:
+  push:
+    branches:
+      - repair/transfer-plan-paid-only-negative-balance
+    paths:
+      - .github/workflows/patch-phone-tp-ledger.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Patch durable audit ledger
+        run: python .github/scripts/patch-phone-tp-ledger.py
+      - name: Verify and commit clean repair
+        run: |
+          git diff --check
+          rm .github/scripts/patch-phone-tp-ledger.py
+          rm .github/workflows/patch-phone-tp-ledger.yml
+          git add docs/GLOBAL-AUDIT-LEDGER.md .github/scripts/patch-phone-tp-ledger.py .github/workflows/patch-phone-tp-ledger.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Record PHONE-TP-001 physical audit evidence"
+          git push origin HEAD:repair/transfer-plan-paid-only-negative-balance
