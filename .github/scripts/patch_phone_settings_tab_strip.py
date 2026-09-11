@@ -92,16 +92,16 @@ if CSS_MARKER in css:
     raise SystemExit('PHONE-SET-001 CSS marker already exists; refusing duplicate patch')
 if '.mv-layout-phone .mv-settings-tabs' not in css or 'overflow-x: auto' not in css:
     raise SystemExit('Expected existing Phone-mode Settings tab scroll contract not found')
-CSS_PATH.write_text(css.rstrip() + CSS_BLOCK + '\n')
+CSS_PATH.write_text(css.rstrip() + CSS_BLOCK.rstrip() + '\n')
 
 if TEST_PATH.exists():
     raise SystemExit(f'{TEST_PATH} already exists; refusing overwrite')
-TEST_PATH.write_text(TEST_CONTENT)
+TEST_PATH.write_text(TEST_CONTENT.rstrip() + '\n')
 
 ledger = LEDGER_PATH.read_text()
 if LEDGER_MARKER in ledger:
     raise SystemExit('PHONE-SET-001 ledger marker already exists; refusing duplicate entry')
-LEDGER_PATH.write_text(ledger.rstrip() + LEDGER_BLOCK + '\n')
+LEDGER_PATH.write_text(ledger.rstrip() + LEDGER_BLOCK.rstrip() + '\n')
 
 Path('.github/scripts/patch_phone_settings_tab_strip.py').unlink()
 Path('.github/workflows/phone-settings-tab-strip-patch.yml').unlink()
