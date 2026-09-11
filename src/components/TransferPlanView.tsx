@@ -20,6 +20,7 @@ import type {
   UserRole,
 } from '../types';
 import { formatPence } from '../utils/currency';
+import { localMonthInputValue } from '../utils/dateInput';
 import { formatMonthLabel, generateTransferPlan } from '../utils/transferPlan';
 import {
   accountIdentityLabel,
@@ -149,7 +150,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const isViewOnly = userRole === 'view_only';
 
   const [internalSelectedMonth, setInternalSelectedMonth] =
-    useState<string>('2026-09');
+    useState<string>(() => localMonthInputValue());
   const selectedMonth = propSelectedMonth || internalSelectedMonth;
 
   const [fundingModel, setFundingModel] =
