@@ -26,34 +26,14 @@ jobs:
           store = Path('src/localStore.ts')
           text = store.read_text()
 
-          payment_old = """        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
-const exists = state.plannedPayments.some((candidate) =>
-  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
-);
-if (exists) continue;
-"""
-          payment_new = """        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
-        const exists = state.plannedPayments.some((candidate) =>
-          isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
-        );
-        if (exists) continue;
-"""
+          payment_old = "        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);\nconst exists = state.plannedPayments.some((candidate) =>\n  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)\n);\nif (exists) continue;\n"
+          payment_new = "        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);\n        const exists = state.plannedPayments.some((candidate) =>\n          isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)\n        );\n        if (exists) continue;\n"
           if text.count(payment_old) != 1:
               raise SystemExit('Expected unindented payment block exactly once.')
           text = text.replace(payment_old, payment_new, 1)
 
-          income_old = """        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
-const exists = incomes.some((candidate) =>
-  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
-);
-if (exists) continue;
-"""
-          income_new = """        const copiedFromId = String(income.metadata?.copiedFromId || income.id);
-        const exists = incomes.some((candidate) =>
-          isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
-        );
-        if (exists) continue;
-"""
+          income_old = "        const copiedFromId = String(income.metadata?.copiedFromId || income.id);\nconst exists = incomes.some((candidate) =>\n  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)\n);\nif (exists) continue;\n"
+          income_new = "        const copiedFromId = String(income.metadata?.copiedFromId || income.id);\n        const exists = incomes.some((candidate) =>\n          isRolloverIncomeDuplicate(income, candidate, params.targetMonth)\n        );\n        if (exists) continue;\n"
           if text.count(income_old) != 1:
               raise SystemExit('Expected unindented income block exactly once.')
           text = text.replace(income_old, income_new, 1)
@@ -79,20 +59,8 @@ if (exists) continue;
 
           test = Path('src/monthRolloverIdentityAudit.test.ts')
           text = test.read_text()
-          imports_old = """import {
-  createBlankLocalHousehold,
-  loadLocalHousehold,
-  saveLocalHousehold,
-} from './localStore';
-import { importCanonicalLocalMonth } from './monthRolloverStore';
-"""
-          imports_new = """import {
-  createBlankLocalHousehold,
-  importLocalMonth,
-  loadLocalHousehold,
-  saveLocalHousehold,
-} from './localStore';
-"""
+          imports_old = "import {\n  createBlankLocalHousehold,\n  loadLocalHousehold,\n  saveLocalHousehold,\n} from './localStore';\nimport { importCanonicalLocalMonth } from './monthRolloverStore';\n"
+          imports_new = "import {\n  createBlankLocalHousehold,\n  importLocalMonth,\n  loadLocalHousehold,\n  saveLocalHousehold,\n} from './localStore';\n"
           if text.count(imports_old) != 1:
               raise SystemExit('Expected rollover test imports exactly once.')
           text = text.replace(imports_old, imports_new, 1)
@@ -102,14 +70,8 @@ import { importCanonicalLocalMonth } from './monthRolloverStore';
           if text.count(store_path_old) != 1:
               raise SystemExit('Expected rollover store source path exactly once.')
           text = text.replace(store_path_old, store_path_new, 1)
-          expectations_old = """    expect(apiSource).toContain(\"import { importCanonicalLocalMonth } from '../monthRolloverStore';\");
-    expect(apiSource).toContain('return importCanonicalLocalMonth(request, expectedVersion);');
-    expect(apiSource).not.toContain('importLocalMonth,');
-"""
-          expectations_new = """    expect(apiSource).toContain('importLocalMonth,');
-    expect(apiSource).toContain('return importLocalMonth(request, expectedVersion);');
-    expect(apiSource).not.toContain('monthRolloverStore');
-"""
+          expectations_old = "    expect(apiSource).toContain(\"import { importCanonicalLocalMonth } from '../monthRolloverStore';\");\n    expect(apiSource).toContain('return importCanonicalLocalMonth(request, expectedVersion);');\n    expect(apiSource).not.toContain('importLocalMonth,');\n"
+          expectations_new = "    expect(apiSource).toContain('importLocalMonth,');\n    expect(apiSource).toContain('return importLocalMonth(request, expectedVersion);');\n    expect(apiSource).not.toContain('monthRolloverStore');\n"
           if text.count(expectations_old) != 1:
               raise SystemExit('Expected rollover API assertions exactly once.')
           text = text.replace(expectations_old, expectations_new, 1)
