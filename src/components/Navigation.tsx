@@ -10,7 +10,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { NavTab } from '../types';
-import { navHrefForTab } from '../navigationState';
+import { canonicalNavTab, navHrefForTab, navTabFromHash } from '../navigationState';
 
 interface NavigationProps {
   activeTab: NavTab;
@@ -34,6 +34,11 @@ export const Navigation: React.FC<NavigationProps> = ({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreTriggerRef = useRef<HTMLButtonElement>(null);
   const morePanelRef = useRef<HTMLDivElement>(null);
+  const activeTabRef = useRef<NavTab>(activeTab);
+  const syncingFromLocationRef = useRef(false);
+  const lastLocationHashRef = useRef<string | null>(null);
+
+  activeTabRef.current = activeTab;
 
   const tabs: TabItem[] = [
     { id: 'dashboard', label: 'Home', mobileLabel: 'Home', icon: LayoutDashboard },
@@ -51,11 +56,55 @@ export const Navigation: React.FC<NavigationProps> = ({
     },
   ];
 
+  const canonicalActiveTab = canonicalNavTab(activeTab);
   const mobilePrimaryIds: NavTab[] = ['dashboard', 'activity', 'accounts', 'transfer_plan'];
   const mobilePrimaryTabs = tabs.filter((tab) => mobilePrimaryIds.includes(tab.id));
   const mobileMoreTabs = tabs.filter((tab) => !mobilePrimaryIds.includes(tab.id));
-  const isMoreActive = mobileMoreTabs.some((tab) => tab.id === activeTab);
+  const isMoreActive = mobileMoreTabs.some((tab) => tab.id === canonicalActiveTab);
   const moreBadge = mobileMoreTabs.some((tab) => Boolean(tab.badge));
+
+  useEffect(() => {
+    const syncFromLocation = () => {
+      const currentHash = window.location.hash;
+      if (syncingFromLocationRef.current && lastLocationHashRef.current === currentHash) return;
+
+      lastLocationHashRef.current = currentHash;
+      const locationTab = navTabFromHash(currentHash);
+      if (locationTab === canonicalNavTab(activeTabRef.current)) {
+        syncingFromLocationRef.current = false;
+        return;
+      }
+
+      syncingFromLocationRef.current = true;
+      onTabChange(locationTab);
+    };
+
+    syncFromLocation();
+    window.addEventListener('popstate', syncFromLocation);
+    window.addEventListener('hashchange', syncFromLocation);
+    return () => {
+      window.removeEventListener('popstate', syncFromLocation);
+      window.removeEventListener('hashchange', syncFromLocation);
+    };
+  }, [onTabChange]);
+
+  useEffect(() => {
+    const canonicalTab = canonicalNavTab(activeTab);
+    const locationTab = navTabFromHash(window.location.hash);
+
+    if (syncingFromLocationRef.current) {
+      if (locationTab === canonicalTab) {
+        syncingFromLocationRef.current = false;
+      }
+      return;
+    }
+
+    if (locationTab === canonicalTab) return;
+
+    const href = navHrefForTab(canonicalTab);
+    window.history.pushState(null, '', href);
+    lastLocationHashRef.current = window.location.hash;
+  }, [activeTab]);
 
   useEffect(() => {
     setIsMoreOpen(false);
@@ -119,7 +168,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           <div className="mv-desktop-nav-rail flex gap-0.5">
             {tabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = canonicalActiveTab === tab.id;
               return (
                 <a
                   key={tab.id}
@@ -158,7 +207,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           >
             {mobileMoreTabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = canonicalActiveTab === tab.id;
               return (
                 <a
                   key={tab.id}
@@ -183,7 +232,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="mv-mobile-nav-grid grid grid-cols-5 h-14">
           {mobilePrimaryTabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = canonicalActiveTab === tab.id;
             return (
               <a
                 key={tab.id}
