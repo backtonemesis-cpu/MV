@@ -715,3 +715,14 @@ Do not declare the global audit complete until all required areas have been reco
 - **Repair contract:** in `.mv-layout-phone` only, convert the existing nested grid wrapper to a single non-wrapping max-content flex row so all five tabs participate in one horizontally scrollable strip. Preserve the five tab identities, ARIA semantics, keyboard behavior, desktop layout, category functionality, finance/storage truth, and theme data.
 - **Code/test status:** WORKING until PR CI passes.
 - **Physical closure gate:** PENDING. After merge/deploy, re-check Settings on iPhone 13 Phone mode and laptop Phone mode. Do not claim physical PASS from source or CI alone.
+
+### PHONE-DENSITY-001 — Summary metrics consume excessive iPhone vertical space
+
+- **Evidence date:** 2026-09-11.
+- **Physical evidence:** current deployed iPhone 13 / Safari / Phone mode shows Income summary metrics (`Expected`, `Received`, `Outstanding`) and Savings summary metrics as full-width stacked cards, consuming most of the initial viewport before schedule/breakdown content becomes visible.
+- **Verified deployed baseline:** `e2f50739fcc0e8ba84db1a6717a888b81f45e42e` (PR #199).
+- **Source diagnosis:** Dashboard already uses a two-column phone metric grid. Income explicitly uses `grid-cols-1 sm:grid-cols-3`; Savings explicitly uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`. The user preference `cardDensity` only changes `.finance-ledger-row` heights and is not the cause of these summary-card layouts.
+- **Repair branch:** `repair/phone-summary-density`.
+- **Repair contract:** Income uses three columns for its three summary metrics on Phone mode; Savings uses two columns for its four summary metrics. Preserve desktop breakpoints, all calculations/values, card-density preference behavior, storage, navigation, themes, and Dashboard hierarchy.
+- **Code/test status:** WORKING until PR CI passes.
+- **Physical closure gate:** PENDING. After merge/deploy, re-check Income and Savings on iPhone 13 Phone mode for readability, no horizontal overflow, and materially improved vertical density.
