@@ -38,6 +38,7 @@ import {
   undoLocalPaymentsPaid,
   undoLocalTransferTransaction,
   getLocalPreferences,
+  importLocalMonth,
   loadLocalHousehold,
   markLocalIncomeReceived,
   markLocalPaymentPaid,
@@ -56,7 +57,6 @@ import {
   updateLocalSavingsGoal,
   updateLocalTransaction,
 } from '../localStore';
-import { importCanonicalLocalMonth } from '../monthRolloverStore';
 
 const OWNER_EMAIL = LOCAL_OWNER.email;
 const OWNER_SESSION: UserSession = {
@@ -330,7 +330,7 @@ export async function importMonth(params: {
   expectedVersion: number;
 }) {
   const { expectedVersion, ...request } = params;
-  return importCanonicalLocalMonth(request, expectedVersion);
+  return importLocalMonth(request, expectedVersion);
 }
 
 export async function createSavingsGoal(
