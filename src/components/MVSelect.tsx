@@ -110,14 +110,19 @@ function calculatePopupPosition(anchor: HTMLElement): PopupPosition {
 }
 
 function focusRelativeTo(anchor: HTMLElement, reverse: boolean): void {
+  const modal = anchor.closest('[role="dialog"][aria-modal="true"]') as HTMLElement | null;
+  const focusScope: ParentNode = modal ?? document;
   const candidates = Array.from(
-    document.querySelectorAll<HTMLElement>(
+    focusScope.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )
   ).filter((element) => !element.closest('[data-mv-select-popover]') && isElementVisible(element));
   const index = candidates.indexOf(anchor);
   if (index < 0) return;
-  const target = candidates[index + (reverse ? -1 : 1)];
+  const nextIndex = index + (reverse ? -1 : 1);
+  const target =
+    candidates[nextIndex] ??
+    (modal ? candidates[reverse ? candidates.length - 1 : 0] : undefined);
   target?.focus({ preventScroll: true });
 }
 

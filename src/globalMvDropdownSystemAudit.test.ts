@@ -160,6 +160,14 @@ describe('global MV dropdown system', () => {
     expect(selectSource).toContain('focus({ preventScroll: true })');
   });
 
+  it('keeps portalled listbox Tab traversal inside the owning modal and wraps at modal edges', () => {
+    expect(selectSource).toContain("anchor.closest('[role=\"dialog\"][aria-modal=\"true\"]')");
+    expect(selectSource).toContain('const focusScope: ParentNode = modal ?? document;');
+    expect(selectSource).toContain('focusScope.querySelectorAll<HTMLElement>');
+    expect(selectSource).toContain('const nextIndex = index + (reverse ? -1 : 1);');
+    expect(selectSource).toContain('(modal ? candidates[reverse ? candidates.length - 1 : 0] : undefined)');
+  });
+
   it('closes on outside pointer interaction and selects one option without nested interactive option controls', () => {
     expect(selectSource).toContain("document.addEventListener('pointerdown', handlePointerDown, true)");
     expect(selectSource).toContain('if (listboxRef.current?.contains(event.target) || anchor.contains(event.target)) return;');
