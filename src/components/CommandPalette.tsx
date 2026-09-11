@@ -106,6 +106,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
+        data-modal-allows-command-shortcut
         tabIndex={-1}
       >
         <div className="mv-command-search-row">
