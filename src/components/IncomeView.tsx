@@ -606,8 +606,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               )}
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Income source</label>
+                <label htmlFor="income-source" className="mb-1 block text-xs font-semibold text-muted">Income source</label>
                 <input
+                  id="income-source"
                   autoFocus
                   value={name}
                   onChange={(event) => setName(event.target.value)}
@@ -619,8 +620,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
               <div className="mv-modal-grid-2">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Expected amount (£)</label>
+                  <label htmlFor="income-expected-amount" className="mb-1 block text-xs font-semibold text-muted">Expected amount (£)</label>
                   <MoneyInput
+                    id="income-expected-amount"
                     value={expectedAmount}
                     onChange={(event) => setExpectedAmount(event.target.value)}
                     className={inputClassName}
@@ -632,8 +634,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Expected date</label>
+                  <label htmlFor="income-expected-date" className="mb-1 block text-xs font-semibold text-muted">Expected date</label>
                   <input
+                    id="income-expected-date"
                     type="date"
                     value={expectedDate}
                     onChange={(event) => setExpectedDate(event.target.value)}
@@ -644,8 +647,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Received by</label>
+                  <label htmlFor="income-received-by" className="mb-1 block text-xs font-semibold text-muted">Received by</label>
                   <select
+                    id="income-received-by"
                     value={sourcePerson}
                     onChange={(event) => setSourcePerson(event.target.value as Payer | '')}
                     className={inputClassName}
@@ -661,8 +665,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Account</label>
+                  <label htmlFor="income-account" className="mb-1 block text-xs font-semibold text-muted">Account</label>
                   <select
+                    id="income-account"
                     value={accountId}
                     onChange={(event) => setAccountId(event.target.value)}
                     className={inputClassName}
@@ -680,11 +685,13 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted">Category (optional)</label>
+                  <label htmlFor="income-category" className="mb-1 block text-xs font-semibold text-muted">Category *</label>
                   <select
+                    id="income-category"
                     value={categoryId}
                     onChange={(event) => setCategoryId(event.target.value)}
                     className={inputClassName}
+                    required
                   >
                     <option value="">Select category</option>
                     {incomeCategories.map((category) => (
@@ -703,8 +710,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               )}
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Notes</label>
+                <label htmlFor="income-notes" className="mb-1 block text-xs font-semibold text-muted">Notes</label>
                 <input
+                  id="income-notes"
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   className={inputClassName}
@@ -774,8 +782,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               )}
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
+                <label htmlFor="income-actual-amount" className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
                 <MoneyInput
+                  id="income-actual-amount"
                   value={actualAmount}
                   onChange={(event) => setActualAmount(event.target.value)}
                   className={inputClassName}
@@ -786,9 +795,10 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Received date</label>
+                <label htmlFor="income-actual-date" className="mb-1 block text-xs font-semibold text-muted">Received date</label>
                 <div className="relative">
                   <input
+                    id="income-actual-date"
                     type="date"
                     value={actualDate}
                     onChange={(event) => setActualDate(event.target.value)}
@@ -799,8 +809,9 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Receiving account</label>
+                <label htmlFor="income-receiving-account" className="mb-1 block text-xs font-semibold text-muted">Receiving account</label>
                 <select
+                  id="income-receiving-account"
                   value={accountId}
                   onChange={(event) => setAccountId(event.target.value)}
                   className={inputClassName}

@@ -104,8 +104,9 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
 
           <div className="mv-modal-grid-2">
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
+              <label htmlFor="payment-actual-amount" className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
               <MoneyInput
+                id="payment-actual-amount"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-xs text-main"
@@ -115,8 +116,9 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-semibold text-muted">Actual date</label>
+              <label htmlFor="payment-actual-date" className="mb-1 block text-xs font-semibold text-muted">Actual date</label>
               <input
+                id="payment-actual-date"
                 type="date"
                 value={date}
                 onChange={(event) => setDate(event.target.value)}
@@ -127,8 +129,9 @@ export const MarkPaymentPaidModal: React.FC<MarkPaymentPaidModalProps> = ({
           </div>
 
           <div>
-            <label className="mb-1 block text-xs font-semibold text-muted">Paid from</label>
+            <label htmlFor="payment-account" className="mb-1 block text-xs font-semibold text-muted">Paid from</label>
             <select
+              id="payment-account"
               value={accountId}
               onChange={(event) => setAccountId(event.target.value)}
               className="w-full rounded-lg border border-muted bg-surface px-3 py-2 text-xs text-main"

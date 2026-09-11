@@ -605,8 +605,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex-1">
-                  <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
+                  <label htmlFor="settings-add-member-name" className="mb-1 block text-xs font-semibold text-muted">Name</label>
                   <input
+                    id="settings-add-member-name"
                     ref={memberNameInputRef}
                     value={memberName}
                     onChange={(event) => setMemberName(event.target.value)}
@@ -656,8 +657,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     {editingMemberId === member.id ? (
                       <div className="space-y-3">
                         <div>
-                          <label className="mb-1 block text-xs font-semibold text-muted">Name</label>
+                          <label htmlFor={`settings-edit-member-name-${member.id}`} className="mb-1 block text-xs font-semibold text-muted">Name</label>
                           <input
+                            id={`settings-edit-member-name-${member.id}`}
                             autoFocus
                             value={editMemberName}
                             onChange={(event) => setEditMemberName(event.target.value)}
@@ -870,19 +872,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               )}
 
               <form onSubmit={handleRestoreSubmit} className="mv-settings-restore-stack">
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="mv-settings-file w-full"
-                />
-                <textarea
-                  value={restoreJson}
-                  onChange={(e) => setRestoreJson(e.target.value)}
-                  placeholder="Paste backup JSON"
-                  rows={4}
-                  className="mv-settings-textarea w-full font-mono"
-                />
+                <div>
+                  <label htmlFor="settings-restore-file" className="mb-1 block text-xs font-semibold text-muted">
+                    Backup JSON file
+                  </label>
+                  <input
+                    id="settings-restore-file"
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileUpload}
+                    className="mv-settings-file w-full"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="settings-restore-json" className="mb-1 block text-xs font-semibold text-muted">
+                    Backup JSON payload
+                  </label>
+                  <textarea
+                    id="settings-restore-json"
+                    value={restoreJson}
+                    onChange={(e) => setRestoreJson(e.target.value)}
+                    placeholder="Paste backup JSON"
+                    rows={4}
+                    className="mv-settings-textarea w-full font-mono"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={!restoreJson.trim() || isRestoring}

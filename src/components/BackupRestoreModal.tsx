@@ -166,22 +166,32 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({
               </div>
             ) : (
               <div className="space-y-3">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="block w-full"
-                />
+                <div>
+                  <label htmlFor="backup-restore-file" className="mb-1 block text-xs font-semibold text-muted">
+                    Backup JSON file
+                  </label>
+                  <input
+                    id="backup-restore-file"
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileUpload}
+                    className="block w-full"
+                  />
+                </div>
 
-                <textarea
-                  placeholder="Paste backup JSON"
-                  value={importJson}
-                  onChange={(e) => setImportJson(e.target.value)}
-                  className="w-full font-mono"
-                />
-
-
+                <div>
+                  <label htmlFor="backup-restore-json" className="mb-1 block text-xs font-semibold text-muted">
+                    Backup JSON payload
+                  </label>
+                  <textarea
+                    id="backup-restore-json"
+                    placeholder="Paste backup JSON"
+                    value={importJson}
+                    onChange={(e) => setImportJson(e.target.value)}
+                    className="w-full font-mono"
+                  />
+                </div>
               </div>
             )}
           </section>

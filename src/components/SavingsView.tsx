@@ -698,8 +698,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               )}
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Goal Name</label>
+                <label htmlFor="savings-goal-create-name" className="mb-1 block text-xs font-semibold text-muted">Goal Name</label>
                 <input
+                  id="savings-goal-create-name"
                   autoFocus
                   type="text"
                   value={goalName}
@@ -711,8 +712,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Target (£)</label>
+                <label htmlFor="savings-goal-create-target" className="mb-1 block text-xs font-semibold text-muted">Target (£)</label>
                 <MoneyInput
+                  id="savings-goal-create-target"
                   value={goalTargetStr}
                   onChange={(event) => setGoalTargetStr(event.target.value)}
                   className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
@@ -724,10 +726,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">
+                <label htmlFor="savings-goal-create-monthly-plan" className="mb-1 block text-xs font-semibold text-muted">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
                 <MoneyInput
+                  id="savings-goal-create-monthly-plan"
                   value={goalMonthlyPlanStr}
                   onChange={(event) => setGoalMonthlyPlanStr(event.target.value)}
                   className="h-11 w-full rounded-xl border border-muted bg-surface-muted px-3.5 text-sm text-main focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft"
@@ -738,8 +741,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-muted">Target Date</label>
+                <label htmlFor="savings-goal-create-date" className="mb-1 block text-xs font-semibold text-muted">Target Date</label>
                 <input
+                  id="savings-goal-create-date"
                   type="date"
                   value={goalDate}
                   onChange={(event) => setGoalDate(event.target.value)}
@@ -797,10 +801,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               {error && <div className="mv-savings-warning-banner">{error}</div>}
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="savings-transfer-source" className="block text-xs font-semibold text-muted mb-1">
                   Source account
                 </label>
                 <select
+                  id="savings-transfer-source"
                   value={sourceAccountId}
                   onChange={(e) => setSourceAccountId(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
@@ -827,10 +832,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="savings-transfer-destination" className="block text-xs font-semibold text-muted mb-1">
                   Savings destination
                 </label>
                 <select
+                  id="savings-transfer-destination"
                   value={destinationAccountId}
                   onChange={(e) => setDestinationAccountId(e.target.value)}
                   className="w-full px-3 py-2 bg-surface border border-muted rounded-xl text-xs text-main focus:ring-2 focus:ring-accent focus:outline-none"
@@ -862,10 +868,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="savings-transfer-amount" className="block text-xs font-semibold text-muted mb-1">
                   Amount (£)
                 </label>
                 <MoneyInput
+                  id="savings-transfer-amount"
                   wrapperClassName="min-w-0"
                   type="text"
                   inputMode="decimal"
@@ -926,10 +933,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
 
             <form onSubmit={handleEditGoalSubmit} className="mv-modal-form">
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="savings-goal-edit-name" className="block text-xs font-semibold text-muted mb-1">
                   Pot Name
                 </label>
                 <input
+                  id="savings-goal-edit-name"
                   autoFocus
                   type="text"
                   value={goalName}
@@ -939,9 +947,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                 />
               </div>
 
-                            <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
+              <div>
+                <label htmlFor="savings-goal-edit-target" className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
                 <MoneyInput
+                  id="savings-goal-edit-target"
                   type="text"
                   value={goalTargetStr}
                   onChange={(e) => setGoalTargetStr(e.target.value)}
@@ -953,10 +962,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="savings-goal-edit-monthly-plan" className="block text-xs font-semibold text-muted mb-1">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
                 <MoneyInput
+                  id="savings-goal-edit-monthly-plan"
                   type="text"
                   value={goalMonthlyPlanStr}
                   onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
@@ -968,10 +978,11 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="savings-goal-edit-date" className="block text-xs font-semibold text-muted mb-1">
                   Target Date
                 </label>
                 <input
+                  id="savings-goal-edit-date"
                   type="date"
                   value={goalDate}
                   onChange={(e) => setGoalDate(e.target.value)}

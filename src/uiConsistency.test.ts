@@ -125,7 +125,8 @@ describe('Global finance UI consistency contract', () => {
     expect(income).toContain("setCategoryId('')");
     expect(income).toContain("setExpectedDate('')");
     expect(income).toContain('Select account');
-    expect(income).toContain('Category (optional)');
+    expect(income).toContain('<option value="">Select category</option>');
+    expect(income).toContain('Category *</label>');
     expect(income).not.toContain('Select receiving account');
 
     expect(bill).toContain("payment?.accountId || ''");

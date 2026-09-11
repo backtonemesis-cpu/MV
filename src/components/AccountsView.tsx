@@ -1354,7 +1354,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </div>
               </div>
 
-              {/* Real-time Discrepancy Card */}
               {(() => {
                 const enteredPence = parseHumanPoundsToPence(reconcileBalanceStr);
                 const currentShownPence =
@@ -1562,10 +1561,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             <form onSubmit={handleGoalSubmit} className="mv-modal-form">
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="accounts-goal-create-name" className="block text-xs font-semibold text-muted mb-1">
                   Goal Name
                 </label>
                 <input
+                  id="accounts-goal-create-name"
                   autoFocus
                   type="text"
                   value={goalName}
@@ -1577,10 +1577,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="accounts-goal-create-target" className="block text-xs font-semibold text-muted mb-1">
                   Target (£)
                 </label>
                 <MoneyInput
+                  id="accounts-goal-create-target"
                   type="text"
                   value={goalTargetStr}
                   onChange={(e) => setGoalTargetStr(e.target.value)}
@@ -1593,10 +1594,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="accounts-goal-create-monthly-plan" className="block text-xs font-semibold text-muted mb-1">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
                 <MoneyInput
+                  id="accounts-goal-create-monthly-plan"
                   type="text"
                   value={goalMonthlyPlanStr}
                   onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
@@ -1608,10 +1610,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="accounts-goal-create-date" className="block text-xs font-semibold text-muted mb-1">
                   Target Date (Optional)
                 </label>
                 <input
+                  id="accounts-goal-create-date"
                   type="date"
                   value={goalDate}
                   onChange={(e) => setGoalDate(e.target.value)}
@@ -1673,8 +1676,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Goal Name</label>
+                <label htmlFor="accounts-goal-edit-name" className="block text-xs font-semibold text-muted mb-1">Goal Name</label>
                 <input
+                  id="accounts-goal-edit-name"
                   autoFocus
                   type="text"
                   value={goalName}
@@ -1685,8 +1689,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
+                <label htmlFor="accounts-goal-edit-target" className="block text-xs font-semibold text-muted mb-1">Target (£)</label>
                 <MoneyInput
+                  id="accounts-goal-edit-target"
                   type="text"
                   value={goalTargetStr}
                   onChange={(e) => setGoalTargetStr(e.target.value)}
@@ -1698,10 +1703,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">
+                <label htmlFor="accounts-goal-edit-monthly-plan" className="block text-xs font-semibold text-muted mb-1">
                   Monthly Saving Plan (£) <span className="font-normal text-subtle">optional</span>
                 </label>
                 <MoneyInput
+                  id="accounts-goal-edit-monthly-plan"
                   type="text"
                   value={goalMonthlyPlanStr}
                   onChange={(e) => setGoalMonthlyPlanStr(e.target.value)}
@@ -1713,8 +1719,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Target Date</label>
+                <label htmlFor="accounts-goal-edit-date" className="block text-xs font-semibold text-muted mb-1">Target Date</label>
                 <input
+                  id="accounts-goal-edit-date"
                   type="date"
                   value={goalDate}
                   onChange={(e) => setGoalDate(e.target.value)}
