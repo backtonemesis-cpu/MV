@@ -1,4 +1,5 @@
 import { CategorySettings } from './CategorySettings';
+import { ConfirmActionDialog } from './ConfirmActionDialog';
 import type { HouseholdData } from '../types';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -106,6 +107,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editMemberName, setEditMemberName] = useState('');
   const [isUpdatingMember, setIsUpdatingMember] = useState(false);
+  const [pendingMemberRemoval, setPendingMemberRemoval] = useState<HouseholdMember | null>(null);
   const memberNameInputRef = useRef<HTMLInputElement>(null);
 
   const settingsTabOrder = ['categories', 'appearance', 'members', 'audit', 'backup'] as const;
@@ -767,15 +769,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             </button>
                             <button
                               type="button"
-                              onClick={() => {
-                                if (
-                                  window.confirm(
-                                    `Remove ${member.name} from future household selections? Historical records will be kept.`
-                                  )
-                                ) {
-                                  onRemoveMember(member.id);
-                                }
-                              }}
+                              onClick={() => setPendingMemberRemoval(member)}
                               className="h-9 rounded-xl border border-danger bg-danger-soft px-3 text-xs font-semibold text-danger transition hover:opacity-80"
                             >
                               Remove
@@ -1042,6 +1036,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       )}
       </div>
+
+      <ConfirmActionDialog
+        open={Boolean(pendingMemberRemoval)}
+        title="Remove household member?"
+        description={
+          pendingMemberRemoval
+            ? `Remove ${pendingMemberRemoval.name} from future household selections? Historical records will be kept.`
+            : ''
+        }
+        confirmLabel="Remove"
+        onClose={() => setPendingMemberRemoval(null)}
+        onConfirm={async () => {
+          if (!pendingMemberRemoval) return;
+          await onRemoveMember(pendingMemberRemoval.id);
+          setPendingMemberRemoval(null);
+        }}
+      />
     </div>
   );
 };

@@ -25,6 +25,7 @@ import { localDateInputValue } from '../utils/dateInput';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
+import { ConfirmActionDialog } from './ConfirmActionDialog';
 
 interface IncomeViewProps {
   incomes: PlannedIncome[];
@@ -65,6 +66,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [selectedIncome, setSelectedIncome] = useState<PlannedIncome | null>(null);
+  const [pendingIncomeDeletion, setPendingIncomeDeletion] = useState<PlannedIncome | null>(null);
 
   const [name, setName] = useState('');
   const [expectedAmount, setExpectedAmount] = useState('');
@@ -307,15 +309,22 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
     }
   };
 
-  const removeIncome = async (income: PlannedIncome) => {
+  const requestRemoveIncome = (income: PlannedIncome) => {
     if (income.actualTransactionId || income.linkedTransactionId) return;
-    if (!window.confirm(`Delete expected income "${income.name}"?`)) return;
+    setError(null);
+    setPendingIncomeDeletion(income);
+  };
+
+  const removeIncome = async (income: PlannedIncome): Promise<boolean> => {
+    if (income.actualTransactionId || income.linkedTransactionId) return false;
 
     try {
       setError(null);
       await onDeleteIncome(income.id);
+      return true;
     } catch (err: any) {
       setError(err.message || 'Failed to delete income.');
+      return false;
     }
   };
 
@@ -551,7 +560,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
                                 {!hasReceiptEvidence && (
                                   <button
                                     type="button"
-                                    onClick={(event) => { event.stopPropagation(); removeIncome(income); }}
+                                    onClick={(event) => { event.stopPropagation(); requestRemoveIncome(income); }}
                                     className="finance-action-button is-danger"
                                     title="Delete expected income"
                                     aria-label={`Delete ${income.name}`}
@@ -850,6 +859,34 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {pendingIncomeDeletion && (
+        <ConfirmActionDialog
+          title="Delete expected income?"
+          description={
+            <>
+              Delete expected income <strong>“{pendingIncomeDeletion.name}”</strong>? No received
+              transaction is linked to this expected-income record.
+            </>
+          }
+          confirmLabel="Delete income"
+          busy={isSubmitting}
+          error={error}
+          onCancel={() => {
+            setPendingIncomeDeletion(null);
+            setError(null);
+          }}
+          onConfirm={async () => {
+            if (isSubmitting) return;
+            const income = pendingIncomeDeletion;
+            if (!income) return;
+            setIsSubmitting(true);
+            const deleted = await removeIncome(income);
+            setIsSubmitting(false);
+            if (deleted) setPendingIncomeDeletion(null);
+          }}
+        />
       )}
     </div>
   );

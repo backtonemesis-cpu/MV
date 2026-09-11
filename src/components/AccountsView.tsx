@@ -29,6 +29,7 @@ import { accountIdentityLabel } from '../utils/accountDisplay';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import type { AccountPermanentDeleteEligibility } from '../utils/accountDeletion';
 import { MoneyInput } from './MoneyInput';
+import { ConfirmActionDialog } from './ConfirmActionDialog';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -78,6 +79,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   const [deleteAccountTarget, setDeleteAccountTarget] = useState<Account | null>(null);
   const [archiveAccountTarget, setArchiveAccountTarget] = useState<Account | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
+  const [pendingGoalDeletion, setPendingGoalDeletion] = useState<{
+    goal: SavingsGoal;
+    returnToEdit: boolean;
+  } | null>(null);
   const [showArchived, setShowArchived] = useState(false);
 
   // New Account form state
@@ -479,10 +484,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
-  const handleDeleteGoal = async (goal: SavingsGoal) => {
-    if (!confirm(`Delete savings pot "${goal.name}"? This removes the goal only and does not delete account transactions.`)) {
-      return;
-    }
+  const requestDeleteGoal = (goal: SavingsGoal, returnToEdit = false) => {
+    if (returnToEdit) setShowEditGoalModal(false);
+    setError(null);
+    setPendingGoalDeletion({ goal, returnToEdit });
+  };
+
+  const handleDeleteGoal = async (goal: SavingsGoal): Promise<boolean> => {
     try {
       setError(null);
       await onDeleteSavingsGoal(goal.id);
@@ -490,8 +498,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         setSelectedGoal(null);
         setShowEditGoalModal(false);
       }
+      return true;
     } catch (err: any) {
       setError(err.message || 'Failed to delete savings pot');
+      return false;
     }
   };
 
@@ -830,7 +840,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => handleDeleteGoal(goal)}
+                        onClick={() => requestDeleteGoal(goal)}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -1732,7 +1742,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="mv-modal-actions justify-between">
                 <button
                   type="button"
-                  onClick={() => handleDeleteGoal(selectedGoal)}
+                  onClick={() => selectedGoal && requestDeleteGoal(selectedGoal, true)}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-danger bg-danger-soft px-4 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -1762,6 +1772,39 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {pendingGoalDeletion && (
+        <ConfirmActionDialog
+          title="Delete savings goal?"
+          description={
+            <>
+              Delete savings pot <strong>“{pendingGoalDeletion.goal.name}”</strong>? This removes
+              the goal only and does not delete account transactions.
+            </>
+          }
+          confirmLabel="Delete goal"
+          busy={isSubmitting}
+          error={error}
+          onCancel={() => {
+            const pending = pendingGoalDeletion;
+            setPendingGoalDeletion(null);
+            setError(null);
+            if (pending.returnToEdit) {
+              setSelectedGoal(pending.goal);
+              setShowEditGoalModal(true);
+            }
+          }}
+          onConfirm={async () => {
+            if (isSubmitting) return;
+            const pending = pendingGoalDeletion;
+            if (!pending) return;
+            setIsSubmitting(true);
+            const deleted = await handleDeleteGoal(pending.goal);
+            setIsSubmitting(false);
+            if (deleted) setPendingGoalDeletion(null);
+          }}
+        />
       )}
     </div>
   );

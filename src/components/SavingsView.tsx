@@ -18,6 +18,7 @@ import {
 } from '../utils/currency';
 import { accountIdentityLabel, accountOptionLabel } from '../utils/accountDisplay';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { ConfirmActionDialog } from './ConfirmActionDialog';
 import { MoneyInput } from './MoneyInput';
 
 interface SavingsViewProps {
@@ -59,6 +60,10 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [showEditGoalModal, setShowEditGoalModal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null);
+  const [pendingGoalDeletion, setPendingGoalDeletion] = useState<{
+    goal: SavingsGoal;
+    returnToEdit: boolean;
+  } | null>(null);
 
   // New Goal form state
   const [goalName, setGoalName] = useState('');
@@ -203,11 +208,12 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
     }
   };
 
-  const handleDeleteGoal = async (goal: SavingsGoal) => {
-    if (!confirm(`Delete savings pot "${goal.name}"? This removes the goal only and does not delete any account transactions.`)) {
-      return;
-    }
+  const requestDeleteGoal = (goal: SavingsGoal, returnToEdit = false) => {
+    if (returnToEdit) setShowEditGoalModal(false);
+    setPendingGoalDeletion({ goal, returnToEdit });
+  };
 
+  const handleDeleteGoal = async (goal: SavingsGoal) => {
     try {
       setError(null);
       await onDeleteSavingsGoal(goal.id);
@@ -217,7 +223,9 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
         setShowTransferModal(false);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to delete savings pot');
+      const message = err.message || 'Failed to delete savings pot';
+      setError(message);
+      throw new Error(message);
     }
   };
 
@@ -589,7 +597,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDeleteGoal(goal)}
+                            onClick={() => requestDeleteGoal(goal)}
                             className="shrink-0 whitespace-nowrap inline-flex items-center gap-1 rounded-full bg-danger-soft px-3 py-1.5 text-[13px] font-medium text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -993,7 +1001,7 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
               <div className="mv-modal-actions justify-between">
                 <button
                   type="button"
-                  onClick={() => handleDeleteGoal(selectedGoal)}
+                  onClick={() => requestDeleteGoal(selectedGoal, true)}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-danger bg-danger-soft px-4 py-2 text-xs font-semibold text-danger transition-all hover:opacity-80 active:scale-[0.98]"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -1021,6 +1029,26 @@ export const SavingsView: React.FC<SavingsViewProps> = ({
           </div>
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={Boolean(pendingGoalDeletion)}
+        title="Delete savings goal?"
+        description={
+          pendingGoalDeletion
+            ? `Delete savings pot "${pendingGoalDeletion.goal.name}"? This removes the goal only and does not delete any account transactions.`
+            : ''
+        }
+        confirmLabel="Delete goal"
+        onClose={() => {
+          if (pendingGoalDeletion?.returnToEdit) setShowEditGoalModal(true);
+          setPendingGoalDeletion(null);
+        }}
+        onConfirm={async () => {
+          if (!pendingGoalDeletion) return;
+          await handleDeleteGoal(pendingGoalDeletion.goal);
+          setPendingGoalDeletion(null);
+        }}
+      />
     </div>
   );
 };
