@@ -182,10 +182,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     return options;
   }, [members, ownerOptions, selectedAccount]);
 
+  // Filter accounts
   const displayedAccounts = useMemo(() => {
     return accounts.filter((a) => (showArchived ? true : a.isActive !== false));
   }, [accounts, showArchived]);
 
+  // Group accounts by financial role. Joint current accounts belong with current accounts,
+  // while cash is treated as a liquid savings asset.
   const currentAccounts = useMemo(
     () => displayedAccounts.filter((account) => account.type === 'current' || account.type === 'joint'),
     [displayedAccounts]
@@ -213,6 +216,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     [accounts]
   );
 
+  // Account creation
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!accName.trim()) {
@@ -257,6 +261,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
+  // Open Edit Modal
   const openEditModal = (acc: Account) => {
     setSelectedAccount(acc);
     setEditName(acc.name);
@@ -276,6 +281,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setShowEditModal(true);
   };
 
+  // Handle Edit Submit
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAccount) return;
@@ -304,6 +310,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
+  // Open Reconcile Modal
   const openReconcileModal = (acc: Account) => {
     setSelectedAccount(acc);
     const shownBalancePence =
@@ -316,6 +323,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     setShowReconcileModal(true);
   };
 
+  // Handle Reconcile Submit
   const handleReconcileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAccount) return;
@@ -348,11 +356,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
+  // Open Activity Modal
   const openActivityModal = (acc: Account) => {
     setSelectedAccount(acc);
     setShowActivityModal(true);
   };
 
+  // Archive is a dedicated audited status transition; generic Edit cannot bypass it.
   const openArchiveDialog = (acc: Account) => {
     setArchiveAccountTarget(acc);
     setError(null);
@@ -415,6 +425,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
+  // Savings goals are household targets, not account-specific allocations.
   const handleGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!goalName.trim()) return;
@@ -494,6 +505,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     }
   };
 
+  // Account activity transactions
   const accountActivityTxs = useMemo(() => {
     if (!selectedAccount) return [];
     return transactions.filter(
@@ -680,6 +692,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Accounts Workspace */}
       <div>
         <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
           <h1 className="text-xl font-bold tracking-tight text-main">Accounts</h1>
@@ -735,6 +748,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         )}
       </div>
 
+      {/* Savings Goals Section */}
       <section className="pt-1">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -841,6 +855,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         )}
       </section>
 
+      {/* MODAL: Archive account confirmation */}
       {showArchiveAccountModal && archiveAccountTarget && (
         <div className="mv-modal-backdrop">
           <div
@@ -924,6 +939,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Permanent account deletion */}
       {showDeleteAccountModal && deleteAccountTarget && (
         <div className="mv-modal-backdrop">
           <div
@@ -1004,6 +1020,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Add Account */}
       {showAccModal && (
         <div className="mv-modal-backdrop">
           <div
@@ -1147,6 +1164,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Edit Account */}
       {showEditModal && selectedAccount && (
         <div className="mv-modal-backdrop">
           <div
@@ -1282,6 +1300,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Reconcile Balance */}
       {showReconcileModal && selectedAccount && (
         <div className="mv-modal-backdrop">
           <div
@@ -1422,6 +1441,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Account Activity Ledger */}
       {showActivityModal && selectedAccount && (
         <div className="mv-modal-backdrop">
           <div
@@ -1524,6 +1544,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Add Savings Goal */}
       {showGoalModal && (
         <div className="mv-modal-backdrop">
           <div
@@ -1632,6 +1653,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         </div>
       )}
 
+      {/* MODAL: Edit Savings Goal */}
       {showEditGoalModal && selectedGoal && (
         <div className="mv-modal-backdrop">
           <div
