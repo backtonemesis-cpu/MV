@@ -1,0 +1,57 @@
+name: Repair PHONE-DENSITY-001 cascade
+
+on:
+  push:
+    branches:
+      - repair/phone-summary-density-cascade
+    paths:
+      - scripts/repair-phone-summary-density-cascade.py
+      - .github/workflows/repair-phone-summary-density-cascade.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repair branch
+        uses: actions/checkout@v5
+        with:
+          ref: repair/phone-summary-density-cascade
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Apply guarded corrective repair
+        run: python3 scripts/repair-phone-summary-density-cascade.py
+
+      - name: Verify patch whitespace
+        run: git diff --check
+
+      - name: Run focused PHONE-DENSITY-001 regression
+        run: npx vitest run src/phoneSummaryDensityAudit.test.ts
+
+      - name: Remove temporary repair tooling
+        run: |
+          rm scripts/repair-phone-summary-density-cascade.py
+          rm .github/workflows/repair-phone-summary-density-cascade.yml
+
+      - name: Verify final staged diff
+        run: |
+          git add -A
+          git diff --cached --check
+          git status --short
+
+      - name: Commit cleaned corrective repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Correct Phone summary density cascade"
+          git push origin HEAD:repair/phone-summary-density-cascade
