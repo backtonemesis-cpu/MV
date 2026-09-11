@@ -164,6 +164,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   const [selectionBusyId, setSelectionBusyId] =
     useState<string | null>(null);
   const [bulkSelectionBusy, setBulkSelectionBusy] = useState(false);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const [paymentActionSelectedIds, setPaymentActionSelectedIds] =
     useState<Record<string, boolean>>({});
   const [bulkPaymentDialog, setBulkPaymentDialog] = useState<{
@@ -272,11 +273,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     if (isViewOnly || isPaymentSelectionLocked(payment)) return;
     try {
       setSelectionBusyId(payment.id);
+      setSelectionError(null);
       await onUpdatePlannedPayment(payment.id, {
         includeInTransferPlan: !payment.includeInTransferPlan,
       });
     } catch (error: any) {
-      window.alert(error.message || 'Failed to update Transfer Plan selection.');
+      setSelectionError(
+        error.message || 'Failed to update Transfer Plan selection.'
+      );
     } finally {
       setSelectionBusyId(null);
     }
@@ -300,6 +304,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
 
     try {
       setBulkSelectionBusy(true);
+      setSelectionError(null);
       await onBulkTogglePlannedPayments({
         month: selectedMonth,
         include,
@@ -307,7 +312,9 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
         paymentIds: eligiblePaymentIds,
       });
     } catch (error: any) {
-      window.alert(error.message || 'Failed to update Transfer Plan selection.');
+      setSelectionError(
+        error.message || 'Failed to update Transfer Plan selection.'
+      );
     } finally {
       setBulkSelectionBusy(false);
     }
@@ -990,6 +997,16 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
             </div>
           )}
         </div>
+
+        {selectionError && (
+          <div
+            className="mx-3 mt-3 flex items-start gap-2 rounded-lg border border-danger bg-danger-soft px-3 py-2 text-xs text-danger"
+            role="alert"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{selectionError}</span>
+          </div>
+        )}
 
         {monthPayments.length === 0 ? (
           <div className="p-5 text-center text-xs text-subtle">
