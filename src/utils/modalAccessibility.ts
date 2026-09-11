@@ -128,10 +128,11 @@ export function useModalAccessibility<T extends HTMLElement>(
       const current = document.activeElement;
       if (current instanceof HTMLElement && dialog.contains(current)) return;
 
-      const first = dialog.querySelector<HTMLElement>(
-        '[autofocus], [data-modal-initial-focus], ' + FOCUSABLE_SELECTOR
-      );
-      (first || dialog).focus({ preventScroll: true });
+      const initialFocus =
+        dialog.querySelector<HTMLElement>('[data-modal-initial-focus]') ??
+        dialog.querySelector<HTMLElement>('[autofocus]') ??
+        dialog.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (initialFocus || dialog).focus({ preventScroll: true });
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
