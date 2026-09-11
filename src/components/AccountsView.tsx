@@ -1576,7 +1576,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </label>
                 <input
                   id="accounts-goal-create-name"
-                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}
@@ -1673,6 +1672,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   setSelectedGoal(null);
                 }}
                 className="mv-modal-close"
+                aria-label="Close edit savings goal"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1689,7 +1689,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <label htmlFor="accounts-goal-edit-name" className="block text-xs font-semibold text-muted mb-1">Goal Name</label>
                 <input
                   id="accounts-goal-edit-name"
-                  autoFocus
                   type="text"
                   value={goalName}
                   onChange={(e) => setGoalName(e.target.value)}

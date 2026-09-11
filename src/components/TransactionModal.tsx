@@ -1040,6 +1040,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                                 onClick={() => handleRemoveSplitRow(idx)}
                                 className="p-1 text-muted text-subtle hover:text-danger transition"
                                 title="Remove split"
+                                aria-label={`Remove split ${idx + 1}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
