@@ -41,6 +41,19 @@ describe('Shared modal stack and background isolation contract', () => {
     expect(helper).toContain("document.addEventListener('keydown', handleKeyDown, true)");
   });
 
+  it('prioritizes an explicit safe initial-focus target before autofocus or generic focusables', () => {
+    const safeFocusLookup = "dialog.querySelector<HTMLElement>('[data-modal-initial-focus]')";
+    const autofocusLookup = "dialog.querySelector<HTMLElement>('[autofocus]')";
+    const genericLookup = 'dialog.querySelector<HTMLElement>(FOCUSABLE_SELECTOR)';
+
+    expect(helper).toContain(safeFocusLookup);
+    expect(helper).toContain(autofocusLookup);
+    expect(helper).toContain(genericLookup);
+    expect(helper.indexOf(safeFocusLookup)).toBeLessThan(helper.indexOf(autofocusLookup));
+    expect(helper.indexOf(autofocusLookup)).toBeLessThan(helper.indexOf(genericLookup));
+    expect(helper).not.toContain("'[autofocus], [data-modal-initial-focus], '");
+  });
+
   it('restores focus only when the remaining top modal contains the return target', () => {
     expect(helper).toContain('const remainingTop = getTopModal()');
     expect(helper).toContain('remainingTop && !remainingTop.dialog.contains(returnTarget)');
