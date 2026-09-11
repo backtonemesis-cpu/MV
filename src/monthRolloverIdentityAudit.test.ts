@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlannedIncome, PlannedPayment } from './types';
 import {
   createBlankLocalHousehold,
-  importLocalMonth,
   loadLocalHousehold,
   saveLocalHousehold,
 } from './localStore';
+import { importCanonicalLocalMonth } from './monthRolloverStore';
 import {
   isRolloverIncomeDuplicate,
   isRolloverPaymentDuplicate,
@@ -207,7 +207,7 @@ describe('Prepare Next Month canonical identity', () => {
     ];
     saveLocalHousehold(state);
 
-    const first = importLocalMonth(
+    const first = importCanonicalLocalMonth(
       {
         sourceMonth: '2026-09',
         targetMonth: '2026-10',
@@ -220,7 +220,7 @@ describe('Prepare Next Month canonical identity', () => {
     expect(first.importedPayments).toBe(2);
     expect(first.importedIncomes).toBe(2);
 
-    let current = loadLocalHousehold();
+    const current = loadLocalHousehold();
     expect(
       current.plannedPayments
         .filter((item) => item.month === '2026-10')
@@ -234,7 +234,7 @@ describe('Prepare Next Month canonical identity', () => {
         .sort()
     ).toEqual(['2026-10-10', '2026-10-25']);
 
-    const second = importLocalMonth(
+    const second = importCanonicalLocalMonth(
       {
         sourceMonth: '2026-09',
         targetMonth: '2026-10',
@@ -247,20 +247,28 @@ describe('Prepare Next Month canonical identity', () => {
     expect(second.imported).toBe(0);
   });
 
-  it('keeps UI preflight and storage mutation wired to the same shared helper', () => {
+  it('keeps UI preflight and the production API on the same canonical rollover path', () => {
     const modalSource = fs.readFileSync(
       path.resolve(process.cwd(), 'src/components/MonthImportModal.tsx'),
       'utf8'
     );
+    const apiSource = fs.readFileSync(
+      path.resolve(process.cwd(), 'src/utils/api.ts'),
+      'utf8'
+    );
     const storeSource = fs.readFileSync(
-      path.resolve(process.cwd(), 'src/localStore.ts'),
+      path.resolve(process.cwd(), 'src/monthRolloverStore.ts'),
       'utf8'
     );
 
     expect(modalSource).toContain('isRolloverPaymentDuplicate');
     expect(modalSource).toContain('isRolloverIncomeDuplicate');
+    expect(apiSource).toContain("import { importCanonicalLocalMonth } from '../monthRolloverStore';");
+    expect(apiSource).toContain('return importCanonicalLocalMonth(request, expectedVersion);');
+    expect(apiSource).not.toContain('importLocalMonth,');
     expect(storeSource).toContain('isRolloverPaymentDuplicate');
     expect(storeSource).toContain('isRolloverIncomeDuplicate');
     expect(storeSource).toContain('shiftRolloverDateToMonth');
+    expect(storeSource).toContain('mutateLocalHousehold(');
   });
 });
