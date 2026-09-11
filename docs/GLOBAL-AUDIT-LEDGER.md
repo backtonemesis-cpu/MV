@@ -704,3 +704,14 @@ Every continuation must follow this order:
 ### Final global-completion gate
 
 Do not declare the global audit complete until all required areas have been reconciled on current deployed `main`, including Dashboard, Activity, Accounts, Income, Savings, Transfer Plan, Settings, Categories, Budget, Prepare Next Month, Backup/Restore, all reachable modals/selectors/date controls, Desktop, Phone mode, physical iPhone 13 Safari, PC mode on iPhone, repeated PC↔Phone switching, keyboard/focus/accessibility, financial reconciliation and storage/backup integrity.
+
+### PHONE-SET-001 — Settings tabs stack instead of forming the Phone-mode tab strip
+
+- **Evidence date:** 2026-09-11.
+- **Physical evidence:** current deployed iPhone 13 / Safari / Phone mode shows `Categories` visually detached above `Appearance`, `Household`, `Audit`, and `Backup`, with the remaining tabs stacked vertically inside a tall Settings navigation card.
+- **Verified deployed baseline:** `8f44092df25ecd733136e16598e49f7e12c45909` (PR #198).
+- **Source root cause:** `SettingsView.tsx` correctly exposes five ARIA tabs but nests them in a responsive `grid grid-cols-2 ... sm:grid-cols-5` wrapper. Phone-mode CSS makes the outer `.mv-settings-tabs` horizontally scrollable and styles `.mv-settings-tab`, but does not neutralise the nested grid, so the two-column grid wins visually.
+- **Repair branch:** `repair/phone-settings-tab-strip`.
+- **Repair contract:** in `.mv-layout-phone` only, convert the existing nested grid wrapper to a single non-wrapping max-content flex row so all five tabs participate in one horizontally scrollable strip. Preserve the five tab identities, ARIA semantics, keyboard behavior, desktop layout, category functionality, finance/storage truth, and theme data.
+- **Code/test status:** WORKING until PR CI passes.
+- **Physical closure gate:** PENDING. After merge/deploy, re-check Settings on iPhone 13 Phone mode and laptop Phone mode. Do not claim physical PASS from source or CI alone.
