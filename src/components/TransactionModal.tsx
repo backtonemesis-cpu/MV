@@ -13,7 +13,7 @@ import {
 import { formatPence, parseToPence } from '../utils/currency';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import { resolveAccountOwnerPayer } from '../utils/accountOwner';
-import { localDateInputValue } from '../utils/dateInput';
+import { localDateInputValue, localMonthInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
@@ -98,7 +98,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   categories,
   categoryGroups,
   members,
-  activeMonth = '2026-09',
+  activeMonth = localMonthInputValue(),
   isSubmitting,
 }) => {
   const {
@@ -161,7 +161,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   };
 
   const clearBillOnlyDraft = () => {
-    setBillMonth(activeMonth || '2026-09');
+    setBillMonth(activeMonth || localMonthInputValue());
     setBillDueDate('');
     setBillIncludeInTransferPlan(false);
     setBillIsRecurring(false);
@@ -228,7 +228,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
       setIsSavings(false);
       setIsRefund(false);
       setIsBillEntry(false);
-      setBillMonth(activeMonth || '2026-09');
+      setBillMonth(activeMonth || localMonthInputValue());
       setBillDueDate('');
       setBillIncludeInTransferPlan(false);
       setBillIsRecurring(false);
