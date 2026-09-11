@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import { NavTab } from '../types';
+import { navHrefForTab } from '../navigationState';
 
 interface NavigationProps {
   activeTab: NavTab;
@@ -57,6 +58,10 @@ export const Navigation: React.FC<NavigationProps> = ({
   const moreBadge = mobileMoreTabs.some((tab) => Boolean(tab.badge));
 
   useEffect(() => {
+    setIsMoreOpen(false);
+  }, [activeTab]);
+
+  useEffect(() => {
     if (!isMoreOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -90,6 +95,22 @@ export const Navigation: React.FC<NavigationProps> = ({
     onTabChange(tab);
   };
 
+  const handleNavLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, tab: NavTab) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    navigate(tab);
+  };
+
   return (
     <>
       {/* Desktop / PC Navigation Bar */}
@@ -100,10 +121,11 @@ export const Navigation: React.FC<NavigationProps> = ({
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
-                <button
+                <a
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
-                  onClick={() => navigate(tab.id)}
+                  href={navHrefForTab(tab.id)}
+                  onClick={(event) => handleNavLinkClick(event, tab.id)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-1.5 border-b-2 px-2.5 py-1.5 text-[11px] font-medium transition-colors ${
                     isActive
@@ -118,7 +140,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                       {tab.badge}
                     </span>
                   )}
-                </button>
+                </a>
               );
             })}
           </div>
@@ -138,10 +160,10 @@ export const Navigation: React.FC<NavigationProps> = ({
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
-                <button
+                <a
                   key={tab.id}
-                  type="button"
-                  onClick={() => navigate(tab.id)}
+                  href={navHrefForTab(tab.id)}
+                  onClick={(event) => handleNavLinkClick(event, tab.id)}
                   aria-current={isActive ? 'page' : undefined}
                   className={`mv-mobile-more-item ${isActive ? 'is-active' : ''}`}
                 >
@@ -152,7 +174,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                       {tab.badge}
                     </span>
                   )}
-                </button>
+                </a>
               );
             })}
           </div>
@@ -163,10 +185,11 @@ export const Navigation: React.FC<NavigationProps> = ({
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button
+              <a
                 key={tab.id}
                 id={`mobile-nav-tab-${tab.id}`}
-                onClick={() => navigate(tab.id)}
+                href={navHrefForTab(tab.id)}
+                onClick={(event) => handleNavLinkClick(event, tab.id)}
                 aria-current={isActive ? 'page' : undefined}
                 className={`relative flex flex-col items-center justify-center h-full min-h-[44px] text-[10px] font-medium transition-colors ${
                   isActive ? 'text-accent font-bold' : 'text-muted'
@@ -174,7 +197,7 @@ export const Navigation: React.FC<NavigationProps> = ({
               >
                 <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
                 <span>{tab.mobileLabel}</span>
-              </button>
+              </a>
             );
           })}
 
