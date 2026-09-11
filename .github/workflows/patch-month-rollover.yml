@@ -1,4 +1,4 @@
-name: One-time month rollover cleanup
+name: One-time month rollover indentation cleanup
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  cleanup-rollover-branch:
+  cleanup-rollover-indentation:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -17,77 +17,44 @@ jobs:
         with:
           ref: repair/month-rollover-identity
 
-      - name: Apply guarded cleanup
+      - name: Fix guarded localStore indentation
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          store = Path('src/localStore.ts')
-          text = store.read_text()
+          path = Path('src/localStore.ts')
+          text = path.read_text()
 
-          payment_old = "        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);\nconst exists = state.plannedPayments.some((candidate) =>\n  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)\n);\nif (exists) continue;\n"
-          payment_new = "        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);\n        const exists = state.plannedPayments.some((candidate) =>\n          isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)\n        );\n        if (exists) continue;\n"
-          if text.count(payment_old) != 1:
-              raise SystemExit('Expected unindented payment block exactly once.')
-          text = text.replace(payment_old, payment_new, 1)
+          replacements = [
+              (
+                  "        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);\nconst exists = state.plannedPayments.some((candidate) =>\n  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)\n);\nif (exists) continue;\n",
+                  "        const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);\n        const exists = state.plannedPayments.some((candidate) =>\n          isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)\n        );\n        if (exists) continue;\n",
+                  'payment',
+              ),
+              (
+                  "        const copiedFromId = String(income.metadata?.copiedFromId || income.id);\nconst exists = incomes.some((candidate) =>\n  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)\n);\nif (exists) continue;\n",
+                  "        const copiedFromId = String(income.metadata?.copiedFromId || income.id);\n        const exists = incomes.some((candidate) =>\n          isRolloverIncomeDuplicate(income, candidate, params.targetMonth)\n        );\n        if (exists) continue;\n",
+                  'income',
+              ),
+          ]
 
-          income_old = "        const copiedFromId = String(income.metadata?.copiedFromId || income.id);\nconst exists = incomes.some((candidate) =>\n  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)\n);\nif (exists) continue;\n"
-          income_new = "        const copiedFromId = String(income.metadata?.copiedFromId || income.id);\n        const exists = incomes.some((candidate) =>\n          isRolloverIncomeDuplicate(income, candidate, params.targetMonth)\n        );\n        if (exists) continue;\n"
-          if text.count(income_old) != 1:
-              raise SystemExit('Expected unindented income block exactly once.')
-          text = text.replace(income_old, income_new, 1)
-          store.write_text(text)
+          for old, new, label in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected unindented {label} rollover block exactly once.')
+              text = text.replace(old, new, 1)
 
-          api = Path('src/utils/api.ts')
-          text = api.read_text()
-          canonical_import = "import { importCanonicalLocalMonth } from '../monthRolloverStore';\n"
-          if text.count(canonical_import) != 1:
-              raise SystemExit('Expected canonical rollover-store import exactly once.')
-          text = text.replace(canonical_import, '', 1)
-          anchor = "  getLocalPreferences,\n  loadLocalHousehold,"
-          replacement = "  getLocalPreferences,\n  importLocalMonth,\n  loadLocalHousehold,"
-          if text.count(anchor) != 1:
-              raise SystemExit('Expected localStore import anchor exactly once.')
-          text = text.replace(anchor, replacement, 1)
-          call_old = 'return importCanonicalLocalMonth(request, expectedVersion);'
-          call_new = 'return importLocalMonth(request, expectedVersion);'
-          if text.count(call_old) != 1:
-              raise SystemExit('Expected canonical API call exactly once.')
-          text = text.replace(call_old, call_new, 1)
-          api.write_text(text)
-
-          test = Path('src/monthRolloverIdentityAudit.test.ts')
-          text = test.read_text()
-          imports_old = "import {\n  createBlankLocalHousehold,\n  loadLocalHousehold,\n  saveLocalHousehold,\n} from './localStore';\nimport { importCanonicalLocalMonth } from './monthRolloverStore';\n"
-          imports_new = "import {\n  createBlankLocalHousehold,\n  importLocalMonth,\n  loadLocalHousehold,\n  saveLocalHousehold,\n} from './localStore';\n"
-          if text.count(imports_old) != 1:
-              raise SystemExit('Expected rollover test imports exactly once.')
-          text = text.replace(imports_old, imports_new, 1)
-          text = text.replace('importCanonicalLocalMonth(', 'importLocalMonth(')
-          store_path_old = "path.resolve(process.cwd(), 'src/monthRolloverStore.ts')"
-          store_path_new = "path.resolve(process.cwd(), 'src/localStore.ts')"
-          if text.count(store_path_old) != 1:
-              raise SystemExit('Expected rollover store source path exactly once.')
-          text = text.replace(store_path_old, store_path_new, 1)
-          expectations_old = "    expect(apiSource).toContain(\"import { importCanonicalLocalMonth } from '../monthRolloverStore';\");\n    expect(apiSource).toContain('return importCanonicalLocalMonth(request, expectedVersion);');\n    expect(apiSource).not.toContain('importLocalMonth,');\n"
-          expectations_new = "    expect(apiSource).toContain('importLocalMonth,');\n    expect(apiSource).toContain('return importLocalMonth(request, expectedVersion);');\n    expect(apiSource).not.toContain('monthRolloverStore');\n"
-          if text.count(expectations_old) != 1:
-              raise SystemExit('Expected rollover API assertions exactly once.')
-          text = text.replace(expectations_old, expectations_new, 1)
-          test.write_text(text)
+          path.write_text(text)
           PY
 
-          git rm src/monthRolloverStore.ts
-          git rm .github/workflows/patch-month-rollover.yml
           git diff --check
-          git diff -- src/localStore.ts src/utils/api.ts src/monthRolloverIdentityAudit.test.ts
+          git diff -- src/localStore.ts
 
-      - name: Commit cleaned single-source implementation
+      - name: Commit indentation cleanup
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'Keep month rollover on the single local-store path'
+          git add src/localStore.ts
+          git commit -m 'Tidy canonical rollover blocks'
           git push origin HEAD:repair/month-rollover-identity
