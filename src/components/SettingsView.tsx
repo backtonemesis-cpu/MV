@@ -114,25 +114,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     event: React.KeyboardEvent<HTMLButtonElement>,
     currentTab: (typeof settingsTabOrder)[number]
   ) => {
-    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
 
     event.preventDefault();
     const currentIndex = settingsTabOrder.indexOf(currentTab);
-    const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
-    const nextIndex =
-      (currentIndex + direction + settingsTabOrder.length) % settingsTabOrder.length;
+    let nextIndex = currentIndex;
+
+    if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = settingsTabOrder.length - 1;
+    } else {
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      nextIndex =
+        (currentIndex + direction + settingsTabOrder.length) % settingsTabOrder.length;
+    }
+
     const nextTab = settingsTabOrder[nextIndex];
     setActiveTab(nextTab);
     requestAnimationFrame(() => {
       document.getElementById(`settings-tab-${nextTab}`)?.focus();
     });
   };
-
-  useEffect(() => {
-    if (activeTab !== 'members' || !isOwner) return;
-    const frame = requestAnimationFrame(() => memberNameInputRef.current?.focus());
-    return () => cancelAnimationFrame(frame);
-  }, [activeTab, isOwner]);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
@@ -296,11 +299,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Settings Tabs */}
       <div className="mv-settings-tabs" role="tablist" aria-label="Settings sections">
         <div className="grid grid-cols-2 gap-1 sm:grid-cols-5">
-          <button id="settings-tab-categories" role="tab" aria-selected={activeTab === 'categories'} onClick={() => setActiveTab('categories')} onKeyDown={(event) => handleSettingsTabKeyDown(event, 'categories')} className={`mv-settings-tab ${activeTab === 'categories' ? 'is-active' : ''}`}>Categories</button>
           <button
+            type="button"
+            id="settings-tab-categories"
+            role="tab"
+            aria-selected={activeTab === 'categories'}
+            aria-controls="settings-panel-categories"
+            tabIndex={activeTab === 'categories' ? 0 : -1}
+            onClick={() => setActiveTab('categories')}
+            onKeyDown={(event) => handleSettingsTabKeyDown(event, 'categories')}
+            className={`mv-settings-tab ${activeTab === 'categories' ? 'is-active' : ''}`}
+          >
+            Categories
+          </button>
+          <button
+            type="button"
             id="settings-tab-appearance"
             role="tab"
             aria-selected={activeTab === 'appearance'}
+            aria-controls="settings-panel-appearance"
+            tabIndex={activeTab === 'appearance' ? 0 : -1}
             onClick={() => setActiveTab('appearance')}
             onKeyDown={(event) => handleSettingsTabKeyDown(event, 'appearance')}
             className={`mv-settings-tab ${activeTab === 'appearance' ? 'is-active' : ''}`}
@@ -310,24 +328,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
 
           <button
-              id="settings-tab-members"
+            type="button"
+            id="settings-tab-members"
             role="tab"
             aria-selected={activeTab === 'members'}
-              onClick={() => setActiveTab('members')}
-              onKeyDown={(event) => handleSettingsTabKeyDown(event, 'members')}
-              className={`mv-settings-tab ${activeTab === 'members' ? 'is-active' : ''}`}
-            >
-              <Users className="w-4 h-4 shrink-0" />
-              <span className="leading-none">Household</span>
-              {members.some((m) => m.role === 'pending') && (
-                <span className="w-2 h-2 rounded-full bg-warning-soft inline-block" />
-              )}
-            </button>
+            aria-controls="settings-panel-members"
+            tabIndex={activeTab === 'members' ? 0 : -1}
+            onClick={() => setActiveTab('members')}
+            onKeyDown={(event) => handleSettingsTabKeyDown(event, 'members')}
+            className={`mv-settings-tab ${activeTab === 'members' ? 'is-active' : ''}`}
+          >
+            <Users className="w-4 h-4 shrink-0" />
+            <span className="leading-none">Household</span>
+            {members.some((m) => m.role === 'pending') && (
+              <span className="w-2 h-2 rounded-full bg-warning-soft inline-block" />
+            )}
+          </button>
 
           <button
+            type="button"
             id="settings-tab-audit"
             role="tab"
             aria-selected={activeTab === 'audit'}
+            aria-controls="settings-panel-audit"
+            tabIndex={activeTab === 'audit' ? 0 : -1}
             onClick={() => setActiveTab('audit')}
             onKeyDown={(event) => handleSettingsTabKeyDown(event, 'audit')}
             className={`mv-settings-tab ${activeTab === 'audit' ? 'is-active' : ''}`}
@@ -337,9 +361,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
 
           <button
+            type="button"
             id="settings-tab-backup"
             role="tab"
             aria-selected={activeTab === 'backup'}
+            aria-controls="settings-panel-backup"
+            tabIndex={activeTab === 'backup' ? 0 : -1}
             onClick={() => setActiveTab('backup')}
             onKeyDown={(event) => handleSettingsTabKeyDown(event, 'backup')}
             className={`mv-settings-tab ${activeTab === 'backup' ? 'is-active' : ''}`}
@@ -350,9 +377,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* TAB 1: Appearance & Themes */}
-      {activeTab === 'categories' && <div role="tabpanel" aria-labelledby="settings-tab-categories"><CategorySettings household={household} onChanged={onCategoriesChanged}/></div>}
+      <div
+        id="settings-panel-categories"
+        role="tabpanel"
+        aria-labelledby="settings-tab-categories"
+        hidden={activeTab !== 'categories'}
+      >
+        {activeTab === 'categories' && (
+          <CategorySettings household={household} onChanged={onCategoriesChanged} />
+        )}
+      </div>
 
+      <div
+        id="settings-panel-appearance"
+        role="tabpanel"
+        aria-labelledby="settings-tab-appearance"
+        hidden={activeTab !== 'appearance'}
+      >
       {activeTab === 'appearance' && (
         <div className="mv-settings-stack max-w-3xl">
           <div className="mv-settings-panel space-y-4">
@@ -570,8 +611,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
       )}
+      </div>
 
-      {/* TAB 2: Household people */}
+      <div
+        id="settings-panel-members"
+        role="tabpanel"
+        aria-labelledby="settings-tab-members"
+        hidden={activeTab !== 'members'}
+      >
       {activeTab === 'members' && (
         <div className="mv-settings-stack max-w-3xl">
           <div className="mv-settings-panel">
@@ -778,8 +825,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
         </div>
       )}
+      </div>
 
-      {/* TAB 3: Audit Trail */}
+      <div
+        id="settings-panel-audit"
+        role="tabpanel"
+        aria-labelledby="settings-tab-audit"
+        hidden={activeTab !== 'audit'}
+      >
       {activeTab === 'audit' && (
         <div className="mv-settings-panel max-w-4xl">
           <h2 className="text-sm font-bold text-main mb-4">
@@ -813,8 +866,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
       )}
+      </div>
 
-      {/* TAB 4: Backup & Testing */}
+      <div
+        id="settings-panel-backup"
+        role="tabpanel"
+        aria-labelledby="settings-tab-backup"
+        hidden={activeTab !== 'backup'}
+      >
       {activeTab === 'backup' && (
         <div className="mv-settings-stack max-w-3xl">
           {showDevelopmentTools && (
@@ -982,6 +1041,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         )}
         </div>
       )}
+      </div>
     </div>
   );
 };
