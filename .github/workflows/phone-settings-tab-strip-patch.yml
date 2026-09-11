@@ -1,0 +1,37 @@
+name: Apply PHONE-SET-001 repair
+
+on:
+  push:
+    branches:
+      - repair/phone-settings-tab-strip
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: repair/phone-settings-tab-strip
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply guarded Settings Phone-mode repair
+        run: python .github/scripts/patch_phone_settings_tab_strip.py
+      - name: Verify patch whitespace
+        run: git diff --check
+      - name: Run focused Settings tests
+        run: |
+          npm install --no-audit --no-fund
+          npx vitest run src/settingsTabsSemanticsAudit.test.ts src/phoneSettingsTabStripAudit.test.ts
+      - name: Commit cleaned repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Repair Phone-mode Settings tab strip"
+          git push origin HEAD:repair/phone-settings-tab-strip
