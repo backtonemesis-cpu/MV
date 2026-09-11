@@ -6,6 +6,10 @@ const source = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/MonthImportModal.tsx'),
   'utf8'
 );
+const identitySource = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/utils/monthRolloverIdentity.ts'),
+  'utf8'
+);
 
 describe('Prepare Next Month submenu audit contract', () => {
   it('does not force focus or text selection into the source month on open', () => {
@@ -33,7 +37,9 @@ describe('Prepare Next Month submenu audit contract', () => {
     expect(source).toContain('.filter((income) => !duplicateIncomeIds.has(income.id))');
     expect(source).toContain('payment.isRecurring === true');
     expect(source).toContain('!duplicatePaymentIds.has(payment.id)');
-    expect(source).toContain("candidate.metadata?.copiedFromId");
+    expect(source).toContain('isRolloverPaymentDuplicate');
+    expect(source).toContain('isRolloverIncomeDuplicate');
+    expect(identitySource).toContain('candidate.metadata?.copiedFromId');
   });
 
   it('prevents a same-month target and zero-item preparation', () => {
