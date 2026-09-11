@@ -47,7 +47,7 @@ function payment(
 describe('Transfer Plan paid-only negative-balance funding safety', () => {
   it('never manufactures a transfer requirement from a negative balance when every selected bill is already paid', () => {
     const destination = account(-247_998);
-    const paid = payment('paid-bill', 'paid', 19_99);
+    const paid = payment('paid-bill', 'paid', 1_999);
 
     const funding = calculateAccountFunding(destination, [paid]);
 
