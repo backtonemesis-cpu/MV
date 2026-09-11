@@ -36,12 +36,12 @@ Allowed status labels in this ledger are: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`
 
 ### 2026-09-11 current-main reconciliation
 
-- Verified deployed `main` before this MVSelect Tab-scope substage: `39f83fc85658bf65ee2ff9ebb91e36ef94173b59` (PR #195).
-- Main workflow run #861: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS` for exact build version `39f83fc85658bf65ee2ff9ebb91e36ef94173b59`.
-- PRs #188–#195 are merged and deployed. They repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, Prepare Next Month identity, reachable-control accessibility defects, and safe modal initial-focus precedence.
+- Verified deployed `main` before this Category Correction review-focus substage: `501130123d8d9522729c34a29c38b36ecf76b5b0` (PR #196).
+- Main workflow run #863: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS` for exact build version `501130123d8d9522729c34a29c38b36ecf76b5b0`.
+- PRs #188–#196 are merged and deployed. They repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, Prepare Next Month identity, reachable-control accessibility defects, safe modal initial-focus precedence, and MVSelect modal-scoped Tab traversal.
 - `GA-INC-001` optional-category wording defect is technically resolved by PR #188; physical current-main regression remains governed by the device matrix.
 - `GA-MONTH-001` broad rollover duplicate identity is technically resolved by PR #193 with shared UI/storage identity and lineage idempotency; physical current-main regression remains governed by the device matrix.
-- `GA-A11Y-001` remains `OPEN` after deployed PR #195 because physical current-main verification and remaining shared-control review are still required. The next source-proven defect is MVSelect portalled-listbox Tab scope: trigger-relative traversal currently searches the entire document, so selectors inside modals can cross the modal focus boundary or lose focus at an edge. `repair/mvselect-modal-tab-scope` scopes Tab traversal to the owning modal and wraps within modal boundaries while preserving non-modal behavior; physical verification is not claimed.
+- `GA-A11Y-001` remains `OPEN` after deployed PR #196 because physical current-main verification and remaining shared-control review are still required. The next source-proven defect is Category Correction review focus: after keyboard activation of Preview changes, the same focused submit control changes in place to Confirm correction, allowing rapid double-Enter to execute the bulk rewrite before focus reaches the review summary. `repair/category-correction-review-focus` moves focus to the successful preview summary before confirmation; financial mutation semantics are unchanged and physical verification is not claimed.
 - `GA-TP-002` per-bill Undo Funding attribution remains `BLOCKED`; this accessibility stage does not change Transfer Plan attribution or financial semantics.
 
 ---
