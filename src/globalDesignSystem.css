@@ -2134,3 +2134,19 @@ body,
     height: 1rem !important;
   }
 }
+
+/* PHONE-SET-001: keep the five Settings tabs in one horizontal strip in Phone mode. */
+.mv-layout-phone .mv-settings-tabs > .grid {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  gap: var(--mv-ds-space-1) !important;
+}
+
+.mv-layout-phone .mv-settings-tabs > .grid > .mv-settings-tab {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
