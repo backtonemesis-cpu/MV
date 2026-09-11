@@ -11,6 +11,7 @@ interface ConfirmActionDialogProps {
   busy?: boolean;
   danger?: boolean;
   ariaLabel?: string;
+  error?: string | null;
 }
 
 export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
@@ -22,6 +23,7 @@ export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
   busy = false,
   danger = true,
   ariaLabel,
+  error,
 }) => {
   const dialogRef = useModalAccessibility<HTMLElement>(true, onCancel);
   const titleId = 'mv-confirm-action-title';
@@ -64,6 +66,15 @@ export const ConfirmActionDialog: React.FC<ConfirmActionDialogProps> = ({
           >
             {description}
           </div>
+
+          {error && (
+            <div
+              role="alert"
+              className="rounded-lg border border-danger bg-danger-soft px-3 py-3 text-xs leading-5 text-danger"
+            >
+              {error}
+            </div>
+          )}
 
           <div className="mv-modal-actions">
             <button
