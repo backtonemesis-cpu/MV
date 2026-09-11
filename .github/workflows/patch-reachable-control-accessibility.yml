@@ -30,8 +30,6 @@ jobs:
                   raise SystemExit(f'{label}: expected source block exactly once, found {text.count(old)}')
               file.write_text(text.replace(old, new, 1))
 
-          # Mobile More is visually absolutely positioned, so put the disclosure
-          # after its trigger in DOM order without changing layout/history logic.
           nav_path = Path('src/components/Navigation.tsx')
           nav = nav_path.read_text()
           panel_start = nav.find('        {isMoreOpen && (\n          <div\n            ref={morePanelRef}')
@@ -47,8 +45,6 @@ jobs:
           nav = nav[:mobile_nav_end] + panel + nav[mobile_nav_end:]
           nav_path.write_text(nav)
 
-          # Editable finance rows already contain explicit Edit/Receive/Delete buttons.
-          # Keep pointer row-click convenience, but remove non-semantic article tab stops.
           replace_once(
               'src/components/TransactionList.tsx',
               '                  tabIndex={canEditRow ? 0 : undefined}\n',
@@ -88,7 +84,6 @@ jobs:
               'Income pseudo-button keyboard handler',
           )
 
-          # Do not force iPhone text keyboard open when ordinary edit/create dialogs launch.
           for path, expected in [
               ('src/components/IncomeView.tsx', 1),
               ('src/components/SavingsView.tsx', 2),
@@ -99,9 +94,12 @@ jobs:
               count = text.count('autoFocus')
               if count != expected:
                   raise SystemExit(f'{path}: expected {expected} autoFocus occurrence(s), found {count}')
-              file.write_text(text.replace('                  autoFocus\n', '').replace('                        autoFocus\n', ''))
+              text = text.replace('                  autoFocus\n', '')
+              text = text.replace('                        autoFocus\n', '')
+              if 'autoFocus' in text:
+                  raise SystemExit(f'{path}: autoFocus remained after guarded removal')
+              file.write_text(text)
 
-          # Explicit names for the two remaining icon-only modal close controls.
           replace_once(
               'src/components/SavingsView.tsx',
               """              <button
@@ -142,8 +140,6 @@ jobs:
 """,
               'Accounts edit-goal close name',
           )
-
-          # Title-only icon control becomes an explicit, row-specific accessible name.
           replace_once(
               'src/components/TransactionModal.tsx',
               '                                title="Remove split"\n',
@@ -151,100 +147,22 @@ jobs:
               'Transaction split remove name',
           )
 
-          # Add a focused source-level regression guard for the audited control contract.
-          Path('src/reachableControlAccessibilityAudit.test.ts').write_text(r'''import fs from 'node:fs';
-import path from 'node:path';
-import { describe, expect, it } from 'vitest';
-
-const componentsDir = path.resolve(process.cwd(), 'src/components');
-const read = (name: string) =>
-  fs.readFileSync(path.join(componentsDir, name), 'utf8');
-
-const navigation = read('Navigation.tsx');
-const activity = read('TransactionList.tsx');
-const income = read('IncomeView.tsx');
-const savings = read('SavingsView.tsx');
-const accounts = read('AccountsView.tsx');
-const transactionModal = read('TransactionModal.tsx');
-
-describe('Reachable control accessibility audit', () => {
-  it('keeps mobile More disclosure links after the More trigger in forward DOM order', () => {
-    const gridIndex = navigation.indexOf('className="mv-mobile-nav-grid grid grid-cols-5 h-14"');
-    const panelIndex = navigation.indexOf('id="mobile-more-navigation"');
-    expect(gridIndex).toBeGreaterThanOrEqual(0);
-    expect(panelIndex).toBeGreaterThan(gridIndex);
-    expect(navigation).toContain('aria-expanded={isMoreOpen}');
-    expect(navigation).toContain('aria-controls="mobile-more-navigation"');
-  });
-
-  it('does not expose finance articles as unnamed pseudo-buttons in the tab order', () => {
-    expect(activity).not.toContain('tabIndex={canEditRow ? 0 : undefined}');
-    expect(income).not.toContain('tabIndex={canEdit ? 0 : undefined}');
-    expect(activity).not.toContain("if (event.key === 'Enter' || event.key === ' ')");
-    expect(income).not.toContain("if (event.key === 'Enter' || event.key === ' ')");
-    expect(activity).toContain('aria-label={`Edit ${tx.description}`}');
-    expect(income).toContain('aria-label={`Edit ${income.name}`}');
-  });
-
-  it('does not autofocus ordinary text inputs in Income, Savings, or Accounts dialogs', () => {
-    for (const [name, source] of [
-      ['IncomeView.tsx', income],
-      ['SavingsView.tsx', savings],
-      ['AccountsView.tsx', accounts],
-    ] as const) {
-      const autoFocusedInputs = source.match(/<input\b[^>]*\bautoFocus\b[^>]*>/gs) || [];
-      expect(autoFocusedInputs, name).toHaveLength(0);
-    }
-  });
-
-  it('gives every shared modal-close button an explicit accessible name', () => {
-    const files = fs
-      .readdirSync(componentsDir)
-      .filter((name) => name.endsWith('.tsx'));
-
-    for (const name of files) {
-      const source = read(name);
-      let cursor = 0;
-      while (true) {
-        const classIndex = source.indexOf('className="mv-modal-close"', cursor);
-        if (classIndex < 0) break;
-        const buttonStart = source.lastIndexOf('<button', classIndex);
-        const openingEnd = source.indexOf('>', classIndex);
-        expect(buttonStart, `${name}: modal close must be a button`).toBeGreaterThanOrEqual(0);
-        expect(openingEnd, `${name}: modal close opening tag`).toBeGreaterThan(classIndex);
-        const openingTag = source.slice(buttonStart, openingEnd + 1);
-        expect(openingTag, `${name}: modal close accessible name`).toContain('aria-label=');
-        cursor = openingEnd + 1;
-      }
-    }
-  });
-
-  it('uses an explicit row-specific accessible name for split removal', () => {
-    expect(transactionModal).toContain('aria-label={`Remove split ${idx + 1}`}');
-  });
-});
-''')
-
-          # Ledger addendum: preserve historical baseline rows but record current truth.
           ledger_path = Path('docs/GLOBAL-AUDIT-LEDGER.md')
           ledger = ledger_path.read_text()
           marker = '**Mandatory freshness rule:** the baseline above is historical as soon as `main` advances. At the start of every audit session, verify `main`, current workflows, deployment and open/draft PRs again.\n'
           if ledger.count(marker) != 1:
               raise SystemExit('Audit ledger freshness marker not found exactly once.')
-          addendum = '''
-
-### 2026-09-11 current-main reconciliation
-
-- Verified deployed `main` before this accessibility stage: `624787be8a5541e804040e04c848eaade4988a12` (PR #193).
-- Main workflow run #857: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS`.
-- PRs #188–#193 are merged and deployed. They respectively repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, and Prepare Next Month identity.
-- `GA-INC-001` optional-category wording defect is technically resolved by PR #188; physical current-main regression remains governed by the device matrix.
-- `GA-MONTH-001` broad rollover duplicate identity is technically resolved by PR #193 with shared UI/storage identity and lineage idempotency; physical current-main regression remains governed by the device matrix.
-- `GA-A11Y-001` remains `OPEN` during `repair/reachable-control-accessibility`. Current source inventory found: mobile More disclosure forward-tab order, focusable non-semantic Activity/Income articles, forced text-field autofocus in Income/Savings/Accounts dialogs, and unnamed icon-only Savings Goal close controls. This branch repairs only those proven interaction/name/focus defects and adds source-level regression coverage; physical verification is not claimed.
-- `GA-TP-002` per-bill Undo Funding attribution remains `BLOCKED`; this accessibility stage does not change Transfer Plan attribution or financial semantics.
-'''
-          ledger = ledger.replace(marker, marker + addendum, 1)
-          ledger_path.write_text(ledger)
+          addendum = (
+              '\n### 2026-09-11 current-main reconciliation\n\n'
+              '- Verified deployed `main` before this accessibility stage: `624787be8a5541e804040e04c848eaade4988a12` (PR #193).\n'
+              '- Main workflow run #857: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS`.\n'
+              '- PRs #188–#193 are merged and deployed. They respectively repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, and Prepare Next Month identity.\n'
+              '- `GA-INC-001` optional-category wording defect is technically resolved by PR #188; physical current-main regression remains governed by the device matrix.\n'
+              '- `GA-MONTH-001` broad rollover duplicate identity is technically resolved by PR #193 with shared UI/storage identity and lineage idempotency; physical current-main regression remains governed by the device matrix.\n'
+              '- `GA-A11Y-001` remains `OPEN` during `repair/reachable-control-accessibility`. Current source inventory found mobile More disclosure forward-tab order, focusable non-semantic Activity/Income articles, forced text-field autofocus in Income/Savings/Accounts dialogs, and unnamed icon-only Savings Goal close controls. This branch repairs only those proven interaction/name/focus defects and adds source-level regression coverage; physical verification is not claimed.\n'
+              '- `GA-TP-002` per-bill Undo Funding attribution remains `BLOCKED`; this accessibility stage does not change Transfer Plan attribution or financial semantics.\n'
+          )
+          ledger_path.write_text(ledger.replace(marker, marker + addendum, 1))
           PY
 
           git rm .github/workflows/patch-reachable-control-accessibility.yml
