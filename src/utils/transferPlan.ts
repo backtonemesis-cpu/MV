@@ -16,7 +16,8 @@ import {
  * - currentBalancePence: authoritative reconciled balance of the account
  * - amountAvailablePence: non-negative available funds (Math.max(0, currentBalancePence))
  * - transferRequiredPence:
- *     Exact formula handling both positive balances and overdrawn/negative balances:
+ *     Paid-only selections always require £0.00 of new funding.
+ *     Otherwise, exact formula handling both positive balances and overdrawn/negative balances:
  *     transferRequired = Math.max(0, totalUnpaidSelectedPaymentsPence - currentBalancePence)
  *     
  *     Positive balance example: balance £300 (30,000p), bills £379.79 (37,979p) -> requires £79.79 (7,979p)
@@ -74,11 +75,16 @@ export function calculateAccountFunding(
   // Exact Transfer Required formula:
   // selected UNPAID In-Plan bills - current destination-account balance.
   // Paid bills remain visible, but their actual expense has already affected
-  // the current balance and must never be funded a second time.
-  const transferRequiredPence = Math.max(
-    0,
-    totalUnpaidSelectedPaymentsPence - currentBalancePence
-  );
+  // the current balance and must never be funded a second time. In particular,
+  // a negative destination balance must not manufacture a funding requirement
+  // when there are no selected unpaid bills left to fund.
+  const transferRequiredPence =
+    totalUnpaidSelectedPaymentsPence === 0
+      ? 0
+      : Math.max(
+          0,
+          totalUnpaidSelectedPaymentsPence - currentBalancePence
+        );
   const isFullyFunded = transferRequiredPence === 0;
 
   return {
