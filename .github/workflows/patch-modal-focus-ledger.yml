@@ -1,0 +1,38 @@
+name: One-time modal focus ledger reconciliation
+
+on:
+  push:
+    branches:
+      - repair/modal-initial-focus-precedence
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile-ledger:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: repair/modal-initial-focus-precedence
+
+      - name: Reconcile durable audit ledger
+        shell: bash
+        run: |
+          python -c "from pathlib import Path; p=Path('docs/GLOBAL-AUDIT-LEDGER.md'); t=p.read_text(); reps=[('Verified deployed `main` before this accessibility stage: `624787be8a5541e804040e04c848eaade4988a12` (PR #193).','Verified deployed `main` before this modal-focus substage: `e181e07d103aff28a7588f4524c12a49bf5b1620` (PR #194).'),('Main workflow run #857: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS`.','Main workflow run #859: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS` for exact build version `e181e07d103aff28a7588f4524c12a49bf5b1620`.'),('PRs #188–#193 are merged and deployed. They respectively repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, and Prepare Next Month identity.','PRs #188–#194 are merged and deployed. They repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, Prepare Next Month identity, and the first systematic reachable-control accessibility defects.'),('`GA-A11Y-001` remains `OPEN` during `repair/reachable-control-accessibility`. Current source inventory found mobile More disclosure forward-tab order, focusable non-semantic Activity/Income articles, forced text-field autofocus in Income/Savings/Accounts dialogs, and unnamed icon-only Savings Goal close controls. This branch repairs only those proven interaction/name/focus defects and adds source-level regression coverage; physical verification is not claimed.','`GA-A11Y-001` remains `OPEN` after deployed PR #194 because physical current-main verification and remaining shared-control review are still required. The next source-proven defect is shared modal initial-focus precedence: `data-modal-initial-focus` is present on deliberately safe controls such as Cancel, but the helper currently uses one combined selector so earlier DOM controls can win. `repair/modal-initial-focus-precedence` makes the safe marker authoritative before native autofocus and generic focusables; physical verification is not claimed.')];
+for old,new in reps:
+    assert t.count(old)==1, f'Expected ledger text once: {old[:80]}'
+    t=t.replace(old,new,1)
+p.write_text(t)"
+          rm .github/workflows/patch-modal-focus-ledger.yml
+          git diff --check
+
+      - name: Commit ledger reconciliation
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/GLOBAL-AUDIT-LEDGER.md .github/workflows/patch-modal-focus-ledger.yml
+          git commit -m "Reconcile modal focus audit ledger"
+          git push origin HEAD:repair/modal-initial-focus-precedence
