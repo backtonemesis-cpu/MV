@@ -31,7 +31,7 @@ describe('final unified Add consistency contract', () => {
 
   it('derives Bill month from the active working month without exposing a redundant picker', () => {
     expect(tx).toContain('const [billMonth, setBillMonth] = useState(activeMonth);');
-    expect(tx).toContain("setBillMonth(activeMonth || '2026-09')");
+    expect(tx).toContain('setBillMonth(activeMonth || localMonthInputValue())');
     expect(tx).toContain('month: billMonth.trim()');
     expect(tx).toContain("if (!billMonth.trim())");
     expect(tx).not.toContain('id="unified-bill-month"');

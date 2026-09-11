@@ -43,7 +43,7 @@ describe('final unified Add presentation consistency', () => {
     expect(tx).toContain('name: description.trim()');
     expect(tx).toContain('month: billMonth.trim()');
     expect(tx).toContain('const [billMonth, setBillMonth] = useState(activeMonth);');
-    expect(tx).toContain("setBillMonth(activeMonth || '2026-09')");
+    expect(tx).toContain('setBillMonth(activeMonth || localMonthInputValue())');
     expect(tx).not.toContain('Billing Month');
     expect(tx).not.toContain('id="unified-bill-month"');
     expect(tx).not.toContain('<MonthPicker');
