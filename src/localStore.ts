@@ -3442,10 +3442,10 @@ export function importLocalMonth(
 
       for (const payment of sourcePayments) {
         const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
-const exists = state.plannedPayments.some((candidate) =>
-  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
-);
-if (exists) continue;
+        const exists = state.plannedPayments.some((candidate) =>
+          isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
+        );
+        if (exists) continue;
 
         state.plannedPayments.push({
           ...payment,
@@ -3468,10 +3468,10 @@ if (exists) continue;
       const incomes = state.plannedIncomes || [];
       for (const income of sourceIncomes) {
         const copiedFromId = String(income.metadata?.copiedFromId || income.id);
-const exists = incomes.some((candidate) =>
-  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
-);
-if (exists) continue;
+        const exists = incomes.some((candidate) =>
+          isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
+        );
+        if (exists) continue;
 
         incomes.push({
           ...income,
