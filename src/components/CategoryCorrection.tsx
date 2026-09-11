@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import type {HouseholdData} from '../types';
 import {categoryScope} from '../categories/validation';
 import {executeReclassification,previewReclassification,type ReclassificationCommand} from '../categories/reclassification';
@@ -9,9 +9,11 @@ export function CategoryCorrection({household,onChanged}:{household:HouseholdDat
  const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const [command,setCommand]=useState<ReclassificationCommand>({action:'merge',sourceId:'',destinationId:''});
  const [review,setReview]=useState<{preview:ReturnType<typeof previewReclassification>;version:number}|null>(null);
+ const reviewRef=useRef<HTMLDivElement>(null);
  const close=()=>{if(!busy){setOpen(false);setReview(null);setError('');}};
  const ref=useModalAccessibility<HTMLDivElement>(open,close);
  const update=(next:Partial<ReclassificationCommand>)=>{setCommand({...command,...next});setReview(null);setError('');};
+ useEffect(()=>{if(!review)return;const frame=window.requestAnimationFrame(()=>reviewRef.current?.focus({preventScroll:true}));return()=>window.cancelAnimationFrame(frame);},[review]);
  const source=household.categories.find(c=>c.id===command.sourceId);
  const candidates=household.categories.filter(c=>!c.supersededById&&(!c.isSystem||(command.action==='recategorise'&&c.systemRole!=='internal-transfer')));
  const destinations=household.categories.filter(c=>!c.isArchived&&!c.isSystem&&c.id!==command.sourceId&&source&&categoryScope(household,c)===categoryScope(household,source));
@@ -25,7 +27,7 @@ export function CategoryCorrection({household,onChanged}:{household:HouseholdDat
     <label className="block text-sm">To category<select className={field} required value={command.destinationId} onChange={e=>update({destinationId:e.target.value})}><option value="">Choose destination</option>{destinations.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
     {command.action==='recategorise'&&<label className="block text-sm">Month (leave blank for all)<input type="month" className={field} value={command.monthKey??''} onChange={e=>update({monthKey:e.target.value||undefined})}/></label>}
     {command.action==='merge'&&<label className="block text-sm">If both categories have a budget in the same month<select className={field} value={command.budgetConflictPolicy??''} onChange={e=>update({budgetConflictPolicy:(e.target.value||undefined) as ReclassificationCommand['budgetConflictPolicy']})}><option value="">Choose if a conflict is found</option><option value="sum">Add both budgets</option><option value="keep-destination">Keep destination budget</option><option value="keep-source">Keep source budget</option></select></label>}
-    {review&&<div className="rounded-lg border border-muted p-3 text-sm text-main" role="status">
+    {review&&<div ref={reviewRef} tabIndex={-1} className="rounded-lg border border-muted p-3 text-sm text-main" role="status" aria-label="Category correction preview">
      <p>{source?.name} → {household.categories.find(c=>c.id===command.destinationId)?.name}</p>
      <p>{review.preview.total} references: {review.preview.transactions.length} transactions, {review.preview.splits.length} splits, {review.preview.bills.length} bills, {review.preview.incomes.length} income plans, {review.preview.budgets.length} budgets.</p>
      {!!review.preview.budgetConflicts.length&&<p>Budget conflicts: {review.preview.budgetConflicts.join(', ')}.</p>}
