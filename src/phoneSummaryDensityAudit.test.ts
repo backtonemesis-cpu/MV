@@ -10,7 +10,7 @@ const mobileCss = fs.readFileSync(path.resolve(process.cwd(), 'src/mobileUx.css'
 const main = fs.readFileSync(path.resolve(process.cwd(), 'src/main.tsx'), 'utf8');
 
 describe('PHONE-DENSITY-001 summary metric density', () => {
-  it('gives the Income summary grid a semantic three-column phone contract', () => {
+  it('uses a readable two-column Income summary with Outstanding spanning the second row', () => {
     expect(income).toContain(
       'className="mv-income-summary-grid grid grid-cols-3 gap-2 sm:grid-cols-3"'
     );
@@ -18,20 +18,28 @@ describe('PHONE-DENSITY-001 summary metric density', () => {
       '.mv-layout-phone .mv-workspace .grid.mv-income-summary-grid {'
     );
     expect(mobileCss).toContain(
-      'grid-template-columns: repeat(3, minmax(0, 1fr)) !important;'
+      'grid-template-columns: repeat(2, minmax(0, 1fr)) !important;'
     );
+    expect(mobileCss).toContain(
+      '.mv-layout-phone .mv-workspace .grid.mv-income-summary-grid > :last-child {'
+    );
+    expect(mobileCss).toContain('grid-column: 1 / -1;');
   });
 
-  it('gives the Savings summary grid a semantic two-column phone contract', () => {
+  it('keeps Savings at two columns while constraining phone card typography and padding', () => {
     expect(savings).toContain(
       'className="mv-savings-summary-grid grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4"'
     );
     expect(mobileCss).toContain(
       '.mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid {'
     );
+    expect(mobileCss).toContain('gap: 10px !important;');
     expect(mobileCss).toContain(
-      'grid-template-columns: repeat(2, minmax(0, 1fr)) !important;'
+      '.mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid > article {'
     );
+    expect(mobileCss).toContain('padding: 12px !important;');
+    expect(mobileCss).toContain('font-size: 18px !important;');
+    expect(mobileCss).toContain('letter-spacing: 0.04em !important;');
   });
 
   it('proves the late mobile stylesheet can override the one-column Phone default', () => {

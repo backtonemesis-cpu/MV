@@ -316,13 +316,34 @@
 }
 
 
-/* PHONE-DENSITY-001 physical correction: explicit summary-grid cascade. */
+/* PHONE-DENSITY-001 physical correction: readable summary-grid density. */
 @media (max-width: 40rem) {
   .mv-layout-phone .mv-workspace .grid.mv-income-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .mv-layout-phone .mv-workspace .grid.mv-income-summary-grid > :last-child {
+    grid-column: 1 / -1;
   }
 
   .mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid > article {
+    padding: 12px !important;
+  }
+
+  .mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid > article > h2 {
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .mv-layout-phone .mv-workspace .grid.mv-savings-summary-grid > article > div {
+    font-size: 18px !important;
+    line-height: 1.4 !important;
+    letter-spacing: -0.02em !important;
   }
 }

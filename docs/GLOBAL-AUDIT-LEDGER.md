@@ -55,6 +55,9 @@ Allowed status labels in this ledger are: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`
 - Corrective branch `repair/phone-summary-density-cascade` adds explicit semantic summary-grid classes and later `src/mobileUx.css` Phone-mode exceptions: Income = three columns, Savings = two columns. The regression test now checks both the component semantic hooks and the stylesheet/import-order cascade rather than only utility class strings.
 - No financial calculations, amounts, transactions, storage, income receipt semantics, savings classification, desktop layout, navigation or theme semantics are changed.
 - Physical status remains `FAIL` until the corrective PR is merged/deployed and the live iPhone is reverified.
+- PR #201 then merged/deployed at `f7c24e2c394527618aa94bb34d270a8a582338fd` with `90/90` test files and `615/615` tests passing. Physical iPhone screenshots proved the cascade correction took effect: Savings rendered 2x2 and Income rendered three columns. However, the three-column Income design was physically unreadable: Expected/Received money values collided across card boundaries and the Outstanding heading was visibly clipped. Savings was structurally correct but remained cramped for long labels and large balances.
+- Therefore PHONE-DENSITY-001 remains physical `FAIL`: the defect has moved from cascade failure to responsive readability. The next narrow correction changes only Phone presentation: Income becomes two columns with the third/Outstanding card spanning the second row; Savings remains 2x2 with tighter summary-card padding, heading tracking and money typography.
+- This follow-up does not change financial calculations, values, transaction/storage semantics, income/savings classification, desktop layout, navigation or themes. Physical iPhone re-verification remains mandatory after deployment.
 
 ---
 
