@@ -25,6 +25,11 @@ import {
   getTransferPlanFundingBatches,
   getTransferPlanFundingMonth,
 } from './utils/transferPlanFunding';
+import {
+  isRolloverIncomeDuplicate,
+  isRolloverPaymentDuplicate,
+  shiftRolloverDateToMonth,
+} from './utils/monthRolloverIdentity';
 
 const STORAGE_KEY = 'mv_local_state_v2';
 const ROLLBACK_KEY = 'mv_local_state_before_restore_v2';
@@ -3010,30 +3015,7 @@ export function deleteLocalSavingsGoal(id: string, expectedVersion: number): { v
 }
 
 function shiftDateToMonth(date: string | undefined, targetMonth: string): string | undefined {
-  if (!date || date.length < 10) return date;
-  if (!/^\d{4}-\d{2}$/.test(targetMonth)) {
-    throw new Error('Target month must use YYYY-MM format.');
-  }
-
-  const [yearText, monthText] = targetMonth.split('-');
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const sourceDay = Number(date.slice(8, 10));
-
-  if (
-    !Number.isInteger(year) ||
-    !Number.isInteger(month) ||
-    month < 1 ||
-    month > 12 ||
-    !Number.isInteger(sourceDay) ||
-    sourceDay < 1
-  ) {
-    throw new Error('Cannot shift an invalid calendar date.');
-  }
-
-  const lastDay = new Date(year, month, 0).getDate();
-  const day = Math.min(sourceDay, lastDay);
-  return `${targetMonth}-${String(day).padStart(2, '0')}`;
+  return shiftRolloverDateToMonth(date, targetMonth);
 }
 
 export function markLocalPaymentPaid(
@@ -3460,21 +3442,10 @@ export function importLocalMonth(
 
       for (const payment of sourcePayments) {
         const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
-        const normalizedName = payment.name.trim().toLowerCase();
-        const exists = state.plannedPayments.some(
-          (candidate) =>
-            candidate.month === params.targetMonth &&
-            (
-              String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
-              (
-                candidate.name.trim().toLowerCase() === normalizedName &&
-                candidate.accountId === payment.accountId &&
-                candidate.amountPence === payment.amountPence &&
-                candidate.responsiblePerson === payment.responsiblePerson
-              )
-            )
-        );
-        if (exists) continue;
+const exists = state.plannedPayments.some((candidate) =>
+  isRolloverPaymentDuplicate(payment, candidate, params.targetMonth)
+);
+if (exists) continue;
 
         state.plannedPayments.push({
           ...payment,
@@ -3497,21 +3468,10 @@ export function importLocalMonth(
       const incomes = state.plannedIncomes || [];
       for (const income of sourceIncomes) {
         const copiedFromId = String(income.metadata?.copiedFromId || income.id);
-        const normalizedName = income.name.trim().toLowerCase();
-        const exists = incomes.some(
-          (candidate) =>
-            candidate.month === params.targetMonth &&
-            (
-              String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
-              (
-                candidate.name.trim().toLowerCase() === normalizedName &&
-                candidate.accountId === income.accountId &&
-                candidate.expectedAmountPence === income.expectedAmountPence &&
-                candidate.sourcePerson === income.sourcePerson
-              )
-            )
-        );
-        if (exists) continue;
+const exists = incomes.some((candidate) =>
+  isRolloverIncomeDuplicate(income, candidate, params.targetMonth)
+);
+if (exists) continue;
 
         incomes.push({
           ...income,
