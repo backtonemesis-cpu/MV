@@ -48,7 +48,7 @@ describe('iPhone unified Add Bill Due Date containment', () => {
     expect(tx).toContain('onChange={(event) => setBillDueDate(event.target.value)}');
     expect(tx).toContain('dueDate: billDueDate || undefined');
     expect(tx).toContain('const [billMonth, setBillMonth] = useState(activeMonth);');
-    expect(tx).toContain("setBillMonth(activeMonth || '2026-09')");
+    expect(tx).toContain('setBillMonth(activeMonth || localMonthInputValue())');
     expect(tx).toContain('month: billMonth.trim()');
     expect(tx).not.toContain('Billing Month');
     expect(tx).not.toContain('id="unified-bill-month"');
