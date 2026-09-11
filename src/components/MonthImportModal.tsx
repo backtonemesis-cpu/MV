@@ -3,6 +3,10 @@ import { AlertCircle, Layers, X } from 'lucide-react';
 import { Account, PlannedIncome, PlannedPayment } from '../types';
 import { formatPence } from '../utils/currency';
 import { localDateInputValue } from '../utils/dateInput';
+import {
+  isRolloverIncomeDuplicate,
+  isRolloverPaymentDuplicate,
+} from '../utils/monthRolloverIdentity';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 
@@ -96,49 +100,29 @@ export const MonthImportModal: React.FC<MonthImportModalProps> = ({
     const duplicates = new Set<string>();
 
     for (const payment of sourcePayments) {
-      const copiedFromId = String(payment.metadata?.copiedFromId || payment.id);
-      const name = payment.name.trim().toLowerCase();
-
-      const exists = targetPayments.some(
-        (candidate) =>
-          String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
-          (
-            candidate.name.trim().toLowerCase() === name &&
-            candidate.accountId === payment.accountId &&
-            candidate.amountPence === payment.amountPence &&
-            candidate.responsiblePerson === payment.responsiblePerson
-          )
+      const exists = targetPayments.some((candidate) =>
+        isRolloverPaymentDuplicate(payment, candidate, targetMonth)
       );
 
       if (exists) duplicates.add(payment.id);
     }
 
     return duplicates;
-  }, [sourcePayments, targetPayments]);
+  }, [sourcePayments, targetMonth, targetPayments]);
 
   const duplicateIncomeIds = useMemo(() => {
     const duplicates = new Set<string>();
 
     for (const income of sourceIncomes) {
-      const copiedFromId = String(income.metadata?.copiedFromId || income.id);
-      const name = income.name.trim().toLowerCase();
-
-      const exists = targetIncomes.some(
-        (candidate) =>
-          String(candidate.metadata?.copiedFromId || '') === copiedFromId ||
-          (
-            candidate.name.trim().toLowerCase() === name &&
-            candidate.accountId === income.accountId &&
-            candidate.expectedAmountPence === income.expectedAmountPence &&
-            candidate.sourcePerson === income.sourcePerson
-          )
+      const exists = targetIncomes.some((candidate) =>
+        isRolloverIncomeDuplicate(income, candidate, targetMonth)
       );
 
       if (exists) duplicates.add(income.id);
     }
 
     return duplicates;
-  }, [sourceIncomes, targetIncomes]);
+  }, [sourceIncomes, targetIncomes, targetMonth]);
 
   useEffect(() => {
     if (!isOpen) return;
