@@ -145,6 +145,7 @@ export const MembersView: React.FC<MembersViewProps> = ({
                       <select
                         value={member.role}
                         onChange={(e) => onChangeRole(member.id, e.target.value as UserRole)}
+                        aria-label={`Role for ${member.name}`}
                         className="px-2.5 py-1.5 text-xs rounded-lg border border-muted bg-surface font-medium text-muted"
                       >
                         <option value="editor">Editor</option>
