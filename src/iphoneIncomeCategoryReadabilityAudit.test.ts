@@ -17,7 +17,7 @@ describe('Step 44 iPhone income category readability contract', () => {
     expect(category?.id).toBe('cat-child-maintenance-received');
   });
 
-  it('keeps ordinary Income category options correctly scoped', () => {
+  it('keeps ordinary Income category options correctly scoped and below the searchable threshold', () => {
     const catalogue = createCanonicalCatalogue();
     const eligibility = createCategoryEligibility(catalogue.categoryGroups);
     const options = eligibility.getTransactionCategoryOptions(catalogue.categories, 'income', []);
@@ -34,17 +34,25 @@ describe('Step 44 iPhone income category readability contract', () => {
     ]);
     expect(names).not.toContain('Uncategorised Income');
     expect(options.every((item) => !item.isSystem)).toBe(true);
+    expect(options).toHaveLength(7);
   });
 
-  it('preserves the native Category select and categoryId binding in TransactionModal', () => {
+  it('routes TransactionModal through CategorySelect while preserving native short-list categoryId binding', () => {
     const modal = read('components/TransactionModal.tsx');
+    const categorySelect = read('components/CategorySelect.tsx');
 
+    expect(modal).toContain("import { CategorySelect } from './CategorySelect';");
     expect(modal).toContain('id="transaction-category"');
     expect(modal).toContain('value={categoryId}');
-    expect(modal).toContain('onChange={(e) => setCategoryId(e.target.value)}');
-    expect(modal).toContain('transactionCategoryOptions.map((cat) =>');
-    expect(modal).toContain('<option key={cat.id} value={cat.id}>');
-    expect(modal).toContain('{cat.name}');
+    expect(modal).toContain('categories={transactionCategoryOptions}');
+    expect(modal).toContain('categoryGroups={categoryGroups}');
+    expect(modal).toContain('onValueChange={setCategoryId}');
+
+    expect(categorySelect).toContain('export const CATEGORY_SEARCH_THRESHOLD = 12;');
+    expect(categorySelect).toContain('categories.length >= searchableThreshold');
+    expect(categorySelect).toContain('<select');
+    expect(categorySelect).toContain('id={id}');
+    expect(categorySelect).toContain('onChange={(event) => onValueChange(event.target.value)}');
   });
 
   it('keeps native iPhone picker activation while containing the Phone Category control', () => {
@@ -60,8 +68,9 @@ describe('Step 44 iPhone income category readability contract', () => {
     expect(mobileCss).not.toContain('width: calc(100% + 12px)');
     expect(mobileCss).not.toContain('margin-inline-end: -12px');
 
-    // Physical iPhone evidence showed appearance:none made the selected Category
-    // field unreliable to reopen. Do not reintroduce custom select chrome here.
+    // Historical physical iPhone evidence showed appearance:none made the selected Category
+    // field unreliable to reopen. The short Income branch remains a native select, so retain
+    // the narrow native appearance treatment for #transaction-category.
     expect(mobileCss).not.toContain('#transaction-category.mv-transaction-control {\n    -webkit-appearance: none;');
     expect(mobileCss).not.toContain('#transaction-category.mv-transaction-control {\n    appearance: none;');
 
