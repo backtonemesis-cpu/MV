@@ -15,8 +15,8 @@ const unifiedAddCss = fs.readFileSync(
 );
 
 describe('Actual iPhone transaction date visual frame regression', () => {
-  it('loads the dedicated iPhone transaction date containment layer', () => {
-    expect(html).toContain('./iphone-transaction-date-fix.css');
+  it('loads the dedicated iPhone transaction date containment layer as a Vite public asset', () => {
+    expect(html).toContain('href="/iphone-transaction-date-fix.css"');
   });
 
   it('applies the iPhone-sized containment layer in both user-selectable layout modes', () => {
