@@ -313,6 +313,16 @@
     border-top: 1px solid var(--border);
     background: var(--surface);
   }
+
+  /* PHONE-DENSITY-001: Accounts uses compact desktop actions in source.
+     Preserve that desktop density, but raise every directly user-triggered
+     Accounts card/header/goal action to the shared 44px Phone target floor. */
+  .mv-layout-phone .mv-app-workspace > div > .space-y-6.pb-12 :is(
+    button,
+    label:has(> input[type="checkbox"])
+  ) {
+    min-height: var(--mv-ds-click-target) !important;
+  }
 }
 
 
