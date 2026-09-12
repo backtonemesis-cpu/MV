@@ -179,7 +179,7 @@ describe('Global finance UI consistency contract', () => {
 
     expect(dashboard).toContain('generateTransferPlan(');
     expect(dashboard).not.toContain('isPlannedPaymentEffectivelyPaid');
-    expect(dashboard).toContain("label: 'Transferred From Savings'");
+    expect(dashboard).toContain("label: 'Transferred from savings'");
     expect(dashboard).toContain('calculateTransferredFromSavingsPence');
   });
 
