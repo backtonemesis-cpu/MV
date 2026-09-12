@@ -1,26 +1,27 @@
 # MV global selector inventory
 
-Baseline repaired from `main` at `a87bb385843d53b9543ab72ece9314a7c22e3333`.
+Current selector architecture is reconciled against deployed `main` at `fa026f4abd1e3120cccd736a9bf9cc9a45f53f6e` plus the active adaptive-category migration branch.
 
 ## Ordinary native selectors
 
-The current component source contains 28 ordinary native `<select>` render points. These controls keep their browser/OS activation, focus, option and form semantics. They are **not** globally intercepted or mirrored into a second custom popup.
+The current component source on this branch contains **25 native `<select>` render points**. This is a source inventory, not a claim that every adaptive category field renders native at runtime: `CategorySelect` owns one native fallback render point and switches to the searchable long-list primitive only when the eligible category set reaches the explicit long-list threshold.
+
+Native controls keep browser/OS activation, focus, option and form semantics. They are **not** globally intercepted or mirrored into a second custom popup.
 
 | Component / screen | Current selector | Metadata / eligibility source |
 | --- | --- | --- |
 | AccountsView / Add Account | Owner, Type native selects | Disabled placeholders; Joint + active member owner options |
 | AccountsView / Edit Account | Owner, Type native selects | Historical removed owner retained; legacy Joint type conditionally retained |
-| TransactionList / Activity | Date, payer, classification, category native selects | Exact current filter values |
+| TransactionList / Activity | Date, payer, classification, category native selects | Exact current filter values; long Category filter is pending the next migration sub-stage |
 | IncomeView | Received by, Account, Category, Receiving account native selects | Household people, account identity, category eligibility |
 | CategorySettings | Category Group, new Group Scope native selects | Group scope/write-boundary constraints |
-| CategoryBudgets | Category native select | Bill-category eligibility |
-| CategoryCorrection | Operation, From category, To category, budget conflict policy native selects | Scope/system/archive/merge constraints |
+| CategoryCorrection | Operation and budget conflict policy native selects | Two/short fixed-choice workflow decisions |
 | MembersView | Member role native select | Owner-only edit; Editor/View Only values |
-| PlannedPaymentModal | Category native select | Bill-category eligibility |
 | SavingsView | Source account, Savings destination native selects | Existing source/destination eligibility |
 | MarkPaymentPaidModal | Paid from native select | Active account options |
 | AuditLogView | Audit type native select | Fixed audit entity filter values |
-| TransactionModal | Bill category, transaction category, split category native selects | Bill/transaction/split category eligibility and historical preservation |
+| TransactionModal | Bill category, transaction category, split category native selects | Bill/transaction/split category eligibility and historical preservation; pending adaptive migration |
+| CategorySelect | Native fallback for category sets below the long-list threshold | Exact category IDs supplied by the authoritative eligibility caller |
 
 ### Native-first contract
 
@@ -28,11 +29,11 @@ Native selects are the default when native behaviour is sufficient. This follows
 
 Do not disable native select pointer hit-testing. Do not install a document-level geometry/touch interceptor. Do not mount a global bridge that turns every native select into a portalled custom listbox.
 
-Short fixed-choice selectors should remain native unless a specific interaction requirement justifies a different pattern.
+Short fixed-choice selectors remain native unless a specific interaction requirement justifies a different pattern.
 
 ## Direct rich selectors
 
-Two current selector families use `MVSelect` directly because their presentation needs richer information than a plain short-choice native control:
+Two current selector families continue to use the select-only `MVSelect` directly because their presentation needs richer information than a plain short-choice native control:
 
 | Component / screen | Current selector | Required rich information |
 | --- | --- | --- |
@@ -45,7 +46,35 @@ These direct controls own exactly one popup/listbox. They do not sit on top of a
 
 A direct `MVSelect` must never open an unexplained empty bordered popover when its legal option array is empty. A clean MV household can legitimately start with `accounts: []`. In that state the closed field remains readable, exposes its unavailable state, replaces its normal placeholder with an explicit empty message, removes popup affordances, and does not open a listbox. Unified Add uses `No accounts available`; other direct selectors use the shared `No options available` fallback unless they supply a more specific message.
 
-A non-empty option set whose items are all disabled is different: the listbox remains available so the user can inspect the options and their disabled reasons. If a direct selector is already open and its dynamic option array becomes empty, it closes predictably rather than collapsing into an empty sliver.
+A non-empty option set whose items are all disabled is different: the listbox remains available so the user can inspect options and disabled reasons. If a direct selector is already open and its dynamic option array becomes empty, it closes predictably rather than collapsing into an empty sliver.
+
+## Adaptive searchable financial lists
+
+`MVSearchableSelect` is a separate long-list primitive. It is not a replacement for ordinary native selects or the select-only account `MVSelect`.
+
+`CategorySelect` is the category-specific adaptive adapter:
+
+- fewer than 12 eligible categories → native `<select>`;
+- 12 or more eligible categories → one searchable `MVSearchableSelect`;
+- exact category IDs remain the stored values in both branches;
+- search text may include category/group display metadata but never substitutes display text for IDs;
+- caller-supplied eligibility arrays remain authoritative;
+- there is never a native and custom picker mounted for the same field at the same time.
+
+The canonical catalogue currently provides **37 expense categories** and **7 income categories**. Therefore ordinary Income category selection stays native, while bill/expense category tasks qualify as long-list tasks.
+
+Current migrated consumers in this branch:
+
+| Component / screen | Adaptive field | Preserved semantics |
+| --- | --- | --- |
+| PlannedPaymentModal | Bill category | Existing bill-category eligibility and validation |
+| CategoryBudgets | Budget category | Bill-category eligibility; explicit category-required validation before budget write |
+| CategoryCorrection | From / To category | Scope/system/archive rules; archived source label retained; Operation/policy selectors remain native |
+
+Pending next sub-stage:
+
+- TransactionModal bill/expense/split category surfaces, while preserving native seven-option Income behaviour and the existing iPhone native short-list contract.
+- Activity category filter, with `All categories` retained as the non-category leading value.
 
 ## Deliberately native/system controls
 
@@ -63,6 +92,6 @@ A non-empty option set whose items are all disabled is different: the listbox re
 
 ## Remaining selector work
 
-The approved MV product decision requires genuinely long financial lists to use a one-tap searchable list/sheet where search materially improves the task. Current direct `MVSelect` remains select-only and the ordinary native category/account selectors have not all been classified by list size/task complexity yet. That is a separate follow-on workstream; it must not be implemented by reintroducing global native-select interception.
+GA-SELECT-002 remains open until the pending TransactionModal and Activity long-category surfaces are migrated and the final source inventory/regression suite is reconciled. The work must not reintroduce global native-select interception or convert short fixed-choice controls merely for visual consistency.
 
-Physical Safari evidence is not a default completion requirement under the current Master Autonomous Engineering Authority. If explicitly requested, physical verification remains a separate evidence tier and must not be inferred from DOM tests.
+Physical Safari evidence is not a default completion requirement under the current Master Autonomous Engineering Authority. If explicitly requested, physical verification remains a separate evidence tier and must not be inferred from DOM/tests.
