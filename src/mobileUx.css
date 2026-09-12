@@ -349,6 +349,15 @@
   .mv-layout-phone .mv-hscroll > button {
     min-height: var(--mv-ds-click-target) !important;
   }
+
+  /* PHONE-DENSITY-001: Transfer Plan bill-selection checkboxes are wrapped in
+     a label that otherwise collapses to the native 16px checkbox. Keep the
+     checkbox itself native and expand only the Phone hit area to 44x44. */
+  .mv-layout-phone section[aria-label="Transfer Plan bill selection"] label:has(> input[type="checkbox"]) {
+    min-width: var(--mv-ds-click-target) !important;
+    min-height: var(--mv-ds-click-target) !important;
+    justify-content: center;
+  }
 }
 
 
