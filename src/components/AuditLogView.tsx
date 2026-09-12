@@ -25,12 +25,12 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
   });
 
   return (
-    <div className="space-y-4 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
+    <div className="min-w-0 max-w-full space-y-4 pb-12">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-xl font-bold text-main">Audit Trail</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="text-xs font-semibold px-2.5 py-1 bg-surface-muted text-muted rounded-lg border border-muted">
             {auditLogs.length} records
           </span>
@@ -38,8 +38,8 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-surface p-4 rounded-2xl border border-muted shadow-xs flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex min-w-0 max-w-full flex-col gap-3 rounded-2xl border border-muted bg-surface p-4 shadow-xs sm:flex-row">
+        <div className="relative min-w-0 flex-1">
           <label htmlFor="audit-log-search" className="sr-only">
             Search audit trail
           </label>
@@ -50,7 +50,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
             placeholder="Search..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-muted focus:ring-2 focus:ring-accent"
+            className="w-full min-w-0 max-w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-muted focus:ring-2 focus:ring-accent"
           />
         </div>
 
@@ -61,7 +61,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
           id="audit-log-type-filter"
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="px-3 py-1.5 text-xs rounded-xl border border-muted text-muted bg-surface"
+          className="w-full min-w-0 max-w-full px-3 py-1.5 text-xs rounded-xl border border-muted text-muted bg-surface sm:w-auto"
         >
           <option value="all">All Types</option>
           <option value="transaction">Transactions</option>
@@ -73,40 +73,40 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({ auditLogs }) => {
       </div>
 
       {/* Audit Entries List */}
-      <div className="bg-surface rounded-2xl border border-muted shadow-xs overflow-hidden">
+      <div className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-muted bg-surface shadow-xs">
         {filteredLogs.length === 0 ? (
           <div className="py-12 text-center text-xs text-muted text-subtle">
             No matching records.
           </div>
         ) : (
-          <div className="divide-y divide-muted">
+          <div className="min-w-0 divide-y divide-muted">
             {filteredLogs.map((entry) => (
-              <div key={entry.id} className="p-4 hover:bg-surface-muted transition">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-surface-muted text-muted border border-muted">
+              <div key={entry.id} className="min-w-0 max-w-full p-4 transition hover:bg-surface-muted">
+                <div className="mb-1.5 flex min-w-0 flex-col justify-between gap-1 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-surface-muted text-muted border border-muted">
                       {entry.entityType}
                     </span>
-                    <span className="text-xs font-mono font-bold text-main">
+                    <span className="min-w-0 break-all text-xs font-mono font-bold text-main">
                       {entry.action}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted text-subtle font-mono">
+                  <div className="shrink-0 text-[11px] text-muted text-subtle font-mono">
                     {new Date(entry.timestamp).toLocaleString('en-GB')}
                   </div>
                 </div>
 
-                <p className="text-xs text-main font-medium">{entry.summary}</p>
+                <p className="min-w-0 break-words text-xs text-main font-medium">{entry.summary}</p>
 
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted text-subtle">
-                  <span>By:</span>
-                  <span className="font-semibold text-muted">{entry.actorEmail}</span>
-                  <span>•</span>
-                  <span>{entry.entityId}</span>
+                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted text-subtle">
+                  <span className="shrink-0">By:</span>
+                  <span className="min-w-0 break-all font-semibold text-muted">{entry.actorEmail}</span>
+                  <span className="shrink-0">•</span>
+                  <span className="min-w-0 break-all">{entry.entityId}</span>
                 </div>
 
                 {entry.details && Object.keys(entry.details).length > 0 && (
-                  <div className="mt-2.5 p-2 bg-surface-muted rounded-lg text-[10px] font-mono text-muted border border-muted overflow-x-auto">
+                  <div className="mt-2.5 max-w-full overflow-x-auto rounded-lg border border-muted bg-surface-muted p-2 text-[10px] font-mono text-muted">
                     {JSON.stringify(entry.details, null, 2)}
                   </div>
                 )}
