@@ -220,9 +220,9 @@ describe('GA-TP-002 bill-level Undo Funding API', () => {
     expect(secondUndo.reversedPence).toBe(100_00);
 
     state = loadLocalHousehold();
-    expect(() => undoTransferPlanBillFunding(bill.id, state.version)).rejects.toThrow(
-      'No active exact bill-level funding attribution'
-    );
+    await expect(
+      undoTransferPlanBillFunding(bill.id, state.version)
+    ).rejects.toThrow('No active exact bill-level funding attribution');
   });
 
   it('refuses bill-level undo for legacy transaction-only funding instead of inventing attribution', async () => {
