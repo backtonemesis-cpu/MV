@@ -27,6 +27,10 @@ export type TransferPlanReversibleFundingEvidence =
       batch: TransferPlanFundingBatch;
     };
 
+function isAttributedFundingReversal(transaction: Transaction): boolean {
+  return transaction.metadata?.transferPlanFundingReversal === true;
+}
+
 export function getActiveAttributedFundingRecords(
   records: TransferPlanFundingRecord[] | undefined,
   transactions: Transaction[],
@@ -49,10 +53,13 @@ export function getTrulyLegacyFundingBatches(
   month?: string
 ): TransferPlanFundingBatch[] {
   const attributedRecordIds = new Set((records || []).map((record) => record.id));
+  const nonReversalTransactions = transactions.filter(
+    (transaction) => !isAttributedFundingReversal(transaction)
+  );
 
   return [
-    ...getTransferPlanFundingBatches(transactions, month),
-    ...getLegacyIncomingFundingBatches(transactions, month),
+    ...getTransferPlanFundingBatches(nonReversalTransactions, month),
+    ...getLegacyIncomingFundingBatches(nonReversalTransactions, month),
   ]
     .filter((batch) => !attributedRecordIds.has(batch.batchKey))
     .sort(
