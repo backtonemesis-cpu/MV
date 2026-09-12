@@ -7,16 +7,21 @@ const SRC = path.resolve(process.cwd(), 'src');
 const INTERACTIVE_ROLES = new Set([
   'button',
   'checkbox',
+  'combobox',
   'link',
+  'listbox',
   'menuitem',
   'menuitemcheckbox',
   'menuitemradio',
   'option',
   'radio',
+  'slider',
+  'spinbutton',
   'switch',
   'tab',
   'treeitem',
 ]);
+const COMPOSITE_ROLES_REQUIRING_EXPLICIT_NAME = new Set(['combobox', 'listbox']);
 const NATIVE_INTERACTIVE = new Set(['button', 'input', 'select', 'textarea', 'summary']);
 
 interface Finding {
@@ -59,6 +64,20 @@ function staticAttrValue(node: ts.JsxOpeningLikeElement, name: string): string |
     return attribute.initializer.expression.text;
   }
   return undefined;
+}
+
+function attrIdentityKey(node: ts.JsxOpeningLikeElement, name: string): string | undefined {
+  const attribute = attr(node, name);
+  if (!attribute?.initializer) return undefined;
+  if (ts.isStringLiteral(attribute.initializer)) return `static:${attribute.initializer.text}`;
+  if (ts.isJsxExpression(attribute.initializer) && attribute.initializer.expression) {
+    return `expression:${attribute.initializer.expression.getText()}`;
+  }
+  return `initializer:${attribute.initializer.getText()}`;
+}
+
+function hasSpreadAttributes(node: ts.JsxOpeningLikeElement): boolean {
+  return node.attributes.properties.some((property) => ts.isJsxSpreadAttribute(property));
 }
 
 function hasNamingAttribute(node: ts.JsxOpeningLikeElement): boolean {
@@ -120,8 +139,8 @@ function hasAssociatedLabel(
   labelledIds: Set<string>
 ): boolean {
   if (ancestorLabel(node)) return true;
-  const id = staticAttrValue(node, 'id');
-  return Boolean(id && labelledIds.has(id));
+  const idKey = attrIdentityKey(node, 'id');
+  return Boolean(idKey && labelledIds.has(idKey));
 }
 
 function lineOf(sourceFile: ts.SourceFile, node: ts.Node): number {
@@ -145,6 +164,11 @@ function hasAccessibleName(
   const tag = tagName(node);
   if (hasNamingAttribute(node)) return true;
 
+  // A native primitive that spreads caller props is indeterminate at this source
+  // location rather than definitely unnamed. Call-site contracts audit the supplied
+  // aria/id props separately (for example the shared MoneyInput gate).
+  if (hasSpreadAttributes(node)) return true;
+
   if (tag === 'button' || tag === 'summary' || tag === 'a') {
     return elementHasText(node);
   }
@@ -163,6 +187,7 @@ function hasAccessibleName(
   }
 
   const role = staticAttrValue(node, 'role');
+  if (role && COMPOSITE_ROLES_REQUIRING_EXPLICIT_NAME.has(role)) return false;
   if (role && INTERACTIVE_ROLES.has(role)) return elementHasText(node);
   return true;
 }
@@ -207,8 +232,8 @@ function auditFile(file: string): Finding[] {
 
   const collectLabels = (node: ts.Node) => {
     if ((ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) && tagName(node) === 'label') {
-      const htmlFor = staticAttrValue(node, 'htmlFor');
-      if (htmlFor) labelledIds.add(htmlFor);
+      const htmlForKey = attrIdentityKey(node, 'htmlFor');
+      if (htmlForKey) labelledIds.add(htmlForKey);
     }
     ts.forEachChild(node, collectLabels);
   };
