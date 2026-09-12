@@ -1,0 +1,84 @@
+/*
+ * Searchable long-list companion to MVSelect.
+ * This surface is for genuinely long financial option sets where search
+ * materially improves selection. Short fixed-choice fields remain native.
+ */
+
+.mv-searchable-select-popover {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mv-searchable-select-search {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 4px;
+  border-bottom: 1px solid var(--border);
+  background: var(--field);
+}
+
+.mv-searchable-select-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--card-radius, 8px) - 2px);
+  padding: 7px 10px 7px 34px;
+  background: var(--field);
+  color: var(--text);
+  font-size: var(--mv-control-value-size);
+  line-height: var(--mv-control-value-leading);
+  outline: none;
+}
+
+.mv-searchable-select-input:focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.mv-searchable-select-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.mv-searchable-select-list {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px;
+  outline: none;
+}
+
+.mv-searchable-select-empty {
+  padding: 16px 12px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  text-align: center;
+}
+
+@media (max-width: 47.999rem) {
+  .mv-searchable-select-input {
+    min-height: 44px;
+    font-size: var(--mv-control-value-phone-size);
+    line-height: var(--mv-control-value-phone-leading);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-searchable-select-list {
+    scroll-behavior: auto;
+  }
+}
