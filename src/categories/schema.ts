@@ -1,4 +1,5 @@
 import type { HouseholdData } from '../types';
+import { normalizeTransferPlanFundingRecords } from '../utils/transferPlanFundingPersistence';
 import type { CategoryCatalogue } from './model';
 import { createCanonicalCatalogue } from './registry';
 import { assertCategoryCatalogue } from './validation';
@@ -35,6 +36,15 @@ export function assertCategorySchema(value: unknown): asserts value is Household
     throw new Error('Incompatible data schema. V2 requires an explicit compatible backup; legacy data was not imported.');
   }
   assertCategoryCatalogue(value);
+
+  // The funding-evidence collection is additive within V2. Older valid V2
+  // households/backups omit it, so normalize absence to [] without inferring
+  // attribution from legacy Transfer Plan transactions. Explicit records must
+  // pass their exact structural reconciliation before the state can continue.
+  const state = value as HouseholdDataV2;
+  state.transferPlanFundingRecords = normalizeTransferPlanFundingRecords(
+    state.transferPlanFundingRecords
+  );
 }
 
 /** The caller must supply the complete financial validator before activating V2. */
