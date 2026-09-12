@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createCleanCategoryHousehold } from './categories/schema';
+import {
+  assertCategorySchema,
+  createCleanCategoryHousehold,
+} from './categories/schema';
 import type { TransferPlanFundingRecord } from './types';
 import { normalizeTransferPlanFundingRecords } from './utils/transferPlanFundingPersistence';
 
@@ -30,22 +33,33 @@ function record(id = 'batch-1'): TransferPlanFundingRecord {
   };
 }
 
+function cleanState() {
+  return createCleanCategoryHousehold(
+    {
+      id: 'household-test',
+      name: 'Test',
+      members: [],
+    },
+    1
+  );
+}
+
 describe('GA-TP-002 funding persistence compatibility', () => {
   it('initializes clean V2 households with an empty funding-record collection', () => {
-    const state = createCleanCategoryHousehold(
-      {
-        id: 'household-test',
-        name: 'Test',
-        members: [],
-      },
-      1
-    );
-
-    expect(state.transferPlanFundingRecords).toEqual([]);
+    expect(cleanState().transferPlanFundingRecords).toEqual([]);
   });
 
   it('normalizes legacy households with no collection to an empty array without inference', () => {
     expect(normalizeTransferPlanFundingRecords(undefined)).toEqual([]);
+  });
+
+  it('normalizes a legacy-compatible V2 state at the schema boundary used by load/save/restore', () => {
+    const state = cleanState();
+    delete state.transferPlanFundingRecords;
+
+    assertCategorySchema(state);
+
+    expect(state.transferPlanFundingRecords).toEqual([]);
   });
 
   it('preserves a valid explicit funding record exactly by value', () => {
@@ -67,6 +81,17 @@ describe('GA-TP-002 funding persistence compatibility', () => {
     corrupt.billAttributions[0].sourceShares[0].amountPence = 9_999;
 
     expect(() => normalizeTransferPlanFundingRecords([corrupt])).toThrow(
+      'do not match the attributed amount'
+    );
+  });
+
+  it('rejects corrupt explicit attribution through the schema boundary before state use', () => {
+    const state = cleanState();
+    const corrupt = record();
+    corrupt.billAttributions[0].sourceShares[0].amountPence = 9_999;
+    state.transferPlanFundingRecords = [corrupt];
+
+    expect(() => assertCategorySchema(state)).toThrow(
       'do not match the attributed amount'
     );
   });
