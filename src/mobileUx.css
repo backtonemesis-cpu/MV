@@ -342,6 +342,13 @@
     width: var(--mv-ds-click-target) !important;
     height: var(--mv-ds-click-target) !important;
   }
+
+  /* PHONE-DENSITY-001: Savings goal-card actions use compact desktop pills in
+     the horizontal action strip. Keep that desktop treatment and raise only
+     the Phone Transfer/Edit/Delete targets to the shared 44px floor. */
+  .mv-layout-phone .mv-hscroll > button {
+    min-height: var(--mv-ds-click-target) !important;
+  }
 }
 
 
