@@ -1,0 +1,18 @@
+/* Dashboard-specific layout contract.
+ * Loaded after the global design system so the three primary PC actions
+ * retain their intended three-column geometry instead of inheriting the
+ * generic four-column Dashboard metric rule.
+ */
+@media (min-width: 80rem) {
+  .mv-layout-pc .mv-dashboard-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Tailwind viewport breakpoints still apply while MV is in Phone mode on a
+ * wide physical screen. Neutralise the PC overview card spans there so the
+ * global one-column Phone contract remains authoritative. */
+.mv-layout-phone .mv-dashboard-overview-grid > .mv-dashboard-period-card,
+.mv-layout-phone .mv-dashboard-overview-grid > .mv-dashboard-surplus-card {
+  grid-column: auto !important;
+}
