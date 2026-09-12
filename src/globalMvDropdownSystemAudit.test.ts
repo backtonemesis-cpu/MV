@@ -41,7 +41,7 @@ describe('global MV selector system', () => {
     expect(main).not.toContain('MVNativeSelectBridge');
     expect(main).not.toContain('installMVNativeSelectTouchGuard');
     expect(main).not.toContain('nativeSelectTouchGuard');
-    expect(selectCss).not.toContain('pointer-events: none');
+    expect(selectCss).not.toContain('.mv-density-root select:not([data-mv-native="true"])');
     expect(selectCss).not.toContain('@media (pointer: coarse)');
   });
 
@@ -173,7 +173,8 @@ describe('global MV selector system', () => {
     expect(selectCss).toContain('@media (max-width: 47.999rem)');
     expect(selectCss).toContain('font-size: var(--mv-control-value-phone-size)');
     expect(selectCss).toContain('min-height: 44px');
-    expect(selectCss).not.toMatch(/select[^\{]*\{[^\}]*pointer-events:\s*none/s);
+    expect(selectCss).not.toContain('.mv-density-root select:not([data-mv-native="true"])');
+    expect(selectCss).not.toContain('@media (pointer: coarse)');
   });
 
   it('keeps Date and Month semantic controls native and independent of rich-selector code', () => {
