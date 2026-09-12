@@ -32,7 +32,7 @@ describe('global modal inventory and shared containment contract', () => {
     for (const { file, source } of dialogFiles) {
       const name = path.relative(COMPONENTS, file);
       expect(source, name).toContain('useModalAccessibility');
-      expect(source, name).toContain('role="dialog"');
+      expect(source, name).toMatch(/role="(?:dialog|alertdialog)"/);
       expect(source, name).toContain('tabIndex={-1}');
     }
   });
