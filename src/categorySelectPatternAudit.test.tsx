@@ -74,11 +74,31 @@ describe('adaptive category selector pattern', () => {
     expect(source).toContain('onValueChange={onValueChange}');
   });
 
-  it('searches category name plus group identity while short lists stay native', () => {
-    expect(source).toContain('textValue: `${category.name} ${groupName}`');
+  it('searches display label, canonical category name and group identity while short lists stay native', () => {
+    expect(source).toContain(
+      'textValue: `${displayLabel} ${category.name} ${groupName}`'
+    );
     expect(source).toContain('secondary: groupName');
     expect(source).toContain('categories.length >= searchableThreshold');
     expect(source).toContain('<select');
     expect(source).toContain('<MVSearchableSelect');
+  });
+
+  it('allows audit-specific display labels without changing the stable category id', () => {
+    const archived = expenseCategories[0];
+    const html = renderToStaticMarkup(
+      <CategorySelect
+        id="category-custom-label-test"
+        value={archived.id}
+        categories={expenseCategories}
+        categoryGroups={catalogue.categoryGroups}
+        onValueChange={vi.fn()}
+        ariaLabel="Category"
+        getCategoryLabel={(category) => `${category.name} (archived)`}
+      />
+    );
+
+    expect(html).toContain(`${archived.name} (archived)`);
+    expect(source).toContain('value: category.id');
   });
 });
