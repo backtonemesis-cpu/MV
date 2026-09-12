@@ -172,7 +172,10 @@ describe('GA-TP-002 live attributed Transfer Plan API lifecycle', () => {
 
     expect(undone.mode).toBe('attributed');
     expect(undone.reversedPence).toBe(150_00);
-    expect(undone.undoneTransactions).toHaveLength(2);
+    expect(undone.undoneTransactions).toHaveLength(3);
+    expect(
+      undone.undoneTransactions.map((transaction) => transaction.amountPence).sort((a, b) => a - b)
+    ).toEqual([10_00, 50_00, 90_00]);
     expect(
       undone.undoneTransactions.every(
         (transaction) =>
