@@ -14,3 +14,13 @@ export function formatDateKeyUk(value: string): string {
   if (!match) return value;
   return `${match[3]}/${match[2]}/${match[1]}`;
 }
+
+export function formatMonthKeyUk(value: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(value);
+  if (!match) return value;
+
+  return new Intl.DateTimeFormat('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${value}-01T12:00:00`));
+}
