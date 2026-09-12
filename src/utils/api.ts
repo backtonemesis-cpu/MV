@@ -32,7 +32,6 @@ import {
   deleteLocalSavingsGoal,
   deleteLocalTransaction,
   executeLocalTransfer,
-  executeLocalTransferAllocations,
   undoLocalPaymentPaid,
   undoLocalPaymentsPaid,
   undoLocalTransferTransaction,
@@ -56,6 +55,7 @@ import {
   updateLocalSavingsGoal,
   updateLocalTransaction,
 } from '../localStore';
+import { executeAttributedTransferPlanAllocations } from './transferPlanFundingStore';
 import { undoCompatibleTransferPlanFunding } from './transferPlanFundingUndoCompatibilityStore';
 
 const OWNER_EMAIL = LOCAL_OWNER.email;
@@ -408,7 +408,7 @@ export async function executeTransferPlanAllocations(payload: {
   expectedVersion: number;
 }) {
   const { expectedVersion, ...transfer } = payload;
-  return executeLocalTransferAllocations(transfer, expectedVersion);
+  return executeAttributedTransferPlanAllocations(transfer, expectedVersion);
 }
 
 export async function undoTransferPlanFunding(
