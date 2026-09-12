@@ -24,12 +24,12 @@ Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUP
 | Item | Current evidence |
 |---|---|
 | Repository | `backtonemesis-cpu/MV` |
-| Current `main` | `ba11f9a947f8a7caa410166cce8f9b5dd72ce6f3` |
-| Current main commit | `Reset transient Phone navigation state on layout changes (#217)` |
-| Exact-main workflow | Run #924 / `34689745865` |
+| Current `main` | `c17970d4172dfcb8cdb1e3b69716f3f0d9bd0213` |
+| Current main commit | `Add shared UK month display formatter (#219)` |
+| Exact-main workflow | Run #928 / `34690254160` |
 | Test/build/privacy/local-only | `PASS` |
-| Main automated suite | full repository suite PASS in run #924 |
-| GitHub Pages deploy | `PASS` in run #924 for exact current main |
+| Main automated suite | full repository suite PASS in run #928 |
+| GitHub Pages deploy | `PASS` in run #928 for exact current main |
 | Production persistence | browser-local `mv_local_state_v2` |
 | Cloud financial backend | not active |
 | Physical evidence requirement | only when explicitly requested |
@@ -55,6 +55,8 @@ Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUP
 | #215 | Tightened Income copy density and replaced raw `YYYY-MM` with readable en-GB month labels | `PASS`, merged; branch run #917 PASS; exact-main run #918/deploy PASS |
 | #216 | Reconciled responsive/Income evidence and current queue | `PASS`, evidence-only; exact-main run #920/deploy PASS |
 | #217 | Reset Phone More-menu transient state on layout-mode changes and added a dedicated regression gate | `PASS`, merged; branch run #923 PASS; exact-main run #924/deploy PASS |
+| #218 | Reconciled mode-switch evidence and remaining queue | `PASS`, evidence-only; exact-main run #926/deploy PASS |
+| #219 | Added shared UK month display formatter with regression coverage | `PASS`, merged; branch run #927 PASS; exact-main run #928/deploy PASS; Dashboard usages remain OPEN |
 
 ---
 
@@ -184,7 +186,7 @@ Final evidence: PR #212 branch gate passed **97/97 test files and 644/644 tests*
 ### GA-DATE-001 — Date/month controls and current working month
 **Status:** `PASS` for current source/automated contract
 
-Dynamic/local month handling and UK date tests pass. PR #205 preserves required iPhone date containment.
+Dynamic/local month handling and UK date tests pass. PR #205 preserves required iPhone date containment. PR #219 adds `formatMonthKeyUk` to the shared date utility for readable user-facing month/year labels while preserving canonical internal `YYYY-MM` keys.
 
 ### GA-HTML-001 — HTML shell accessibility / public asset paths
 **Status:** `PASS`
@@ -214,7 +216,7 @@ The selected mode remains persisted in `mv-layout-mode-v1`, mirrored to `documen
 ### GA-REPO-001 — Repository / PR / delivery hygiene
 **Status:** `PASS` at this baseline
 
-PR #34 is closed/superseded. PRs #203–#217 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
+PR #34 is closed/superseded. PRs #203–#219 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
 
 ---
 
@@ -228,7 +230,7 @@ Historical sequence: #200 ineffective cascade repair; #201 made density effectiv
 ### GLOBAL-COPY-001 — Content/copy density
 **Status:** `PARTIAL PASS / OPEN` — LOW
 
-PR #215 repaired the confirmed Income helper/qualifier prose and raw `YYYY-MM` user-facing schedule/empty-state copy. Broader current-source copy review across remaining screens remains open; no financial-calculation failure is implied.
+PR #215 repaired the confirmed Income helper/qualifier prose and raw `YYYY-MM` user-facing schedule/empty-state copy. PR #219 added a shared `formatMonthKeyUk` formatter and regression coverage without changing stored month keys or finance semantics. Current Dashboard source still exposes raw `selectedMonth` (`YYYY-MM`) in four user-facing places: surplus metadata, Spending Attribution heading, Bills heading and the no-bills empty state. Those four Dashboard usages remain OPEN and must be repaired with a narrow, diff-safe edit. Broader current-source copy review otherwise found no confirmed new defect in the reviewed Accounts, Activity, Savings or Settings surfaces.
 
 ### GLOBAL-RESPONSIVE-001 — Historical responsive defect family
 **Status:** `PASS` for current source/automated evidence
@@ -280,6 +282,8 @@ Under Master Autonomous Engineering Authority v2:
 | #215 | Income copy density/readable month labels — `PASS` |
 | #216 | responsive/Income ledger reconciliation — `PASS` |
 | #217 | mode-switch transient Phone navigation reset — `PASS` |
+| #218 | mode-switch ledger reconciliation — `PASS` |
+| #219 | shared UK month display formatter support — `PASS`; Dashboard usages remain OPEN |
 
 Git history remains the detailed implementation chronology; this ledger stores current consequence.
 
@@ -292,8 +296,9 @@ This ordering must be rechecked whenever `main` changes.
 | Priority | Item | Status | Current reason |
 |---:|---|---|---|
 | 1 | GA-TP-002 per-bill Undo Funding attribution | `BLOCKED` | No safe explicit bill-level funding attribution exists; guessing would risk financial corruption. Continue independent work. |
-| 2 | PHONE-DENSITY-001 / GLOBAL-COPY-001 broader discovery-inclusive review | `PARTIAL PASS / OPEN` | Confirmed Income copy defects repaired in #215; remaining screens still need concise-copy/density reconciliation. |
-| 3 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after copy/density review. |
+| 2 | GLOBAL-COPY-001 Dashboard raw month labels | `OPEN` | Four confirmed user-facing Dashboard `YYYY-MM` usages remain; shared formatter now exists. |
+| 3 | PHONE-DENSITY-001 broader discovery-inclusive review | `PARTIAL PASS / OPEN` | Income copy/geometry repaired; final density reconciliation remains. |
+| 4 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after the Dashboard copy repair. |
 
 No physical-only sweep is a default blocker.
 
