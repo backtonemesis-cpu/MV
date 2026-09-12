@@ -66,7 +66,7 @@ describe('unified Dashboard Add launcher', () => {
   });
 
   it('shows only the six-choice launcher and cancel/close affordances before a type is selected', () => {
-    expect(indexHtml).toContain('./unified-add-launcher-fix.css');
+    expect(indexHtml).toContain('href="/unified-add-launcher-fix.css"');
     expect(launcherStateCss).toContain('button[aria-label="Add bill"]');
     expect(launcherStateCss).toContain(':not(:has(.mv-transaction-type-tab.is-active))');
     expect(launcherStateCss).toContain('.mv-transaction-body > *:not(:has(.mv-transaction-type-tabs))');
