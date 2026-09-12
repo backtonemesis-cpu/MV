@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const src = path.resolve(process.cwd(), 'src');
 const modal = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
+const categorySelect = fs.readFileSync(path.join(src, 'components/CategorySelect.tsx'), 'utf8');
 const mobileCss = fs.readFileSync(path.join(src, 'mobileUx.css'), 'utf8');
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
@@ -106,9 +107,11 @@ describe('iPhone Add Bill containment and field geometry', () => {
     expect(sharedUi).toContain('value: account.id');
     expect(sharedUi).toContain('label: accountIdentityLabel(account)');
     expect(sharedUi).toContain('onValueChange={onChange}');
-    expect(modal).toContain('<option key={c.id} value={c.id}>');
+    expect(modal).toContain('categories={billCategoryOptions}');
     expect(modal).toContain('getBillCategoryOptions');
     expect(modal).toContain('isBillCategorySelectionAllowed');
+    expect(categorySelect).toContain('value: category.id');
+    expect(categorySelect).toContain('onValueChange={onValueChange}');
   });
 
   it('does not alter New Transaction-specific selectors', () => {
