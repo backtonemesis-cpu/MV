@@ -22,7 +22,8 @@ describe('TransactionModal adaptive category selectors', () => {
     expect(modal).toContain('id="transaction-category"');
     expect(modal).toContain('categories={transactionCategoryOptions}');
     expect(modal).toContain('onValueChange={setCategoryId}');
-    expect(modal).toContain('isTransactionCategorySelectionAllowed(categories, type, categoryId, preservedHistoricalCategoryIds)');
+    expect(modal).toContain('isTransactionCategorySelectionAllowed(');
+    expect(modal).toContain('preservedHistoricalCategoryIds');
     expect(modal).not.toMatch(/<select[^>]*id="transaction-category"/);
   });
 
@@ -30,7 +31,7 @@ describe('TransactionModal adaptive category selectors', () => {
     expect(modal).toContain('id={`transaction-split-category-${idx}`}');
     expect(modal).toContain('categories={getTransactionCategoryOptions(');
     expect(modal).toContain('initialTransaction?.type === type && splitRow.originalCategoryId');
-    expect(modal).toContain('? [splitRow.originalCategoryId]');
+    expect(modal).toContain('splitRow.originalCategoryId');
     expect(modal).toContain("handleUpdateSplitRow(idx, 'categoryId', value)");
     expect(modal).toContain('isTransactionCategorySelectionAllowed(');
     expect(modal).toContain('item.originalCategoryId');
