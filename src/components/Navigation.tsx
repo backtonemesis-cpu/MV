@@ -111,6 +111,22 @@ export const Navigation: React.FC<NavigationProps> = ({
   }, [activeTab]);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => mutation.attributeName === 'data-layout-mode')) {
+        setIsMoreOpen(false);
+      }
+    });
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-layout-mode'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     if (!isMoreOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
