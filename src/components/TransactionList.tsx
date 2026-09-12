@@ -19,6 +19,9 @@ import { accountIdentityLabel } from '../utils/accountDisplay';
 import { formatMonthLabel } from '../utils/transferPlan';
 import { formatDateKeyUk } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
+import { MVSearchableSelect } from './MVSearchableSelect';
+
+const CATEGORY_FILTER_SEARCH_THRESHOLD = 12;
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -73,6 +76,18 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const payerOptions = useMemo(
     () => householdPersonOptions(members, transactions.map((transaction) => transaction.payer)),
     [members, transactions]
+  );
+
+  const categoryFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All categories', textValue: 'All categories' },
+      ...categories.map((category) => ({
+        value: category.id,
+        label: category.name,
+        textValue: category.name,
+      })),
+    ],
+    [categories]
   );
 
   const filteredTransactions = useMemo(() => {
@@ -227,22 +242,40 @@ export const TransactionList: React.FC<TransactionListProps> = ({
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
           </label>
 
-          <label className="relative block min-w-0">
-            <span className="sr-only">Category filter</span>
-            <select
-              value={selectedCategory}
-              onChange={(event) => setSelectedCategory(event.target.value)}
-              className={`${filterInputClassName} finance-filter-control-trailing appearance-none`}
-            >
-              <option value="all">All categories</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-          </label>
+          <div className="relative block min-w-0">
+            <span id="activity-category-filter-label" className="sr-only">Category filter</span>
+            {categories.length >= CATEGORY_FILTER_SEARCH_THRESHOLD ? (
+              <MVSearchableSelect
+                id="activity-category-filter"
+                value={selectedCategory}
+                options={categoryFilterOptions}
+                onValueChange={setSelectedCategory}
+                placeholder="All categories"
+                searchPlaceholder="Search categories"
+                noMatchesMessage="No matching categories"
+                ariaLabelledBy="activity-category-filter-label"
+                className={filterInputClassName}
+              />
+            ) : (
+              <>
+                <select
+                  id="activity-category-filter"
+                  value={selectedCategory}
+                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  className={`${filterInputClassName} finance-filter-control-trailing appearance-none`}
+                  aria-labelledby="activity-category-filter-label"
+                >
+                  <option value="all">All categories</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
+              </>
+            )}
+          </div>
         </div>
       </section>
 
