@@ -17,6 +17,7 @@ import type {
   PlannedPayment,
   Transaction,
   TransferPlanFundingMutationExpectation,
+  TransferPlanFundingRecord,
   UserRole,
 } from '../types';
 import { formatPence } from '../utils/currency';
@@ -25,6 +26,7 @@ import { formatMonthLabel, generateTransferPlan } from '../utils/transferPlan';
 import {
   accountIdentityLabel,
 } from '../utils/accountDisplay';
+import { getActiveBillFundingByPaymentId } from '../utils/transferPlanFundingCompatibility';
 import {
   buildTransferPlanAccountModels,
   groupTransferPlanAccountModels,
@@ -35,6 +37,7 @@ import { ExecuteTransferModal } from './ExecuteTransferModal';
 import { MarkPaymentPaidModal } from './MarkPaymentPaidModal';
 import { BulkPaymentStatusModal } from './BulkPaymentStatusModal';
 import { UndoFundingModal } from './UndoFundingModal';
+import { UndoBillFundingModal } from './UndoBillFundingModal';
 import { MonthPicker } from './MonthPicker';
 
 interface TransferPlanViewProps {
@@ -42,6 +45,7 @@ interface TransferPlanViewProps {
   categories: Category[];
   plannedPayments: PlannedPayment[];
   transactions: Transaction[];
+  fundingRecords: TransferPlanFundingRecord[];
   members: HouseholdMember[];
   userRole: UserRole;
   selectedMonth?: string;
@@ -84,6 +88,7 @@ interface TransferPlanViewProps {
     month: string,
     expectedBatch: TransferPlanFundingMutationExpectation
   ) => Promise<void>;
+  onUndoBillFunding: (plannedPaymentId: string) => Promise<void>;
 }
 
 function formatDueDate(value?: string): string {
@@ -134,6 +139,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   categories,
   plannedPayments,
   transactions,
+  fundingRecords,
   members,
   userRole,
   selectedMonth: propSelectedMonth,
@@ -146,6 +152,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
   onBulkTogglePlannedPayments,
   onExecuteTransfer,
   onUndoFunding,
+  onUndoBillFunding,
 }) => {
   const isViewOnly = userRole === 'view_only';
 
@@ -161,6 +168,10 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
     useState<Record<string, boolean>>({});
   const [undoFundingModel, setUndoFundingModel] =
     useState<TransferPlanAccountModel | null>(null);
+  const [undoBillFunding, setUndoBillFunding] = useState<{
+    payment: PlannedPayment;
+    activePence: number;
+  } | null>(null);
   const [selectionBusyId, setSelectionBusyId] =
     useState<string | null>(null);
   const [bulkSelectionBusy, setBulkSelectionBusy] = useState(false);
@@ -193,9 +204,20 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
       buildTransferPlanAccountModels(
         plan,
         transactions,
+        selectedMonth,
+        fundingRecords
+      ),
+    [plan, transactions, selectedMonth, fundingRecords]
+  );
+
+  const activeBillFundingByPaymentId = useMemo(
+    () =>
+      getActiveBillFundingByPaymentId(
+        fundingRecords,
+        transactions,
         selectedMonth
       ),
-    [plan, transactions, selectedMonth]
+    [fundingRecords, transactions, selectedMonth]
   );
 
   const groups = useMemo(
@@ -546,6 +568,7 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               ? categoriesById.get(payment.categoryId)
               : undefined;
             const statusLabel = billFundingLabel(model, payment);
+            const activeBillFunding = activeBillFundingByPaymentId.get(payment.id);
 
             return (
               <div
@@ -581,6 +604,14 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                       ) : null}
                       <span>·</span>
                       <span>{statusLabel}</span>
+                      {activeBillFunding ? (
+                        <>
+                          <span>·</span>
+                          <span className="finance-semantic-positive">
+                            Transfer-funded {formatPence(activeBillFunding.activePence)}
+                          </span>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -619,6 +650,22 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
                   <span className="mv-private-value min-w-[82px] text-right font-mono text-xs font-bold tabular-nums text-main">
                     {formatPence(payment.amountPence)}
                   </span>
+                  {!isViewOnly && activeBillFunding ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setUndoBillFunding({
+                          payment,
+                          activePence: activeBillFunding.activePence,
+                        })
+                      }
+                      className="inline-flex min-h-11 items-center justify-center gap-1 rounded-md border border-muted px-2.5 text-[11px] font-semibold text-muted hover:bg-surface-muted sm:min-h-8"
+                      title="Undo only the latest exact Transfer Plan funding attributed to this bill"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Undo funding {formatPence(activeBillFunding.activePence)}
+                    </button>
+                  ) : null}
                   {renderCardPaymentAction(model, payment)}
                 </div>
               </div>
@@ -1128,6 +1175,15 @@ export const TransferPlanView: React.FC<TransferPlanViewProps> = ({
               expectedBatch
             );
           }}
+        />
+      )}
+
+      {undoBillFunding && (
+        <UndoBillFundingModal
+          payment={undoBillFunding.payment}
+          activeFundingPence={undoBillFunding.activePence}
+          onClose={() => setUndoBillFunding(null)}
+          onConfirm={onUndoBillFunding}
         />
       )}
 
