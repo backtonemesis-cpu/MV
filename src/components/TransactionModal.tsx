@@ -16,6 +16,7 @@ import { resolveAccountOwnerPayer } from '../utils/accountOwner';
 import { localDateInputValue, localMonthInputValue } from '../utils/dateInput';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
+import { CategorySelect } from './CategorySelect';
 import { createCategoryEligibility } from '../utils/categoryEligibility';
 import type { CategoryGroup } from '../types';
 import {
@@ -754,20 +755,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                       >
                         Category
                       </label>
-                      <select
+                      <CategorySelect
                         id="unified-bill-category"
                         value={categoryId}
-                        onChange={(e) => setCategoryId(e.target.value)}
+                        categories={billCategoryOptions}
+                        categoryGroups={categoryGroups}
+                        onValueChange={setCategoryId}
+                        ariaLabel="Bill category"
+                        placeholder="Select category"
                         className={`mv-transaction-control w-full ${categoryId ? '' : 'is-placeholder'}`.trim()}
                         required
-                      >
-                        <option value="">Select category</option>
-                        {billCategoryOptions.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
                   </div>
 
@@ -922,20 +920,17 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                         >
                           Category
                         </label>
-                        <select
+                        <CategorySelect
                           id="transaction-category"
                           value={categoryId}
-                          onChange={(e) => setCategoryId(e.target.value)}
+                          categories={transactionCategoryOptions}
+                          categoryGroups={categoryGroups}
+                          onValueChange={setCategoryId}
+                          ariaLabel="Transaction category"
+                          placeholder="Select category"
                           className={`mv-transaction-control w-full ${categoryId ? '' : 'is-placeholder'}`.trim()}
                           required
-                        >
-                          <option value="">Select category</option>
-                          {transactionCategoryOptions.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </div>
                     )}
                   </div>
@@ -1001,28 +996,25 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
                           </div>
                           {splits.map((splitRow, idx) => (
                             <div key={idx} className="mv-hscroll items-center">
-                              <select
-                                aria-label={`Split ${idx + 1} category`}
+                              <CategorySelect
+                                id={`transaction-split-category-${idx}`}
                                 value={splitRow.categoryId}
-                                onChange={(event) =>
-                                  handleUpdateSplitRow(idx, 'categoryId', event.target.value)
-                                }
-                                className="mv-transaction-control flex-1"
-                                required
-                              >
-                                <option value="">Select category</option>
-                                {getTransactionCategoryOptions(
+                                categories={getTransactionCategoryOptions(
                                   categories,
                                   type,
                                   initialTransaction?.type === type && splitRow.originalCategoryId
                                     ? [splitRow.originalCategoryId]
                                     : []
-                                ).map((category) => (
-                                  <option key={category.id} value={category.id}>
-                                    {category.name}
-                                  </option>
-                                ))}
-                              </select>
+                                )}
+                                categoryGroups={categoryGroups}
+                                onValueChange={(value) =>
+                                  handleUpdateSplitRow(idx, 'categoryId', value)
+                                }
+                                ariaLabel={`Split ${idx + 1} category`}
+                                placeholder="Select category"
+                                className="mv-transaction-control flex-1"
+                                required
+                              />
                               <MoneyInput
                                 wrapperClassName="w-36"
                                 type="text"
