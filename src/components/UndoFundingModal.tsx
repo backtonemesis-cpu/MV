@@ -45,14 +45,7 @@ export const UndoFundingModal: React.FC<UndoFundingModalProps> = ({
     return account ? accountIdentityLabel(account) : `Missing account · ${id}`;
   });
 
-  const expectedBatch: TransferPlanFundingMutationExpectation = {
-    batchKey: latestFundingBatch.batchKey,
-    destinationAccountId: latestFundingBatch.destinationAccountId,
-    totalPence: latestFundingBatch.totalPence,
-    transactionIds: latestFundingBatch.transactions.map(
-      (transaction) => transaction.id
-    ),
-  };
+  const expectedBatch = latestFundingBatch.expectedUndoBatch;
 
   const handleConfirm = async () => {
     try {
