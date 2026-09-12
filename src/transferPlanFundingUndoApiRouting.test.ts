@@ -7,8 +7,19 @@ const api = fs.readFileSync(
   'utf8'
 );
 
-describe('GA-TP-002 unified Undo Funding API routing', () => {
-  it('routes card Undo Funding through the attributed/legacy compatibility layer', () => {
+describe('GA-TP-002 Transfer Plan funding API routing', () => {
+  it('routes attributed Record Funding and compatible card Undo Funding through their proven stores', () => {
+    expect(api).toContain(
+      "import { executeAttributedTransferPlanAllocations } from './transferPlanFundingStore';"
+    );
+    expect(api).toContain(
+      'return executeAttributedTransferPlanAllocations(transfer, expectedVersion);'
+    );
+    expect(api).not.toContain('executeLocalTransferAllocations,');
+    expect(api).not.toContain(
+      'return executeLocalTransferAllocations(transfer, expectedVersion);'
+    );
+
     expect(api).toContain(
       "import { undoCompatibleTransferPlanFunding } from './transferPlanFundingUndoCompatibilityStore';"
     );
@@ -19,6 +30,5 @@ describe('GA-TP-002 unified Undo Funding API routing', () => {
     expect(api).not.toContain(
       'return undoLatestLocalTransferPlanFunding(\n    destinationAccountId,\n    expectedVersion,\n    month,\n    expectedBatch\n  );'
     );
-    expect(api).toContain('return executeLocalTransferAllocations(transfer, expectedVersion);');
   });
 });
