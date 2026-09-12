@@ -1,741 +1,301 @@
 # MV Household Finance / Penny — Global Audit Ledger
 
-> **Purpose:** durable, repository-resident handover for the ongoing global audit. This file records only evidence that can be traced to repository history/tests/current source or explicitly recorded physical-device results. It is not a substitute for checking the current repository before work begins.
+> **Role:** current repository-resident master defect/evidence register for the discovery-inclusive global audit and repair programme.
+>
+> **Authority:** current GitHub source/CI/deployment evidence establishes implementation state. The Master Autonomous Engineering Authority v2 governs execution and completion. Permanent MV standards govern approved behaviour. Historical chat/handover state is not current truth unless reverified.
 
-## GLOBAL AUDIT LEDGER MAINTENANCE RULES
+## 0. Maintenance rules
 
-1. Every material global-audit PR must update this ledger.
-2. No item moves to `PASS` merely because code exists; use tests, CI, deployment and physical evidence where each is required.
-3. Physical-device requirements require physical-device evidence. Code/tests/deployment do not equal live iPhone or desktop verification.
-4. Any later PR touching a previously passed area triggers targeted regression review of that area.
-5. `SUPERSEDED` work remains documented but must not be reopened blindly.
-6. `FUTURE` product/design ideas do not count as audit failures.
-7. Financial integrity, traceability and recoverability outrank visual polish.
-8. Current GitHub state always overrides stale SHA references in older chats or handovers.
-9. Do not declare the global audit complete while material `FAIL`, `OPEN`, `BLOCKED` or required `UNPROVEN` items remain.
-10. Every new audit chat begins by reading this ledger **and independently checking current GitHub state**.
+1. Verify current `main`, open PRs, relevant branches, CI and deployment before relying on this file.
+2. Do not mark an item PASS because code merely exists; use evidence appropriate to the claim.
+3. Physical-device evidence is a separate evidence tier. It is required only when Marius explicitly requests it for the relevant issue/final gate. Missing physical evidence is **not** a default blocker under Master Authority v2.
+4. Preserve financial truth: integer pence, exact stable account IDs, no transfer-as-income/spend, no duplicate spend/income, funding != payment, exact linked undo, £0 valid, UK-local dates.
+5. Later material work touching a passed area requires proportionate regression review.
+6. Do not silently drop material issues. Historical superseded items may be condensed once their disposition is explicit and Git history preserves the implementation detail.
+7. `BLOCKED` means a genuine unresolved dependency/semantic ambiguity, not ordinary engineering difficulty.
+8. Do not declare the global programme COMPLETE while a known material unresolved defect remains.
 
-Allowed status labels in this ledger are: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `UNPROVEN`, `FUTURE`, `SUPERSEDED`, `N/A`.
+Allowed current statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUPERSEDED`, `DEFERRED`, `N/A`.
 
 ---
 
-## 1. Current verified repository baseline
+## 1. Current verified baseline — 2026-09-12
 
-| Item | Verified state |
+| Item | Current evidence |
 |---|---|
 | Repository | `backtonemesis-cpu/MV` |
-| Baseline main SHA when ledger v1 was created | `76d778671765e39b19ed25a0106d39e406d7f493` |
-| Baseline main commit | PR #185 — dynamic UK/local working month |
-| Latest verified successful main workflow at ledger creation | Run #827 / workflow run `34544553413` |
-| Main test/build/privacy/local-only checks | `PASS` |
-| GitHub Pages deployment in that run | `PASS` |
-| Open PR #186 | `OPEN` — stale September fallback cleanup; PR CI run #829 was failing at the local finance/storage test step when ledger v1 was created |
-| Open PR #34 | `SUPERSEDED` — old Activity/Accounts/Savings visual branch; do not opportunistically merge |
+| Current `main` | `7c6ed59820b715a074479b7551fd6b87c5cd67af` |
+| Current main commit | `Restore browser zoom and correct public CSS asset paths (#205)` |
+| Exact-main workflow | Run #889 / `34662700403` |
+| Test/build/privacy/local-only | `PASS` |
+| Main test count | `91/91` files, `613/613` tests on the equivalent PR head; exact-main test/build also PASS |
+| GitHub Pages deploy | `PASS` in run #889 for current main |
+| Open PRs after #205 merge | `NONE` |
+| PR #34 | `SUPERSEDED / CLOSED` on 2026-09-12 after comparison with current main |
+| Production persistence | browser-local `mv_local_state_v2` |
+| Cloud financial backend | not active |
 
-**Mandatory freshness rule:** the baseline above is historical as soon as `main` advances. At the start of every audit session, verify `main`, current workflows, deployment and open/draft PRs again.
+**Freshness rule:** re-read GitHub after any `main` advance. This section becomes historical immediately when the SHA changes.
 
-### 2026-09-11 current-main reconciliation
+### Current delivery chain added 2026-09-12
 
-- Verified deployed `main` before the first current-main physical phone repair: `fe6b86a7959c9a4b74f8cacbb54371219c695271` (PR #197).
-- Main workflow run #865: test/build/privacy/local-only checks `PASS`; GitHub Pages deployment `PASS` for exact build version `fe6b86a7959c9a4b74f8cacbb54371219c695271`.
-- PRs #188–#197 are merged and deployed. They repaired field accessible names, Settings tab semantics, primary navigation history semantics, native browser feedback, modal-stack accessibility, Prepare Next Month identity, reachable-control accessibility defects, safe modal initial-focus precedence, MVSelect modal-scoped Tab traversal, and Category Correction review focus safety.
-- `GA-INC-001` optional-category wording defect is technically resolved by PR #188; physical current-main regression remains governed by the device matrix.
-- `GA-MONTH-001` broad rollover duplicate identity is technically resolved by PR #193 with shared UI/storage identity and lineage idempotency; physical current-main regression remains governed by the device matrix.
-- `GA-A11Y-001` source-only shared-control sweep is at `PARTIAL PASS`; current-main physical verification has begun on iPhone 13 Safari in Phone mode and remains required across the full device/mode matrix.
-- `PHONE-TP-001` is a physically confirmed `FAIL`: iPhone 13 Phone-mode screenshots showed `£2,479.98 Transfer Required`, `0 accounts`, `0 unpaid · 13 paid`, and `0 funded cards` while the selected bill list showed paid rows. Source trace proved `calculateAccountFunding` was subtracting a negative destination balance even when selected unpaid total was zero, while lifecycle classification correctly returned Paid. `repair/transfer-plan-paid-only-negative-balance` fixes the calculation boundary so paid-only selections require £0.00 while preserving overdraft funding for genuine unpaid bills.
-- The earlier Accounts fixed-bottom-navigation occlusion concern is physically `PASS`: a follow-up iPhone screenshot showed Activity, Reconcile, Edit, Archive and Delete permanently can all be scrolled fully above the bottom navigation.
-- `GA-TP-002` per-bill Undo Funding attribution remains `BLOCKED`; PHONE-TP-001 does not change funding attribution, payment evidence, balances, transactions or storage semantics.
-
-
-### 2026-09-11 PHONE-DENSITY-001 corrective reconciliation
-
-- PR #200 merged and deployed at `eeb19554e0bc5434534ae867ee45cec843392615`; automated CI passed `90/90` test files and `614/614` tests.
-- Physical iPhone 13 Safari verification after a genuine page reload still showed the Income summary and Savings summary as single-column stacks. Therefore PR #200 is recorded as technical/deployment `PASS` but physical `FAIL` for the intended density outcome.
-- Source trace found the decisive cascade: `src/index.css` forces `.mv-layout-phone .mv-workspace .grid:not(.mv-mobile-nav-grid)` to one column with `!important`. PR #200 changed Tailwind utility classes only, so those utilities could not override the stronger Phone-mode default.
-- Corrective branch `repair/phone-summary-density-cascade` adds explicit semantic summary-grid classes and later `src/mobileUx.css` Phone-mode exceptions: Income = three columns, Savings = two columns. The regression test now checks both the component semantic hooks and the stylesheet/import-order cascade rather than only utility class strings.
-- No financial calculations, amounts, transactions, storage, income receipt semantics, savings classification, desktop layout, navigation or theme semantics are changed.
-- Physical status remains `FAIL` until the corrective PR is merged/deployed and the live iPhone is reverified.
-- PR #201 then merged/deployed at `f7c24e2c394527618aa94bb34d270a8a582338fd` with `90/90` test files and `615/615` tests passing. Physical iPhone screenshots proved the cascade correction took effect: Savings rendered 2x2 and Income rendered three columns. However, the three-column Income design was physically unreadable: Expected/Received money values collided across card boundaries and the Outstanding heading was visibly clipped. Savings was structurally correct but remained cramped for long labels and large balances.
-- Therefore PHONE-DENSITY-001 remains physical `FAIL`: the defect has moved from cascade failure to responsive readability. The next narrow correction changes only Phone presentation: Income becomes two columns with the third/Outstanding card spanning the second row; Savings remains 2x2 with tighter summary-card padding, heading tracking and money typography.
-- This follow-up does not change financial calculations, values, transaction/storage semantics, income/savings classification, desktop layout, navigation or themes. Physical iPhone re-verification remains mandatory after deployment.
+| PR | Result | Current disposition |
+|---:|---|---|
+| #203 | Restored native browser contract for ordinary selectors; removed global native/custom bridge and coarse-pointer geometry interception; retained explicit rich MVSelect consumers | `PASS`, merged, exact-main CI/deploy PASS |
+| #204 | Added exhaustive rendered-modal inventory gate across `dialog`/`alertdialog` and shared modal containment/accessibility stack | `PASS`, merged, exact-main CI/deploy PASS |
+| #205 | Restored browser zoom and corrected required `public/` CSS asset paths while preserving iPhone date and Unified Add fixes | `PASS`, merged, exact-main CI/deploy PASS |
 
 ---
 
-## 2. Device and environment baselines
+## 2. Financial invariant matrix
 
-| Environment | Baseline |
-|---|---|
-| Physical phone | iPhone 13, Safari, portrait |
-| Desktop/laptop | HP OmniBook 7 AI 14-inch, 1920×1200, Windows scaling 150%, Chrome 100% |
-| App presentation modes | User-selectable PC / Phone modes; repeated switching must be tested independently of physical viewport |
-| Locale/financial context | UK terminology, GBP, UK/local calendar dates |
-
----
-
-## 3. Financial invariant matrix
-
-These invariants are the highest-priority regression gates.
-
-| Invariant | Current status | Current evidence / remaining risk |
+| Invariant | Status | Evidence state |
 |---|---|---|
-| Exact integer-pence arithmetic | `PASS` | Safe-integer validation and finance/storage regression coverage are present; latest verified main CI passed. |
-| Internal transfers are not income | `PASS` | Transfer type/flags and financial calculations are separately classified and covered by finance tests. |
-| Internal transfers are not spending | `PASS` | Same classification boundary as above. |
-| Savings transfers are not ordinary income/spending | `PASS` | Savings/transfer classification is separately represented and covered by finance tests. |
-| Card repayments are not duplicate spending | `PASS` | Repayment has its own transaction type/flag and dedicated repayment safety work/tests. |
-| Refunds are not ordinary income | `PASS` | Refund is a separate transaction type/flag and is treated separately from income. |
-| Funding != Paid | `PASS` | Transfer Plan stores funding as transfer evidence and payment as linked expense evidence; separate undo paths exist. |
-| Paid requires actual evidence | `PASS` | PlannedPayment payment workflow creates reciprocal Activity evidence; undo rejects missing/duplicated/mismatched evidence. |
-| Undo Funding reverses funding only | `PASS` | Current account/batch-level undo targets the exact latest recognised funding batch. Per-bill undo is a separate open architecture gap below. |
-| Undo Payment reverses payment evidence only | `PASS` | Exact linked payment transaction is required before undo. |
-| Source/destination transfer balances reconcile | `PASS` | Transfer/undo paths and cross-view reconciliation tests are present and pass current verified CI. |
-| Same-name accounts remain distinct | `PASS` | Stable account IDs and owner/type identity are used; account-identity regression work exists. |
-| Account owner identity remains exact | `PASS` | Stable ownership IDs/account-derived attribution work is present. |
-| PlannedPayment ↔ Transaction reciprocal linkage | `PASS` | `plannedPaymentId` / `actualTransactionId` linkage and validation are present. |
-| PlannedIncome linkage | `PASS` | Planned-income actual/link fields and receive workflow are represented and covered by storage/finance tests. |
-| Category changes do not alter monetary truth | `PASS` | Category System v2 is ID/scoping driven and category operations are separated from monetary/account/date fields. |
-| Backup/restore is atomic and referentially safe | `PASS` | Restore validates household shape and referential integrity, writes rollback copy before active state, and restores rollback-key state on write failure; category-v2 backup/restore tests and latest verified CI pass. Live destructive restore remains inappropriate for routine physical testing. |
+| Authoritative money uses integer pence | `PASS` | finance/storage suite PASS |
+| Internal transfer != income | `PASS` | finance classification tests PASS |
+| Internal transfer != spending | `PASS` | finance classification tests PASS |
+| Savings transfer remains internal | `PASS` | savings/transfer tests PASS |
+| Refund != ordinary income | `PASS` | refund classification tests PASS |
+| Credit-card repayment does not double-count spending | `PASS` | repayment safety tests PASS |
+| Planned bill != actual payment | `PASS` | planned-payment/payment linkage tests PASS |
+| Transfer Plan funding != payment | `PASS` | funding/payment lifecycle tests PASS |
+| Paid requires linked payment evidence where applicable | `PASS` | payment workflow/safety tests PASS |
+| Undo Funding reverses exact supported funding evidence | `PASS` | card/batch undo tests PASS; per-bill attribution tracked separately as GA-TP-002 |
+| Undo Payment reverses exact linked payment evidence | `PASS` | payment undo tests PASS |
+| Source/destination balances reconcile | `PASS` | transfer/cross-view reconciliation PASS |
+| Same-name accounts remain distinct | `PASS` | stable-ID + identity-label regression tests PASS |
+| £0 balance is valid | `PASS` | account/funding coverage PASS |
+| PlannedPayment ↔ Transaction reciprocal linkage | `PASS` | storage/finance tests PASS |
+| PlannedIncome linkage | `PASS` | storage/finance tests PASS |
+| Backup/restore integrity | `PASS` | local-store/category backup tests PASS |
+| UK-local date/month handling | `PASS` | date/month tests PASS; historical September fallback work merged in #186 |
+
+No current evidence establishes a known balance-reconciliation or monetary-corruption failure on current `main`.
 
 ---
 
-## 4. Current material audit ledger
+## 3. Current material defect/evidence register
 
 ### GA-ARCH-001 — Local-only architecture and persistence
+**Status:** `PASS`
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-ARCH-001 / Global Architecture |
-| Requirement / Defect | Production household data must remain browser-local; GitHub repository/static bundle must not contain household finance data. |
-| Original Evidence | Earlier cloud/Firebase direction was superseded by local-only work; global audit Stage 1 added a committed-data privacy guard. |
-| Device / Environment | All |
-| Root Cause | Earlier architecture evolved from cloud/shared concepts into local static deployment. |
-| Repair | Local-store architecture, static GitHub Pages build, CI guard against committed finance data. |
-| PR / Commit | PR #24 onward; global audit Stage 1 PR #84; later local-only checks retained. |
-| Automated Test Coverage | Privacy/data guard and local-only architecture verification run in CI. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `PASS` |
-| Remaining Risk | Browser storage remains device/browser scoped by design; backup discipline remains important. |
-| Last Later Change Touching Area | PR #185 did not change storage architecture. |
-| Notes / Dependencies | Never commit real household data into this public repository. |
+Production remains a static React/Vite GitHub Pages application with browser-local `mv_local_state_v2`. CI guards against committed household data and retired backend configuration. No current production financial backend is active.
 
-### GA-DASH-001 — Dashboard financial summary and actions
+### GA-DASH-001 — Dashboard financial truth
+**Status:** `PASS` for financial/source/automated contract
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-DASH-001 / Dashboard |
-| Requirement / Defect | Dashboard must use the same financial truth as Activity/Accounts/Income/Savings/Transfer Plan and expose stable primary actions. |
-| Original Evidence | Global cross-view audit found the need for one reconciled financial source of truth. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Earlier independent view calculations/presentation drift. |
-| Repair | Shared finance calculations, reconciliation tests, later unified Add action. |
-| PR / Commit | PR #86; PR #142 and follow-ups. |
-| Automated Test Coverage | Cross-view reconciliation, finance tests, unified Add launcher tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Final end-to-end current-main physical regression pass remains required. |
-| Last Later Change Touching Area | PR #185 working-month propagation. |
-| Notes / Dependencies | Do not infer global visual/live pass solely from code/tests. |
+Shared finance/reconciliation tests pass. Remaining content/visual quality is tracked under `GLOBAL-COPY-001` / `PHONE-DENSITY-001`, not as a separate financial failure.
 
-### GA-ACT-001 — Activity integrity, editing and destructive actions
+### GA-ACT-001 — Activity integrity / editing / destructive actions
+**Status:** `PASS` for current source/automated contract
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-ACT-001 / Activity |
-| Requirement / Defect | Activity must show audit evidence without duplicate financial effects; edit/delete must preserve category/type/link integrity and destructive actions require explicit confirmation. |
-| Original Evidence | Earlier global audit and screenshots exposed edit-category/destructive-confirmation/date issues. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Inconsistent interaction/date/category handling across legacy flows. |
-| Repair | Activity ledger, edit eligibility/split fixes, destructive confirmation repair, UK-local date display. |
-| PR / Commit | PR #48, #107, #123, #130. |
-| Automated Test Coverage | Activity edit/destructive/date regression tests plus finance/store tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Final complete live-device pass remains. |
-| Last Later Change Touching Area | Global dropdown/date-control work through #183–#185 may affect reachable controls. |
-| Notes / Dependencies | Linked bill/income evidence must remain reciprocal. |
+Activity destructive confirmation, edit/category/date and linked-evidence regression coverage pass. No current source-level financial failure is established.
 
-### GA-ACC-001 — Accounts identity, balances and lifecycle
+### GA-ACC-001 / GLOBAL-IDENTITY-001 — Account identity and lifecycle
+**Status:** `PASS`
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-ACC-001 / Accounts |
-| Requirement / Defect | Stable account IDs, unambiguous owner/type identity, zero balances accepted, safe archive/reactivate/reconcile/delete. |
-| Original Evidence | Same-name account collapse/owner ambiguity, zero-balance and archive/reconcile defects were found during audit. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Legacy name-oriented identity and inconsistent account lifecycle UX. |
-| Repair | Stable ownership IDs, account identity helpers, lifecycle and permanent-delete eligibility, reconcile/archive UX, selected-account mobile presentation. |
-| PR / Commit | #49, #62, #108–#112, #133–#137, #157. |
-| Automated Test Coverage | Account ownership/delete/archive/reconcile/selected-account tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PASS` |
-| Current Status | `PASS` |
-| Remaining Risk | Final global mode-switch/device sweep may still expose presentation regressions. |
-| Last Later Change Touching Area | Global MVSelect work #182–#184 affects account selectors. |
-| Notes / Dependencies | Same-name accounts must never be merged by display label. |
+Stable account IDs are authoritative. Same-name accounts remain distinct; current tests explicitly preserve `Lloyds · Current · Marius` vs `Lloyds · Current · Vesta`. Archive/reconcile/delete/ownership tests pass. Historical blank/truncated-account symptoms do not justify a new code change without current evidence.
 
-### GA-INC-001 — Income & Wages integrity and wording
+### GA-INC-001 — Income financial/category semantics
+**Status:** `PASS` for finance semantics
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-INC-001 / Income |
-| Requirement / Defect | Expected/received income must preserve linkage, account attribution and valid income category semantics. UI wording must match required fields. |
-| Original Evidence | Income category/type/wording and receipt-state issues were identified during global audit. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Legacy optional-category presentation and earlier mixed attribution patterns. |
-| Repair | Income receive/link work, Category System v2 eligibility, account-derived attribution. |
-| PR / Commit | #51, #129, #157–#158. |
-| Automated Test Coverage | Finance/storage/category tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `OPEN` |
-| Remaining Risk | Current source still renders `Category (optional)` while save validation requires a valid income category. This is a wording/UX inconsistency, not currently a financial-integrity failure. |
-| Last Later Change Touching Area | Category/dropdown work #129/#182–#184. |
-| Notes / Dependencies | Narrow repair should change wording only unless inspection proves a deeper defect. |
+Current source requires a valid income category and uses stable account identity. The old ledger claim that current UI still says `Category (optional)` is stale and is not reproduced in current source. Income content density/wording remains separately open under `GLOBAL-COPY-001`.
 
 ### GA-SAV-001 — Savings truth and classification
+**Status:** `PASS` for financial classification/calculation
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-SAV-001 / Savings |
-| Requirement / Defect | Savings view must use authoritative savings accounts/transactions and must not classify internal savings movements as spending/income. |
-| Original Evidence | Early Savings view showed inappropriate accounts/calculation ambiguity. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Earlier presentation/calculation drift. |
-| Repair | Authoritative savings calculation and classification. |
-| PR / Commit | #50, #85, #86. |
-| Automated Test Coverage | `savingsCalculation` and cross-view/finance tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Final live layout/interaction sweep still required. |
-| Last Later Change Touching Area | Global control/dropdown work. |
-| Notes / Dependencies | Preserve internal-transfer classification. |
+Savings calculations and internal-transfer classification tests pass. Current copy/density quality is tracked separately.
 
-### GA-TP-001 — Transfer Plan functional lifecycle
+### GA-TP-001 / PHONE-TP-001 — Transfer Plan lifecycle
+**Status:** `PASS` for supported financial lifecycle
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-TP-001 / Transfer Plan |
-| Requirement / Defect | Required lifecycle: Needs Funding → Funded by Transfer or Covered by Existing Balance → Paid/Complete; funding/payment independent. |
-| Original Evidence | Repeated historical regressions replaced actions with passive state, showed funded bills as needing funds, or coupled Paid/Funding. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Transfer Plan was repeatedly patched across earlier designs. |
-| Repair | V2 lifecycle, explicit actions, bulk payment, reciprocal payment evidence, funded-selection lock, exact batch undo. |
-| PR / Commit | #53–#72, #113–#116 and follow-ups. |
-| Automated Test Coverage | Transfer Plan funding/payment/bulk/payment-safety regression suites. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Remaining physical live-device matrix is not fully closed. |
-| Last Later Change Touching Area | Mobile card-density/global controls later changed presentation. |
-| Notes / Dependencies | Visual redesign remains `FUTURE`, not an audit failure. |
+Funding and payment remain separate; reciprocal payment evidence, bulk payment, funded-selection locking, batch undo and paid-only negative-balance correction are covered by passing tests. PR #198 repaired the paid-only shortfall defect and was merged/deployed; relevant historical physical evidence also passed.
 
 ### GA-TP-002 — Per-bill Undo Funding attribution
+**Status:** `BLOCKED`
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-TP-002 / Transfer Plan |
-| Requirement / Defect | User requirement includes undoing funding for an individual bill without corrupting balances or other funded bills. |
-| Original Evidence | Requirement recorded during Transfer Plan regression audit; existing card/batch undo is not equivalent. |
-| Device / Environment | All |
-| Root Cause | Current funding evidence is destination-account/batch based. `TransferPlanFundingBatch` records source allocations and destination, but no `plannedPaymentId` or per-bill allocation. |
-| Repair | No safe per-bill repair implemented. Current code correctly avoids guessing attribution. |
-| PR / Commit | N/A |
-| Automated Test Coverage | Existing tests cover batch/card undo, not a safe per-bill attribution model. |
-| CI Result | `N/A` |
-| Merged Status | `N/A` |
-| Deployment Status | `N/A` |
-| Live Desktop Status | `N/A` |
-| Live iPhone Status | `N/A` |
-| Current Status | `BLOCKED` |
-| Remaining Risk | Implementing this requires an explicit funding-allocation/linkage model and migration/backward-compatibility decision; amount inference is unsafe. |
-| Last Later Change Touching Area | Current `transferPlanFunding` batch model still has no bill attribution at ledger creation. |
-| Notes / Dependencies | This is an architecture/product-semantics decision. Do not implement by proportional or positional guessing. |
+Current funding evidence is destination-account/batch based and does not contain safe explicit bill-to-funding attribution. A per-bill undo cannot be implemented by proportional, positional or amount inference without risking incorrect balance reversal. Keep blocked until a safe data-model/linkage and backward-compatibility design is established from approved requirements/evidence.
 
-### GA-SET-001 — Settings / household-local controls
+### GA-SET-001 / PHONE-SET-001 — Settings controls and Phone tab strip
+**Status:** `PASS` for current repaired contract
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-SET-001 / Settings |
-| Requirement / Defect | Settings controls, theme/preferences and data-management actions must be reachable and not imply remote permissions in the local-only build. |
-| Original Evidence | Global audit covered settings consistency/contrast and legacy household-access concepts. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Evolving local-only architecture and visual inconsistency. |
-| Repair | Local preferences/theme work, control-surface and contrast repairs. |
-| PR / Commit | Multiple early settings/theme PRs; global stages #88–#90 and later control system. |
-| Automated Test Coverage | Theme/contrast/control-surface tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Reachable-control inventory and final live sweep remain. |
-| Last Later Change Touching Area | Global control/dropdown work #178–#184. |
-| Notes / Dependencies | Multi-user cloud permissions are outside current local-only production scope. |
+PR #199 repaired the Phone Settings tab strip and was merged/deployed with relevant historical physical verification. Settings semantics/contrast tests pass. Broader whole-app accessibility inventory remains GA-A11Y-001.
 
 ### GA-CAT-001 — Category System v2
+**Status:** `PASS`
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-CAT-001 / Categories |
-| Requirement / Defect | Canonical category IDs/groups/scopes, lifecycle/admin, merge, recategorisation, budgets and backup/restore must remain coherent. |
-| Original Evidence | Legacy category system had static/ambiguous behavior and migration risk. |
-| Device / Environment | All |
-| Root Cause | Legacy category model lacked required v2 lifecycle/scoping. |
-| Repair | Category System v2 Stages 1–5. |
-| PR / Commit | PR #129 merged; PR #128 `SUPERSEDED`. |
-| Automated Test Coverage | Category schema/eligibility/backup/budget/admin regression suite. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PASS` for the Step 44 category picker/readability checks recorded below. |
-| Current Status | `PASS` |
-| Remaining Risk | Later dropdown work requires normal regression awareness but no current category-integrity failure is known. |
-| Last Later Change Touching Area | #182–#184 selector implementation; category eligibility itself unchanged. |
-| Notes / Dependencies | Manual ordinary entry must use eligible final categories; system uncategorised roles remain special-purpose. |
+Schema, eligibility, management, reclassification, budgets and backup coverage pass. PR #128 is superseded; #129 is the implemented path.
 
-### GA-BUD-001 — Budget view and category budget truth
+### GA-BUD-001 — Budget/category budget truth
+**Status:** `PASS` for current source/automated contract
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-BUD-001 / Budget |
-| Requirement / Defect | Budget data must use Category v2 IDs and selected/dynamic month, without mutating transaction truth. |
-| Original Evidence | Category-v2 and month audit identified budget as a dependent surface. |
-| Device / Environment | Desktop + Phone |
-| Root Cause | Dependency on older category/month assumptions. |
-| Repair | Category System v2 budget integration and dynamic month fallback. |
-| PR / Commit | #129, #185. |
-| Automated Test Coverage | Category budget and dynamic-active-month tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Final live reachability/layout pass remains. |
-| Last Later Change Touching Area | #185. |
-| Notes / Dependencies | Do not treat budgets as transaction mutations. |
+Category-v2 budget and dynamic-month tests pass; budgets remain non-transaction metadata.
 
-### GA-MONTH-001 — Prepare Next Month duplicate matching
+### GA-MONTH-001 — Prepare Next Month identity/idempotency
+**Status:** `PASS`
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-MONTH-001 / Prepare Next Month |
-| Requirement / Defect | Re-running rollover must not create false duplicates or suppress distinct bills/incomes. |
-| Original Evidence | Duplicate rollover risk was identified during global audit. |
-| Device / Environment | All |
-| Root Cause | Current fallback matching for bills uses name + account + amount + responsible person, but not category; income fallback similarly omits category. `copiedFromId` is authoritative when present, but manually equivalent target rows can still be misclassified by fallback. |
-| Repair | Earlier duplicate guard exists, but semantic identity is not fully specified for category-distinct otherwise-identical rows. |
-| PR / Commit | #106 introduced rollover duplicate protection; later month work #185. |
-| Automated Test Coverage | Prepare-next-month tests exist and pass, but they do not close the category-distinct identity question. |
-| CI Result | `PASS` for current tests |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `OPEN` |
-| Remaining Risk | Need explicit duplicate identity contract before changing fallback matching; category may be part of semantic identity, but this should be confirmed rather than guessed. |
-| Last Later Change Touching Area | #185 month default/rollover month propagation. |
-| Notes / Dependencies | `copiedFromId` remains the strongest duplicate evidence and must continue to win. |
+Old ledger OPEN state is stale. PR #193 merged the shared rollover identity/lineage repair. `monthRolloverIdentityAudit.test.ts` passes on current CI. `copiedFromId` lineage remains the strongest identity evidence.
 
-### GA-BACKUP-001 — Whole-state backup / restore
+### GA-BACKUP-001 — Whole-state backup/restore
+**Status:** `PASS`
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-BACKUP-001 / Backup / Restore |
-| Requirement / Defect | Export/restore must preserve complete current schema, reject invalid references, provide rollback safety and avoid partial mutation. |
-| Original Evidence | Global financial-system audit and Category v2 migration required stronger restore integrity. |
-| Device / Environment | Browser-local storage |
-| Root Cause | Older backup format/schema paths required hardening as model evolved. |
-| Repair | Versioned local backup envelope, shape/referential/category validation, rollback copy, failure restoration and Category-v2 round-trip/preflight work. |
-| PR / Commit | #85 and #129 family. |
-| Automated Test Coverage | `localStore` and Category backup/restore tests; latest verified main CI passes. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `N/A` |
-| Live iPhone Status | `N/A` |
-| Current Status | `PASS` |
-| Remaining Risk | Real-data destructive restore should not be used as routine physical QA; retain downloadable backups before production migrations. |
-| Last Later Change Touching Area | Later UI/control work did not alter restore core at ledger creation. |
-| Notes / Dependencies | Restore path validates before active-state replacement and maintains rollback data. |
+Current local-store and category backup/restore validation, referential integrity and rollback tests pass. Do not use real-data destructive restore merely for cosmetic QA.
 
-### GA-ADD-001 — Unified + Add launcher and persistence separation
+### GA-ADD-001 — Unified Add launcher
+**Status:** `PASS` for source/automated contract
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-ADD-001 / Unified + Add |
-| Requirement / Defect | One Home `+ Add` launcher with Expense, Income, Transfer, Refund, Repayment, Bill; Bill must remain PlannedPayment-only. |
-| Original Evidence | User-approved consolidation of separate Home Add Transaction/Add Bill actions. |
-| Device / Environment | Desktop + iPhone |
-| Root Cause | Two competing entry points and unused sixth type-selector cell. |
-| Repair | One launcher; `UnifiedAddChoice = TransactionType | 'bill'`; separate Bill save path. |
-| PR / Commit | #142; hardening #143–#149, #151–#177. |
-| Automated Test Coverage | Unified Add launcher/initial-state/consistency/batch-entry/shared-UI/date/containment tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` for a single current-main end-to-end six-choice routing sweep after all later hardening. |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | One current-main physical iPhone launcher/routing check remains appropriate; do not reimplement the feature. |
-| Last Later Change Touching Area | #177 field typography; #182–#184 dropdown system can affect selected forms but not launcher semantics. |
-| Notes / Dependencies | `bill` must never be added to `TransactionType`. Opening/switching/cancelling must create nothing. |
+One six-choice launcher remains; `bill` stays outside `TransactionType` and persists as PlannedPayment only. The required `public/unified-add-launcher-fix.css` layer is preserved by #205 and launcher tests pass.
 
-### GA-MODAL-001 — Modals / sheets / footer containment
+### GA-MODAL-001 / GA-FOCUS-001 — Modal/focus architecture
+**Status:** `PASS` for current rendered source/automated contract
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-MODAL-001 / All Modals & Sheets |
-| Requirement / Defect | Header/footer/actions reachable; vertical scroll works; no horizontal panning/clipping; focus/Escape behavior correct. |
-| Original Evidence | iPhone screenshots showed clipped/panning transaction/Add Bill/date/footer states. |
-| Device / Environment | iPhone 13 Safari + Desktop |
-| Root Cause | Mixed legacy modal geometry, WebKit intrinsic sizing, safe-area/footer interactions. |
-| Repair | Global modal accessibility plus targeted iPhone containment/date/footer fixes. |
-| PR / Commit | #118–#127, #131–#141, #143–#177. |
-| Automated Test Coverage | Modal viewport, footer safe-area, Add Bill containment, date containment and accessibility tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Not every reachable modal has a post-latest-change physical check. |
-| Last Later Change Touching Area | #182–#184 selector system and #185 month flow. |
-| Notes / Dependencies | Never hide underlying overflow as the sole fix when child geometry remains oversized. |
+PR #204 added an exhaustive rendered-modal inventory gate. Every current rendered modal/alertdialog is required to use the shared modal accessibility stack. Shared evidence covers top-modal Escape/Tab ownership, initial/return focus, inert/aria-hidden background isolation, body scroll lock, bounded modal card, internal scroll body, fixed actions and Phone safe-area target rules.
 
-### GA-SELECT-001 — MVSelect / dropdown / native selector architecture
+Physical-device behaviour remains a separate evidence tier and is not a default blocker.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-SELECT-001 / Dropdowns & Selectors |
-| Requirement / Defect | Action menus vs value selectors must be semantically correct, contained, keyboard/touch usable and iOS-safe. |
-| Original Evidence | Global dropdown audit found inconsistent native/custom menus, clipping and iOS touch behavior. |
-| Device / Environment | Desktop + iPhone Safari |
-| Root Cause | Multiple legacy selector implementations and Safari/native-control behavior. |
-| Repair | Global MVSelect architecture, native iOS picker guard, empty direct-MVSelect protection. |
-| PR / Commit | #182, #183, #184. |
-| Automated Test Coverage | Global MV dropdown tests, empty-state tests, native select touch guard tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Full reachable-selector inventory and physical matrix remain to be completed. |
-| Last Later Change Touching Area | #184. |
-| Notes / Dependencies | Preserve native iOS picker behavior where intentionally used. |
+### GA-SELECT-001 — Native/custom selector competition
+**Status:** `PASS`
 
-### GA-DATE-001 — Date / month controls and UK-local defaults
+PR #203 removed the global `MVNativeSelectBridge`, native-select touch guard and coarse-pointer hit-test suppression. The 28 ordinary HTML selects now retain native browser/OS activation. Explicit rich `MVSelect` remains only where current presentation needs richer account identity/disabled-reason information. Stable IDs and exact eligibility logic are unchanged.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-DATE-001 / Date & Month Controls |
-| Requirement / Defect | UK/local calendar dates, no UTC rollover surprises, native Safari interaction retained, no fixed September production default. |
-| Original Evidence | Date frame/picker issues and fixed-month defaults were identified during iPhone/global audit. |
-| Device / Environment | All, especially iPhone Safari |
-| Root Cause | Browser-native date rendering plus legacy fixed working-month assumptions. |
-| Repair | Local date/month helpers, iPhone date containment/presentation fixes, PR #185 dynamic app working month. |
-| PR / Commit | #123–#127, #170–#172, #179/#181, #185. |
-| Automated Test Coverage | UK date display, date frame/containment and dynamic active-month tests. |
-| CI Result | `PASS` on main baseline |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `OPEN` |
-| Remaining Risk | PR #186 is an open follow-up attempting to remove defensive `2026-09` fallbacks from standalone TransactionModal/TransferPlanView; its CI run #829 was failing at ledger creation and it must not be merged until diagnosed. Historical migration ID containing `2026-09` is intentionally preserved. |
-| Last Later Change Touching Area | #185 main; #186 open/unmerged. |
-| Notes / Dependencies | Explicit selected/imported months must take precedence over defaults. |
+### GA-SELECT-002 — Long financial-list pattern classification
+**Status:** `OPEN`
 
-### GA-DESKTOP-001 — Desktop baseline
+Approved product direction says genuinely long financial lists should use a one-tap searchable list/sheet where search materially improves the task. Current ordinary native selectors and direct select-only MVSelect consumers have not yet been exhaustively classified by option-set size/task complexity. Do not solve this by reintroducing global interception.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-DESKTOP-001 / Desktop Layout |
-| Requirement / Defect | Stable PC-mode layout at 1920×1200 / 150% Windows scaling / Chrome 100%; no phone-style oversized forms or clipped menus. |
-| Original Evidence | Global audit desktop baseline requirements. |
-| Device / Environment | HP OmniBook baseline above |
-| Root Cause | Earlier mixed responsive rules/density. |
-| Repair | Global audit Stage 5 and later component-specific desktop fixes. |
-| PR / Commit | #89 and later control/UI PRs. |
-| Automated Test Coverage | Desktop layout/control/readability tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `N/A` |
-| Current Status | `UNPROVEN` |
-| Remaining Risk | A final current-main physical desktop sweep is still required for global closure. |
-| Last Later Change Touching Area | #182–#185. |
-| Notes / Dependencies | Automated CSS contracts are not physical visual proof. |
+### GA-DATE-001 — Date/month controls and current working month
+**Status:** `PASS` for current source/automated contract
 
-### GA-PHONE-001 — Phone mode and iPhone Safari
+PR #186 is **MERGED**, not open. Dynamic/local month handling and UK date tests pass. PR #205 preserves the required iPhone transaction-date containment stylesheet under the correct Vite public-asset path.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-PHONE-001 / Phone Mode & iPhone 13 Safari |
-| Requirement / Defect | Portrait Phone mode must remain contained, touch-usable, safe-area aware and vertically scrollable. |
-| Original Evidence | Extensive iPhone screenshot audit found modal, field, footer, selector and card-density defects. |
-| Device / Environment | iPhone 13 Safari portrait; Phone mode on laptop also relevant |
-| Root Cause | Mixed WebKit/native-control sizing and legacy responsive rules. |
-| Repair | Global Stage 6 plus targeted PRs #118–#141 and later unified Add/date/select fixes. |
-| PR / Commit | #90, #118–#141, #143–#184. |
-| Automated Test Coverage | Mobile UX plus numerous `iphone*Audit` tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `N/A` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Final all-screen current-main iPhone pass remains. |
-| Last Later Change Touching Area | #184 selectors / #185 month propagation. |
-| Notes / Dependencies | Preserve physical evidence separately from code/test status. |
+### GA-HTML-001 — HTML shell accessibility / public asset paths
+**Status:** `PASS`
 
-### GA-MODE-001 — PC mode on iPhone and repeated PC ↔ Phone switching
+PR #205 removed `maximum-scale=1.0, user-scalable=no`, preserving browser/user zoom. The two required public CSS layers remain loaded using Vite-compatible root paths and the configured `/MV/` base. Exact-main CI and Pages deployment pass.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-MODE-001 / Presentation Mode Switching |
-| Requirement / Defect | PC/Phone selector stays accessible and repeated switching does not leave clipped/offscreen/stale layout state. PC mode on iPhone must remain usable. |
-| Original Evidence | Explicit global-audit device matrix. |
-| Device / Environment | Laptop + iPhone 13 Safari |
-| Root Cause | App uses user-selected presentation classes in addition to viewport behavior; cross-mode regressions are possible. |
-| Repair | Device layout/mode-switch architecture and later iPhone PC-mode date containment. |
-| PR / Commit | #73–#83, #179. |
-| Automated Test Coverage | Device/layout and iPhone PC-mode contracts exist. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `UNPROVEN` |
-| Current Status | `UNPROVEN` |
-| Remaining Risk | Final repeated physical switching sequence has not been closed in durable evidence. |
-| Last Later Change Touching Area | #182–#185. |
-| Notes / Dependencies | Do not replace user-selected mode with CSS viewport inference. |
+### GA-A11Y-001 — Whole-app reachable-control accessibility inventory
+**Status:** `OPEN`
 
-### GA-FOCUS-001 — Keyboard, focus and modal accessibility
+Targeted accessibility suites are extensive, but `reachableControlAccessibilityAudit.test.ts` is not an exhaustive whole-app rendered-control inventory. Current remaining work is to inventory reachable controls/shared primitives systematically and repair only concrete exceptions found. Do not infer a whole-app accessibility PASS from component-specific tests.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-FOCUS-001 / Keyboard & Focus |
-| Requirement / Defect | No unwanted first-field autofocus/keyboard; Escape/Enter/focus restore must be predictable; hidden controls removed from keyboard path. |
-| Original Evidence | Physical iPhone audit showed unwanted keyboard/opening and viewport-offset risk. |
-| Device / Environment | Desktop keyboard + iPhone Safari |
-| Root Cause | Legacy autofocus/modal behavior and hidden-form state. |
-| Repair | Shared modal accessibility utility, removed money-field autofocus, unified Add initial-state hiding, focus/viewport repairs. |
-| PR / Commit | #88, #100–#105, #124–#127, #145–#148. |
-| Automated Test Coverage | Interaction accessibility, money input and modal tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PASS` for the specifically retested unwanted-autofocus/transaction area; global inventory remains incomplete. |
-| Current Status | `PARTIAL PASS` |
-| Remaining Risk | Reachable-control keyboard inventory remains open. |
-| Last Later Change Touching Area | #182–#184 custom dropdown architecture. |
-| Notes / Dependencies | Do not add autofocus to monetary inputs. |
+### GA-DESKTOP-001 — Desktop layout baseline
+**Status:** `PARTIAL PASS`
 
-### GA-A11Y-001 — Reachable-control accessibility inventory
+Existing desktop source/CSS regression tests pass, but the discovery-inclusive audit has not yet reconciled every current screen/control against the latest visual/content standards. Physical desktop evidence is not a default blocker unless explicitly requested.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-A11Y-001 / Accessibility |
-| Requirement / Defect | Every reachable button/menu/listbox/dialog/form control must have correct semantics, labels, focus order, target size and keyboard/touch behavior. |
-| Original Evidence | Global-audit completeness requirement; multiple targeted fixes exist but no durable evidence of a final entire-app reachable-control inventory. |
-| Device / Environment | Desktop keyboard + iPhone touch |
-| Root Cause | Incremental component evolution. |
-| Repair | Many targeted accessibility repairs and shared utilities. |
-| PR / Commit | #88 onward; selector/modal/accessibility PRs. |
-| Automated Test Coverage | Interaction accessibility and component-specific regression tests. |
-| CI Result | `PASS` |
-| Merged Status | `PASS` |
-| Deployment Status | `PASS` |
-| Live Desktop Status | `UNPROVEN` |
-| Live iPhone Status | `PARTIAL PASS` |
-| Current Status | `OPEN` |
-| Remaining Risk | A systematic current-main reachable-control inventory is still required for global completion. |
-| Last Later Change Touching Area | #182–#184. |
-| Notes / Dependencies | WCAG/APG semantics should be checked at the component actually rendered, not inferred from visual appearance. |
+### GA-PHONE-001 — Phone responsive baseline
+**Status:** `PARTIAL PASS`
 
-### GA-REPO-001 — Repository / PR / CI / deployment hygiene
+Numerous Phone/iPhone containment tests pass and historical physical repairs are retained. Current known remaining issue is primarily content/density quality (`PHONE-DENSITY-001` / `GLOBAL-COPY-001`) plus discovery-inclusive revalidation of historical responsive candidates. Physical iPhone evidence is not a default blocker unless explicitly requested.
 
-| Field | Record |
-|---|---|
-| ID / Audit Area | GA-REPO-001 / Repository & Delivery |
-| Requirement / Defect | Audit work must be branch/PR/CI controlled; stale branches must not be mistaken for current work. |
-| Original Evidence | Long-running audit accumulated superseded/open PRs. |
-| Device / Environment | GitHub |
-| Root Cause | Iterative audit and long chat history. |
-| Repair | Controlled PR workflow plus this durable ledger. |
-| PR / Commit | This ledger PR plus historical audit PR chain. |
-| Automated Test Coverage | Repository CI. |
-| CI Result | `PASS` on main baseline; PR #186 currently not green |
-| Merged Status | `PARTIAL PASS` |
-| Deployment Status | `PASS` on main baseline |
-| Live Desktop Status | `N/A` |
-| Live iPhone Status | `N/A` |
-| Current Status | `OPEN` |
-| Remaining Risk | Diagnose/resolve or supersede #186; close/supersede stale #34 when safe. Do not merge stale visual work. |
-| Last Later Change Touching Area | #186 open. |
-| Notes / Dependencies | Current GitHub state is authoritative over chat references. |
+### GA-MODE-001 — PC/Phone mode switching
+**Status:** `PARTIAL PASS`
+
+Mode architecture and targeted tests exist. Current audit still needs current-source regression reconciliation for stale overlays/layout state across repeated mode switching. Physical repeated switching is only required if explicitly requested.
+
+### GA-REPO-001 — Repository / PR / delivery hygiene
+**Status:** `PASS` as of baseline above
+
+PR #34 is closed/superseded. PR #186 and #193 are merged. After #205 merge there are no open PRs. Current GitHub state remains authoritative after the next change.
 
 ---
 
-## 5. Known physical/manual evidence
+## 4. Current content / responsive defect families
 
-`HISTORICAL NUMBERING EVIDENCE INCOMPLETE`
+### PHONE-DENSITY-001 — Phone summary density/readability
+**Status:** `PARTIAL FAIL / OPEN`
 
-Only step numbers and results that survived reliable handover evidence are retained here. Missing numbers are not reconstructed by guesswork.
+Historical sequence:
+- #200 attempted density repair but was ineffective because of CSS cascade.
+- #201 made the cascade effective but three-column Income was physically unreadable.
+- #202 changed Income to two columns with Outstanding on the lower row; Savings retained 2×2.
 
-| Step | Screen / action | Original result | Later repair | Current code/test status | Live Desktop | Live iPhone |
-|---|---|---|---|---|---|---|
-| Step 43 | New Transaction mobile entry/focus behavior | Unwanted/fragile initial focus behavior was under review | Autofocus removed/guarded in later transaction/modal work | `PASS` | `UNPROVEN` | `PASS` for the specifically retested behavior |
-| Step 44 | Income/Transaction selected category readability | Long `Child Maintenance Received` selected value clipped in Safari | PR #131 then #132 narrowing | `PASS` | `UNPROVEN` | `PASS` |
-| Step 44 | Expense → Category picker eligibility/interaction | One screenshot raised concern when no type was selected; deliberate Expense test showed normal eligible categories | Concern superseded; no category-system repair required | `PASS` | `UNPROVEN` | `PASS` |
-| Step 44 | New Transaction horizontal containment | Modal could pan horizontally after oversized Account/Category geometry | Later containment repair removed >100%/negative geometry | `PASS` | `UNPROVEN` | `PASS` |
-| Step 44 follow-up | Account selected-state identity/readability | Native closed account text clipped/ambiguous | Coherent selected account field/identity work | `PASS` | `UNPROVEN` | `PASS` |
-| Later iPhone Add Bill check | Add Bill horizontal panning / inconsistent widths | Physical defect | Add Bill containment/field-geometry repair | `PASS` | `UNPROVEN` | `PASS` recorded before unified Add rollout |
+Latest known geometry was recorded as layout PASS, but content/copy density remains open. Do not restore #200/#201 Income geometry without new evidence.
 
-**Physical evidence rule:** a later PR touching the same rendered control may require a targeted physical recheck even when the historical physical result was `PASS`.
+### GLOBAL-COPY-001 — Content/copy density
+**Status:** `OPEN` — LOW/MEDIUM
+
+Current source confirms content that conflicts with the newer concise-copy standard, including Income helper/qualifier prose and raw `YYYY-MM` presentation in schedule/empty-state copy. This is a current source-confirmed UX/content issue, not a financial-calculation failure.
+
+Repair must preserve financial values and semantics while applying the Content + Copy standard: remove duplicate explanation, shorten qualifiers, format months for users and keep the shortest safe wording.
+
+### GLOBAL-RESPONSIVE-001 — Historical responsive defect family
+**Status:** `OPEN / REVALIDATE`
+
+Historical evidence included Split Categories horizontal overflow, Audit Trail clipping/panning, Savings Goal action clipping, Prepare Next Month wrapping/nested overflow and modal-content overflow. Some areas have since received substantial shared repairs. Do **not** patch from history alone; confirm each symptom against current source/tests before changing code, then close or repair with evidence.
 
 ---
 
-## 6. Compact material PR / repair chronology
+## 5. Historical physical evidence policy
 
-This is intentionally a repair-chain index, not a list of every repository PR.
+Historical physical evidence is retained only for what it directly observed at that time. Examples include successful targeted rechecks for account selected-state identity, category readability, transaction containment, Settings tab strip and paid-only Transfer Plan correction.
 
-| PR / range | Purpose / outcome | Status |
-|---|---|---|
-| #16 | Earlier cloud/Firestore-era work | `SUPERSEDED` |
-| #24–#28 | Local-only architecture / static GitHub Pages path | `PASS` |
-| #34 | Old Activity/Accounts/Savings visual modernization branch | `SUPERSEDED` |
-| #36 | Later Activity/Accounts/Savings restyle | `PASS` |
-| #39 | Month-range work | `PASS` |
-| #48–#51 | Activity ledger, Accounts grouping, Savings authoritative calculations, Income/household repairs | `PASS` |
-| #53–#72 | Major Transfer Plan funding/payment/ownership/undo/V2 repair chain | `PASS` with GA-TP-002 exception |
-| #73–#83 | PC/Phone presentation architecture and mode switching | `PARTIAL PASS` — final physical matrix still required |
-| #84 | Global audit Stage 1 privacy/data guard | `PASS` |
-| #85 | Stage 2 finance/data integrity | `PASS` |
-| #86 | Stage 3 cross-view reconciliation | `PASS` |
-| #87 | Earlier interaction/accessibility attempt | `SUPERSEDED` |
-| #88 | Stage 4 interactions/accessibility | `PASS` with GA-A11Y-001 final inventory still open |
-| #89 | Stage 5 desktop baseline | `PARTIAL PASS` — physical final pass unproven |
-| #90 | Stage 6 mobile/iPhone hardening | `PARTIAL PASS` — later targeted defects were found/repaired |
-| #100–#105 | Money-input and Add Bill entry/accessibility/category fixes | `PASS` |
-| #106 | Prepare Next Month focus/duplicate protection | `PARTIAL PASS` — duplicate semantic identity remains GA-MONTH-001 |
-| #107–#112 | Activity editing + account add/edit/reconcile/archive lifecycle | `PASS` |
-| #113–#116 | Transfer Plan funded selection, bulk payments and payment safety/UX | `PASS` |
-| #117–#127 | UK payment/date, modal/footer/card-density/iPhone transaction repairs | `PASS` for code/tests; physical evidence item-specific |
-| #128 | Legacy category migration approach | `SUPERSEDED` |
-| #129 | Category System v2 Stages 1–5 | `PASS` |
-| #130 | Activity destructive confirmations | `PASS` |
-| #131–#137 | Step 44 category/account/transaction containment chain | `PASS` |
-| #138–#141 | Add Bill iPhone containment/footer/date chain | `PASS` |
-| #142 | Unified Dashboard + Add launcher | `PASS` |
-| #143–#149 | Unified Add shell/initial-state/iPhone hardening | `PASS` |
-| #150 | Earlier dropdown/select attempt | `SUPERSEDED` |
-| #151–#177 | Unified Add safe-area, switching, batch-entry, typography, attribution, repayment, shared UI and date/presentation hardening | `PASS` |
-| #178–#181 | Global control typography and iPhone date/surface parity | `PASS` |
-| #182 | Global MVSelect/dropdown architecture | `PASS` |
-| #183 | Native iOS picker protection | `PASS` |
-| #184 | Prevent empty direct MVSelect popovers | `PASS` |
-| #185 | Dynamic UK/local working month | `PASS` |
-| #186 | Remove remaining defensive September fallbacks | `OPEN` — CI failing at ledger creation; do not merge until diagnosed |
+Under Master Autonomous Engineering Authority v2:
+- automated/source/CI/deployment evidence must not be called physical evidence;
+- missing physical evidence does **not** block ordinary engineering, merge or deployment;
+- a physical PASS claim requires actual physical evidence;
+- physical evidence becomes mandatory only when Marius explicitly requests it for the relevant issue/final verification.
+
+---
+
+## 6. Material PR chronology / disposition
+
+| PR / range | Current disposition |
+|---|---|
+| #24–#28 | local-only/static architecture — `PASS` |
+| #34 | old visual branch — `SUPERSEDED / CLOSED` |
+| #48–#51 | Activity/Accounts/Savings/Income truth repairs — `PASS` |
+| #53–#72 | Transfer Plan lifecycle repair chain — `PASS`, except GA-TP-002 |
+| #73–#90 | mode/global audit stages — implemented; later targeted repairs supersede old open-device wording |
+| #100–#127 | money, entry, Activity/account lifecycle, Transfer Plan, modal/date repairs — `PASS` under current tests |
+| #128 | old category approach — `SUPERSEDED` |
+| #129 | Category System v2 — `PASS` |
+| #130–#184 | destructive confirmations, iPhone containment, Unified Add, control/date/select hardening — implemented; latest selector architecture superseded by #203 where applicable |
+| #185 | dynamic UK/local working month — `PASS` |
+| #186 | September fallback cleanup — `MERGED / PASS` |
+| #188–#197 | accessibility/navigation/month identity/reachable controls — `MERGED`; #193 closes GA-MONTH-001 source/automated gap |
+| #198 | paid-only Transfer Plan funding correction — `PASS` |
+| #199 | Phone Settings tab strip — `PASS` |
+| #200 | Phone density first attempt — `SUPERSEDED` |
+| #201 | density cascade repair — `SUPERSEDED` for Income 3-column geometry |
+| #202 | readable Phone summary geometry repair — layout `PASS`; content remains PHONE-DENSITY-001/GLOBAL-COPY-001 |
+| #203 | native-first selector architecture — `PASS` |
+| #204 | exhaustive modal inventory gate — `PASS` |
+| #205 | browser zoom/public asset-path repair — `PASS` |
+
+Git history remains the detailed implementation chronology; this ledger stores current consequence, not every historical intermediate state.
 
 ---
 
 ## 7. Current unresolved queue — risk ordered
 
-This queue must be re-ranked against current GitHub state at the start of every audit session.
+This ordering must be rechecked whenever `main` changes.
 
-| Priority | Item | Status | Why it remains |
+| Priority | Item | Status | Current reason |
 |---:|---|---|---|
-| 1 | GA-TP-002 per-bill Undo Funding attribution | `BLOCKED` | No safe bill-level funding attribution exists; requires explicit financial architecture/product decision. |
-| 2 | GA-MONTH-001 Prepare Next Month duplicate semantic identity | `OPEN` | Fallback matching omits category; exact intended identity needs confirmation before repair. |
-| 3 | GA-A11Y-001 full reachable-control accessibility inventory | `OPEN` | Targeted tests exist, but no durable final current-main whole-app inventory. |
-| 4 | GA-MODE-001 final PC/Phone/iPhone mode-switch matrix | `UNPROVEN` | Requires physical/live evidence. |
-| 5 | GA-DESKTOP-001 final current-main desktop sweep | `UNPROVEN` | Requires physical/live evidence. |
-| 6 | GA-PHONE-001 final current-main all-screen iPhone sweep | `PARTIAL PASS` | Many checks passed individually, not one final post-latest-change sweep. |
-| 7 | GA-ADD-001 current-main unified Add six-choice routing physical sweep | `PARTIAL PASS` | Implemented/tested/deployed; final current-main physical routing check still useful. |
-| 8 | GA-INC-001 `Category (optional)` wording | `OPEN` | Source validation requires a category, so label is misleading. |
-| 9 | GA-DATE-001 / PR #186 | `OPEN` | Follow-up PR exists but CI is not green. Diagnose rather than merge blindly. |
-| 10 | GA-REPO-001 stale PR #34 cleanup | `OPEN` | Repository hygiene only; do not prioritise above functional/a11y/device work. |
+| 1 | GA-TP-002 per-bill Undo Funding attribution | `BLOCKED` | No safe explicit bill-level funding attribution exists; guessing would risk financial corruption. |
+| 2 | GA-A11Y-001 whole-app reachable-control inventory | `OPEN` | Targeted suites are not yet a systematic current-main whole-app inventory. |
+| 3 | GA-SELECT-002 long financial-list classification/searchability | `OPEN` | Native-first architecture fixed competition; long-list task classification remains. |
+| 4 | GLOBAL-RESPONSIVE-001 current-source revalidation | `OPEN` | Historical responsive defects need current confirmation/closure after later shared repairs. |
+| 5 | PHONE-DENSITY-001 / GLOBAL-COPY-001 | `OPEN` | Current source still contains excessive/duplicate helper copy and raw month strings. |
+| 6 | GA-MODE-001 current mode-switch regression reconciliation | `PARTIAL PASS` | Needs current-source/test reconciliation; physical evidence not default. |
+| 7 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after above items. |
 
-No known current-main financial corruption or balance-reconciliation failure was established when ledger v1 was created.
+No physical-only sweep is listed as a default blocker.
 
 ---
 
-## 8. Current design/future items that are not audit failures
+## 8. Continuation protocol
 
-| Item | Status | Rule |
-|---|---|---|
-| Transfer Plan visual redesign concept | `FUTURE` | Functional/financial audit takes precedence; do not implement opportunistically. |
-| Broader visual-polish ideas not tied to a proven defect | `FUTURE` | Keep separate from global-audit completion criteria unless explicitly authorised. |
-| Future multi-user/cloud synchronization and permissions | `FUTURE` | Current production architecture is local-only. |
+1. Verify current GitHub truth and compare it with this file.
+2. Continue the highest-risk non-blocked item; record genuine blockers and move to independent work.
+3. For R2–R4 work: current source → root cause → concise Impact Analysis → smallest durable repair → targeted tests → broader regression → diff review → PR → exact-head CI → merge → exact-main CI/deploy → evidence reconciliation.
+4. Classify test failures before changing expectations. Never weaken a valid test merely to get green.
+5. Reconcile this same ledger after material change; do not create competing master registers.
+6. Do not require Marius to supply routine physical verification unless explicitly requested.
 
----
+### Final completion gate
 
-## 9. Audit continuation protocol
+The global programme may be called COMPLETE only when the Master Authority final gate is satisfied: discovery-inclusive scope accounted for; no known unresolved material defect falsely closed; applicable static/type/build/regression/financial/persistence/accessibility/responsive gates pass; intended repairs are merged/deployed; available runtime evidence is reconciled; requested physical evidence (if any) passes; and this master register matches final truth.
 
-Every continuation must follow this order:
-
-1. Read this ledger from current `main`.
-2. Verify current `main` SHA, recent commits, open/draft PRs, latest main CI and Pages deployment.
-3. Reconcile any PRs/commits newer than this ledger revision.
-4. Recheck the risk-ordered unresolved queue; remove stale items only with evidence.
-5. For a proven defect whose behavior is not ambiguous: impact analysis → root cause → narrow repair → targeted tests → full suite → typecheck → privacy/data guard → local-only check → production build → PR → CI → merge → post-merge main CI → Pages deploy → live/physical check where required.
-6. Stop for user input only when physical-device evidence, destructive real-data action, ambiguous financial semantics, or a genuine product-choice decision is required.
-7. Update this ledger in the same material audit PR or immediately following evidence-only ledger update.
-
-### Final global-completion gate
-
-Do not declare the global audit complete until all required areas have been reconciled on current deployed `main`, including Dashboard, Activity, Accounts, Income, Savings, Transfer Plan, Settings, Categories, Budget, Prepare Next Month, Backup/Restore, all reachable modals/selectors/date controls, Desktop, Phone mode, physical iPhone 13 Safari, PC mode on iPhone, repeated PC↔Phone switching, keyboard/focus/accessibility, financial reconciliation and storage/backup integrity.
-
-### PHONE-SET-001 — Settings tabs stack instead of forming the Phone-mode tab strip
-
-- **Evidence date:** 2026-09-11.
-- **Physical evidence:** current deployed iPhone 13 / Safari / Phone mode shows `Categories` visually detached above `Appearance`, `Household`, `Audit`, and `Backup`, with the remaining tabs stacked vertically inside a tall Settings navigation card.
-- **Verified deployed baseline:** `8f44092df25ecd733136e16598e49f7e12c45909` (PR #198).
-- **Source root cause:** `SettingsView.tsx` correctly exposes five ARIA tabs but nests them in a responsive `grid grid-cols-2 ... sm:grid-cols-5` wrapper. Phone-mode CSS makes the outer `.mv-settings-tabs` horizontally scrollable and styles `.mv-settings-tab`, but does not neutralise the nested grid, so the two-column grid wins visually.
-- **Repair branch:** `repair/phone-settings-tab-strip`.
-- **Repair contract:** in `.mv-layout-phone` only, convert the existing nested grid wrapper to a single non-wrapping max-content flex row so all five tabs participate in one horizontally scrollable strip. Preserve the five tab identities, ARIA semantics, keyboard behavior, desktop layout, category functionality, finance/storage truth, and theme data.
-- **Code/test status:** WORKING until PR CI passes.
-- **Physical closure gate:** PENDING. After merge/deploy, re-check Settings on iPhone 13 Phone mode and laptop Phone mode. Do not claim physical PASS from source or CI alone.
-
-### PHONE-DENSITY-001 — Summary metrics consume excessive iPhone vertical space
-
-- **Evidence date:** 2026-09-11.
-- **Physical evidence:** current deployed iPhone 13 / Safari / Phone mode shows Income summary metrics (`Expected`, `Received`, `Outstanding`) and Savings summary metrics as full-width stacked cards, consuming most of the initial viewport before schedule/breakdown content becomes visible.
-- **Verified deployed baseline:** `e2f50739fcc0e8ba84db1a6717a888b81f45e42e` (PR #199).
-- **Source diagnosis:** Dashboard already uses a two-column phone metric grid. Income explicitly uses `grid-cols-1 sm:grid-cols-3`; Savings explicitly uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`. The user preference `cardDensity` only changes `.finance-ledger-row` heights and is not the cause of these summary-card layouts.
-- **Repair branch:** `repair/phone-summary-density`.
-- **Repair contract:** Income uses three columns for its three summary metrics on Phone mode; Savings uses two columns for its four summary metrics. Preserve desktop breakpoints, all calculations/values, card-density preference behavior, storage, navigation, themes, and Dashboard hierarchy.
-- **Code/test status:** WORKING until PR CI passes.
-- **Physical closure gate:** PENDING. After merge/deploy, re-check Income and Savings on iPhone 13 Phone mode for readability, no horizontal overflow, and materially improved vertical density.
+**Current programme status: WORKING / NOT COMPLETE.**
