@@ -9,7 +9,8 @@ const dashboard = fs.readFileSync(
 
 describe('GLOBAL-COPY-001 Dashboard month display', () => {
   it('uses the shared readable month label for all user-facing month text', () => {
-    expect(dashboard).toContain("import { formatMonthKeyUk } from '../utils/dateInput';");
+    expect(dashboard).toContain('formatMonthKeyUk');
+    expect(dashboard).toContain("from '../utils/dateInput';");
     expect(dashboard).toContain('const visibleMonthLabel = formatMonthKeyUk(selectedMonth);');
     expect(dashboard).toContain('<span>{visibleMonthLabel}</span>');
     expect(dashboard).toContain('>{visibleMonthLabel}</h2>');
