@@ -330,6 +330,18 @@
   .mv-layout-phone .mv-dashboard-workspace button:not(.mv-dashboard-actions > button) {
     min-height: var(--mv-ds-click-target) !important;
   }
+
+  /* PHONE-DENSITY-001: Activity keeps 40px/36px page actions and 32px row
+     actions for desktop density. Phone mode raises every Activity button to
+     the shared 44px target floor after the global row-action compaction rule. */
+  .mv-layout-phone .finance-activity-workspace button {
+    min-height: var(--mv-ds-click-target) !important;
+  }
+
+  .mv-layout-phone .finance-activity-workspace .finance-action-button {
+    width: var(--mv-ds-click-target) !important;
+    height: var(--mv-ds-click-target) !important;
+  }
 }
 
 
