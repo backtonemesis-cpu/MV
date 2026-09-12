@@ -10,6 +10,10 @@ const sharedUi = fs.readFileSync(
   path.resolve(process.cwd(), 'src/components/UnifiedAddUi.tsx'),
   'utf8'
 );
+const categorySelect = fs.readFileSync(
+  path.resolve(process.cwd(), 'src/components/CategorySelect.tsx'),
+  'utf8'
+);
 
 describe('Activity Edit Transaction submenu audit contract', () => {
   it('preloads existing transaction facts without forcing focus and preserves historical attribution when the account is unchanged', () => {
@@ -73,7 +77,8 @@ describe('Activity Edit Transaction submenu audit contract', () => {
     expect(sharedUi).toContain('aria-pressed={activeType === type}');
     expect(source).not.toContain('transaction-person-label');
     expect(source).not.toContain('aria-pressed={payer === person}');
-    expect(source).toContain('aria-label={`Split ${idx + 1} category`}');
+    expect(source).toContain('ariaLabel={`Split ${idx + 1} category`}');
+    expect(categorySelect).toContain('aria-label={ariaLabel}');
   });
 
   it('keeps monetary entry numeric-only and spinner-free', () => {
