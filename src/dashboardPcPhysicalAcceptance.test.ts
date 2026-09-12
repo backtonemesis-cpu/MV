@@ -27,6 +27,12 @@ describe('PC Dashboard physical acceptance contract', () => {
     expect(dashboardImport).toBeGreaterThan(globalImport);
   });
 
+  it('keeps the compact overview stack safe when a wide laptop is switched to Phone mode', () => {
+    expect(dashboardCss).toContain('.mv-layout-phone .mv-dashboard-overview-grid > .mv-dashboard-period-card');
+    expect(dashboardCss).toContain('.mv-layout-phone .mv-dashboard-overview-grid > .mv-dashboard-surplus-card');
+    expect(dashboardCss).toContain('grid-column: auto !important;');
+  });
+
   it('uses system UI tabular numerals and concise finance copy', () => {
     expect(dashboard).not.toContain('font-mono');
     expect(dashboard).toContain('tabular-nums');
