@@ -1,10 +1,10 @@
 # MV global selector inventory
 
-Current selector architecture is reconciled against deployed `main` at `fa026f4abd1e3120cccd736a9bf9cc9a45f53f6e` plus the active adaptive-category migration branch.
+Current selector architecture is reconciled against deployed `main` at `85ddc9dea64631456d31c174783a5f8bb13ee54b` plus the active TransactionModal adaptive-category migration branch.
 
 ## Ordinary native selectors
 
-The current component source on this branch contains **25 native `<select>` render points**. This is a source inventory, not a claim that every adaptive category field renders native at runtime: `CategorySelect` owns one native fallback render point and switches to the searchable long-list primitive only when the eligible category set reaches the explicit long-list threshold.
+The current component source on this branch contains **22 native `<select>` render points**. This is a source inventory, not a claim that every adaptive category field renders native at runtime: `CategorySelect` owns one native fallback render point and switches to the searchable long-list primitive only when the eligible category set reaches the explicit long-list threshold.
 
 Native controls keep browser/OS activation, focus, option and form semantics. They are **not** globally intercepted or mirrored into a second custom popup.
 
@@ -12,7 +12,7 @@ Native controls keep browser/OS activation, focus, option and form semantics. Th
 | --- | --- | --- |
 | AccountsView / Add Account | Owner, Type native selects | Disabled placeholders; Joint + active member owner options |
 | AccountsView / Edit Account | Owner, Type native selects | Historical removed owner retained; legacy Joint type conditionally retained |
-| TransactionList / Activity | Date, payer, classification, category native selects | Exact current filter values; long Category filter is pending the next migration sub-stage |
+| TransactionList / Activity | Date, payer, classification native selects | Exact current filter values; Category is adaptive/searchable when long |
 | IncomeView | Received by, Account, Category, Receiving account native selects | Household people, account identity, category eligibility |
 | CategorySettings | Category Group, new Group Scope native selects | Group scope/write-boundary constraints |
 | CategoryCorrection | Operation and budget conflict policy native selects | Two/short fixed-choice workflow decisions |
@@ -20,7 +20,6 @@ Native controls keep browser/OS activation, focus, option and form semantics. Th
 | SavingsView | Source account, Savings destination native selects | Existing source/destination eligibility |
 | MarkPaymentPaidModal | Paid from native select | Active account options |
 | AuditLogView | Audit type native select | Fixed audit entity filter values |
-| TransactionModal | Bill category, transaction category, split category native selects | Bill/transaction/split category eligibility and historical preservation; pending adaptive migration |
 | CategorySelect | Native fallback for category sets below the long-list threshold | Exact category IDs supplied by the authoritative eligibility caller |
 
 ### Native-first contract
@@ -63,18 +62,17 @@ A non-empty option set whose items are all disabled is different: the listbox re
 
 The canonical catalogue currently provides **37 expense categories** and **7 income categories**. Therefore ordinary Income category selection stays native, while bill/expense category tasks qualify as long-list tasks.
 
-Current migrated consumers in this branch:
+Current adaptive consumers:
 
 | Component / screen | Adaptive field | Preserved semantics |
 | --- | --- | --- |
 | PlannedPaymentModal | Bill category | Existing bill-category eligibility and validation |
 | CategoryBudgets | Budget category | Bill-category eligibility; explicit category-required validation before budget write |
 | CategoryCorrection | From / To category | Scope/system/archive rules; archived source label retained; Operation/policy selectors remain native |
-
-Pending next sub-stage:
-
-- TransactionModal bill/expense/split category surfaces, while preserving native seven-option Income behaviour and the existing iPhone native short-list contract.
-- Activity category filter, with `All categories` retained as the non-category leading value.
+| TransactionList / Activity | Category filter | `All categories` sentinel and exact category IDs retained; Date/Payer/Classification remain native |
+| TransactionModal | Bill category | Existing bill eligibility and submit validation retained |
+| TransactionModal | Main transaction category | Type-scoped eligibility and historical-category preservation retained; seven-option Income remains native |
+| TransactionModal | Split category | Type-scoped eligibility and original split-category preservation retained; exact split category IDs retained |
 
 ## Deliberately native/system controls
 
@@ -92,6 +90,8 @@ Pending next sub-stage:
 
 ## Remaining selector work
 
-GA-SELECT-002 remains open until the pending TransactionModal and Activity long-category surfaces are migrated and the final source inventory/regression suite is reconciled. The work must not reintroduce global native-select interception or convert short fixed-choice controls merely for visual consistency.
+The current source classification and migration for GA-SELECT-002 is complete on this branch: long category tasks use the searchable pattern and short fixed-choice tasks remain native. GA-SELECT-002 must not be marked fully closed in the master audit ledger until this branch passes the full repository gate, merges, and exact-main CI plus Pages deployment are confirmed.
+
+The work must not reintroduce global native-select interception or convert short fixed-choice controls merely for visual consistency.
 
 Physical Safari evidence is not a default completion requirement under the current Master Autonomous Engineering Authority. If explicitly requested, physical verification remains a separate evidence tier and must not be inferred from DOM/tests.
