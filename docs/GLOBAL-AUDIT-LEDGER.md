@@ -24,12 +24,12 @@ Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUP
 | Item | Current evidence |
 |---|---|
 | Repository | `backtonemesis-cpu/MV` |
-| Current `main` | `c17970d4172dfcb8cdb1e3b69716f3f0d9bd0213` |
-| Current main commit | `Add shared UK month display formatter (#219)` |
-| Exact-main workflow | Run #928 / `34690254160` |
+| Current `main` | `64230aa0a22cfa7fea10ef8cf19a0218007c799e` |
+| Current main commit | `Use readable month labels across Dashboard (#221)` |
+| Exact-main workflow | Run #933 / `34690951579` |
 | Test/build/privacy/local-only | `PASS` |
-| Main automated suite | full repository suite PASS in run #928 |
-| GitHub Pages deploy | `PASS` in run #928 for exact current main |
+| Main automated suite | full repository suite PASS in run #933 |
+| GitHub Pages deploy | `PASS` in run #933 for exact current main |
 | Production persistence | browser-local `mv_local_state_v2` |
 | Cloud financial backend | not active |
 | Physical evidence requirement | only when explicitly requested |
@@ -56,7 +56,9 @@ Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUP
 | #216 | Reconciled responsive/Income evidence and current queue | `PASS`, evidence-only; exact-main run #920/deploy PASS |
 | #217 | Reset Phone More-menu transient state on layout-mode changes and added a dedicated regression gate | `PASS`, merged; branch run #923 PASS; exact-main run #924/deploy PASS |
 | #218 | Reconciled mode-switch evidence and remaining queue | `PASS`, evidence-only; exact-main run #926/deploy PASS |
-| #219 | Added shared UK month display formatter with regression coverage | `PASS`, merged; branch run #927 PASS; exact-main run #928/deploy PASS; Dashboard usages remain OPEN |
+| #219 | Added shared UK month display formatter with regression coverage | `PASS`, merged; branch run #927 PASS; exact-main run #928/deploy PASS |
+| #220 | Reconciled audit evidence after shared month formatter | `PASS`, evidence-only; exact-main run #930/deploy PASS |
+| #221 | Replaced all six user-facing Dashboard raw `YYYY-MM` month labels with the shared readable month formatter and added focused regression coverage | `PASS`, merged; branch run #932 PASS; exact-main run #933/deploy PASS |
 
 ---
 
@@ -97,7 +99,7 @@ Production remains a static React/Vite GitHub Pages application with browser-loc
 ### GA-DASH-001 — Dashboard financial truth
 **Status:** `PASS` for financial/source/automated contract
 
-Shared finance/reconciliation tests pass. Remaining content/visual quality is tracked under `GLOBAL-COPY-001` / `PHONE-DENSITY-001`.
+Shared finance/reconciliation tests pass. Dashboard month display copy is repaired by PR #221; remaining visual/density review is tracked under `PHONE-DENSITY-001` / final responsive reconciliation.
 
 ### GA-ACT-001 — Activity integrity / editing / destructive actions
 **Status:** `PASS` for current source/automated contract
@@ -186,7 +188,7 @@ Final evidence: PR #212 branch gate passed **97/97 test files and 644/644 tests*
 ### GA-DATE-001 — Date/month controls and current working month
 **Status:** `PASS` for current source/automated contract
 
-Dynamic/local month handling and UK date tests pass. PR #205 preserves required iPhone date containment. PR #219 adds `formatMonthKeyUk` to the shared date utility for readable user-facing month/year labels while preserving canonical internal `YYYY-MM` keys.
+Dynamic/local month handling and UK date tests pass. PR #205 preserves required iPhone date containment. PR #219 added `formatMonthKeyUk` to the shared date utility for readable user-facing month/year labels while preserving canonical internal `YYYY-MM` keys; PR #221 applies it across all current Dashboard user-facing month labels.
 
 ### GA-HTML-001 — HTML shell accessibility / public asset paths
 **Status:** `PASS`
@@ -216,7 +218,7 @@ The selected mode remains persisted in `mv-layout-mode-v1`, mirrored to `documen
 ### GA-REPO-001 — Repository / PR / delivery hygiene
 **Status:** `PASS` at this baseline
 
-PR #34 is closed/superseded. PRs #203–#219 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
+PR #34 is closed/superseded. PRs #203–#221 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
 
 ---
 
@@ -225,12 +227,12 @@ PR #34 is closed/superseded. PRs #203–#219 are merged; current delivery chain 
 ### PHONE-DENSITY-001 — Phone summary density/readability
 **Status:** `PARTIAL PASS / OPEN`
 
-Historical sequence: #200 ineffective cascade repair; #201 made density effective but Income three-column geometry was unreadable; #202 changed Income to two columns with Outstanding below while Savings retained 2×2. PR #215 repaired confirmed Income copy density while preserving the approved two-column Phone geometry. Broader discovery-inclusive Phone density review remains open; do not restore superseded geometry without new evidence.
+Historical sequence: #200 ineffective cascade repair; #201 made density effective but Income three-column geometry was unreadable; #202 changed Income to two columns with Outstanding below while Savings retained 2×2. PR #215 repaired confirmed Income copy density while preserving the approved two-column Phone geometry. Current-source review after #221 confirms the global Phone design-system layer uses 16px working gutters, 44px controls, two-column Dashboard actions/metrics, wrapped Activity rows, scrollable Settings tabs, viewport-bounded menus and safe-area modal actions. Broader discovery-inclusive Phone density review remains open until the remaining screen-specific geometry is reconciled; do not restore superseded Income three-column geometry without new evidence.
 
 ### GLOBAL-COPY-001 — Content/copy density
-**Status:** `PARTIAL PASS / OPEN` — LOW
+**Status:** `PASS` for current confirmed findings
 
-PR #215 repaired the confirmed Income helper/qualifier prose and raw `YYYY-MM` user-facing schedule/empty-state copy. PR #219 added a shared `formatMonthKeyUk` formatter and regression coverage without changing stored month keys or finance semantics. Current Dashboard source still exposes raw `selectedMonth` (`YYYY-MM`) in four user-facing places: surplus metadata, Spending Attribution heading, Bills heading and the no-bills empty state. Those four Dashboard usages remain OPEN and must be repaired with a narrow, diff-safe edit. Broader current-source copy review otherwise found no confirmed new defect in the reviewed Accounts, Activity, Savings or Settings surfaces.
+PR #215 repaired the confirmed Income helper/qualifier prose and raw `YYYY-MM` user-facing schedule/empty-state copy. PR #219 added shared `formatMonthKeyUk` formatting support. Current-source review then found **six** user-facing Dashboard raw `selectedMonth` (`YYYY-MM`) usages: surplus metadata, Spending Attribution heading, Bills heading, no-bills empty state, Activity heading and no-transactions empty state. PR #221 replaced all six with the shared readable month label while preserving `selectedMonth` as the internal financial/filter key. Focused regression coverage passes; branch run #932 and exact-main run #933/Pages deployment pass. Broader reviewed Accounts, Activity, Savings and Settings copy surfaces produced no confirmed additional copy defect in this pass. No physical-device claim is made.
 
 ### GLOBAL-RESPONSIVE-001 — Historical responsive defect family
 **Status:** `PASS` for current source/automated evidence
@@ -269,21 +271,23 @@ Under Master Autonomous Engineering Authority v2:
 | #202 | readable Phone summary geometry — layout `PASS`; broader copy/density remains open |
 | #203 | native-first selector architecture — `PASS` |
 | #204 | exhaustive modal inventory gate — `PASS` |
-| #205 | browser zoom/public asset paths — `PASS` |
-| #206 | master evidence reconciliation — `PASS` |
-| #207 | whole-source reachable-control inventory — `PASS` |
-| #208 | evidence reconciliation after accessibility gate — `PASS` |
-| #209 | searchable long-list primitive — `PASS` |
-| #210 | adaptive category selector + contained consumers — `PASS` |
+| #205 | browser zoom/public CSS asset repair — `PASS` |
+| #206 | master ledger reconciliation — `PASS` |
+| #207 | whole-source reachable-control accessibility inventory — `PASS` |
+| #208 | accessibility ledger reconciliation — `PASS` |
+| #209 | searchable financial-list primitive — `PASS` |
+| #210 | adaptive category selector + first consumers — `PASS` |
 | #211 | Activity adaptive category filter — `PASS` |
-| #212 | TransactionModal adaptive categories; GA-SELECT-002 completion gate — `PASS` |
+| #212 | TransactionModal adaptive category migration — `PASS` |
 | #213 | selector-programme ledger reconciliation — `PASS` |
-| #214 | responsive revalidation + Audit Trail containment — `PASS` |
+| #214 | historical responsive revalidation + Audit Trail containment — `PASS` |
 | #215 | Income copy density/readable month labels — `PASS` |
 | #216 | responsive/Income ledger reconciliation — `PASS` |
 | #217 | mode-switch transient Phone navigation reset — `PASS` |
 | #218 | mode-switch ledger reconciliation — `PASS` |
-| #219 | shared UK month display formatter support — `PASS`; Dashboard usages remain OPEN |
+| #219 | shared UK month display formatter support — `PASS` |
+| #220 | shared month formatter ledger reconciliation — `PASS` |
+| #221 | Dashboard readable month labels across all six visible month surfaces — `PASS` |
 
 Git history remains the detailed implementation chronology; this ledger stores current consequence.
 
@@ -296,9 +300,8 @@ This ordering must be rechecked whenever `main` changes.
 | Priority | Item | Status | Current reason |
 |---:|---|---|---|
 | 1 | GA-TP-002 per-bill Undo Funding attribution | `BLOCKED` | No safe explicit bill-level funding attribution exists; guessing would risk financial corruption. Continue independent work. |
-| 2 | GLOBAL-COPY-001 Dashboard raw month labels | `OPEN` | Four confirmed user-facing Dashboard `YYYY-MM` usages remain; shared formatter now exists. |
-| 3 | PHONE-DENSITY-001 broader discovery-inclusive review | `PARTIAL PASS / OPEN` | Income copy/geometry repaired; final density reconciliation remains. |
-| 4 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after the Dashboard copy repair. |
+| 2 | PHONE-DENSITY-001 broader discovery-inclusive review | `PARTIAL PASS / OPEN` | Income geometry/copy and global Phone density contracts are repaired; remaining screen-specific density geometry still needs final reconciliation. |
+| 3 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after the density review. |
 
 No physical-only sweep is a default blocker.
 
