@@ -85,9 +85,11 @@ describe('Add Bill submenu audit contract', () => {
     expect(blocks[0]).not.toContain('min=');
   });
 
-  it('filters new bill categories by authoritative category group metadata', () => {
+  it('filters new bill categories by authoritative category group metadata before adaptive rendering', () => {
+    expect(source).toContain("import { CategorySelect } from './CategorySelect';");
     expect(source).toContain('getBillCategoryOptions(');
-    expect(source).toContain('billCategoryOptions.map((c) =>');
+    expect(source).toContain('categories={billCategoryOptions}');
+    expect(source).toContain('categoryGroups={categoryGroups}');
     expect(source).toContain('isBillCategorySelectionAllowed(');
     expect(source).not.toContain('{categories.map((c) => (');
   });
