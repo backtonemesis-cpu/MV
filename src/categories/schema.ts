@@ -1,5 +1,8 @@
 import type { HouseholdData } from '../types';
-import { normalizeTransferPlanFundingRecords } from '../utils/transferPlanFundingPersistence';
+import {
+  assertTransferPlanFundingEvidenceIntegrity,
+  normalizeTransferPlanFundingRecords,
+} from '../utils/transferPlanFundingPersistence';
 import type { CategoryCatalogue } from './model';
 import { createCanonicalCatalogue } from './registry';
 import { assertCategoryCatalogue } from './validation';
@@ -44,6 +47,10 @@ export function assertCategorySchema(value: unknown): asserts value is Household
   const state = value as HouseholdDataV2;
   state.transferPlanFundingRecords = normalizeTransferPlanFundingRecords(
     state.transferPlanFundingRecords
+  );
+  assertTransferPlanFundingEvidenceIntegrity(
+    state.transferPlanFundingRecords,
+    state.transactions
   );
 }
 
