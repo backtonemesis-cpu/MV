@@ -6,6 +6,7 @@ const ROOT = process.cwd();
 const COMPONENTS = path.join(ROOT, 'src', 'components');
 const indexCss = fs.readFileSync(path.join(ROOT, 'src', 'index.css'), 'utf8');
 const modalHelper = fs.readFileSync(path.join(ROOT, 'src', 'utils', 'modalAccessibility.ts'), 'utf8');
+const renderedModalRoot = /<[A-Za-z][A-Za-z0-9.:-]*\b(?=[^>]*\baria-modal="true")(?=[^>]*\brole="(?:dialog|alertdialog)")[^>]*>/s;
 
 function walkTsx(directory: string): string[] {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -21,7 +22,7 @@ function source(file: string): string {
 
 const dialogFiles = walkTsx(COMPONENTS)
   .map((file) => ({ file, source: source(file) }))
-  .filter(({ source }) => source.includes('aria-modal="true"'));
+  .filter(({ source }) => renderedModalRoot.test(source));
 
 describe('global modal inventory and shared containment contract', () => {
   it('finds the current rendered modal inventory rather than relying on a hand-written component list', () => {
@@ -32,7 +33,7 @@ describe('global modal inventory and shared containment contract', () => {
     for (const { file, source } of dialogFiles) {
       const name = path.relative(COMPONENTS, file);
       expect(source, name).toContain('useModalAccessibility');
-      expect(source, name).toMatch(/role="(?:dialog|alertdialog)"/);
+      expect(source, name).toMatch(renderedModalRoot);
       expect(source, name).toContain('tabIndex={-1}');
     }
   });
