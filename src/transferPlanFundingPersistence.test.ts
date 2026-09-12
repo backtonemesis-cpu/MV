@@ -53,7 +53,6 @@ describe('GA-TP-002 funding persistence compatibility', () => {
     const normalized = normalizeTransferPlanFundingRecords([original]);
 
     expect(normalized).toEqual([original]);
-    expect(normalized).not.toBe([original]);
     expect(normalized[0]).not.toBe(original);
   });
 
