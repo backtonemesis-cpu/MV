@@ -16,7 +16,6 @@ interface NavigationProps {
   activeTab: NavTab;
   onTabChange: (tab: NavTab) => void;
   pendingMembersCount: number;
-  layoutMode: 'pc' | 'phone';
 }
 
 interface TabItem {
@@ -31,7 +30,6 @@ export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onTabChange,
   pendingMembersCount,
-  layoutMode,
 }) => {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreTriggerRef = useRef<HTMLButtonElement>(null);
@@ -110,7 +108,23 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   useEffect(() => {
     setIsMoreOpen(false);
-  }, [activeTab, layoutMode]);
+  }, [activeTab]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => mutation.attributeName === 'data-layout-mode')) {
+        setIsMoreOpen(false);
+      }
+    });
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['data-layout-mode'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isMoreOpen) return;
@@ -164,7 +178,6 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <>
-      {/* Desktop / PC Navigation Bar */}
       <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors" aria-label="Primary navigation">
         <div className="mv-shell-boundary mx-auto w-full max-w-[1440px] px-4">
           <div className="mv-desktop-nav-rail flex gap-0.5">
@@ -198,7 +211,6 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       </nav>
 
-      {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
       <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors" aria-label="Mobile navigation">
         <div className="mv-mobile-nav-grid grid grid-cols-5 h-14">
           {mobilePrimaryTabs.map((tab) => {
@@ -267,7 +279,6 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </div>
         )}
-
       </nav>
     </>
   );
