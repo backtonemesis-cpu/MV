@@ -196,7 +196,7 @@ describe('GA-TP-002 final attribution evidence closure', () => {
     };
 
     expect(() => preflightLocalRestore(corrupted)).toThrow(
-      /funding transaction linkage|missing Transfer Plan funding record/
+      /funding transaction linkage|missing Transfer Plan funding record/i
     );
   });
 });
