@@ -15,6 +15,8 @@ describe('GLOBAL-COPY-001 Dashboard month display', () => {
     expect(dashboard).toContain('>{visibleMonthLabel}</h2>');
     expect(dashboard).toContain('>{visibleMonthLabel} • {monthPlannedPayments.length} bill');
     expect(dashboard).toContain('No bills for {visibleMonthLabel}');
+    expect(dashboard).toContain('>{visibleMonthLabel} • {monthTransactions.length} transaction');
+    expect(dashboard).toContain('No transactions for {visibleMonthLabel}');
   });
 
   it('keeps selectedMonth as the internal month key for filters and calculations', () => {
