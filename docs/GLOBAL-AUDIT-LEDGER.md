@@ -8,14 +8,14 @@
 
 1. Verify current `main`, open PRs, relevant branches, CI and deployment before relying on this file.
 2. Do not mark an item PASS because code merely exists; use evidence appropriate to the claim.
-3. Physical-device evidence is a separate evidence tier. It is required only when Marius explicitly requests it for the relevant issue/final gate. Missing physical evidence is **not** a default blocker under Master Authority v2.
+3. Physical-device evidence is a separate evidence tier and is required only when Marius explicitly requests it for the relevant issue/final gate.
 4. Preserve financial truth: integer pence, exact stable account IDs, no transfer-as-income/spend, no duplicate spend/income, funding != payment, exact linked undo, £0 valid, UK-local dates.
 5. Later material work touching a passed area requires proportionate regression review.
-6. Do not silently drop material issues. Historical superseded items may be condensed once their disposition is explicit and Git history preserves implementation detail.
+6. Do not silently drop material issues. Historical superseded items may be condensed once disposition is explicit and Git history preserves implementation detail.
 7. `BLOCKED` means a genuine unresolved dependency/semantic ambiguity, not ordinary engineering difficulty.
 8. Do not declare the global programme COMPLETE while a known material unresolved defect remains.
 
-Allowed current statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUPERSEDED`, `DEFERRED`, `N/A`.
+Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUPERSEDED`, `DEFERRED`, `N/A`.
 
 ---
 
@@ -24,12 +24,12 @@ Allowed current statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TB
 | Item | Current evidence |
 |---|---|
 | Repository | `backtonemesis-cpu/MV` |
-| Current `main` | `f6b8460c475cdd8938a3f870d6f6dcb4d12fa8cb` |
-| Current main commit | `Add global reachable-control accessibility inventory gate (#207)` |
-| Exact-main workflow | Run #894 / `34669056284` |
+| Current `main` | `7e7b5315c28740d917c7b95e6b154c6025d68b9d` |
+| Current main commit | `Use adaptive searchable categories in TransactionModal (#212)` |
+| Exact-main workflow | Run #910 / `34677399378` |
 | Test/build/privacy/local-only | `PASS` |
-| Main automated suite | `92/92` test files, `616/616` tests |
-| GitHub Pages deploy | `PASS` in run #894 for exact current main |
+| Main automated suite | `97/97` test files, `644/644` tests |
+| GitHub Pages deploy | `PASS` in run #910 for exact current main |
 | Production persistence | browser-local `mv_local_state_v2` |
 | Cloud financial backend | not active |
 | Physical evidence requirement | only when explicitly requested |
@@ -40,11 +40,16 @@ Allowed current statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TB
 
 | PR | Result | Current disposition |
 |---:|---|---|
-| #203 | Restored native browser contract for ordinary selectors; removed global native/custom bridge and coarse-pointer geometry interception; retained explicit rich MVSelect consumers | `PASS`, merged, exact-main CI/deploy PASS |
-| #204 | Added exhaustive rendered-modal inventory gate across `dialog`/`alertdialog` and shared modal containment/accessibility stack | `PASS`, merged, exact-main CI/deploy PASS |
-| #205 | Restored browser zoom and corrected required `public/` CSS asset paths while preserving iPhone date and Unified Add fixes | `PASS`, merged, exact-main CI/deploy PASS |
+| #203 | Restored native browser contract for ordinary selectors; removed global native/custom bridge and coarse-pointer interception | `PASS`, merged, exact-main CI/deploy PASS |
+| #204 | Added exhaustive rendered-modal inventory gate across `dialog`/`alertdialog` and shared modal accessibility stack | `PASS`, merged, exact-main CI/deploy PASS |
+| #205 | Restored browser zoom and corrected required `public/` CSS asset paths while preserving iPhone date/Unified Add fixes | `PASS`, merged, exact-main CI/deploy PASS |
 | #206 | Reconciled this master ledger from current GitHub evidence and removed stale default physical-only blockers | `PASS`, merged, exact-main CI/deploy PASS |
-| #207 | Added a whole-source TSX reachable-control AST inventory; initial false positives were classified and the inventory was corrected for dynamic labels, prop-spread primitives and ARIA listbox semantics | `PASS`, merged, exact-main CI/deploy PASS |
+| #207 | Added whole-source reachable-control accessibility inventory | `PASS`, merged, exact-main CI/deploy PASS |
+| #208 | Reconciled accessibility evidence/current queue in the master ledger | `PASS`, merged, exact-main CI/deploy PASS |
+| #209 | Added isolated searchable long-financial-list selector primitive | `PASS`, merged, exact-main CI/deploy PASS |
+| #210 | Added count-driven `CategorySelect`; migrated PlannedPayment, category budgets and category correction long lists | `PASS`, merged, exact-main CI/deploy PASS |
+| #211 | Migrated Activity Category filter to adaptive search while retaining short native filters and `All categories` | `PASS`, merged, exact-main CI/deploy PASS |
+| #212 | Migrated TransactionModal Bill/main/split categories while preserving native short Income, stable IDs and financial semantics | `PASS`, merged; branch 97/97 files + 644/644 tests; exact-main run #910/deploy PASS |
 
 ---
 
@@ -69,7 +74,7 @@ Allowed current statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TB
 | PlannedPayment ↔ Transaction reciprocal linkage | `PASS` | storage/finance tests |
 | PlannedIncome linkage | `PASS` | storage/finance tests |
 | Backup/restore integrity | `PASS` | local-store/category backup tests |
-| UK-local date/month handling | `PASS` | date/month tests; September fallback work merged in #186 |
+| UK-local date/month handling | `PASS` | date/month tests |
 
 No current evidence establishes a known balance-reconciliation or monetary-corruption failure on current `main`.
 
@@ -90,17 +95,17 @@ Shared finance/reconciliation tests pass. Remaining content/visual quality is tr
 ### GA-ACT-001 — Activity integrity / editing / destructive actions
 **Status:** `PASS` for current source/automated contract
 
-Destructive confirmation, edit/category/date and linked-evidence regression coverage pass.
+Destructive confirmation, edit/category/date, adaptive category filtering and linked-evidence regression coverage pass.
 
 ### GA-ACC-001 / GLOBAL-IDENTITY-001 — Account identity and lifecycle
 **Status:** `PASS`
 
-Stable account IDs are authoritative. Same-name accounts remain distinct; current tests preserve `Lloyds · Current · Marius` vs `Lloyds · Current · Vesta`. Archive/reconcile/delete/ownership tests pass.
+Stable account IDs are authoritative. Same-name accounts remain distinct; archive/reconcile/delete/ownership tests pass.
 
 ### GA-INC-001 — Income financial/category semantics
 **Status:** `PASS` for finance semantics
 
-Current source requires a valid income category and stable account identity. Content density/wording remains separately tracked under `GLOBAL-COPY-001`.
+Current source requires a valid income category and stable account identity. The canonical seven-option Income category picker remains native under the adaptive selector contract. Content density/wording remains tracked under `GLOBAL-COPY-001`.
 
 ### GA-SAV-001 — Savings truth and classification
 **Status:** `PASS` for financial classification/calculation
@@ -155,49 +160,56 @@ PR #204 exhaustively inventories rendered `dialog`/`alertdialog` surfaces and re
 ### GA-SELECT-001 — Native/custom selector competition
 **Status:** `PASS`
 
-PR #203 removed the global native-select bridge, coarse-pointer hit-test suppression and competing picker architecture. The 28 ordinary HTML selects retain native browser/OS activation. Explicit rich `MVSelect` remains only for fields that need richer account identity/disabled-reason presentation.
+PR #203 removed the global native-select bridge, coarse-pointer hit-test suppression and competing picker architecture. Current component source contains **22 native `<select>` render points**; short choices retain browser/OS activation. Explicit rich/searchable selectors are mounted only where the field contract requires them.
 
 ### GA-SELECT-002 — Long financial-list pattern classification
-**Status:** `OPEN`
+**Status:** `PASS` for current source/automated contract
 
-Approved direction requires genuinely long financial lists to use a one-tap searchable list/sheet where search materially improves the task. Current evidence confirms the canonical starter catalogue already contains **37 expense categories** before user-added categories, so category selection is a genuine long-list case. Short fixed-choice selectors must remain native. Current selector families still need explicit classification and the long-list implementation must preserve exact IDs/eligibility and avoid native/custom competition.
+PRs #209–#212 implement the approved classification:
+- `MVSearchableSelect` is the isolated long-list primitive.
+- `CategorySelect` uses an explicit threshold: fewer than 12 eligible categories stays native; 12+ uses one searchable selector.
+- Canonical catalogue: **37 expense categories** and **7 income categories**.
+- Long category tasks now use the adaptive pattern in PlannedPayment, CategoryBudgets, CategoryCorrection, Activity, and TransactionModal Bill/main/split category fields.
+- Short fixed-choice selectors stay native; canonical Income remains native.
+- Exact category IDs, caller-owned eligibility rules, historical edit preservation and submit validation remain authoritative.
+- No global interception/native-custom competition was reintroduced.
+
+Final evidence: PR #212 branch gate passed **97/97 test files and 644/644 tests**; exact-main run #910 and Pages deployment passed for `7e7b5315c28740d917c7b95e6b154c6025d68b9d`. No physical-device claim is made.
 
 ### GA-DATE-001 — Date/month controls and current working month
 **Status:** `PASS` for current source/automated contract
 
-PR #186 is merged. Dynamic/local month handling and UK date tests pass. PR #205 preserves the required iPhone date-containment stylesheet.
+Dynamic/local month handling and UK date tests pass. PR #205 preserves required iPhone date containment.
 
 ### GA-HTML-001 — HTML shell accessibility / public asset paths
 **Status:** `PASS`
 
-PR #205 restored browser/user zoom and corrected the required public CSS asset paths. Exact-main CI/deploy pass.
+PR #205 restored browser/user zoom and corrected required public CSS asset paths. Exact-main CI/deploy passed.
 
 ### GA-A11Y-001 — Whole-app reachable-control accessibility inventory
 **Status:** `PASS` for current source/automated inventory
 
-PR #207 adds a TypeScript-AST inventory across all production TSX rather than a hand-written component shortlist. It currently finds no **definite** unnamed native controls/links/interactive-role widgets and no non-interactive element definitely placed in the forward tab order. The gate understands dynamic `htmlFor`/`id` expressions, caller-prop-spread primitives and explicit ARIA listbox/combobox roles.
-
-This is not a physical-device claim and does not prevent later discovery of runtime-only accessibility defects.
+PR #207 adds a TypeScript-AST inventory across production TSX. It finds no definite unnamed native controls/links/interactive-role widgets and no non-interactive element definitely placed in forward tab order. Later runtime-only accessibility defects may still be discovered.
 
 ### GA-DESKTOP-001 — Desktop layout baseline
 **Status:** `PARTIAL PASS`
 
-Existing desktop source/CSS regression tests pass. Discovery-inclusive reconciliation of all remaining screens/content/visual contracts is still pending.
+Existing desktop source/CSS regression tests pass. Discovery-inclusive reconciliation of remaining screens/content/visual contracts is pending.
 
 ### GA-PHONE-001 — Phone responsive baseline
 **Status:** `PARTIAL PASS`
 
-Numerous Phone/iPhone containment tests pass. Current known remaining work is content/density quality plus current-source revalidation of historical responsive candidates.
+Numerous Phone/iPhone containment tests pass. Remaining work is current-source responsive revalidation plus content/density quality.
 
 ### GA-MODE-001 — PC/Phone mode switching
 **Status:** `PARTIAL PASS`
 
-Mode architecture and targeted tests exist. Current-source regression reconciliation for stale overlays/layout state across repeated mode switching remains.
+Mode architecture and targeted tests exist. Current-source regression reconciliation for stale overlays/layout state across repeated switching remains.
 
 ### GA-REPO-001 — Repository / PR / delivery hygiene
 **Status:** `PASS` at this baseline
 
-PR #34 is closed/superseded. PRs #186/#193 are merged. PRs #203–#207 are merged with exact-main CI/deployment evidence where applicable. Current GitHub state remains authoritative after the next change.
+PR #34 is closed/superseded. PRs #203–#212 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
 
 ---
 
@@ -206,17 +218,12 @@ PR #34 is closed/superseded. PRs #186/#193 are merged. PRs #203–#207 are merge
 ### PHONE-DENSITY-001 — Phone summary density/readability
 **Status:** `PARTIAL FAIL / OPEN`
 
-Historical sequence:
-- #200 attempted density repair but was ineffective because of CSS cascade.
-- #201 made the cascade effective but three-column Income was physically unreadable.
-- #202 changed Income to two columns with Outstanding on the lower row; Savings retained 2×2.
-
-Latest known geometry was recorded as layout PASS, but content/copy density remains open. Do not restore #200/#201 Income geometry without new evidence.
+Historical sequence: #200 ineffective cascade repair; #201 made density effective but Income three-column geometry was unreadable; #202 changed Income to two columns with Outstanding below while Savings retained 2×2. Current content/copy density remains open; do not restore superseded geometry without new evidence.
 
 ### GLOBAL-COPY-001 — Content/copy density
 **Status:** `OPEN` — LOW/MEDIUM
 
-Current source confirms copy that conflicts with the concise-copy standard, including Income helper/qualifier prose and raw `YYYY-MM` presentation in user-facing schedule/empty-state copy. This is a UX/content issue, not a financial-calculation failure.
+Current source confirms copy that conflicts with concise-copy standards, including Income helper/qualifier prose and raw `YYYY-MM` presentation in user-facing schedule/empty-state copy. This is UX/content, not financial-calculation failure.
 
 ### GLOBAL-RESPONSIVE-001 — Historical responsive defect family
 **Status:** `OPEN / REVALIDATE`
@@ -230,7 +237,7 @@ Historical evidence included Split Categories horizontal overflow, Audit Trail c
 Historical physical evidence is retained only for what it directly observed at that time. Automated/source/CI/deployment evidence must never be called physical evidence.
 
 Under Master Autonomous Engineering Authority v2:
-- missing physical evidence does **not** block ordinary engineering, merge or deployment;
+- missing physical evidence does not block ordinary engineering, merge or deployment;
 - a physical PASS claim requires actual physical evidence;
 - physical evidence becomes mandatory only when Marius explicitly requests it for the relevant issue/final verification.
 
@@ -249,19 +256,20 @@ Under Master Autonomous Engineering Authority v2:
 | #128 | old category approach — `SUPERSEDED` |
 | #129 | Category System v2 — `PASS` |
 | #130–#184 | destructive confirmation, containment, Unified Add, control/date/select hardening — implemented; selector architecture superseded by #203 where applicable |
-| #185 | dynamic UK/local working month — `PASS` |
-| #186 | September fallback cleanup — `MERGED / PASS` |
-| #188–#197 | accessibility/navigation/month identity/reachable controls — `MERGED`; #193 closes GA-MONTH-001 |
-| #198 | paid-only Transfer Plan correction — `PASS` |
-| #199 | Phone Settings tab strip — `PASS` |
+| #185–#199 | month/accessibility/navigation/payment/settings repairs — merged; current tests authoritative |
 | #200 | Phone density first attempt — `SUPERSEDED` |
-| #201 | density cascade repair — `SUPERSEDED` for Income 3-column geometry |
+| #201 | density cascade repair — `SUPERSEDED` for Income three-column geometry |
 | #202 | readable Phone summary geometry — layout `PASS`; copy/density remains open |
 | #203 | native-first selector architecture — `PASS` |
 | #204 | exhaustive modal inventory gate — `PASS` |
 | #205 | browser zoom/public asset paths — `PASS` |
 | #206 | master evidence reconciliation — `PASS` |
-| #207 | whole-source reachable-control inventory — `PASS` for source/automated evidence |
+| #207 | whole-source reachable-control inventory — `PASS` |
+| #208 | evidence reconciliation after accessibility gate — `PASS` |
+| #209 | searchable long-list primitive — `PASS` |
+| #210 | adaptive category selector + contained consumers — `PASS` |
+| #211 | Activity adaptive category filter — `PASS` |
+| #212 | TransactionModal adaptive categories; GA-SELECT-002 completion gate — `PASS` |
 
 Git history remains the detailed implementation chronology; this ledger stores current consequence.
 
@@ -274,11 +282,10 @@ This ordering must be rechecked whenever `main` changes.
 | Priority | Item | Status | Current reason |
 |---:|---|---|---|
 | 1 | GA-TP-002 per-bill Undo Funding attribution | `BLOCKED` | No safe explicit bill-level funding attribution exists; guessing would risk financial corruption. Continue independent work. |
-| 2 | GA-SELECT-002 long financial-list classification/searchability | `OPEN` | Expense category selection is a confirmed long-list case; classify selector families and implement the approved searchable pattern without global interception. |
-| 3 | GLOBAL-RESPONSIVE-001 current-source revalidation | `OPEN` | Historical responsive defects need current confirmation/closure after shared repairs. |
-| 4 | PHONE-DENSITY-001 / GLOBAL-COPY-001 | `OPEN` | Current source still contains excessive/duplicate helper copy and raw month strings. |
-| 5 | GA-MODE-001 current mode-switch regression reconciliation | `PARTIAL PASS` | Needs current-source/test reconciliation; physical evidence not default. |
-| 6 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after higher-priority items. |
+| 2 | GLOBAL-RESPONSIVE-001 current-source revalidation | `OPEN / REVALIDATE` | Historical responsive defects must be confirmed or closed against current source/tests after shared repairs. |
+| 3 | PHONE-DENSITY-001 / GLOBAL-COPY-001 | `OPEN` | Current source still contains excessive/duplicate helper copy and raw month strings. |
+| 4 | GA-MODE-001 current mode-switch regression reconciliation | `PARTIAL PASS` | Needs current-source/test reconciliation; physical evidence not default. |
+| 5 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after higher-priority items. |
 
 No physical-only sweep is a default blocker.
 
