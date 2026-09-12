@@ -25,7 +25,7 @@ export function createCleanCategoryHousehold(
       appliedMigrations: [], isUpToDate: true,
     },
     ...createCanonicalCatalogue(),
-    accounts: [], transactions: [], plannedPayments: [], plannedIncomes: [], savingsGoals: [], auditLogs: [],
+    accounts: [], transactions: [], plannedPayments: [], plannedIncomes: [], savingsGoals: [], transferPlanFundingRecords: [], auditLogs: [],
   };
 }
 
