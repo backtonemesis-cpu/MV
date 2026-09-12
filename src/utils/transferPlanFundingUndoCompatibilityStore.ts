@@ -3,11 +3,7 @@ import type {
   Transaction,
   TransferPlanFundingMutationExpectation,
 } from '../types';
-import {
-  LOCAL_OWNER,
-  loadLocalHousehold,
-  mutateLocalHousehold,
-} from '../localStore';
+import { loadLocalHousehold, mutateLocalHousehold } from '../localStore';
 import { getLatestReversibleFundingEvidence } from './transferPlanFundingCompatibility';
 import { undoAttributedTransferPlanBatchFunding } from './transferPlanFundingReversalStore';
 
