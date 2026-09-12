@@ -27,7 +27,7 @@ function componentSources(): string[] {
 
 describe('global MV selector system', () => {
   it('records the current selector inventory and native-first architecture decision', () => {
-    expect(inventory).toContain('25 native `<select>` render points');
+    expect(inventory).toContain('22 native `<select>` render points');
     expect(inventory).toContain('Ordinary native selectors');
     expect(inventory).toContain('Direct rich selectors');
     expect(inventory).toContain('Adaptive searchable financial lists');
@@ -40,7 +40,7 @@ describe('global MV selector system', () => {
       (count, source) => count + (source.match(/<select\b/g) ?? []).length,
       0
     );
-    expect(nativeSelectCount).toBe(25);
+    expect(nativeSelectCount).toBe(22);
     expect(main).not.toContain('MVNativeSelectBridge');
     expect(main).not.toContain('installMVNativeSelectTouchGuard');
     expect(main).not.toContain('nativeSelectTouchGuard');
