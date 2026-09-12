@@ -46,6 +46,14 @@ interface IncomeViewProps {
   ) => Promise<void>;
 }
 
+function incomeMonthLabel(month: string): string {
+  if (!/^\d{4}-\d{2}$/.test(month)) return month;
+  return new Intl.DateTimeFormat('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${month}-01T12:00:00`));
+}
+
 export const IncomeView: React.FC<IncomeViewProps> = ({
   incomes,
   accounts,
@@ -133,6 +141,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   );
 
   const monthRemainingCount = Math.max(0, monthIncomes.length - monthFullyReceivedCount);
+  const visibleMonthLabel = incomeMonthLabel(selectedMonth);
 
   const incomeDateGroups = useMemo(() => {
     const groups = new Map<string, PlannedIncome[]>();
@@ -334,12 +343,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   return (
     <div className="finance-workspace space-y-5 pb-16">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Income & Wages</h1>
-          <p className="mt-0.5 text-[12px] font-normal text-subtle">
-            Expected and received household income for the active month.
-          </p>
-        </div>
+        <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Income & Wages</h1>
 
         <div className="flex items-center gap-2">
           <MonthPicker
@@ -373,7 +377,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             {formatPence(monthExpectedPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
-            {monthIncomes.length} income source{monthIncomes.length === 1 ? '' : 's'}
+            {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
           </p>
         </article>
 
@@ -385,7 +389,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             {formatPence(monthReceivedPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
-            {monthFullyReceivedCount} of {monthIncomes.length} received
+            {monthFullyReceivedCount}/{monthIncomes.length} received
           </p>
         </article>
 
@@ -397,7 +401,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             {formatPence(monthOutstandingPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
-            {monthRemainingCount} payment{monthRemainingCount === 1 ? '' : 's'} remaining
+            {monthRemainingCount} remaining
           </p>
         </article>
       </section>
@@ -415,7 +419,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               id="income-schedule-title"
               className="mt-0.5 text-[14px] font-semibold text-main"
             >
-              {selectedMonth} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
+              {visibleMonthLabel} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
             </h2>
           </div>
         </header>
@@ -423,7 +427,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
         {monthIncomes.length === 0 ? (
           <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-muted bg-surface-muted p-8 text-center">
             <Banknote className="h-5 w-5 text-subtle" />
-            <p className="mt-2 text-sm font-medium text-muted">No income sources for {selectedMonth}</p>
+            <p className="mt-2 text-sm font-medium text-muted">No income sources for {visibleMonthLabel}</p>
             {canEdit && (
               <button
                 type="button"
