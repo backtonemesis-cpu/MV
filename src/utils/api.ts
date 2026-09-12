@@ -33,7 +33,6 @@ import {
   deleteLocalTransaction,
   executeLocalTransfer,
   executeLocalTransferAllocations,
-  undoLatestLocalTransferPlanFunding,
   undoLocalPaymentPaid,
   undoLocalPaymentsPaid,
   undoLocalTransferTransaction,
@@ -57,6 +56,7 @@ import {
   updateLocalSavingsGoal,
   updateLocalTransaction,
 } from '../localStore';
+import { undoCompatibleTransferPlanFunding } from './transferPlanFundingUndoCompatibilityStore';
 
 const OWNER_EMAIL = LOCAL_OWNER.email;
 const OWNER_SESSION: UserSession = {
@@ -417,10 +417,10 @@ export async function undoTransferPlanFunding(
   expectedVersion: number,
   expectedBatch?: TransferPlanFundingMutationExpectation
 ) {
-  return undoLatestLocalTransferPlanFunding(
+  return undoCompatibleTransferPlanFunding(
     destinationAccountId,
-    expectedVersion,
     month,
+    expectedVersion,
     expectedBatch
   );
 }
