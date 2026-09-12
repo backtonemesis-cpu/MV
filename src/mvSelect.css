@@ -1,8 +1,8 @@
 /*
- * MV shared select-only listbox system.
- * One visual/interaction contract is used on PC mode, Phone mode and small
- * physical viewports. Native Date/month/file/colour/boolean controls are not
- * part of this layer.
+ * MV shared rich select-only listbox system.
+ * Use this custom surface only where the native select contract is insufficient
+ * for the task (for example account identity, balances or disabled reasons).
+ * Ordinary HTML select controls remain native browser controls.
  */
 
 .mv-select-trigger {
@@ -173,24 +173,6 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
-}
-
-/* Native selects remain the option/value source of truth. MVNativeSelectBridge
-   mediates opening through the same popover, while the closed control keeps its
-   existing form geometry and one consistent authored indicator. */
-.mv-density-root select:not([data-mv-native="true"]) {
-  cursor: pointer;
-}
-
-/* Mobile Safari can present its native picker even when script cancels the
-   select's activation event. On coarse/touch input the real select therefore
-   stays visible and focusable but does not receive direct pointer hit-testing.
-   nativeSelectTouchGuard resolves the field under the tap and asks the shared
-   bridge to open the MV listbox instead. */
-@media (pointer: coarse) {
-  .mv-density-root select:not([data-mv-native="true"]) {
-    pointer-events: none;
-  }
 }
 
 /* The obsolete large Unified Add mobile account sheet is no longer a valid
