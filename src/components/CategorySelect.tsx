@@ -11,6 +11,8 @@ interface LeadingOption {
   label: string;
 }
 
+const defaultCategoryLabel = (category: Category) => category.name;
+
 export interface CategorySelectProps {
   id: string;
   value: string;
@@ -20,6 +22,7 @@ export interface CategorySelectProps {
   ariaLabel: string;
   placeholder?: string;
   leadingOption?: LeadingOption;
+  getCategoryLabel?: (category: Category) => string;
   required?: boolean;
   disabled?: boolean;
   invalid?: boolean;
@@ -36,6 +39,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   ariaLabel,
   placeholder = 'Choose category',
   leadingOption,
+  getCategoryLabel = defaultCategoryLabel,
   required = false,
   disabled = false,
   invalid = false,
@@ -50,18 +54,26 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   const searchableOptions = useMemo<MVSelectOption[]>(() => {
     const categoryOptions = categories.map((category) => {
       const groupName = groupNames.get(category.groupId) || 'Category';
+      const displayLabel = getCategoryLabel(category);
       return {
         value: category.id,
-        label: category.name,
-        textValue: `${category.name} ${groupName}`,
+        label: displayLabel,
+        textValue: `${displayLabel} ${category.name} ${groupName}`,
         secondary: groupName,
       } satisfies MVSelectOption;
     });
 
     return leadingOption
-      ? [{ value: leadingOption.value, label: leadingOption.label, textValue: leadingOption.label }, ...categoryOptions]
+      ? [
+          {
+            value: leadingOption.value,
+            label: leadingOption.label,
+            textValue: leadingOption.label,
+          },
+          ...categoryOptions,
+        ]
       : categoryOptions;
-  }, [categories, groupNames, leadingOption]);
+  }, [categories, getCategoryLabel, groupNames, leadingOption]);
 
   const useSearchableList = categories.length >= searchableThreshold;
 
@@ -103,7 +115,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
       )}
       {categories.map((category) => (
         <option key={category.id} value={category.id}>
-          {category.name}
+          {getCategoryLabel(category)}
         </option>
       ))}
     </select>
