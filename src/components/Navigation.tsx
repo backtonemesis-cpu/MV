@@ -178,6 +178,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   return (
     <>
+      {/* Desktop / PC Navigation Bar */}
       <nav className="mv-nav-desktop hidden sm:block border-b border-muted bg-surface transition-colors" aria-label="Primary navigation">
         <div className="mv-shell-boundary mx-auto w-full max-w-[1440px] px-4">
           <div className="mv-desktop-nav-rail flex gap-0.5">
@@ -211,6 +212,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         </div>
       </nav>
 
+      {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
       <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors" aria-label="Mobile navigation">
         <div className="mv-mobile-nav-grid grid grid-cols-5 h-14">
           {mobilePrimaryTabs.map((tab) => {
@@ -279,6 +281,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </div>
         )}
+
       </nav>
     </>
   );
