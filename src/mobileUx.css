@@ -323,6 +323,13 @@
   ) {
     min-height: var(--mv-ds-click-target) !important;
   }
+
+  /* PHONE-DENSITY-001: Dashboard primary actions already meet the 44px floor,
+     but section-header, funding-review and empty-state actions stay compact in
+     source. Raise those Phone targets without changing desktop density. */
+  .mv-layout-phone .mv-dashboard-workspace button:not(.mv-dashboard-actions > button) {
+    min-height: var(--mv-ds-click-target) !important;
+  }
 }
 
 
