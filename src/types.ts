@@ -153,6 +153,38 @@ export interface TransferPlanFundingMutationExpectation {
   transactionIds: string[];
 }
 
+export interface TransferPlanFundingSourceShare {
+  transactionId: string;
+  sourceAccountId: string;
+  amountPence: number;
+}
+
+export interface TransferPlanFundingBillAttribution {
+  plannedPaymentId: string;
+  paymentNameSnapshot: string;
+  paymentAmountPenceSnapshot: number;
+  paymentDueDateSnapshot?: string;
+  attributedPence: number;
+  sourceShares: TransferPlanFundingSourceShare[];
+}
+
+export interface TransferPlanFundingRecord {
+  id: string;
+  schemaVersion: 1;
+  month: string;
+  destinationAccountId: string;
+  createdAt: string;
+  createdBy: string;
+  destinationBalanceBeforePence: number;
+  expectedTransferTotalPence: number;
+  sourceLegs: TransferPlanFundingSourceShare[];
+  billAttributions: TransferPlanFundingBillAttribution[];
+  accountDeficitRecovery?: {
+    amountPence: number;
+    sourceShares: TransferPlanFundingSourceShare[];
+  };
+}
+
 export interface AccountFundingRequirement {
   account: Account;
   currentBalancePence: number;
@@ -237,6 +269,8 @@ export interface HouseholdData {
   savingsGoals: SavingsGoal[];
   plannedPayments: PlannedPayment[];
   plannedIncomes?: PlannedIncome[];
+  /** Legacy mv_local_state_v2 records may omit this until normalization is wired. */
+  transferPlanFundingRecords?: TransferPlanFundingRecord[];
   auditLogs: AuditLogEntry[];
 }
 
