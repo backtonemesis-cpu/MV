@@ -24,12 +24,12 @@ Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUP
 | Item | Current evidence |
 |---|---|
 | Repository | `backtonemesis-cpu/MV` |
-| Current `main` | `8f89c1c39e621646cc48f83e5821e2731cac085e` |
-| Current main commit | `Tighten Income copy and readable month labels (#215)` |
-| Exact-main workflow | Run #918 / `34689367423` |
+| Current `main` | `ba11f9a947f8a7caa410166cce8f9b5dd72ce6f3` |
+| Current main commit | `Reset transient Phone navigation state on layout changes (#217)` |
+| Exact-main workflow | Run #924 / `34689745865` |
 | Test/build/privacy/local-only | `PASS` |
-| Main automated suite | full repository suite PASS in run #918 |
-| GitHub Pages deploy | `PASS` in run #918 for exact current main |
+| Main automated suite | full repository suite PASS in run #924 |
+| GitHub Pages deploy | `PASS` in run #924 for exact current main |
 | Production persistence | browser-local `mv_local_state_v2` |
 | Cloud financial backend | not active |
 | Physical evidence requirement | only when explicitly requested |
@@ -53,6 +53,8 @@ Allowed statuses: `PASS`, `PARTIAL PASS`, `FAIL`, `OPEN`, `BLOCKED`, `TBC`, `SUP
 | #213 | Reconciled selector-programme evidence and promoted responsive revalidation | `PASS`, evidence-only, merged |
 | #214 | Revalidated historical responsive family and repaired Audit Trail long-identifier containment | `PASS`, merged; exact-main run #914/deploy PASS |
 | #215 | Tightened Income copy density and replaced raw `YYYY-MM` with readable en-GB month labels | `PASS`, merged; branch run #917 PASS; exact-main run #918/deploy PASS |
+| #216 | Reconciled responsive/Income evidence and current queue | `PASS`, evidence-only; exact-main run #920/deploy PASS |
+| #217 | Reset Phone More-menu transient state on layout-mode changes and added a dedicated regression gate | `PASS`, merged; branch run #923 PASS; exact-main run #924/deploy PASS |
 
 ---
 
@@ -205,14 +207,14 @@ Existing desktop source/CSS regression tests pass. Discovery-inclusive reconcili
 Current historical responsive family is source/automated PASS after PR #214. Remaining work is discovery-inclusive final Phone reconciliation and any still-open content/density findings.
 
 ### GA-MODE-001 — PC/Phone mode switching
-**Status:** `PARTIAL PASS`
+**Status:** `PASS` for current source/automated evidence
 
-Mode architecture and targeted tests exist. Current-source regression reconciliation for stale overlays/layout state across repeated switching remains.
+The selected mode remains persisted in `mv-layout-mode-v1`, mirrored to `document.documentElement.dataset.layoutMode`, and applied through exclusive `mv-layout-phone`/`mv-layout-pc` root classes. Current-source reconciliation found Phone navigation `isMoreOpen` could survive a mode transition because it was component-local state. PR #217 now observes the authoritative root `data-layout-mode` attribute and clears the Phone-only More menu on every mode change while preserving active-tab/history behaviour. Dedicated regression coverage passes; exact-main run #924 and Pages deployment passed. No physical-device claim is made.
 
 ### GA-REPO-001 — Repository / PR / delivery hygiene
 **Status:** `PASS` at this baseline
 
-PR #34 is closed/superseded. PRs #203–#215 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
+PR #34 is closed/superseded. PRs #203–#217 are merged; current delivery chain has exact-main CI/deployment evidence. GitHub remains authoritative after the next change.
 
 ---
 
@@ -276,6 +278,8 @@ Under Master Autonomous Engineering Authority v2:
 | #213 | selector-programme ledger reconciliation — `PASS` |
 | #214 | responsive revalidation + Audit Trail containment — `PASS` |
 | #215 | Income copy density/readable month labels — `PASS` |
+| #216 | responsive/Income ledger reconciliation — `PASS` |
+| #217 | mode-switch transient Phone navigation reset — `PASS` |
 
 Git history remains the detailed implementation chronology; this ledger stores current consequence.
 
@@ -288,9 +292,8 @@ This ordering must be rechecked whenever `main` changes.
 | Priority | Item | Status | Current reason |
 |---:|---|---|---|
 | 1 | GA-TP-002 per-bill Undo Funding attribution | `BLOCKED` | No safe explicit bill-level funding attribution exists; guessing would risk financial corruption. Continue independent work. |
-| 2 | GA-MODE-001 current mode-switch regression reconciliation | `PARTIAL PASS` | Needs current-source/test reconciliation; physical evidence not default. |
-| 3 | PHONE-DENSITY-001 / GLOBAL-COPY-001 broader discovery-inclusive review | `PARTIAL PASS / OPEN` | Confirmed Income copy defects repaired in #215; remaining screens still need concise-copy/density reconciliation. |
-| 4 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after higher-priority items. |
+| 2 | PHONE-DENSITY-001 / GLOBAL-COPY-001 broader discovery-inclusive review | `PARTIAL PASS / OPEN` | Confirmed Income copy defects repaired in #215; remaining screens still need concise-copy/density reconciliation. |
+| 3 | GA-DESKTOP-001 / GA-PHONE-001 discovery-inclusive final source audit | `PARTIAL PASS` | Remaining screens/content/visual contracts must be reconciled after copy/density review. |
 
 No physical-only sweep is a default blocker.
 
