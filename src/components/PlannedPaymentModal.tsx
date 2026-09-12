@@ -9,6 +9,7 @@ import type { CategoryGroup } from '../types';
 import { MonthPicker } from './MonthPicker';
 import { useModalAccessibility } from '../utils/modalAccessibility';
 import { MoneyInput } from './MoneyInput';
+import { CategorySelect } from './CategorySelect';
 import {
   UnifiedAddAccountField,
   UnifiedAddFooter,
@@ -166,9 +167,20 @@ export const PlannedPaymentModal: React.FC<PlannedPaymentModalProps> = ({
 
             <div className="mv-modal-grid-2">
               <div><label htmlFor="planned-payment-due-date" className="block text-xs font-semibold text-muted mb-1">Due Date</label><input id="planned-payment-due-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="mv-transaction-control w-full" /></div>
-              <div><label htmlFor="planned-payment-category" className="block text-xs font-semibold text-muted mb-1">Category</label><select id="planned-payment-category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="mv-transaction-control w-full"><option value="">Select category</option>{billCategoryOptions.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}</select></div>
+              <div>
+                <label htmlFor="planned-payment-category" className="block text-xs font-semibold text-muted mb-1">Category</label>
+                <CategorySelect
+                  id="planned-payment-category"
+                  value={categoryId}
+                  categories={billCategoryOptions}
+                  categoryGroups={categoryGroups}
+                  onValueChange={setCategoryId}
+                  ariaLabel="Bill category"
+                  placeholder="Select category"
+                  required
+                  className="mv-transaction-control w-full"
+                />
+              </div>
             </div>
 
             <div className="mv-modal-section space-y-2">

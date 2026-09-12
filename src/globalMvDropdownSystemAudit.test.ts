@@ -8,6 +8,8 @@ const ROOT = process.cwd();
 const SRC = path.join(ROOT, 'src');
 const read = (relativePath: string) => fs.readFileSync(path.join(SRC, relativePath), 'utf8');
 const selectSource = read('components/MVSelect.tsx');
+const searchableSource = read('components/MVSearchableSelect.tsx');
+const categorySelect = read('components/CategorySelect.tsx');
 const selectCss = read('mvSelect.css');
 const main = read('main.tsx');
 const unified = read('components/UnifiedAddUi.tsx');
@@ -25,9 +27,10 @@ function componentSources(): string[] {
 
 describe('global MV selector system', () => {
   it('records the current selector inventory and native-first architecture decision', () => {
-    expect(inventory).toContain('28 ordinary native `<select>` render points');
+    expect(inventory).toContain('25 native `<select>` render points');
     expect(inventory).toContain('Ordinary native selectors');
     expect(inventory).toContain('Direct rich selectors');
+    expect(inventory).toContain('Adaptive searchable financial lists');
     expect(inventory).toContain('Deliberately native/system controls');
     expect(inventory).toContain('Direct MVSelect empty-state contract');
   });
@@ -37,7 +40,7 @@ describe('global MV selector system', () => {
       (count, source) => count + (source.match(/<select\b/g) ?? []).length,
       0
     );
-    expect(nativeSelectCount).toBe(28);
+    expect(nativeSelectCount).toBe(25);
     expect(main).not.toContain('MVNativeSelectBridge');
     expect(main).not.toContain('installMVNativeSelectTouchGuard');
     expect(main).not.toContain('nativeSelectTouchGuard');
@@ -53,6 +56,18 @@ describe('global MV selector system', () => {
     expect(unified).toContain('<MVSelect');
     expect(funding).toContain("from './MVSelect'");
     expect(funding).toContain('<MVSelect');
+  });
+
+  it('uses a separate count-driven searchable primitive only for genuinely long category sets', () => {
+    expect(searchableSource).toContain('export const MVSearchableSelect');
+    expect(searchableSource).toContain('role="combobox"');
+    expect(searchableSource).toContain('role="listbox"');
+    expect(searchableSource).not.toContain('<select');
+    expect(categorySelect).toContain('export const CATEGORY_SEARCH_THRESHOLD = 12;');
+    expect(categorySelect).toContain('categories.length >= searchableThreshold');
+    expect(categorySelect).toContain('<select');
+    expect(categorySelect).toContain('<MVSearchableSelect');
+    expect(categorySelect).not.toMatch(/window\.innerWidth|navigator\.userAgent/);
   });
 
   it('does not resurrect the rejected Unified Add mobile account sheet', () => {
@@ -184,16 +199,21 @@ describe('global MV selector system', () => {
     expect(monthPicker).toContain('type="month"');
   });
 
-  it('preserves transaction/category eligibility sources rather than reimplementing them in MVSelect', () => {
+  it('preserves transaction/category eligibility sources rather than reimplementing them in selector primitives', () => {
     expect(transaction).toContain('getTransactionCategoryOptions');
     expect(transaction).toContain('getBillCategoryOptions');
     expect(transaction).toContain('isTransactionCategorySelectionAllowed');
     expect(selectSource).not.toContain('categoryEligibility');
+    expect(searchableSource).not.toContain('categoryEligibility');
+    expect(categorySelect).not.toContain('createCategoryEligibility');
     expect(selectSource).not.toContain('safeToMovePence');
+    expect(searchableSource).not.toContain('safeToMovePence');
   });
 
-  it('contains no page scale workaround or user-agent sniffing in rich-selector code', () => {
+  it('contains no page scale workaround or user-agent sniffing in selector code', () => {
     expect(selectSource).not.toMatch(/userAgent|navigator\.platform|iPhone|iPad/);
+    expect(searchableSource).not.toMatch(/userAgent|navigator\.platform|iPhone|iPad/);
+    expect(categorySelect).not.toMatch(/userAgent|navigator\.platform|iPhone|iPad/);
     expect(selectCss).not.toMatch(/zoom\s*:|transform:\s*scale/);
   });
 });
