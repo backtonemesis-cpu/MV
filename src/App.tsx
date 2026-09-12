@@ -44,6 +44,7 @@ import {
   saveUserPreferences,
   subscribeToHouseholdEvents,
 } from './utils/api';
+import { undoTransferPlanBillFunding } from './utils/transferPlanBillFundingApi';
 import {
   HouseholdData,
   UserSession,
@@ -700,6 +701,24 @@ export default function App() {
     }
   };
 
+  const handleUndoTransferPlanBillFunding = async (plannedPaymentId: string) => {
+    if (!household) return;
+    try {
+      setIsSubmitting(true);
+      await undoTransferPlanBillFunding(plannedPaymentId, household.version);
+      await loadData();
+    } catch (err: any) {
+      if (err.status === 409) {
+        setConflictServerVersion(err.serverVersion || household.version + 1);
+      } else {
+        setError(err.message || 'Failed to undo bill funding');
+      }
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Planned Income / Wages Handlers
   const handleCreatePlannedIncome = async (data: Partial<PlannedIncome>) => {
     if (!household) return;
@@ -921,6 +940,7 @@ export default function App() {
                 categories={household.categories}
                 plannedPayments={household.plannedPayments || []}
                 transactions={household.transactions}
+                fundingRecords={household.transferPlanFundingRecords || []}
                 members={household.members}
                 userRole={session.role}
                 selectedMonth={selectedMonth}
@@ -933,6 +953,7 @@ export default function App() {
                 onBulkTogglePlannedPayments={handleBulkTogglePlannedPayments}
                 onExecuteTransfer={handleExecuteTransferAllocations}
                 onUndoFunding={handleUndoTransferPlanFunding}
+                onUndoBillFunding={handleUndoTransferPlanBillFunding}
               />
             )}
 
