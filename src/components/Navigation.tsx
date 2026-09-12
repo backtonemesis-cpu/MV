@@ -16,6 +16,7 @@ interface NavigationProps {
   activeTab: NavTab;
   onTabChange: (tab: NavTab) => void;
   pendingMembersCount: number;
+  layoutMode: 'pc' | 'phone';
 }
 
 interface TabItem {
@@ -30,6 +31,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onTabChange,
   pendingMembersCount,
+  layoutMode,
 }) => {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreTriggerRef = useRef<HTMLButtonElement>(null);
@@ -108,7 +110,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   useEffect(() => {
     setIsMoreOpen(false);
-  }, [activeTab]);
+  }, [activeTab, layoutMode]);
 
   useEffect(() => {
     if (!isMoreOpen) return;
