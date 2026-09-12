@@ -46,6 +46,14 @@ interface IncomeViewProps {
   ) => Promise<void>;
 }
 
+function incomeMonthLabel(month: string): string {
+  if (!/^\d{4}-\d{2}$/.test(month)) return month;
+  return new Intl.DateTimeFormat('en-GB', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${month}-01T12:00:00`));
+}
+
 export const IncomeView: React.FC<IncomeViewProps> = ({
   incomes,
   accounts,
@@ -99,7 +107,12 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   );
 
   const incomeCategories = useMemo(
-    () => createCategoryEligibility(categoryGroups).getTransactionCategoryOptions(categories, 'income', selectedIncome?.categoryId ? [selectedIncome.categoryId] : []),
+    () =>
+      createCategoryEligibility(categoryGroups).getTransactionCategoryOptions(
+        categories,
+        'income',
+        selectedIncome?.categoryId ? [selectedIncome.categoryId] : []
+      ),
     [categories, categoryGroups, selectedIncome]
   );
 
@@ -133,6 +146,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   );
 
   const monthRemainingCount = Math.max(0, monthIncomes.length - monthFullyReceivedCount);
+  const visibleMonthLabel = incomeMonthLabel(selectedMonth);
 
   const incomeDateGroups = useMemo(() => {
     const groups = new Map<string, PlannedIncome[]>();
@@ -211,9 +225,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       0,
       income.expectedAmountPence - (income.actualAmountPence ?? 0)
     );
-    setActualAmount(
-      remainingPence > 0 ? (remainingPence / 100).toFixed(2) : ''
-    );
+    setActualAmount(remainingPence > 0 ? (remainingPence / 100).toFixed(2) : '');
     setActualDate(localDateInputValue());
     const plannedAccount = accounts.find(
       (account) => account.id === income.accountId && account.isActive !== false
@@ -243,7 +255,14 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
       return;
     }
 
-    if (!createCategoryEligibility(categoryGroups).isTransactionCategorySelectionAllowed(categories, 'income', categoryId, selectedIncome?.categoryId ? [selectedIncome.categoryId] : [])) {
+    if (
+      !createCategoryEligibility(categoryGroups).isTransactionCategorySelectionAllowed(
+        categories,
+        'income',
+        categoryId,
+        selectedIncome?.categoryId ? [selectedIncome.categoryId] : []
+      )
+    ) {
       setError('Choose an income category.');
       return;
     }
@@ -334,12 +353,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
   return (
     <div className="finance-workspace space-y-5 pb-16">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Income & Wages</h1>
-          <p className="mt-0.5 text-[12px] font-normal text-subtle">
-            Expected and received household income for the active month.
-          </p>
-        </div>
+        <h1 className="text-[24px] font-bold leading-8 tracking-tight text-main">Income & Wages</h1>
 
         <div className="flex items-center gap-2">
           <MonthPicker
@@ -373,7 +387,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             {formatPence(monthExpectedPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
-            {monthIncomes.length} income source{monthIncomes.length === 1 ? '' : 's'}
+            {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
           </p>
         </article>
 
@@ -385,7 +399,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             {formatPence(monthReceivedPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
-            {monthFullyReceivedCount} of {monthIncomes.length} received
+            {monthFullyReceivedCount}/{monthIncomes.length} received
           </p>
         </article>
 
@@ -397,7 +411,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             {formatPence(monthOutstandingPence)}
           </div>
           <p className="mt-1 text-[11px] font-normal text-subtle">
-            {monthRemainingCount} payment{monthRemainingCount === 1 ? '' : 's'} remaining
+            {monthRemainingCount} remaining
           </p>
         </article>
       </section>
@@ -415,7 +429,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
               id="income-schedule-title"
               className="mt-0.5 text-[14px] font-semibold text-main"
             >
-              {selectedMonth} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
+              {visibleMonthLabel} · {monthIncomes.length} source{monthIncomes.length === 1 ? '' : 's'}
             </h2>
           </div>
         </header>
@@ -423,144 +437,102 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
         {monthIncomes.length === 0 ? (
           <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-dashed border-muted bg-surface-muted p-8 text-center">
             <Banknote className="h-5 w-5 text-subtle" />
-            <p className="mt-2 text-sm font-medium text-muted">No income sources for {selectedMonth}</p>
+            <p className="mt-2 text-sm font-medium text-muted">No income sources for {visibleMonthLabel}</p>
             {canEdit && (
               <button
                 type="button"
                 onClick={openCreate}
                 className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-md border border-muted bg-surface px-3 text-xs font-semibold text-main transition-colors hover:bg-surface-muted"
               >
-                <Plus className="h-3.5 w-3.5 text-accent" />
-                Add income
+                <Plus className="h-3.5 w-3.5" />
+                Add Income
               </button>
             )}
           </div>
         ) : (
           <div className="space-y-4">
             {incomeDateGroups.map((group) => (
-              <div key={group.date}>
-                <div className="px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-subtle">
+              <div key={group.date} className="space-y-2">
+                <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-subtle">
                   {group.label}
                 </div>
-
-                <div className="mt-2 space-y-px">
+                <div className="space-y-2">
                   {group.items.map((income) => {
                     const linkedTx = linkedTransactionFor(income);
-                    const hasReceiptEvidence =
-                      (income.actualAmountPence ?? 0) > 0 ||
-                      Boolean(income.actualTransactionId || income.linkedTransactionId);
-                    const fullyReceived = income.status === 'received';
-                    const categoryName =
-                      categories.find(
-                        (category) => category.id === (income.categoryId || linkedTx?.categoryId)
-                      )?.name || 'Income';
-                    const targetAccount = accounts.find((account) => account.id === income.accountId);
-                    const accountName = targetAccount
-                      ? accountIdentityLabel(targetAccount)
-                      : 'Account';
-                    const statusLabel =
-                      income.status === 'partial' ? 'Partial' : fullyReceived ? 'Received' : 'Expected';
-                    const statusClassName =
-                      income.status === 'partial'
-                        ? 'finance-status-neutral'
-                        : fullyReceived
-                        ? 'finance-status-positive'
-                        : 'finance-status-accent';
-                    const shownAmountPence =
-                      income.actualAmountPence ?? linkedTx?.amountPence ?? income.expectedAmountPence;
-                    const showExpectedComparison =
-                      hasReceiptEvidence && shownAmountPence !== income.expectedAmountPence;
-
+                    const received = income.status === 'received';
+                    const account = accounts.find((item) => item.id === income.accountId);
                     return (
-                      <article
-                        key={income.id}
-                        onClick={(event) => {
-                          if (!canEdit) return;
-                          if ((event.target as HTMLElement).closest('button, input, a, select, textarea')) return;
-                          openEdit(income);
-                        }}
-                        className={`finance-row finance-ledger-row group ${canEdit ? 'is-clickable' : ''}`}
-                      >
-                        <div className="finance-row-left">
-                          <div className="finance-leading-icon">
-                            <Banknote className="h-4 w-4" aria-hidden="true" />
+                      <article key={income.id} className="finance-row flex items-center gap-3 p-3">
+                        <div className="finance-leading-icon">
+                          {received ? (
+                            <CheckCircle2 className="h-4 w-4 text-success" />
+                          ) : (
+                            <Banknote className="h-4 w-4" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <h3 className="truncate text-[13px] font-semibold text-main">{income.name}</h3>
+                            <span className={received ? 'finance-status-positive' : 'finance-status-neutral'}>
+                              {received ? 'Received' : 'Expected'}
+                            </span>
                           </div>
-
-                          <div className="finance-row-copy">
-                            <div className="finance-row-titleline">
-                              <h3 className="finance-row-title" title={income.name}>
-                                {income.name}
-                              </h3>
-
-                              <span
-                                className={`${statusClassName} finance-income-status`}
-                              >
-                                {statusLabel}
-                              </span>
-                            </div>
-
-                            <div className="finance-metadata-line">
-                              <span className="finance-metadata-token">{income.sourcePerson}</span>
-                              <span className="finance-metadata-separator text-subtle" aria-hidden="true">·</span>
-                              <span className="finance-metadata-token">{categoryName}</span>
-                              <span className="finance-metadata-separator text-subtle" aria-hidden="true">·</span>
-                              <span className="finance-metadata-token is-account">{accountName}</span>
-                            </div>
-
+                          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-subtle">
+                            <span>{income.sourcePerson}</span>
+                            <span>•</span>
+                            <span className="truncate">{account ? accountIdentityLabel(account) : 'Account unavailable'}</span>
+                            {linkedTx && (
+                              <>
+                                <span>•</span>
+                                <span>Recorded {new Intl.DateTimeFormat('en-GB').format(new Date(`${linkedTx.date}T12:00:00`))}</span>
+                              </>
+                            )}
                           </div>
                         </div>
 
-                        <div className="finance-row-side">
-                          <div className="finance-amount-block">
-                            <div className="finance-amount is-positive">
-                              {formatPence(shownAmountPence)}
+                        <div className="flex shrink-0 items-center gap-2">
+                          <div className="text-right">
+                            <div className="font-mono text-sm font-semibold tabular-nums text-main">
+                              {formatPence(received ? income.actualAmountPence ?? income.expectedAmountPence : income.expectedAmountPence)}
                             </div>
-                            <div
-                              className={`finance-amount-detail ${showExpectedComparison ? '' : 'is-placeholder'}`}
-                            >
-                              {showExpectedComparison
-                                ? `Expected ${formatPence(income.expectedAmountPence)}`
-                                : 'Expected —'}
-                            </div>
+                            {!received && income.expectedDate && (
+                              <div className="mt-0.5 text-[10px] text-subtle">
+                                {new Intl.DateTimeFormat('en-GB').format(new Date(`${income.expectedDate}T12:00:00`))}
+                              </div>
+                            )}
                           </div>
 
                           {canEdit && (
-                            <div className="flex items-center gap-1">
-                              {!fullyReceived && (
+                            <div className="finance-row-actions flex items-center gap-1">
+                              {!received && (
                                 <button
                                   type="button"
-                                  onClick={(event) => { event.stopPropagation(); openReceive(income); }}
+                                  onClick={() => openReceive(income)}
                                   className="finance-receive-button"
-                                  title="Mark received"
+                                  aria-label={`Record ${income.name} received`}
                                 >
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                  {income.status === 'partial' ? 'Add receipt' : 'Receive'}
+                                  Received
                                 </button>
                               )}
-
-                              <div className="finance-row-actions flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => openEdit(income)}
+                                className="finance-action-button"
+                                aria-label={`Edit ${income.name}`}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </button>
+                              {!income.actualTransactionId && !income.linkedTransactionId && (
                                 <button
                                   type="button"
-                                  onClick={(event) => { event.stopPropagation(); openEdit(income); }}
-                                  className="finance-action-button"
-                                  title="Edit income"
-                                  aria-label={`Edit ${income.name}`}
+                                  onClick={() => requestRemoveIncome(income)}
+                                  className="finance-action-button is-danger"
+                                  aria-label={`Delete ${income.name}`}
                                 >
-                                  <Edit2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </button>
-
-                                {!hasReceiptEvidence && (
-                                  <button
-                                    type="button"
-                                    onClick={(event) => { event.stopPropagation(); requestRemoveIncome(income); }}
-                                    className="finance-action-button is-danger"
-                                    title="Delete expected income"
-                                    aria-label={`Delete ${income.name}`}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                )}
-                              </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -574,176 +546,7 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
         )}
       </section>
 
-      {showEditModal && (
-        <div className="mv-modal-backdrop">
-          <div
-            ref={dialogRef}
-            className="mv-modal-card mv-income-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label={dialogLabel}
-            tabIndex={-1}
-          >
-            <header className="mv-modal-header">
-              <h2 className="text-base font-bold text-main">
-                {selectedIncome ? 'Edit Income' : 'Add Income'}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowEditModal(false)}
-                className="mv-modal-close"
-                aria-label="Close dialog"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </header>
-
-            <form onSubmit={saveIncome} className="flex min-h-0 flex-1 flex-col">
-              <div className="mv-modal-scroll-body space-y-3">
-              {error && (
-                <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="income-source" className="mb-1 block text-xs font-semibold text-muted">Income source</label>
-                <input
-                  id="income-source"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="e.g. Marius salary"
-                  className={inputClassName}
-                  required
-                />
-              </div>
-
-              <div className="mv-modal-grid-2">
-                <div>
-                  <label htmlFor="income-expected-amount" className="mb-1 block text-xs font-semibold text-muted">Expected amount (£)</label>
-                  <MoneyInput
-                    id="income-expected-amount"
-                    value={expectedAmount}
-                    onChange={(event) => setExpectedAmount(event.target.value)}
-                    className={inputClassName}
-                    placeholder="0.00"
-                    inputMode="decimal"
-                    aria-label="Expected income amount in pounds sterling"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="income-expected-date" className="mb-1 block text-xs font-semibold text-muted">Expected date</label>
-                  <input
-                    id="income-expected-date"
-                    type="date"
-                    value={expectedDate}
-                    onChange={(event) => setExpectedDate(event.target.value)}
-                    className={inputClassName}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
-                  <label htmlFor="income-received-by" className="mb-1 block text-xs font-semibold text-muted">Received by</label>
-                  <select
-                    id="income-received-by"
-                    value={sourcePerson}
-                    onChange={(event) => setSourcePerson(event.target.value as Payer | '')}
-                    className={inputClassName}
-                    required
-                  >
-                    <option value="">Select person</option>
-                    {personOptions.map((person) => (
-                      <option key={person} value={person}>
-                        {person}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="income-account" className="mb-1 block text-xs font-semibold text-muted">Account</label>
-                  <select
-                    id="income-account"
-                    value={accountId}
-                    onChange={(event) => setAccountId(event.target.value)}
-                    className={inputClassName}
-                    required
-                  >
-                    <option value="">Select account</option>
-                    {accounts
-                      .filter((account) => account.isActive !== false)
-                      .map((account) => (
-                        <option key={account.id} value={account.id}>
-                          {accountOptionLabel(account)}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="income-category" className="mb-1 block text-xs font-semibold text-muted">Category *</label>
-                  <select
-                    id="income-category"
-                    value={categoryId}
-                    onChange={(event) => setCategoryId(event.target.value)}
-                    className={inputClassName}
-                    required
-                  >
-                    <option value="">Select category</option>
-                    {incomeCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {selectedIncome && (selectedIncome.actualTransactionId || selectedIncome.linkedTransactionId) && (
-                <div className="rounded-lg border border-muted bg-surface-muted px-3 py-2 text-[11px] text-subtle">
-                  Actual receipts are ledger evidence. Correct a receipt from Activity; editing this plan does not rewrite money already recorded.
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="income-notes" className="mb-1 block text-xs font-semibold text-muted">Notes</label>
-                <input
-                  id="income-notes"
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  className={inputClassName}
-                  placeholder="Optional"
-                />
-              </div>
-
-              </div>
-
-              <div className="mv-modal-fixed-actions">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="mv-income-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mv-income-primary"
-                >
-                  {isSubmitting ? 'Saving...' : selectedIncome ? 'Save Changes' : 'Add Income'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showReceiveModal && selectedIncome && (
+      {anyModalOpen && (
         <div className="mv-modal-backdrop">
           <div
             ref={dialogRef}
@@ -754,131 +557,155 @@ export const IncomeView: React.FC<IncomeViewProps> = ({
             tabIndex={-1}
           >
             <div className="mv-modal-header">
-              <div>
-                <h2 className="text-base font-bold text-main">Record Income Received</h2>
-                <p className="mt-0.5 text-xs text-muted">
-                  {selectedIncome.name}
-                  {selectedIncome.status === 'partial' && selectedIncome.actualAmountPence !== undefined
-                    ? ` · Received ${formatPence(selectedIncome.actualAmountPence)} of ${formatPence(selectedIncome.expectedAmountPence)}`
-                    : ''}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowReceiveModal(false)}
-                className="mv-modal-close"
-                aria-label="Close dialog"
-              >
-                <X className="h-5 w-5" />
+              <h2>{dialogLabel}</h2>
+              <button type="button" onClick={closeActiveModal} className="mv-modal-close" aria-label="Close">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <form onSubmit={markReceived} className="flex min-h-0 flex-1 flex-col">
-              <div className="mv-modal-scroll-body space-y-3">
-              {error && (
-                <div className="rounded-xl border border-danger bg-danger-soft p-3 text-xs text-danger">
-                  {error}
-                </div>
-              )}
+            {showEditModal && (
+              <form onSubmit={saveIncome} className="mv-modal-form">
+                {error && <div className="mv-modal-error" role="alert">{error}</div>}
 
-              <div>
-                <label htmlFor="income-actual-amount" className="mb-1 block text-xs font-semibold text-muted">Actual amount (£)</label>
-                <MoneyInput
-                  id="income-actual-amount"
-                  value={actualAmount}
-                  onChange={(event) => setActualAmount(event.target.value)}
-                  className={inputClassName}
-                  inputMode="decimal"
-                  aria-label="Actual income amount received in pounds sterling"
-                  required
-                />
-              </div>
+                <label>
+                  Income name
+                  <input value={name} onChange={(event) => setName(event.target.value)} className={inputClassName} />
+                </label>
 
-              <div>
-                <label htmlFor="income-actual-date" className="mb-1 block text-xs font-semibold text-muted">Received date</label>
-                <div className="relative">
-                  <input
-                    id="income-actual-date"
-                    type="date"
-                    value={actualDate}
-                    onChange={(event) => setActualDate(event.target.value)}
+                <label>
+                  Expected amount
+                  <MoneyInput
+                    value={expectedAmount}
+                    onChange={(event) => setExpectedAmount(event.target.value)}
+                    className={inputClassName}
+                    type="text"
+                    inputMode="decimal"
+                    aria-label="Expected amount"
+                  />
+                </label>
+
+                <label>
+                  Received by
+                  <select
+                    value={sourcePerson}
+                    onChange={(event) => setSourcePerson(event.target.value as Payer)}
                     className={inputClassName}
                     required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="income-receiving-account" className="mb-1 block text-xs font-semibold text-muted">Receiving account</label>
-                <select
-                  id="income-receiving-account"
-                  value={accountId}
-                  onChange={(event) => setAccountId(event.target.value)}
-                  className={inputClassName}
-                  required
-                >
-                  <option value="">Select account</option>
-                  {accounts
-                    .filter((account) => account.isActive !== false)
-                    .map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {accountOptionLabel(account)}
-                      </option>
+                  >
+                    <option value="">Choose person</option>
+                    {personOptions.map((person) => (
+                      <option key={person.value} value={person.value}>{person.label}</option>
                     ))}
-                </select>
-              </div>
+                  </select>
+                </label>
 
-              </div>
+                <label>
+                  Account
+                  <select
+                    value={accountId}
+                    onChange={(event) => setAccountId(event.target.value)}
+                    className={inputClassName}
+                    required
+                  >
+                    <option value="">Choose account</option>
+                    {accounts.filter((account) => account.isActive !== false).map((account) => (
+                      <option key={account.id} value={account.id}>{accountOptionLabel(account)}</option>
+                    ))}
+                  </select>
+                </label>
 
-              <div className="mv-modal-fixed-actions">
-                <button
-                  type="button"
-                  onClick={() => setShowReceiveModal(false)}
-                  className="mv-income-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="mv-income-primary inline-flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {isSubmitting ? 'Recording...' : 'Record Received'}
-                </button>
-              </div>
-            </form>
+                <label>
+                  Category
+                  <select
+                    value={categoryId}
+                    onChange={(event) => setCategoryId(event.target.value)}
+                    className={inputClassName}
+                    required
+                  >
+                    <option value="">Choose category</option>
+                    {incomeCategories.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Expected date
+                  <input type="date" value={expectedDate} onChange={(event) => setExpectedDate(event.target.value)} className={inputClassName} />
+                </label>
+
+                <label>
+                  Notes
+                  <textarea value={notes} onChange={(event) => setNotes(event.target.value)} className={inputClassName} rows={3} />
+                </label>
+
+                <div className="mv-modal-actions">
+                  <button type="button" onClick={closeActiveModal}>Cancel</button>
+                  <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving…' : 'Save'}</button>
+                </div>
+              </form>
+            )}
+
+            {showReceiveModal && selectedIncome && (
+              <form onSubmit={markReceived} className="mv-modal-form">
+                {error && <div className="mv-modal-error" role="alert">{error}</div>}
+
+                <label>
+                  Amount received
+                  <MoneyInput
+                    value={actualAmount}
+                    onChange={(event) => setActualAmount(event.target.value)}
+                    className={inputClassName}
+                    type="text"
+                    inputMode="decimal"
+                    aria-label="Amount received"
+                  />
+                </label>
+
+                <label>
+                  Received date
+                  <input type="date" value={actualDate} onChange={(event) => setActualDate(event.target.value)} className={inputClassName} required />
+                </label>
+
+                <label>
+                  Receiving account
+                  <select
+                    value={accountId}
+                    onChange={(event) => setAccountId(event.target.value)}
+                    className={inputClassName}
+                    required
+                  >
+                    <option value="">Choose account</option>
+                    {accounts.filter((account) => account.isActive !== false).map((account) => (
+                      <option key={account.id} value={account.id}>{accountOptionLabel(account)}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="mv-modal-actions">
+                  <button type="button" onClick={closeActiveModal}>Cancel</button>
+                  <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving…' : 'Record received'}</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
 
-      {pendingIncomeDeletion && (
-        <ConfirmActionDialog
-          title="Delete expected income?"
-          description={
-            <>
-              Delete expected income <strong>“{pendingIncomeDeletion.name}”</strong>? No received
-              transaction is linked to this expected-income record.
-            </>
-          }
-          confirmLabel="Delete income"
-          busy={isSubmitting}
-          error={error}
-          onCancel={() => {
-            setPendingIncomeDeletion(null);
-            setError(null);
-          }}
-          onConfirm={async () => {
-            if (isSubmitting) return;
-            const income = pendingIncomeDeletion;
-            if (!income) return;
-            setIsSubmitting(true);
-            const deleted = await removeIncome(income);
-            setIsSubmitting(false);
-            if (deleted) setPendingIncomeDeletion(null);
-          }}
-        />
-      )}
+      <ConfirmActionDialog
+        isOpen={Boolean(pendingIncomeDeletion)}
+        title="Delete expected income?"
+        message={pendingIncomeDeletion ? `Delete ${pendingIncomeDeletion.name}?` : ''}
+        confirmLabel="Delete income"
+        tone="danger"
+        onCancel={() => setPendingIncomeDeletion(null)}
+        onConfirm={async () => {
+          if (!pendingIncomeDeletion) return false;
+          const removed = await removeIncome(pendingIncomeDeletion);
+          if (removed) setPendingIncomeDeletion(null);
+          return removed;
+        }}
+      />
     </div>
   );
 };
