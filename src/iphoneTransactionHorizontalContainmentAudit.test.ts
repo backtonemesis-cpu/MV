@@ -42,6 +42,7 @@ describe('Step 44 iPhone transaction horizontal containment contract', () => {
   it('does not alter TransactionModal account/category binding semantics', () => {
     const modal = read('components/TransactionModal.tsx');
     const shared = read('components/UnifiedAddUi.tsx');
+    const categorySelect = read('components/CategorySelect.tsx');
 
     expect(modal).toContain('id="transaction-account"');
     expect(modal).toContain('value={accountId}');
@@ -51,6 +52,8 @@ describe('Step 44 iPhone transaction horizontal containment contract', () => {
     expect(shared).toContain('onValueChange={onChange}');
     expect(modal).toContain('id="transaction-category"');
     expect(modal).toContain('value={categoryId}');
-    expect(modal).toContain('onChange={(e) => setCategoryId(e.target.value)}');
+    expect(modal).toContain('onValueChange={setCategoryId}');
+    expect(categorySelect).toContain('value: category.id');
+    expect(categorySelect).toContain('onChange={(event) => onValueChange(event.target.value)}');
   });
 });
