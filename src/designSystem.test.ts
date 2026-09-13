@@ -73,13 +73,13 @@ describe('semantic design system enforcement', () => {
     );
     const css = fs.readFileSync(path.join(SRC_DIR, 'index.css'), 'utf8');
 
-    // Dashboard telemetry: total fixed bills belong on the primary metric,
-    // while outstanding unpaid bills are explanatory secondary text only.
-    expect(dashboard).toContain("label: 'Fixed Bills'");
-    expect(dashboard).toContain('value: surplusCalculation.fixedBillsTotalPence');
-    expect(dashboard).not.toContain(
-      "label: 'Fixed Bills',\n      value: surplusCalculation.fixedBillsUnpaidPence"
-    );
+    // Dashboard v4.31 keeps fixed-bill total as the primary Bills value while
+    // outstanding remains secondary state from the authoritative paid resolver.
+    expect(dashboard).toContain('mv-dashboard-financial-frame');
+    expect(dashboard).toContain('formatPence(surplusCalculation.fixedBillsTotalPence)');
+    expect(dashboard).toContain('surplusCalculation.fixedBillsUnpaidPence > 0');
+    expect(dashboard).toContain('isPlannedPaymentEffectivelyPaid(');
+    expect(dashboard).not.toContain('Spending Attribution');
 
     // Transfer Plan V2 is a selection + funding workflow, not a second bill
     // editor. Bulk inclusion remains fast, while bill facts stay read-only.
