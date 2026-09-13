@@ -73,10 +73,16 @@ function prepareLabel(sourceMonth: string, targetMonth: string): string {
     : `Prepare ${full}`;
 }
 
+function incomeOutstandingPence(income: PlannedIncome): number {
+  return Math.max(
+    0,
+    income.expectedAmountPence - (income.actualAmountPence ?? 0)
+  );
+}
+
 function incomeIsFulfilled(income: PlannedIncome): boolean {
   if (income.status === 'received') return true;
-  const actual = income.actualAmountPence ?? 0;
-  return actual >= income.expectedAmountPence;
+  return incomeOutstandingPence(income) === 0;
 }
 
 function eventSort(a: DashboardEvent, b: DashboardEvent): number {
@@ -237,7 +243,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           kind: 'income',
           date: income.expectedDate,
           title: income.name,
-          amountPence: income.expectedAmountPence,
+          amountPence: incomeOutstandingPence(income),
         });
       }
     }
@@ -281,7 +287,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           kind: 'income',
           date: income.expectedDate,
           title: income.name,
-          amountPence: income.expectedAmountPence,
+          amountPence: incomeOutstandingPence(income),
         });
       }
     }
