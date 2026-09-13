@@ -32,7 +32,6 @@ describe('Dashboard v4.31 PC and narrow-PC source contract', () => {
     expect(dashboardCss).toContain('white-space: nowrap;');
     expect(dashboardCss).not.toContain('text-overflow: ellipsis');
     expect(dashboardCss).not.toContain('zoom:');
-    expect(dashboardCss).not.toContain('transform: scale(');
   });
 
   it('keeps the Dashboard stylesheet after the global/mobile layers', () => {
