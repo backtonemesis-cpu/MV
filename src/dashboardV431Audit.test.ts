@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 const src = path.resolve(process.cwd(), 'src');
 const dashboard = fs.readFileSync(path.join(src, 'components', 'Dashboard.tsx'), 'utf8');
 const css = fs.readFileSync(path.join(src, 'dashboard.css'), 'utf8');
+const closureCss = fs.readFileSync(path.join(src, 'dashboardPriorityOneClosure.css'), 'utf8');
 
 describe('Dashboard v4.31 implementation contract', () => {
   it('consumes existing authoritative finance helpers instead of defining new headline arithmetic', () => {
@@ -42,7 +43,7 @@ describe('Dashboard v4.31 implementation contract', () => {
     expect(dashboard).toContain('income.expectedDate < todayKey');
     expect(dashboard).toContain('payment.dueDate >= todayKey');
     expect(dashboard).toContain('income.expectedDate >= todayKey');
-    expect(dashboard).toContain("if (temporalMode === 'past') return [] as DashboardEvent[];");
+    expect(dashboard).toContain("suppressFinancialCalculations || temporalMode === 'past'");
     expect(dashboard).toContain('events.sort(eventSort).slice(0, 2)');
     expect(dashboard).toContain('attentionEvents.slice(0, 3)');
     expect(dashboard).toContain("if (a.kind !== b.kind) return a.kind === 'bill' ? -1 : 1;");
@@ -64,9 +65,9 @@ describe('Dashboard v4.31 implementation contract', () => {
     expect(dashboard).not.toContain('Prepare Next Month');
   });
 
-  it('keeps View-only free of edit actions and separates PC/Phone action placement', () => {
+  it('keeps View-only and unsafe states free of edit actions and separates PC/Phone action placement', () => {
     expect(dashboard).toContain("const canEdit = userRole === 'owner' || userRole === 'editor';");
-    expect(dashboard).toContain('const actionControls = canEdit ? (');
+    expect(dashboard).toContain('const actionControls = canEdit && !suppressFinancialCalculations ? (');
     expect(dashboard).toContain('mv-dashboard-actions-pc');
     expect(dashboard).toContain('mv-dashboard-actions-phone');
     expect(css).toContain('.mv-layout-phone .mv-dashboard-actions-pc');
@@ -88,5 +89,15 @@ describe('Dashboard v4.31 implementation contract', () => {
     expect(css).toContain('grid-template-columns: repeat(2, var(--mv-ds-control-large)) !important;');
     expect(css).toContain('width: var(--mv-ds-control-large) !important;');
     expect(css).toContain('min-width: var(--mv-ds-control-large) !important;');
+  });
+
+  it('adds the v4.31 first-setup, structural absence and critical-integrity closure states', () => {
+    expect(dashboard).toContain('No accounts yet');
+    expect(dashboard).toContain('No active cash/savings accounts');
+    expect(dashboard).toContain('No active accounts');
+    expect(dashboard).toContain('Dashboard totals unavailable');
+    expect(dashboard).toContain('Review data');
+    expect(closureCss).toContain('.mv-dashboard-critical-integrity');
+    expect(closureCss).toContain('.mv-dashboard-setup-state');
   });
 });
