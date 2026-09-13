@@ -174,13 +174,16 @@ describe('Global finance UI consistency contract', () => {
     expect(moneyInput).not.toMatch(/>\s*£\s*</);
   });
 
-  it('keeps Dashboard on the same Transfer Plan and savings rules', () => {
+  it('keeps Dashboard on the same authoritative financial and Transfer Plan rules', () => {
     const dashboard = component('Dashboard.tsx');
 
+    expect(dashboard).toContain('calculateMonthlySurplus(');
+    expect(dashboard).toContain('calculateLiquidFundsPence(household.accounts)');
+    expect(dashboard).toContain('calculateSavingsPosition(');
+    expect(dashboard).toContain('isPlannedPaymentEffectivelyPaid(');
     expect(dashboard).toContain('generateTransferPlan(');
-    expect(dashboard).not.toContain('isPlannedPaymentEffectivelyPaid');
-    expect(dashboard).toContain("label: 'Transferred from savings'");
-    expect(dashboard).toContain('calculateTransferredFromSavingsPence');
+    expect(dashboard).not.toContain('calculateTransferredFromSavingsPence');
+    expect(dashboard).not.toContain("label: 'Transferred from savings'");
   });
 
   it('keeps financial amount colors semantic rather than decorative', () => {
