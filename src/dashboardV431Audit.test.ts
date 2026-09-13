@@ -48,6 +48,13 @@ describe('Dashboard v4.31 implementation contract', () => {
     expect(dashboard).toContain("if (a.kind !== b.kind) return a.kind === 'bill' ? -1 : 1;");
   });
 
+  it('uses remaining partial income rather than overstating outstanding event amounts', () => {
+    expect(dashboard).toContain('function incomeOutstandingPence(income: PlannedIncome): number');
+    expect(dashboard).toContain('income.expectedAmountPence - (income.actualAmountPence ?? 0)');
+    expect(dashboard.match(/amountPence: incomeOutstandingPence\(income\)/g)?.length).toBe(2);
+    expect(dashboard).toContain('return incomeOutstandingPence(income) === 0;');
+  });
+
   it('makes Prepare target-relative, calendar-gated and duplicate-aware', () => {
     expect(dashboard).toContain('targetMonth < currentMonth');
     expect(dashboard).toContain('isRolloverPaymentDuplicate(');
