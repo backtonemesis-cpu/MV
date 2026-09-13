@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const src = path.resolve(process.cwd(), 'src');
 const dashboard = fs.readFileSync(path.join(src, 'components/Dashboard.tsx'), 'utf8');
+const dashboardCss = fs.readFileSync(path.join(src, 'dashboard.css'), 'utf8');
 const transactionModal = fs.readFileSync(path.join(src, 'components/TransactionModal.tsx'), 'utf8');
 const types = fs.readFileSync(path.join(src, 'types.ts'), 'utf8');
 const plannedPaymentModal = fs.readFileSync(path.join(src, 'components/PlannedPaymentModal.tsx'), 'utf8');
@@ -12,9 +13,13 @@ const launcherStateCss = fs.readFileSync(path.resolve(process.cwd(), 'public/uni
 const sharedUi = fs.readFileSync(path.join(src, 'components/UnifiedAddUi.tsx'), 'utf8');
 
 describe('unified Dashboard Add launcher', () => {
-  it('has one primary Dashboard Add action instead of competing transaction and bill actions', () => {
-    expect(dashboard).toContain('id="dashboard-add-btn"');
-    expect(dashboard).toContain('aria-label="Add"');
+  it('has one semantic Dashboard Add definition with mode-specific placement instead of competing transaction and bill actions', () => {
+    expect(dashboard).toContain('const actionControls = canEdit ? (');
+    expect(dashboard.match(/<span>Add<\/span>/g)?.length).toBe(1);
+    expect(dashboard).toContain('mv-dashboard-actions-pc');
+    expect(dashboard).toContain('mv-dashboard-actions-phone');
+    expect(dashboardCss).toContain('.mv-layout-phone .mv-dashboard-actions-pc');
+    expect(dashboardCss).toContain('.mv-layout-pc .mv-dashboard-actions-phone');
     expect(dashboard).not.toContain('id="dashboard-add-tx-btn"');
     expect(dashboard).not.toContain('>Add Transaction</button>');
   });
@@ -51,7 +56,10 @@ describe('unified Dashboard Add launcher', () => {
   });
 
   it('creates nothing merely by opening, switching or cancelling the launcher', () => {
-    const openLauncher = dashboard.slice(dashboard.indexOf('const openUnifiedAdd'), dashboard.indexOf('const { mariusSpendPence'));
+    const openLauncher = dashboard.slice(
+      dashboard.indexOf('const openUnifiedAdd'),
+      dashboard.indexOf('const actionControls')
+    );
     expect(openLauncher).toContain('onOpenAddTransaction()');
     expect(openLauncher).not.toContain('createTransaction');
     expect(openLauncher).not.toContain('createPlannedPayment');
