@@ -15,6 +15,7 @@ import './unifiedAddIphoneDateContainment.css';
 import './globalControlSurface.css';
 import './mvSelect.css';
 import './dashboard.css';
+import './dashboardPriorityOneClosure.css';
 import './unifiedAddBridge';
 import { applyThemePreferences, readStoredUserPreferences } from './themeEngine';
 
