@@ -7,22 +7,26 @@ const dashboard = fs.readFileSync(
   'utf8'
 );
 
-describe('GLOBAL-COPY-001 Dashboard month display', () => {
-  it('uses the shared readable month label for all user-facing month text', () => {
-    expect(dashboard).toContain('formatMonthKeyUk');
-    expect(dashboard).toContain("from '../utils/dateInput';");
+describe('Dashboard v4.31 selected-month semantics', () => {
+  it('uses the shared UK-readable month label while retaining the month key internally', () => {
+    expect(dashboard).toContain('formatDateKeyUk,');
+    expect(dashboard).toContain('formatMonthKeyUk,');
+    expect(dashboard).toContain('localDateInputValue,');
     expect(dashboard).toContain('const visibleMonthLabel = formatMonthKeyUk(selectedMonth);');
-    expect(dashboard).toContain('<span>{visibleMonthLabel}</span>');
-    expect(dashboard).toContain('>{visibleMonthLabel}</h2>');
-    expect(dashboard).toContain('>{visibleMonthLabel} • {monthPlannedPayments.length} bill');
-    expect(dashboard).toContain('No bills for {visibleMonthLabel}');
-    expect(dashboard).toContain('>{visibleMonthLabel} • {monthTransactions.length} transaction');
-    expect(dashboard).toContain('No transactions for {visibleMonthLabel}');
+    expect(dashboard).toContain('payment.month === selectedMonth');
+    expect(dashboard).toContain('income.month === selectedMonth');
+    expect(dashboard).toContain('calculateMonthlySurplus(');
+    expect(dashboard).toContain('selectedMonth,');
+    expect(dashboard).toContain('<h1>{visibleMonthLabel}</h1>');
   });
 
-  it('keeps selectedMonth as the internal month key for filters and calculations', () => {
-    expect(dashboard).toContain('tx.date.startsWith(selectedMonth)');
-    expect(dashboard).toContain('p.month === selectedMonth');
-    expect(dashboard).toContain('calculateMonthlySurplus(household.transactions, household.plannedPayments || [], selectedMonth');
+  it('keeps current/past/future meaning explicit and refreshes UK-local today while open', () => {
+    expect(dashboard).toContain("type TemporalMode = 'past' | 'current' | 'future';");
+    expect(dashboard).toContain('const currentMonth = todayKey.slice(0, 7);');
+    expect(dashboard).toContain("const intervalId = window.setInterval(refreshToday, 60_000);");
+    expect(dashboard).toContain("window.addEventListener('focus', refreshToday);");
+    expect(dashboard).toContain("document.addEventListener('visibilitychange', refreshToday);");
+    expect(dashboard).toContain("temporalMode === 'future'");
+    expect(dashboard).toContain('Not started');
   });
 });
