@@ -13,6 +13,7 @@ export type DashboardAccountState =
 
 export type DashboardIntegrityIssueCode =
   | 'duplicate_account_id'
+  | 'duplicate_record_id'
   | 'missing_account_reference'
   | 'missing_payment_reference'
   | 'missing_income_reference'
@@ -154,6 +155,15 @@ function isActualIncomeEvidence(
   );
 }
 
+function hasDuplicateOrBlankId(ids: string[]): boolean {
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (!id?.trim() || seen.has(id)) return true;
+    seen.add(id);
+  }
+  return false;
+}
+
 export function assessDashboardIntegrity(
   household: HouseholdData,
   selectedMonth: string
@@ -178,6 +188,35 @@ export function assessDashboardIntegrity(
         'A current account balance is outside exact safe-integer pence.'
       );
     }
+  }
+
+  const selectedPayments = household.plannedPayments.filter(
+    (payment) => payment.month === selectedMonth
+  );
+  const selectedIncomes = (household.plannedIncomes || []).filter(
+    (income) => income.month === selectedMonth
+  );
+
+  if (hasDuplicateOrBlankId(household.transactions.map((item) => item.id))) {
+    pushIssue(
+      issues,
+      'duplicate_record_id',
+      'Transaction identity is missing or duplicated.'
+    );
+  }
+  if (hasDuplicateOrBlankId(selectedPayments.map((item) => item.id))) {
+    pushIssue(
+      issues,
+      'duplicate_record_id',
+      'Selected-month bill identity is missing or duplicated.'
+    );
+  }
+  if (hasDuplicateOrBlankId(selectedIncomes.map((item) => item.id))) {
+    pushIssue(
+      issues,
+      'duplicate_record_id',
+      'Selected-month income identity is missing or duplicated.'
+    );
   }
 
   const paymentsById = new Map(
@@ -208,6 +247,15 @@ export function assessDashboardIntegrity(
         'A transaction references a missing destination account.'
       );
     }
+    if (!Number.isSafeInteger(transaction.amountPence)) {
+      pushIssue(
+        issues,
+        'unsafe_money_total',
+        'A transaction amount is outside exact safe-integer pence.'
+      );
+    }
+
+    if (!transaction.date.startsWith(selectedMonth)) continue;
     if (
       transaction.plannedPaymentId &&
       !paymentsById.has(transaction.plannedPaymentId)
@@ -215,7 +263,7 @@ export function assessDashboardIntegrity(
       pushIssue(
         issues,
         'missing_payment_reference',
-        'A transaction references a missing planned bill.'
+        'A selected-month transaction references a missing planned bill.'
       );
     }
     if (
@@ -225,31 +273,28 @@ export function assessDashboardIntegrity(
       pushIssue(
         issues,
         'missing_income_reference',
-        'A transaction references a missing planned income item.'
-      );
-    }
-    if (!Number.isSafeInteger(transaction.amountPence)) {
-      pushIssue(
-        issues,
-        'unsafe_money_total',
-        'A transaction amount is outside exact safe-integer pence.'
+        'A selected-month transaction references a missing planned income item.'
       );
     }
   }
 
-  for (const payment of household.plannedPayments) {
+  for (const payment of selectedPayments) {
     if (!accountIds.has(payment.accountId)) {
       pushIssue(
         issues,
         'missing_account_reference',
-        'A planned bill references a missing account.'
+        'A selected-month planned bill references a missing account.'
       );
     }
-    if (!Number.isSafeInteger(payment.amountPence)) {
+    if (
+      !Number.isSafeInteger(payment.amountPence) ||
+      (payment.actualAmountPence !== undefined &&
+        !Number.isSafeInteger(payment.actualAmountPence))
+    ) {
       pushIssue(
         issues,
         'unsafe_money_total',
-        'A planned bill amount is outside exact safe-integer pence.'
+        'A selected-month planned bill amount is outside exact safe-integer pence.'
       );
     }
     if (payment.actualTransactionId) {
@@ -258,18 +303,18 @@ export function assessDashboardIntegrity(
         pushIssue(
           issues,
           'invalid_payment_evidence',
-          'A planned bill has missing or mismatched actual payment evidence.'
+          'A selected-month planned bill has missing or mismatched actual payment evidence.'
         );
       }
     }
   }
 
-  for (const income of household.plannedIncomes || []) {
+  for (const income of selectedIncomes) {
     if (!accountIds.has(income.accountId)) {
       pushIssue(
         issues,
         'missing_account_reference',
-        'A planned income item references a missing account.'
+        'A selected-month planned income item references a missing account.'
       );
     }
     if (
@@ -280,7 +325,7 @@ export function assessDashboardIntegrity(
       pushIssue(
         issues,
         'unsafe_money_total',
-        'A planned income amount is outside exact safe-integer pence.'
+        'A selected-month planned income amount is outside exact safe-integer pence.'
       );
     }
     const linkedId = income.actualTransactionId || income.linkedTransactionId;
@@ -290,7 +335,7 @@ export function assessDashboardIntegrity(
         pushIssue(
           issues,
           'invalid_income_evidence',
-          'A planned income item has missing or mismatched actual receipt evidence.'
+          'A selected-month planned income item has missing or mismatched actual receipt evidence.'
         );
       }
     }
@@ -336,8 +381,7 @@ export function assessDashboardIntegrity(
     }
   }
 
-  for (const income of household.plannedIncomes || []) {
-    if (income.month !== selectedMonth) continue;
+  for (const income of selectedIncomes) {
     expectedIncome = addSafe(
       expectedIncome,
       income.expectedAmountPence,
@@ -346,8 +390,7 @@ export function assessDashboardIntegrity(
   }
   void expectedIncome;
 
-  for (const payment of household.plannedPayments) {
-    if (payment.month !== selectedMonth) continue;
+  for (const payment of selectedPayments) {
     let effectiveAmount = payment.amountPence;
     if (payment.actualTransactionId) {
       const linked = transactionsById.get(payment.actualTransactionId);
@@ -373,9 +416,8 @@ export function assessDashboardIntegrity(
   for (const account of household.accounts) {
     if (account.isActive === false || account.type === 'credit') continue;
     let selectedUnpaid = 0;
-    for (const payment of household.plannedPayments) {
+    for (const payment of selectedPayments) {
       if (
-        payment.month !== selectedMonth ||
         payment.accountId !== account.id ||
         !payment.includeInTransferPlan
       ) {
@@ -386,8 +428,9 @@ export function assessDashboardIntegrity(
       const linked = payment.actualTransactionId
         ? transactionsById.get(payment.actualTransactionId)
         : undefined;
-      const paidByEvidence =
-        Boolean(linked) && isActualPaymentEvidence(linked!, payment);
+      const paidByEvidence = Boolean(
+        linked && isActualPaymentEvidence(linked, payment)
+      );
       if (paidByLegacyState || paidByEvidence) continue;
       selectedUnpaid = addSafe(selectedUnpaid, payment.amountPence, issues);
     }
