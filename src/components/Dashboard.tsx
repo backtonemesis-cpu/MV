@@ -23,6 +23,10 @@ import {
 import { generateTransferPlan } from '../utils/transferPlan';
 import { accountIdentityLabel } from '../utils/accountDisplay';
 import {
+  assessDashboardIntegrity,
+  classifyDashboardAccountState,
+} from '../utils/dashboardState';
+import {
   formatDateKeyUk,
   formatMonthKeyUk,
   localDateInputValue,
@@ -125,6 +129,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
         : 'current';
 
   const visibleMonthLabel = formatMonthKeyUk(selectedMonth);
+  const accountState = useMemo(
+    () => classifyDashboardAccountState(household),
+    [household]
+  );
+  const integrity = useMemo(
+    () => assessDashboardIntegrity(household, selectedMonth),
+    [household, selectedMonth]
+  );
+  const suppressFinancialCalculations =
+    integrity.isCritical || accountState === 'first_setup';
+
   const monthPlannedPayments = useMemo(
     () =>
       (household.plannedPayments || []).filter(
@@ -142,58 +157,67 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const surplusCalculation = useMemo(
     () =>
-      calculateMonthlySurplus(
-        household.transactions,
-        household.plannedPayments || [],
-        selectedMonth,
-        household.plannedIncomes || []
-      ),
+      suppressFinancialCalculations
+        ? null
+        : calculateMonthlySurplus(
+            household.transactions,
+            household.plannedPayments || [],
+            selectedMonth,
+            household.plannedIncomes || []
+          ),
     [
       household.transactions,
       household.plannedPayments,
       household.plannedIncomes,
       selectedMonth,
+      suppressFinancialCalculations,
     ]
   );
   const savingsPosition = useMemo(
     () =>
-      calculateSavingsPosition(
-        household.accounts,
-        household.transactions,
-        household.plannedPayments || [],
-        selectedMonth,
-        household.plannedIncomes || []
-      ),
+      suppressFinancialCalculations
+        ? null
+        : calculateSavingsPosition(
+            household.accounts,
+            household.transactions,
+            household.plannedPayments || [],
+            selectedMonth,
+            household.plannedIncomes || []
+          ),
     [
       household.accounts,
       household.transactions,
       household.plannedPayments,
       household.plannedIncomes,
       selectedMonth,
+      suppressFinancialCalculations,
     ]
   );
 
-  const activeLiquidAccounts = useMemo(
-    () =>
-      household.accounts.filter(
-        (account) => account.isActive !== false && account.type !== 'credit'
-      ),
-    [household.accounts]
-  );
   const totalLiquidBalancePence = useMemo(
-    () => calculateLiquidFundsPence(household.accounts),
-    [household.accounts]
+    () =>
+      suppressFinancialCalculations
+        ? null
+        : calculateLiquidFundsPence(household.accounts),
+    [household.accounts, suppressFinancialCalculations]
   );
 
   const paidBillCount = useMemo(
     () =>
-      monthPlannedPayments.filter((payment) =>
-        isPlannedPaymentEffectivelyPaid(payment, household.transactions)
-      ).length,
-    [household.transactions, monthPlannedPayments]
+      suppressFinancialCalculations
+        ? 0
+        : monthPlannedPayments.filter((payment) =>
+            isPlannedPaymentEffectivelyPaid(payment, household.transactions)
+          ).length,
+    [
+      household.transactions,
+      monthPlannedPayments,
+      suppressFinancialCalculations,
+    ]
   );
 
   const transferPlanSnapshot = useMemo(() => {
+    if (suppressFinancialCalculations) return [];
     const plan = generateTransferPlan(
       household.accounts,
       household.plannedPayments || [],
@@ -210,10 +234,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     household.plannedPayments,
     household.transactions,
     selectedMonth,
+    suppressFinancialCalculations,
   ]);
 
   const upcomingEvents = useMemo(() => {
-    if (temporalMode === 'past') return [] as DashboardEvent[];
+    if (suppressFinancialCalculations || temporalMode === 'past') {
+      return [] as DashboardEvent[];
+    }
 
     const events: DashboardEvent[] = [];
     for (const payment of monthPlannedPayments) {
@@ -253,11 +280,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     household.transactions,
     monthPlannedIncomes,
     monthPlannedPayments,
+    suppressFinancialCalculations,
     temporalMode,
     todayKey,
   ]);
 
   const attentionEvents = useMemo(() => {
+    if (suppressFinancialCalculations) return [] as DashboardEvent[];
     const events: DashboardEvent[] = [];
 
     for (const payment of monthPlannedPayments) {
@@ -297,13 +326,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
     household.transactions,
     monthPlannedIncomes,
     monthPlannedPayments,
+    suppressFinancialCalculations,
     todayKey,
   ]);
 
   const targetMonth = nextMonthKey(selectedMonth);
   const canEdit = userRole === 'owner' || userRole === 'editor';
   const canPrepare = useMemo(() => {
-    if (!canEdit || !targetMonth || targetMonth < currentMonth) return false;
+    if (
+      suppressFinancialCalculations ||
+      !canEdit ||
+      !targetMonth ||
+      targetMonth < currentMonth
+    ) {
+      return false;
+    }
 
     const targetPayments = (household.plannedPayments || []).filter(
       (payment) => payment.month === targetMonth
@@ -334,6 +371,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     household.plannedPayments,
     monthPlannedIncomes,
     monthPlannedPayments,
+    suppressFinancialCalculations,
     targetMonth,
   ]);
 
@@ -342,7 +380,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     onOpenAddTransaction();
   };
 
-  const actionControls = canEdit ? (
+  const actionControls = canEdit && !suppressFinancialCalculations ? (
     <div
       className="mv-dashboard-page-actions"
       role="group"
@@ -371,12 +409,104 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   ) : null;
 
+  const monthControl = (
+    <div className="mv-dashboard-month-control">
+      <span className="mv-dashboard-eyebrow">Selected month</span>
+      <MonthPicker
+        value={selectedMonth}
+        onChange={onSelectMonth}
+        ariaLabel="Dashboard selected month"
+        className="mv-dashboard-month-picker"
+      />
+    </div>
+  );
+
+  if (integrity.isCritical) {
+    const primaryIssue =
+      integrity.issues[0]?.message ||
+      'Dashboard financial data could not be verified safely.';
+
+    return (
+      <div className="mv-dashboard-workspace mv-dashboard-v431">
+        <div className="mv-dashboard-command-row">
+          {monthControl}
+          <div className="mv-dashboard-actions-pc" />
+        </div>
+
+        <section
+          className="mv-dashboard-critical-integrity"
+          role="alert"
+          aria-labelledby="dashboard-integrity-title"
+        >
+          <div className="mv-dashboard-section-heading">
+            <div>
+              <span className="mv-dashboard-eyebrow">Financial integrity</span>
+              <h1 id="dashboard-integrity-title">Dashboard totals unavailable</h1>
+            </div>
+            <AlertTriangle aria-hidden="true" />
+          </div>
+          <p>{primaryIssue}</p>
+          {integrity.issues.length > 1 && (
+            <p>
+              {integrity.issues.length - 1} additional integrity issue
+              {integrity.issues.length === 2 ? '' : 's'} also requires review.
+            </p>
+          )}
+          <p>
+            Headline money is hidden until Penny can establish the underlying
+            financial data safely.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigateToTab('settings')}
+            className="mv-dashboard-inline-action"
+          >
+            Review data
+          </button>
+        </section>
+      </div>
+    );
+  }
+
+  if (accountState === 'first_setup') {
+    return (
+      <div className="mv-dashboard-workspace mv-dashboard-v431">
+        <div className="mv-dashboard-command-row">
+          {monthControl}
+          <div className="mv-dashboard-actions-pc" />
+        </div>
+
+        <section
+          className="mv-dashboard-setup-state"
+          aria-labelledby="dashboard-setup-title"
+        >
+          <span className="mv-dashboard-eyebrow">First setup</span>
+          <h1 id="dashboard-setup-title">No accounts yet</h1>
+          <p>Set up an account before recording household money.</p>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => onNavigateToTab('accounts')}
+              className="mv-dashboard-primary-action"
+            >
+              Open Accounts
+            </button>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  const dashboardSurplus = surplusCalculation!;
+  const dashboardSavings = savingsPosition!;
+  const dashboardLiquidBalance = totalLiquidBalancePence!;
+
   const billsStatus =
     monthPlannedPayments.length === 0
       ? 'No bills'
       : temporalMode === 'future'
         ? 'Planned'
-        : surplusCalculation.fixedBillsUnpaidPence > 0
+        : dashboardSurplus.fixedBillsUnpaidPence > 0
           ? 'Outstanding'
           : paidBillCount === monthPlannedPayments.length
             ? 'All paid'
@@ -384,21 +514,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const incomeValue =
     temporalMode === 'future'
-      ? surplusCalculation.expectedIncomePence
-      : surplusCalculation.actualIncomeReceivedPence;
+      ? dashboardSurplus.expectedIncomePence
+      : dashboardSurplus.actualIncomeReceivedPence;
 
   return (
     <div className="mv-dashboard-workspace mv-dashboard-v431">
       <div className="mv-dashboard-command-row">
-        <div className="mv-dashboard-month-control">
-          <span className="mv-dashboard-eyebrow">Selected month</span>
-          <MonthPicker
-            value={selectedMonth}
-            onChange={onSelectMonth}
-            ariaLabel="Dashboard selected month"
-            className="mv-dashboard-month-picker"
-          />
-        </div>
+        {monthControl}
         <div className="mv-dashboard-actions-pc">{actionControls}</div>
       </div>
 
@@ -422,31 +544,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <>
                 <div
                   className={`mv-dashboard-anchor-value mv-dashboard-private-money mv-private-value tabular-nums ${
-                    surplusCalculation.availableSurplusPence > 0
+                    dashboardSurplus.availableSurplusPence > 0
                       ? 'finance-semantic-positive'
-                      : surplusCalculation.availableSurplusPence < 0
+                      : dashboardSurplus.availableSurplusPence < 0
                         ? 'finance-semantic-negative'
                         : ''
                   }`}
                 >
-                  {formatPence(surplusCalculation.availableSurplusPence)}
+                  {formatPence(dashboardSurplus.availableSurplusPence)}
                 </div>
                 <div className="mv-dashboard-value-state">
-                  {surplusCalculation.availableSurplusPence > 0
+                  {dashboardSurplus.availableSurplusPence > 0
                     ? 'Positive'
-                    : surplusCalculation.availableSurplusPence < 0
+                    : dashboardSurplus.availableSurplusPence < 0
                       ? 'Negative'
                       : 'Balanced'}
                 </div>
               </>
             )}
 
-            {surplusCalculation.refundsPence !== 0 && (
+            {dashboardSurplus.refundsPence !== 0 && (
               <div className="mv-dashboard-refunds">
                 <span>Refunds &amp; credits</span>
                 <span className="mv-dashboard-private-money mv-private-value tabular-nums">
-                  {surplusCalculation.refundsPence > 0 ? '+' : ''}
-                  {formatPence(surplusCalculation.refundsPence)}
+                  {dashboardSurplus.refundsPence > 0 ? '+' : ''}
+                  {formatPence(dashboardSurplus.refundsPence)}
                 </span>
               </div>
             )}
@@ -464,18 +586,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <article className="mv-dashboard-horizon mv-dashboard-current-position">
             <span className="mv-dashboard-eyebrow">Current</span>
             <h2>Current cash &amp; savings</h2>
-            {activeLiquidAccounts.length > 0 ? (
+            {accountState === 'liquid' ? (
               <>
                 <div className="mv-dashboard-anchor-value mv-dashboard-private-money mv-private-value tabular-nums">
-                  {formatPence(totalLiquidBalancePence)}
+                  {formatPence(dashboardLiquidBalance)}
                 </div>
                 <div className="mv-dashboard-current-component">
                   <span className="mv-dashboard-private-money mv-private-value tabular-nums">
-                    {formatPence(savingsPosition.currentSavingsPence)}
+                    {formatPence(dashboardSavings.currentSavingsPence)}
                   </span>
                   <span>in savings &amp; cash accounts</span>
                 </div>
-                {totalLiquidBalancePence < 0 && (
+                {dashboardLiquidBalance < 0 && (
                   <div className="mv-dashboard-current-adverse">
                     Current cash &amp; savings is below £0.00
                   </div>
@@ -489,10 +611,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </p>
                 </details>
               </>
+            ) : accountState === 'credit_only' ? (
+              <div className="mv-dashboard-structural-state">
+                <div className="mv-dashboard-anchor-value mv-dashboard-private-money mv-private-value tabular-nums">
+                  {formatPence(dashboardLiquidBalance)}
+                </div>
+                <strong>No active cash/savings accounts</strong>
+                <span>Active credit accounts are excluded from this liquid total.</span>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToTab('accounts')}
+                    className="mv-dashboard-inline-action"
+                  >
+                    Open Accounts
+                  </button>
+                )}
+              </div>
             ) : (
-              <div className="mv-dashboard-unavailable">
-                <strong>Unavailable</strong>
-                <span>No active cash or savings accounts</span>
+              <div className="mv-dashboard-structural-state">
+                <strong>No active accounts</strong>
+                <span>
+                  Historical selected-month information remains available, but
+                  Penny has no active account for the current cash position.
+                </span>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onNavigateToTab('accounts')}
+                    className="mv-dashboard-inline-action"
+                  >
+                    Open Accounts
+                  </button>
+                )}
               </div>
             )}
           </article>
@@ -523,7 +674,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 temporalMode === 'future' ? '' : 'finance-semantic-negative'
               }`}
             >
-              {formatPence(surplusCalculation.grossOtherSpendingPence)}
+              {formatPence(dashboardSurplus.grossOtherSpendingPence)}
             </div>
             <span className="mv-dashboard-movement-note">
               {temporalMode === 'future'
@@ -535,13 +686,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <article className="mv-dashboard-movement">
             <span className="mv-dashboard-movement-label">Bills</span>
             <div className="mv-dashboard-movement-value mv-dashboard-private-money mv-private-value tabular-nums">
-              {formatPence(surplusCalculation.fixedBillsTotalPence)}
+              {formatPence(dashboardSurplus.fixedBillsTotalPence)}
             </div>
             <span className="mv-dashboard-movement-note">
               {billsStatus === 'Outstanding' ? (
                 <>
                   <span className="mv-dashboard-private-money mv-private-value tabular-nums">
-                    {formatPence(surplusCalculation.fixedBillsUnpaidPence)}
+                    {formatPence(dashboardSurplus.fixedBillsUnpaidPence)}
                   </span>{' '}
                   outstanding
                 </>
