@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard,
   Receipt,
@@ -26,14 +26,20 @@ interface TabItem {
   badge?: number;
 }
 
+const MOBILE_NAV_MIN_TARGET_PX = 44;
+const MOBILE_NAV_LABEL_GUTTER_PX = 16;
+
 export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   onTabChange,
   pendingMembersCount,
 }) => {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isTwoRowMobileNav, setIsTwoRowMobileNav] = useState(false);
   const moreTriggerRef = useRef<HTMLButtonElement>(null);
   const morePanelRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const mobileGridRef = useRef<HTMLDivElement>(null);
   const activeTabRef = useRef<NavTab>(activeTab);
   const syncingFromLocationRef = useRef(false);
   const lastLocationHashRef = useRef<string | null>(null);
@@ -62,6 +68,83 @@ export const Navigation: React.FC<NavigationProps> = ({
   const mobileMoreTabs = tabs.filter((tab) => !mobilePrimaryIds.includes(tab.id));
   const isMoreActive = mobileMoreTabs.some((tab) => tab.id === canonicalActiveTab);
   const moreBadge = mobileMoreTabs.some((tab) => Boolean(tab.badge));
+
+  useLayoutEffect(() => {
+    const grid = mobileGridRef.current;
+    if (!grid) return;
+
+    const measure = () => {
+      const labels = Array.from(
+        grid.querySelectorAll<HTMLElement>('.mv-mobile-nav-label')
+      );
+      const requiredWidth = labels.reduce(
+        (sum, label) =>
+          sum +
+          Math.max(
+            MOBILE_NAV_MIN_TARGET_PX,
+            Math.ceil(label.scrollWidth) + MOBILE_NAV_LABEL_GUTTER_PX
+          ),
+        0
+      );
+      const availableWidth = Math.floor(grid.getBoundingClientRect().width);
+      if (availableWidth > 0) {
+        setIsTwoRowMobileNav(requiredWidth > availableWidth);
+      }
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(measure);
+    observer?.observe(grid);
+    grid
+      .querySelectorAll<HTMLElement>('.mv-mobile-nav-label')
+      .forEach((label) => observer?.observe(label));
+
+    document.fonts?.ready.then(measure).catch(() => undefined);
+
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer?.disconnect();
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const nav = mobileNavRef.current;
+    const grid = mobileGridRef.current;
+    const root = document.documentElement;
+    if (!nav || !grid) return;
+
+    const publishHeight = () => {
+      const gridHeight = Math.ceil(grid.getBoundingClientRect().height);
+      if (gridHeight <= 0) return;
+      const navStyle = window.getComputedStyle(nav);
+      const paddingBottom = Number.parseFloat(navStyle.paddingBottom) || 0;
+      const borderTop = Number.parseFloat(navStyle.borderTopWidth) || 0;
+      root.style.setProperty(
+        '--mv-mobile-nav-height',
+        `${Math.ceil(gridHeight + paddingBottom + borderTop)}px`
+      );
+    };
+
+    publishHeight();
+    const observer =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(publishHeight);
+    observer?.observe(grid);
+    observer?.observe(nav);
+    window.addEventListener('resize', publishHeight);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', publishHeight);
+      root.style.removeProperty('--mv-mobile-nav-height');
+    };
+  }, [isTwoRowMobileNav]);
 
   useEffect(() => {
     const syncFromLocation = () => {
@@ -213,8 +296,18 @@ export const Navigation: React.FC<NavigationProps> = ({
       </nav>
 
       {/* Phone navigation: four primary destinations plus an uncluttered More menu. */}
-      <nav className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors" aria-label="Mobile navigation">
-        <div className="mv-mobile-nav-grid grid grid-cols-5 h-14">
+      <nav
+        ref={mobileNavRef}
+        className="mv-nav-mobile sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface backdrop-blur-md border-t border-muted pb-safe transition-colors"
+        aria-label="Mobile navigation"
+      >
+        <div
+          ref={mobileGridRef}
+          className={`mv-mobile-nav-grid grid grid-cols-5 h-14 ${
+            isTwoRowMobileNav ? 'is-two-row' : ''
+          }`}
+          data-nav-layout={isTwoRowMobileNav ? 'two-row' : 'one-row'}
+        >
           {mobilePrimaryTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = canonicalActiveTab === tab.id;
@@ -230,7 +323,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 }`}
               >
                 <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
-                <span>{tab.mobileLabel}</span>
+                <span className="mv-mobile-nav-label">{tab.mobileLabel}</span>
               </a>
             );
           })}
@@ -247,7 +340,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             }`}
           >
             <MoreHorizontal className={`w-4 h-4 mb-0.5 ${isMoreActive || isMoreOpen ? 'text-accent' : 'text-muted'}`} aria-hidden="true" />
-            <span>More</span>
+            <span className="mv-mobile-nav-label">More</span>
             {moreBadge && <span className="mv-mobile-nav-badge" aria-hidden="true" />}
           </button>
         </div>
@@ -281,7 +374,6 @@ export const Navigation: React.FC<NavigationProps> = ({
             })}
           </div>
         )}
-
       </nav>
     </>
   );
