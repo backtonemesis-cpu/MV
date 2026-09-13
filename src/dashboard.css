@@ -1,18 +1,646 @@
-/* Dashboard-specific layout contract.
- * Loaded after the global design system so the three primary PC actions
- * retain their intended three-column geometry instead of inheriting the
- * generic four-column Dashboard metric rule.
+/* Dashboard v4.31 — Integrated Dual-Horizon Financial Frame.
+ * Loaded last so Dashboard-specific reflow and the approved <=352px shell
+ * compatibility repair can override generic legacy grid rules without changing
+ * financial semantics.
  */
-@media (min-width: 80rem) {
-  .mv-layout-pc .mv-dashboard-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+
+.mv-dashboard-v431 {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--mv-ds-space-6);
+  padding-bottom: var(--mv-ds-space-12);
+  color: var(--text);
+}
+
+.mv-dashboard-v431 *,
+.mv-dashboard-v431 *::before,
+.mv-dashboard-v431 *::after {
+  box-sizing: border-box;
+}
+
+.mv-dashboard-command-row {
+  display: flex;
+  min-width: 0;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-4);
+}
+
+.mv-dashboard-month-control {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--mv-ds-space-2);
+}
+
+.mv-dashboard-month-picker {
+  min-width: 11rem;
+}
+
+.mv-dashboard-eyebrow {
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-meta);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-meta);
+}
+
+.mv-dashboard-page-actions {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--mv-ds-space-2);
+}
+
+.mv-dashboard-actions-phone {
+  display: none;
+}
+
+.mv-dashboard-primary-action,
+.mv-dashboard-secondary-action,
+.mv-dashboard-inline-action,
+.mv-dashboard-row-action {
+  display: inline-flex;
+  min-height: var(--mv-ds-control);
+  align-items: center;
+  justify-content: center;
+  gap: var(--mv-ds-space-2);
+  border-radius: var(--mv-ds-radius-md);
+  padding-inline: var(--mv-ds-space-4);
+  font-size: var(--mv-ds-text-compact);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-compact);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    transform 100ms ease;
+}
+
+.mv-dashboard-primary-action {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.mv-dashboard-secondary-action,
+.mv-dashboard-inline-action,
+.mv-dashboard-row-action {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.mv-dashboard-primary-action:hover,
+.mv-dashboard-secondary-action:hover,
+.mv-dashboard-inline-action:hover,
+.mv-dashboard-row-action:hover {
+  filter: brightness(0.98);
+}
+
+.mv-dashboard-primary-action:active,
+.mv-dashboard-secondary-action:active,
+.mv-dashboard-inline-action:active,
+.mv-dashboard-row-action:active {
+  transform: scale(0.98);
+}
+
+.mv-dashboard-primary-action svg,
+.mv-dashboard-secondary-action svg,
+.mv-dashboard-row-action svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.mv-dashboard-financial-frame {
+  min-width: 0;
+  overflow: clip;
+  border: 1px solid var(--border);
+  border-radius: var(--mv-ds-radius-lg);
+  background: var(--surface);
+}
+
+.mv-dashboard-horizons {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+}
+
+.mv-dashboard-horizon {
+  min-width: 0;
+  padding: var(--mv-ds-space-6);
+}
+
+.mv-dashboard-horizon + .mv-dashboard-horizon {
+  border-inline-start: 1px solid var(--border);
+}
+
+.mv-dashboard-horizon h1,
+.mv-dashboard-horizon h2,
+.mv-dashboard-section-heading h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+.mv-dashboard-horizon h1 {
+  margin-top: var(--mv-ds-space-1);
+  font-size: var(--mv-ds-text-section);
+  font-weight: 700;
+  line-height: var(--mv-ds-leading-section);
+}
+
+.mv-dashboard-horizon h2,
+.mv-dashboard-section-heading h2 {
+  margin-top: var(--mv-ds-space-1);
+  font-size: var(--mv-ds-text-subhead);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-heading);
+}
+
+.mv-dashboard-anchor-label {
+  margin-top: var(--mv-ds-space-6);
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-compact);
+  font-weight: 500;
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-anchor-value,
+.mv-dashboard-anchor-state {
+  margin-top: var(--mv-ds-space-1);
+  max-width: 100%;
+  color: var(--text);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 2.25rem;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.mv-dashboard-anchor-state {
+  color: var(--text-muted);
+}
+
+.mv-dashboard-value-state,
+.mv-dashboard-support,
+.mv-dashboard-current-component,
+.mv-dashboard-current-adverse,
+.mv-dashboard-unavailable,
+.mv-dashboard-calculation-help,
+.mv-dashboard-movement-note,
+.mv-dashboard-event-copy > span,
+.mv-dashboard-more-count {
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-value-state {
+  margin-top: var(--mv-ds-space-1);
+  font-weight: 600;
+}
+
+.mv-dashboard-support {
+  max-width: 44ch;
+  margin: var(--mv-ds-space-2) 0 0;
+}
+
+.mv-dashboard-refunds {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-3);
+  margin-top: var(--mv-ds-space-4);
+  padding-top: var(--mv-ds-space-3);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-current-component {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--mv-ds-space-1);
+  margin-top: var(--mv-ds-space-2);
+}
+
+.mv-dashboard-current-adverse {
+  margin-top: var(--mv-ds-space-3);
+  font-weight: 600;
+  color: var(--danger-text);
+}
+
+.mv-dashboard-unavailable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mv-ds-space-1);
+  margin-top: var(--mv-ds-space-6);
+}
+
+.mv-dashboard-unavailable strong {
+  color: var(--text);
+  font-size: var(--mv-ds-text-card);
+  line-height: var(--mv-ds-leading-heading);
+}
+
+.mv-dashboard-calculation-help {
+  margin-top: var(--mv-ds-space-4);
+  max-width: 52ch;
+}
+
+.mv-dashboard-calculation-help summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--primary);
+  font-size: var(--mv-ds-text-meta);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-calculation-help p {
+  margin: var(--mv-ds-space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-meta);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-movement-layer {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.mv-dashboard-movement {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--mv-ds-space-1);
+  padding: var(--mv-ds-space-4) var(--mv-ds-space-6);
+}
+
+.mv-dashboard-movement + .mv-dashboard-movement {
+  border-inline-start: 1px solid var(--border);
+}
+
+.mv-dashboard-movement-label {
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-compact);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-movement-value {
+  max-width: 100%;
+  color: var(--text);
+  font-size: var(--mv-ds-text-card);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-heading);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.mv-dashboard-movement-note {
+  max-width: 34ch;
+}
+
+.mv-dashboard-conditional {
+  min-width: 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--mv-ds-space-4);
+}
+
+.mv-dashboard-attention {
+  border-color: var(--warning-border);
+}
+
+.mv-dashboard-section-heading {
+  display: flex;
+  min-width: 0;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-3);
+}
+
+.mv-dashboard-section-heading > svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+.mv-dashboard-attention .mv-dashboard-section-heading > svg {
+  color: var(--warning-text);
+}
+
+.mv-dashboard-event-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  margin-top: var(--mv-ds-space-3);
+}
+
+.mv-dashboard-event {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-4);
+  padding-block: var(--mv-ds-space-3);
+}
+
+.mv-dashboard-event + .mv-dashboard-event {
+  border-top: 1px solid var(--border);
+}
+
+.mv-dashboard-event-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--mv-ds-space-1);
+}
+
+.mv-dashboard-event-copy strong {
+  color: var(--text);
+  font-size: var(--mv-ds-text-compact);
+  font-weight: 600;
+  line-height: var(--mv-ds-leading-compact);
+  overflow-wrap: anywhere;
+}
+
+.mv-dashboard-event-type {
+  color: var(--text-muted);
+  font-size: var(--mv-ds-text-meta);
+  font-weight: 600;
+}
+
+.mv-dashboard-row-action {
+  min-height: var(--mv-ds-control-compact);
+  flex: 0 0 auto;
+  padding-inline: var(--mv-ds-space-3);
+  font-size: var(--mv-ds-text-meta);
+}
+
+.mv-dashboard-more-count {
+  margin: var(--mv-ds-space-2) 0 0;
+}
+
+.mv-dashboard-plan-summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  margin-top: var(--mv-ds-space-3);
+}
+
+.mv-dashboard-plan-row {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mv-ds-space-4);
+  padding-block: var(--mv-ds-space-2);
+  color: var(--text);
+  font-size: var(--mv-ds-text-compact);
+  line-height: var(--mv-ds-leading-compact);
+}
+
+.mv-dashboard-plan-row > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mv-dashboard-inline-action {
+  margin-top: var(--mv-ds-space-3);
+  min-height: var(--mv-ds-control-compact);
+  padding-inline: var(--mv-ds-space-3);
+  font-size: var(--mv-ds-text-meta);
+}
+
+/* Money remains complete. Reflow is preferred to truncation or ellipsis. */
+.mv-dashboard-private-money {
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+/* Mask Balances: remove Dashboard money from visual/AT presentation and show a
+ * neutral placeholder while retaining stable geometry. Sign-derived text and
+ * semantic colour are suppressed at the same time. */
+.mv-privacy-mask .mv-dashboard-v431 .mv-dashboard-private-money {
+  position: relative;
+  visibility: hidden;
+  filter: none !important;
+  color: var(--text) !important;
+}
+
+.mv-privacy-mask .mv-dashboard-v431 .mv-dashboard-private-money::after {
+  content: "••••••";
+  visibility: visible;
+  color: var(--text);
+  font: inherit;
+  letter-spacing: 0.08em;
+}
+
+.mv-privacy-mask .mv-dashboard-v431 :is(
+  .finance-semantic-positive,
+  .finance-semantic-negative
+) {
+  color: var(--text) !important;
+}
+
+.mv-privacy-mask .mv-dashboard-v431 :is(
+  .mv-dashboard-value-state,
+  .mv-dashboard-current-adverse
+) {
+  display: none;
+}
+
+/* Mode transformation. Only the active action copy is reachable/rendered. */
+.mv-layout-pc .mv-dashboard-actions-phone {
+  display: none;
+}
+
+.mv-layout-phone .mv-dashboard-actions-pc {
+  display: none;
+}
+
+.mv-layout-phone .mv-dashboard-actions-phone {
+  display: block;
+}
+
+.mv-layout-phone .mv-dashboard-page-actions {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+}
+
+.mv-layout-phone .mv-dashboard-page-actions > button {
+  width: 100%;
+  min-height: var(--mv-ds-control-large);
+}
+
+.mv-layout-phone .mv-dashboard-horizons,
+.mv-layout-phone .mv-dashboard-movement-layer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mv-layout-phone .mv-dashboard-horizon + .mv-dashboard-horizon,
+.mv-layout-phone .mv-dashboard-movement + .mv-dashboard-movement {
+  border-inline-start: 0;
+  border-top: 1px solid var(--border);
+}
+
+.mv-layout-phone .mv-dashboard-horizon {
+  padding: var(--mv-ds-space-4);
+}
+
+.mv-layout-phone .mv-dashboard-movement {
+  padding: var(--mv-ds-space-4);
+}
+
+.mv-layout-phone .mv-dashboard-event {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.mv-layout-phone .mv-dashboard-row-action {
+  width: 100%;
+  min-height: var(--mv-ds-control-large);
+}
+
+/* Narrow PC mode and 200%-text-style reflow: preserve exact values before
+ * compactness. This applies regardless of the selected MV presentation mode. */
+@media (max-width: 64rem) {
+  .mv-layout-pc .mv-dashboard-horizons {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mv-layout-pc .mv-dashboard-horizon + .mv-dashboard-horizon {
+    border-inline-start: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .mv-layout-pc .mv-dashboard-movement-layer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mv-layout-pc .mv-dashboard-movement:nth-child(3) {
+    grid-column: 1 / -1;
+    border-inline-start: 0;
+    border-top: 1px solid var(--border);
   }
 }
 
-/* Tailwind viewport breakpoints still apply while MV is in Phone mode on a
- * wide physical screen. Neutralise the PC overview card spans there so the
- * global one-column Phone contract remains authoritative. */
-.mv-layout-phone .mv-dashboard-overview-grid > .mv-dashboard-period-card,
-.mv-layout-phone .mv-dashboard-overview-grid > .mv-dashboard-surplus-card {
-  grid-column: auto !important;
+@media (max-width: 48rem) {
+  .mv-dashboard-v431 {
+    gap: var(--mv-ds-space-4);
+  }
+
+  .mv-dashboard-command-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mv-layout-pc .mv-dashboard-movement-layer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mv-layout-pc .mv-dashboard-movement:nth-child(3) {
+    grid-column: auto;
+  }
+
+  .mv-layout-pc .mv-dashboard-movement + .mv-dashboard-movement {
+    border-inline-start: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .mv-dashboard-anchor-value,
+  .mv-dashboard-anchor-state {
+    font-size: var(--mv-ds-text-section);
+    line-height: var(--mv-ds-leading-section);
+  }
+
+  .mv-dashboard-refunds,
+  .mv-dashboard-plan-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--mv-ds-space-1);
+  }
+}
+
+/* v4.31 narrow global-shell compatibility requirement (<=352 CSS px).
+ * Keep all three utilities and both layout choices reachable as 44px controls,
+ * remove only redundant visible text, and preserve accessible names/titles. */
+@media (max-width: 22rem) {
+  .mv-density-root .mv-shell-boundary {
+    padding-inline: var(--mv-ds-space-2) !important;
+  }
+
+  .mv-density-root .mv-app-header-row {
+    gap: var(--mv-ds-space-1) !important;
+  }
+
+  .mv-density-root .mv-header-brand-copy {
+    display: none !important;
+  }
+
+  .mv-density-root .mv-header-actions {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: var(--mv-ds-space-1) !important;
+  }
+
+  .mv-density-root :is(
+    #header-backup-btn,
+    #header-refresh-btn,
+    #header-privacy-mask-btn
+  ) {
+    width: var(--mv-ds-control-large) !important;
+    min-width: var(--mv-ds-control-large) !important;
+    padding: 0 !important;
+    justify-content: center;
+  }
+
+  .mv-density-root :is(
+    .mv-header-backup-label,
+    .mv-privacy-label,
+    .mv-layout-switcher-option > span
+  ) {
+    display: none !important;
+  }
+
+  .mv-density-root .mv-layout-switcher {
+    display: grid !important;
+    width: auto !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    grid-template-columns: repeat(2, var(--mv-ds-control-large)) !important;
+  }
+
+  .mv-density-root .mv-layout-switcher-option,
+  .mv-layout-pc .mv-layout-switcher-option,
+  .mv-layout-phone .mv-layout-switcher-option {
+    width: var(--mv-ds-control-large) !important;
+    min-width: var(--mv-ds-control-large) !important;
+    padding: 0 !important;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-dashboard-v431 * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
 }
