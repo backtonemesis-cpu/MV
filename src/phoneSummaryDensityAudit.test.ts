@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 const income = fs.readFileSync(path.resolve(process.cwd(), 'src/components/IncomeView.tsx'), 'utf8');
 const savings = fs.readFileSync(path.resolve(process.cwd(), 'src/components/SavingsView.tsx'), 'utf8');
 const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/Dashboard.tsx'), 'utf8');
+const dashboardCss = fs.readFileSync(path.resolve(process.cwd(), 'src/dashboard.css'), 'utf8');
 const indexCss = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
 const mobileCss = fs.readFileSync(path.resolve(process.cwd(), 'src/mobileUx.css'), 'utf8');
 const main = fs.readFileSync(path.resolve(process.cwd(), 'src/main.tsx'), 'utf8');
@@ -56,9 +57,11 @@ describe('PHONE-DENSITY-001 summary metric density', () => {
     expect(mobileImport).toBeGreaterThan(indexImport);
   });
 
-  it('preserves the already-dense Dashboard two-column phone metrics', () => {
-    expect(dashboard).toContain(
-      'className="mv-dashboard-metrics grid grid-cols-2 gap-3 lg:grid-cols-4"'
-    );
+  it('stacks the Dashboard financial frame in Phone mode instead of restoring a KPI grid', () => {
+    expect(dashboard).toContain('mv-dashboard-financial-frame');
+    expect(dashboard).not.toContain('mv-dashboard-metrics grid grid-cols-2');
+    expect(dashboardCss).toContain('.mv-layout-phone .mv-dashboard-horizons');
+    expect(dashboardCss).toContain('.mv-layout-phone .mv-dashboard-movement-layer');
+    expect(dashboardCss).toContain('grid-template-columns: minmax(0, 1fr);');
   });
 });
